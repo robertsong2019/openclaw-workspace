@@ -1,0 +1,59 @@
+# 敏感文件
+TOOLS.md
+MEMORY.md
+USER.md
+.env
+*.key
+*.token
+
+# OpenClaw 敏感文件
+.openclaw/
+.clawhub/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+.env/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 测试覆盖率
+.coverage
+htmlcov/
+.pytest_cache/
+coverage/
+
+# Embedding 索引 (可重新生成)
+.embedding_index.json
+# 嵌入的 Git 仓库
+code-lab/jp/
+experiments/agent-workflow-viz/
+openclaw-test/
+projects/agent-task-cli/
+projects/mission-control/
+projects/prompt-mgr/
