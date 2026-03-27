@@ -1,163 +1,76 @@
 {
-  "timestamp": "2026-03-26T06:00:00+08:00",
-  "generatedAt": "2026-03-25T22:00:00Z",
-  "cronJobs": [
-    {
-      "id": "f38e0365-7bbf-46fd-bab7-14d51a5d4df0",
-      "name": "dashboard-update-morning",
-      "schedule": "0 6 * * *",
-      "status": "running",
-      "lastRun": "1d ago",
-      "nextRun": "<1m ago",
-      "target": "isolated"
+  "timestamp": "2026-03-28T06:00:00.000Z",
+  "localTime": "2026-03-28 14:00:00 +08:00",
+  "dashboard": {
+    "cronStatus": {
+      "enabled": true,
+      "totalJobs": 13,
+      "nextWakeAtMs": 1774648800000
     },
-    {
-      "id": "610a8d6d-faba-40c2-945c-9ba8472c4839",
-      "name": "github-creative-evening",
-      "schedule": "0 19 * * *",
-      "status": "ok",
-      "lastRun": "11h ago",
-      "nextRun": "in 13h",
-      "target": "isolated"
+    "sessions": {
+      "totalSessions": 39,
+      "directSessions": 37,
+      "groupSessions": 1,
+      "recentActivity": [
+        {
+          "kind": "direct",
+          "age": "just now",
+          "model": "glm-5",
+          "tokens": "20k/200k (10%)"
+        },
+        {
+          "kind": "direct", 
+          "age": "1m ago",
+          "model": "glm-5",
+          "tokens": "30k/200k (15%)"
+        },
+        {
+          "kind": "direct",
+          "age": "1h ago", 
+          "model": "glm-5",
+          "tokens": "40k/200k (20%)"
+        }
+      ]
     },
-    {
-      "id": "265091b6-6c5f-4afb-8485-7108945fe1f7",
-      "name": "deep-exploration-evening",
-      "schedule": "0 20 * * *",
-      "status": "ok",
-      "lastRun": "10h ago",
-      "nextRun": "in 14h",
-      "target": "isolated"
-    },
-    {
-      "id": "13a2f284-a1ed-4394-979a-5392fbdf50f7",
-      "name": "code-lab-evening",
-      "schedule": "0 21 * * *",
-      "status": "ok",
-      "lastRun": "9h ago",
-      "nextRun": "in 15h",
-      "target": "isolated"
-    },
-    {
-      "id": "ce2fb615-132a-4c40-864f-86de27bea24c",
-      "name": "tool-development-evening",
-      "schedule": "0 22 * * *",
-      "status": "ok",
-      "lastRun": "8h ago",
-      "nextRun": "in 16h",
-      "target": "isolated"
-    },
-    {
-      "id": "78eac6fc-c2d7-41d2-a5d1-9a52892f89ab",
-      "name": "key-development-1",
-      "schedule": "0 23 * * *",
-      "status": "ok",
-      "lastRun": "7h ago",
-      "nextRun": "in 17h",
-      "target": "isolated"
-    },
-    {
-      "id": "88679f9e-ba09-4e1a-8dbd-a2dc12808544",
-      "name": "key-development-2",
-      "schedule": "0 0 * * *",
-      "status": "ok",
-      "lastRun": "6h ago",
-      "nextRun": "in 18h",
-      "target": "isolated"
-    },
-    {
-      "id": "b0fd7e8d-f946-4228-bb85-1baaa3502c7c",
-      "name": "key-development-3",
-      "schedule": "0 1 * * *",
-      "status": "ok",
-      "lastRun": "5h ago",
-      "nextRun": "in 19h",
-      "target": "isolated"
-    },
-    {
-      "id": "fd0515b0-f483-411d-b110-3a16fbc49983",
-      "name": "knowledge-organization",
-      "schedule": "0 2 * * *",
-      "status": "ok",
-      "lastRun": "4h ago",
-      "nextRun": "in 20h",
-      "target": "isolated"
-    },
-    {
-      "id": "f7510f1f-9db8-46e7-8019-3c9a4858db2e",
-      "name": "project-testing-morning",
-      "schedule": "0 3 * * *",
-      "status": "ok",
-      "lastRun": "3h ago",
-      "nextRun": "in 21h",
-      "target": "isolated"
-    },
-    {
-      "id": "77a5bcc6-1342-4ff4-836a-f640973006dc",
-      "name": "documentation-morning",
-      "schedule": "0 4 * * *",
-      "status": "ok",
-      "lastRun": "2h ago",
-      "nextRun": "in 22h",
-      "target": "isolated"
-    },
-    {
-      "id": "686ec55c-17ca-43a9-9977-65a3c320ec3a",
-      "name": "essay-generation-morning",
-      "schedule": "0 5 * * *",
-      "status": "ok",
-      "lastRun": "1h ago",
-      "nextRun": "in 23h",
-      "target": "isolated"
-    }
-  ],
-  "sessions": {
-    "total": 37,
-    "recent": [
+    "activeCronJobs": [
       {
-        "key": "agent:main:cron:dashboard-update-morning",
-        "age": "just now",
-        "model": "glm-5",
-        "tokensUsed": "25k/200k",
-        "contextPercent": "12%"
+        "id": "f38e0365-7bbf-46fd-bab7-14d51a5d4df0",
+        "name": "dashboard-update-morning",
+        "schedule": "cron 0 6 * * * (exact)",
+        "next": "<1m ago",
+        "last": "1d ago",
+        "status": "running"
       },
       {
-        "key": "agent:main:cron:essay-generation-morning",
-        "age": "1h ago",
-        "model": "glm-5",
-        "tokensUsed": "26k/200k",
-        "contextPercent": "13%"
+        "id": "610a8d6d-faba-40c2-945c-9ba8472c4839",
+        "name": "github-creative-evening", 
+        "schedule": "cron 0 19 * * * (exact)",
+        "next": "in 13h",
+        "last": "11h ago",
+        "status": "ok"
       },
       {
-        "key": "agent:main:cron:documentation-morning",
-        "age": "2h ago",
-        "model": "glm-5",
-        "tokensUsed": "43k/200k",
-        "contextPercent": "22%"
+        "id": "265091b6-6c5f-4afb-8485-7108945fe1f7",
+        "name": "deep-exploration-evening",
+        "schedule": "cron 0 20 * * * (exact)", 
+        "next": "in 14h",
+        "last": "10h ago",
+        "status": "ok"
       },
       {
-        "key": "agent:main:cron:project-testing-morning",
-        "age": "3h ago",
-        "model": "glm-5",
-        "tokensUsed": "42k/200k",
-        "contextPercent": "21%"
-      },
-      {
-        "key": "agent:main:cron:knowledge-organization",
-        "age": "4h ago",
-        "model": "glm-5",
-        "tokensUsed": "28k/200k",
-        "contextPercent": "14%"
+        "id": "bb46cb70-ec67-4790-b98d-bdacf280f2a1",
+        "name": "deep-exploration-evening",
+        "schedule": "cron 0 12 * * * @ UTC (exact)",
+        "next": "in 14h",
+        "last": "10h ago", 
+        "status": "error"
       }
     ]
   },
-  "summary": {
-    "cronJobsTotal": 12,
-    "cronJobsHealthy": 11,
-    "cronJobsRunning": 1,
-    "sessionsTotal": 37,
-    "sessionsLast24h": 25,
-    "model": "glm-5",
-    "status": "operational"
+  "git": {
+    "status": "prepared",
+    "action": "push",
+    "target": "robertsong2019/robertsong2019.github.io",
+    "branch": "main"
   }
 }
