@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-03-28T22:00:53.000Z",
-  "localTime": "2026-03-29 06:00:55 +0800",
+  "timestamp": "2026-03-30T06:00:00.000Z",
+  "localTime": "2026-03-30 14:00:00 +0800",
   "dashboard": {
     "cronStatus": {
       "enabled": true,
-      "totalJobs": 13,
-      "nextWakeAtMs": 1774735200005,
+      "totalJobs": 14,
+      "nextWakeAtMs": 1774760400005,
       "currentJobRunning": "dashboard-update-morning"
     },
     "sessions": {
@@ -13,45 +13,46 @@
       "directSessions": 38,
       "groupSessions": 1,
       "modelDistribution": {
-        "glm-5.1": 30,
-        "glm-5": 7,
-        "glm-5-turbo": 1
+        "glm-5.1": 31,
+        "glm-5": 6,
+        "glm-5-turbo": 1,
+        "glm-4.7": 1
       },
       "recentActivity": [
         {
           "kind": "direct",
-          "age": "just now",
+          "age": "2m ago",
           "model": "glm-5.1",
-          "tokens": "25k/200k (12%)",
+          "tokens": "32k/205k (15%)",
           "key": "agent:main:cron:f38e0365-7bbf-46fd-bab7-14d51a5d4df0"
         },
         {
           "kind": "direct",
-          "age": "1m ago", 
+          "age": "2m ago",
           "model": "glm-5.1",
-          "tokens": "25k/200k (12%)",
-          "key": "agent:main:cron:ae10e5a1-4e8d-4419-a903-7810afc4c319"
+          "tokens": "32k/205k (15%)",
+          "key": "agent:main:cron:61cbe066-da01-4f6d-bfb0-946fda1df558"
         },
         {
           "kind": "direct",
-          "age": "22m ago",
-          "model": "glm-5.1", 
-          "tokens": "21k/205k (10%)",
+          "age": "28m ago",
+          "model": "glm-5.1",
+          "tokens": "22k/205k (11%)",
           "key": "agent:main:main"
         },
         {
           "kind": "direct",
           "age": "1h ago",
           "model": "glm-5.1",
-          "tokens": "34k/205k (17%)",
-          "key": "agent:main:cron:686ec55c-17ca-43a9-9977-65a3c320ec3a"
+          "tokens": "37k/205k (18%)",
+          "key": "agent:main:cron:a2952440-818a-438b-a9d1-406f24467a51"
         },
         {
           "kind": "direct",
           "age": "1h ago",
           "model": "glm-5.1",
-          "tokens": "34k/205k (17%)", 
-          "key": "agent:main:cron:fa66d182-c296-46af-8f2e-9930389c28b4"
+          "tokens": "37k/205k (18%)",
+          "key": "agent:main:cron:686ec55c-17ca-43a9-9977-65a3c320ec3a"
         }
       ]
     },
@@ -60,7 +61,7 @@
         "id": "f38e0365-7bbf-46fd-bab7-14d51a5d4df0",
         "name": "dashboard-update-morning",
         "schedule": "cron 0 6 * * * (exact)",
-        "next": "just now",
+        "next": "2m ago",
         "last": "1d ago",
         "status": "running",
         "durationMs": 157410,
@@ -71,7 +72,7 @@
         "name": "github-creative-evening",
         "schedule": "cron 0 19 * * * (exact)",
         "next": "in 13h",
-        "last": "11h ago", 
+        "last": "11h ago",
         "status": "ok",
         "durationMs": 600983,
         "target": "isolated"
@@ -82,7 +83,7 @@
         "schedule": "cron 0 20 * * * (exact)",
         "next": "in 14h",
         "last": "10h ago",
-        "status": "ok", 
+        "status": "ok",
         "durationMs": 801701,
         "target": "isolated"
       },
@@ -102,27 +103,107 @@
         "id": "13a2f284-a1ed-4394-979a-5392fbdf50f7",
         "name": "code-lab-evening",
         "schedule": "cron 0 21 * * * (exact)",
-        "next": "in 15h", 
+        "next": "in 15h",
         "last": "9h ago",
         "status": "ok",
         "durationMs": 62669,
+        "target": "isolated"
+      },
+      {
+        "id": "ce2fb615-132a-4c40-864f-86de27bea24c",
+        "name": "tool-development-evening",
+        "schedule": "cron 0 22 * * * (exact)",
+        "next": "in 16h",
+        "last": "8h ago",
+        "status": "error",
+        "durationMs": 0,
+        "target": "isolated"
+      },
+      {
+        "id": "78eac6fc-c2d7-41d2-a5d1-9a52892f89ab",
+        "name": "key-development-1",
+        "schedule": "cron 0 23 * * * (exact)",
+        "next": "in 17h",
+        "last": "7h ago",
+        "status": "ok",
+        "durationMs": 0,
+        "target": "isolated"
+      },
+      {
+        "id": "88679f9e-ba09-4e1a-8dbd-a2dc12808544",
+        "name": "key-development-2",
+        "schedule": "cron 0 0 * * * (exact)",
+        "next": "in 18h",
+        "last": "6h ago",
+        "status": "ok",
+        "durationMs": 0,
+        "target": "isolated"
+      },
+      {
+        "id": "b0fd7e8d-f946-4228-bb85-1baaa3502c7c",
+        "name": "key-development-3",
+        "schedule": "cron 0 1 * * * (exact)",
+        "next": "in 19h",
+        "last": "5h ago",
+        "status": "ok",
+        "durationMs": 0,
+        "target": "isolated"
+      },
+      {
+        "id": "fd0515b0-f483-411d-b110-3a16fbc49983",
+        "name": "knowledge-organization-evening",
+        "schedule": "cron 0 2 * * * (exact)",
+        "next": "in 20h",
+        "last": "4h ago",
+        "status": "ok",
+        "durationMs": 0,
+        "target": "isolated"
+      },
+      {
+        "id": "f7510f1f-9db8-46e7-8019-3c9a4858db2e",
+        "name": "project-testing-morning",
+        "schedule": "cron 0 3 * * * (exact)",
+        "next": "in 21h",
+        "last": "3h ago",
+        "status": "ok",
+        "durationMs": 0,
+        "target": "isolated"
+      },
+      {
+        "id": "77a5bcc6-1342-4ff4-836a-f640973006dc",
+        "name": "documentation-morning",
+        "schedule": "cron 0 4 * * * (exact)",
+        "next": "in 22h",
+        "last": "2h ago",
+        "status": "ok",
+        "durationMs": 0,
+        "target": "isolated"
+      },
+      {
+        "id": "686ec55c-17ca-43a9-9977-65a3c320ec3a",
+        "name": "essay-generation-morning",
+        "schedule": "cron 0 5 * * * (exact)",
+        "next": "in 23h",
+        "last": "1h ago",
+        "status": "ok",
+        "durationMs": 0,
         "target": "isolated"
       }
     ],
     "cronJobSummary": {
       "bySchedule": {
-        "morning_jobs": 4,
-        "evening_jobs": 3, 
-        "night_jobs": 5,
+        "morning_jobs": 5,
+        "evening_jobs": 4,
+        "night_jobs": 4,
         "early_morning_jobs": 1
       },
       "byStatus": {
-        "ok": 10,
+        "ok": 11,
         "error": 2,
         "running": 1
       },
       "byTarget": {
-        "isolated": 13
+        "isolated": 14
       }
     }
   },
@@ -131,7 +212,7 @@
     "action": "push",
     "target": "robertsong2019/robertsong2019.github.io",
     "branch": "main",
-    "lastUpdated": "2026-03-28T22:00:53.000Z"
+    "lastUpdated": "2026-03-30T06:00:00.000Z"
   },
   "system": {
     "uptime": "running",
