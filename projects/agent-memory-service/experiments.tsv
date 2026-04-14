@@ -1,0 +1,3 @@
+timestamp	commit	metric	value	status	description
+2026-04-14T16:00	baseline	test_pass_rate	31/31	keep	v0.1.0 baseline: three-layer storage + extraction + multi-strategy search
+2026-04-15T00:00	consolidate-v1	test_pass_rate	54/54	keep	v0.2.0: memory consolidation (merge related memories, auto-promote layers, dry-run mode)

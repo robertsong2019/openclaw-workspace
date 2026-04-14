@@ -1,0 +1,14 @@
+{
+  "name": "agent-memory-service",
+  "version": "0.1.0",
+  "description": "Mem0-inspired Agent memory management — auto-extract, tiered storage, semantic retrieval",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "start": "node src/index.js"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "license": "MIT"
+}

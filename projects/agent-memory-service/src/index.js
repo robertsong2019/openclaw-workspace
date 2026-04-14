@@ -1,0 +1,952 @@
+/**
+ * Agent Memory Service — Mem0 风格的记忆管理
+ * 
+ * 三层存储 + 自动提取 + 语义检索
+ * 零外部依赖，纯 Node.js
+ */
+
+import { randomUUID } from 'node:crypto';
+import { createHash } from 'node:crypto';
+import { mkdir, readFile, writeFile, appendFile } from 'node:fs/promises';
+import { join, dirname } from 'node:path';
+
+// ─── Types ───────────────────────────────────────────────
+
+/**
+ * @typedef {'core'|'long'|'short'} MemoryLayer
+ * @typedef {'relates_to'|'contradicts'|'supersedes'|'derived_from'|'causes'} LinkType
+ * @typedef {{
+ *   id: string,
+ *   content: string,
+ *   layer: MemoryLayer,
+ *   tags: string[],
+ *   entities: string[],
+ *   weight: number,
+ *   createdAt: number,
+ *   accessedAt: number,
+ *   accessCount: number,
+ *   source?: string,
+ *   hash: string
+ * }} Memory
+ * @typedef {{
+ *   id: string,
+ *   source: string,
+ *   target: string,
+ *   type: LinkType,
+ *   strength: number,
+ *   createdAt: number
+ * }} Link
+ */
+
+// ─── Constants ───────────────────────────────────────────
+
+const LAYERS = /** @type {const} */ ({
+  core:  { decayRate: 0,     minWeight: 1.0   },  // 永不过期
+  long:  { decayRate: 0.02,  minWeight: 0.05  },  // 30天半衰期
+  short: { decayRate: 0.5,   minWeight: 0.05  },  // 1天半衰期
+});
+
+const DECAY_BASE = 0.3;  // Ebbinghaus coefficient
+const BOOST_AMOUNT = 0.3;
+const MAX_WEIGHT = 1.0;
+
+// ─── Utility ─────────────────────────────────────────────
+
+function contentHash(content) {
+  return createHash('sha256').update(content).digest('hex').slice(0, 16);
+}
+
+function now() {
+  return Date.now();
+}
+
+function daysSince(timestamp) {
+  return (now() - timestamp) / (1000 * 60 * 60 * 24);
+}
+
+/**
+ * Tokenize text into lowercase words for keyword matching
+ */
+function tokenize(text) {
+  return text.toLowerCase()
+    .replace(/[^\w\u4e00-\u9fff]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 1);
+}
+
+/**
+ * Simple TF-IDF inspired scoring
+ */
+function keywordScore(queryTokens, contentTokens) {
+  if (queryTokens.length === 0) return 0;
+  let hits = 0;
+  for (const qt of queryTokens) {
+    if (contentTokens.includes(qt)) hits++;
+  }
+  return hits / queryTokens.length;
+}
+
+/**
+ * Very simple n-gram based semantic similarity (no embeddings needed)
+ */
+function ngramSimilarity(a, b) {
+  const ngrams = (s, n = 2) => {
+    const chars = s.toLowerCase().replace(/\s+/g, '');
+    const set = new Set();
+    for (let i = 0; i <= chars.length - n; i++) {
+      set.add(chars.slice(i, i + n));
+    }
+    return set;
+  };
+  const setA = ngrams(a);
+  const setB = ngrams(b);
+  const union = setA.size + setB.size - (function() {
+    let c = 0;
+    for (const g of setA) { if (setB.has(g)) c++; }
+    return c;
+  })();
+  if (union === 0) return 0;
+  let intersection = 0;
+  for (const g of setA) {
+    if (setB.has(g)) intersection++;
+  }
+  return intersection / union;
+}
+
+// ─── Memory Store (JSON file-based) ──────────────────────
+
+class MemoryStore {
+  /** @type {Map<string, Memory>} */
+  #memories = new Map();
+  /** @type {string} */
+  #filePath;
+  /** @type {Map<string, Set<string>>} */  // tag -> memory ids
+  #tagIndex = new Map();
+  /** @type {Map<string, Set<string>>} */  // entity -> memory ids
+  #entityIndex = new Map();
+  #dirty = false;
+
+  /**
+   * @param {string} dirPath 
+   */
+  constructor(dirPath) {
+    this.#filePath = join(dirPath, 'memories.json');
+  }
+
+  async load() {
+    try {
+      const data = await readFile(this.#filePath, 'utf-8');
+      const arr = JSON.parse(data);
+      this.#memories.clear();
+      this.#tagIndex.clear();
+      this.#entityIndex.clear();
+      for (const m of arr) {
+        this.#memories.set(m.id, m);
+        this.#indexMemory(m);
+      }
+    } catch {
+      this.#memories.clear();
+    }
+  }
+
+  async save() {
+    if (!this.#dirty) return;
+    const arr = Array.from(this.#memories.values());
+    await mkdir(dirname(this.#filePath), { recursive: true });
+    await writeFile(this.#filePath, JSON.stringify(arr, null, 2));
+    this.#dirty = false;
+  }
+
+  /**
+   * @param {Memory} m 
+   */
+  #indexMemory(m) {
+    for (const tag of m.tags) {
+      if (!this.#tagIndex.has(tag)) this.#tagIndex.set(tag, new Set());
+      this.#tagIndex.get(tag).add(m.id);
+    }
+    for (const entity of m.entities) {
+      if (!this.#entityIndex.has(entity)) this.#entityIndex.set(entity, new Set());
+      this.#entityIndex.get(entity).add(m.id);
+    }
+  }
+
+  /** @param {string} id */
+  get(id) { return this.#memories.get(id); }
+
+  /** @param {Memory} m */
+  put(m) {
+    this.#memories.set(m.id, m);
+    this.#indexMemory(m);
+    this.#dirty = true;
+  }
+
+  /** @param {string} id */
+  delete(id) {
+    const m = this.#memories.get(id);
+    if (m) {
+      for (const tag of m.tags) this.#tagIndex.get(tag)?.delete(id);
+      for (const entity of m.entities) this.#entityIndex.get(entity)?.delete(id);
+    }
+    this.#memories.delete(id);
+    this.#dirty = true;
+  }
+
+  /** @returns {Memory[]} */
+  all() { return Array.from(this.#memories.values()); }
+
+  /** @param {string} tag */
+  byTag(tag) {
+    const ids = this.#tagIndex.get(tag);
+    return ids ? Array.from(ids).map(id => this.#memories.get(id)).filter(Boolean) : [];
+  }
+
+  /** @param {string} entity */
+  byEntity(entity) {
+    const ids = this.#entityIndex.get(entity);
+    return ids ? Array.from(ids).map(id => this.#memories.get(id)).filter(Boolean) : [];
+  }
+
+  /** @param {MemoryLayer} layer */
+  byLayer(layer) {
+    return this.all().filter(m => m.layer === layer);
+  }
+
+  get size() { return this.#memories.size; }
+}
+
+// ─── Link Store ──────────────────────────────────────────
+
+class LinkStore {
+  /** @type {Map<string, Link>} */
+  #links = new Map();
+  /** @type {string} */
+  #filePath;
+  /** @type {Map<string, Set<string>>} */  // memoryId -> link ids
+  #memIndex = new Map();
+  #dirty = false;
+
+  constructor(dirPath) {
+    this.#filePath = join(dirPath, 'links.json');
+  }
+
+  async load() {
+    try {
+      const data = await readFile(this.#filePath, 'utf-8');
+      const arr = JSON.parse(data);
+      this.#links.clear();
+      this.#memIndex.clear();
+      for (const l of arr) {
+        this.#links.set(l.id, l);
+        this.#indexLink(l);
+      }
+    } catch {
+      this.#links.clear();
+    }
+  }
+
+  async save() {
+    if (!this.#dirty) return;
+    const arr = Array.from(this.#links.values());
+    await mkdir(dirname(this.#filePath), { recursive: true });
+    await writeFile(this.#filePath, JSON.stringify(arr, null, 2));
+    this.#dirty = false;
+  }
+
+  /** @param {Link} l */
+  #indexLink(l) {
+    for (const id of [l.source, l.target]) {
+      if (!this.#memIndex.has(id)) this.#memIndex.set(id, new Set());
+      this.#memIndex.get(id).add(l.id);
+    }
+  }
+
+  /** @param {Link} l */
+  put(l) {
+    this.#links.set(l.id, l);
+    this.#indexLink(l);
+    this.#dirty = true;
+  }
+
+  /** @param {string} id */
+  delete(id) {
+    const l = this.#links.get(id);
+    if (l) {
+      this.#memIndex.get(l.source)?.delete(id);
+      this.#memIndex.get(l.target)?.delete(id);
+    }
+    this.#links.delete(id);
+    this.#dirty = true;
+  }
+
+  /** Clean up links pointing to deleted memories */
+  cleanForMemory(memId) {
+    const linkIds = this.#memIndex.get(memId);
+    if (linkIds) {
+      for (const lid of [...linkIds]) this.delete(lid);
+    }
+  }
+
+  /**
+   * Get all links involving a memory (both directions)
+   * @param {string} memId
+   * @returns {Link[]}
+   */
+  forMemory(memId) {
+    const ids = this.#memIndex.get(memId);
+    return ids ? Array.from(ids).map(id => this.#links.get(id)).filter(Boolean) : [];
+  }
+
+  /**
+   * Traverse graph from a memory, following links up to `depth` hops
+   * @param {string} startId
+   * @param {{depth?: number, types?: LinkType[], direction?: 'out'|'in'|'both'}} opts
+   * @returns {Map<string, {link: Link, hop: number}>}
+   */
+  traverse(startId, opts = {}) {
+    const depth = opts.depth ?? 2;
+    const types = opts.types;
+    const direction = opts.direction ?? 'both';
+    const visited = new Map(); // memoryId -> {link, hop}
+    const queue = [{id: startId, hop: 0}];
+
+    while (queue.length > 0) {
+      const {id, hop} = queue.shift();
+      if (hop >= depth) continue;
+
+      const links = this.forMemory(id);
+      for (const l of links) {
+        if (types && !types.includes(l.type)) continue;
+
+        // Determine neighbor based on direction
+        let neighbor = null;
+        if (direction === 'out' && l.source === id) neighbor = l.target;
+        else if (direction === 'in' && l.target === id) neighbor = l.source;
+        else if (direction === 'both') neighbor = l.source === id ? l.target : l.source;
+
+        if (neighbor && !visited.has(neighbor)) {
+          visited.set(neighbor, {link: l, hop: hop + 1});
+          queue.push({id: neighbor, hop: hop + 1});
+        }
+      }
+    }
+    return visited;
+  }
+
+  all() { return Array.from(this.#links.values()); }
+  get size() { return this.#links.size; }
+}
+
+// ─── Extractor ───────────────────────────────────────────
+
+/**
+ * Simple rule-based memory extractor
+ * In production, this would call an LLM
+ */
+class MemoryExtractor {
+  /**
+   * Extract potential memories from text
+   * @param {string} text
+   * @param {string} role - 'user' | 'assistant' | 'system'
+   * @returns {Array<{content: string, type: string, confidence: number, entities: string[]}>}
+   */
+  extract(text, role = 'user') {
+    const memories = [];
+
+    // Pattern: preferences ("我喜欢...", "I prefer...", "用...比较好")
+    const prefPatterns = [
+      /(?:我喜欢|偏好|prefer|喜欢用|比较喜欢|最好用)([^。，！？\n]+)/g,
+      /(?:我不喜欢|讨厌|don't like)([^。，！？\n]+)/g,
+    ];
+    for (const pat of prefPatterns) {
+      let match;
+      while ((match = pat.exec(text)) !== null) {
+        memories.push({
+          content: match[0],
+          type: 'preference',
+          confidence: 0.8,
+          entities: tokenize(match[1]),
+        });
+      }
+    }
+
+    // Pattern: facts/statements ("...是...", "... means ...")
+    const factPatterns = [
+      /([^。，！？\n]+(?:是|等于|意味着|means|is|are)[^。，！？\n]+)/g,
+    ];
+    for (const pat of factPatterns) {
+      let match;
+      while ((match = pat.exec(text)) !== null) {
+        const content = match[1].trim();
+        if (content.length > 5 && content.length < 200) {
+          memories.push({
+            content,
+            type: 'fact',
+            confidence: 0.6,
+            entities: [],
+          });
+        }
+      }
+    }
+
+    // Pattern: decisions/intentions ("我要...", "计划...", "let's...", "I will...")
+    const decisionPatterns = [
+      /(?:我要|我打算|计划|let's|I will|going to|准备)([^。，！？\n]+)/g,
+    ];
+    for (const pat of decisionPatterns) {
+      let match;
+      while ((match = pat.exec(text)) !== null) {
+        memories.push({
+          content: match[0],
+          type: 'decision',
+          confidence: 0.7,
+          entities: tokenize(match[1]),
+        });
+      }
+    }
+
+    // Pattern: project/tech mentions
+    const techPattern = /(?:project|项目|repo|仓库|框架|framework|工具|tool)\s*[:：]?\s*([A-Za-z0-9\-_\.]+)/gi;
+    let techMatch;
+    while ((techMatch = techPattern.exec(text)) !== null) {
+      memories.push({
+        content: `技术/项目: ${techMatch[1]}`,
+        type: 'entity',
+        confidence: 0.7,
+        entities: [techMatch[1].toLowerCase()],
+      });
+    }
+
+    // For user messages, also treat the whole message as a potential fact if substantial
+    if (role === 'user' && text.length > 20 && text.length < 500 && memories.length === 0) {
+      memories.push({
+        content: text.trim(),
+        type: 'context',
+        confidence: 0.3,
+        entities: tokenize(text).slice(0, 5),
+      });
+    }
+
+    return memories;
+  }
+
+  /**
+   * Extract from a full conversation
+   * @param {Array<{role: string, content: string}>} messages
+   * @returns {Array<{content: string, type: string, confidence: number, entities: string[], layer: MemoryLayer}>}
+   */
+  extractFromConversation(messages) {
+    const allMemories = [];
+    for (const msg of messages) {
+      const extracted = this.extract(msg.content, msg.role);
+      for (const m of extracted) {
+        // Classify into layers
+        let layer = 'short';
+        if (m.type === 'preference' || m.type === 'decision') layer = 'core';
+        else if (m.type === 'fact' || m.type === 'entity') layer = 'long';
+        
+        allMemories.push({ ...m, layer });
+      }
+    }
+    return allMemories;
+  }
+}
+
+// ─── Memory Service ──────────────────────────────────────
+
+export class MemoryService {
+  /** @type {MemoryStore} */
+  #store;
+  /** @type {LinkStore} */
+  #links;
+  /** @type {MemoryExtractor} */
+  #extractor;
+  /** @type {string} */
+  #dirPath;
+  /** @type {boolean} */
+  #loaded = false;
+
+  /**
+   * @param {{dbPath?: string}} options
+   */
+  constructor(options = {}) {
+    this.#dirPath = options.dbPath || './data/memory';
+    this.#store = new MemoryStore(this.#dirPath);
+    this.#links = new LinkStore(this.#dirPath);
+    this.#extractor = new MemoryExtractor();
+  }
+
+  async init() {
+    if (!this.#loaded) {
+      await this.#store.load();
+      await this.#links.load();
+      this.#loaded = true;
+    }
+  }
+
+  async #ensureLoaded() {
+    if (!this.#loaded) await this.init();
+  }
+
+  /**
+   * Add a memory directly
+   * @param {{content: string, layer?: MemoryLayer, tags?: string[], entities?: string[], source?: string}} opts
+   * @returns {Promise<Memory>}
+   */
+  async add(opts) {
+    await this.#ensureLoaded();
+    const id = randomUUID();
+    const ts = now();
+    /** @type {Memory} */
+    const memory = {
+      id,
+      content: opts.content,
+      layer: opts.layer || 'short',
+      tags: opts.tags || [],
+      entities: opts.entities || [],
+      weight: MAX_WEIGHT,
+      createdAt: ts,
+      accessedAt: ts,
+      accessCount: 0,
+      source: opts.source,
+      hash: contentHash(opts.content),
+    };
+    this.#store.put(memory);
+    await this.#store.save();
+    return memory;
+  }
+
+  /**
+   * Extract and store memories from a conversation
+   * @param {Array<{role: string, content: string}>} messages
+   * @returns {Promise<Memory[]>}
+   */
+  async extractFromConversation(messages) {
+    await this.#ensureLoaded();
+    const extracted = this.#extractor.extractFromConversation(messages);
+    const stored = [];
+    for (const m of extracted) {
+      // Deduplicate by content hash
+      const hash = contentHash(m.content);
+      const existing = this.#store.all().find(x => x.hash === hash);
+      if (existing) {
+        // Boost existing memory
+        existing.weight = Math.min(MAX_WEIGHT, existing.weight + BOOST_AMOUNT * 0.5);
+        existing.accessedAt = now();
+        existing.accessCount++;
+        continue;
+      }
+      const memory = await this.add({
+        content: m.content,
+        layer: m.layer,
+        entities: m.entities,
+      });
+      stored.push(memory);
+    }
+    await this.#store.save();
+    return stored;
+  }
+
+  /**
+   * Search memories with multi-strategy retrieval
+   * @param {string} query
+   * @param {{limit?: number, layer?: MemoryLayer, strategy?: 'keyword'|'semantic'|'hybrid'}} opts
+   * @returns {Promise<Array<Memory & {score: number}>>}
+   */
+  async search(query, opts = {}) {
+    await this.#ensureLoaded();
+    const limit = opts.limit || 5;
+    const strategy = opts.strategy || 'hybrid';
+    let candidates = this.#store.all();
+
+    // Filter by layer if specified
+    if (opts.layer) {
+      candidates = candidates.filter(m => m.layer === opts.layer);
+    }
+
+    // Filter out decayed memories
+    candidates = candidates.filter(m => m.weight >= LAYERS[m.layer].minWeight);
+
+    const queryTokens = tokenize(query);
+
+    // Score each candidate
+    const scored = candidates.map(m => {
+      let score = 0;
+
+      if (strategy === 'keyword' || strategy === 'hybrid') {
+        const contentTokens = tokenize(m.content);
+        score += keywordScore(queryTokens, contentTokens) * 0.5;
+        // Tag match bonus
+        const tagMatch = m.tags.filter(t => queryTokens.includes(t.toLowerCase())).length;
+        score += tagMatch * 0.1;
+      }
+
+      if (strategy === 'semantic' || strategy === 'hybrid') {
+        score += ngramSimilarity(query, m.content) * 0.3;
+      }
+
+      // Time decay bonus (prefer recent)
+      const ageDays = daysSince(m.createdAt);
+      score *= Math.exp(-0.01 * ageDays);
+
+      // Weight bonus (prefer strong memories)
+      score *= m.weight;
+
+      // Layer priority: core > long > short
+      const layerBoost = { core: 1.5, long: 1.0, short: 0.7 };
+      score *= layerBoost[m.layer];
+
+      return { ...m, score };
+    });
+
+    // Sort by score, take top N
+    scored.sort((a, b) => b.score - a.score);
+    const results = scored.slice(0, limit);
+
+    // Boost accessed memories
+    for (const m of results) {
+      const original = this.#store.get(m.id);
+      if (original) {
+        original.accessedAt = now();
+        original.accessCount++;
+        original.weight = Math.min(MAX_WEIGHT, original.weight + BOOST_AMOUNT);
+      }
+    }
+    await this.#store.save();
+
+    return results;
+  }
+
+  /**
+   * Get a specific memory by ID
+   * @param {string} id
+   */
+  async get(id) {
+    await this.#ensureLoaded();
+    const m = this.#store.get(id);
+    if (m) {
+      m.accessedAt = now();
+      m.accessCount++;
+      m.weight = Math.min(MAX_WEIGHT, m.weight + BOOST_AMOUNT * 0.5);
+      await this.#store.save();
+    }
+    return m;
+  }
+
+  /**
+   * Apply decay to all memories
+   * @returns {{decayed: number, removed: number}}
+   */
+  async decay() {
+    await this.#ensureLoaded();
+    let decayed = 0;
+    let removed = 0;
+    const toRemove = [];
+
+    for (const m of this.#store.all()) {
+      const config = LAYERS[m.layer];
+      if (config.decayRate === 0) continue;  // core never decays
+
+      const elapsedDays = daysSince(m.accessedAt);
+      const newWeight = m.weight * Math.exp(-DECAY_BASE * config.decayRate * elapsedDays);
+      
+      if (newWeight < config.minWeight) {
+        toRemove.push(m.id);
+        removed++;
+      } else if (newWeight < m.weight) {
+        m.weight = newWeight;
+        decayed++;
+      }
+    }
+
+    for (const id of toRemove) {
+      this.#store.delete(id);
+    }
+
+    await this.#store.save();
+    return { decayed, removed };
+  }
+
+  /**
+   * Get statistics
+   */
+  async stats() {
+    await this.#ensureLoaded();
+    const all = this.#store.all();
+    const byLayer = { core: 0, long: 0, short: 0 };
+    let totalWeight = 0;
+    const tags = new Set();
+    const entities = new Set();
+
+    for (const m of all) {
+      byLayer[m.layer]++;
+      totalWeight += m.weight;
+      m.tags.forEach(t => tags.add(t));
+      m.entities.forEach(e => entities.add(e));
+    }
+
+    return {
+      total: all.length,
+      byLayer,
+      avgWeight: all.length > 0 ? totalWeight / all.length : 0,
+      uniqueTags: tags.size,
+      uniqueEntities: entities.size,
+    };
+  }
+
+  /**
+   * Export all memories as JSON
+   */
+  async export() {
+    await this.#ensureLoaded();
+    return this.#store.all();
+  }
+
+  /**
+   * Consolidate related short-term memories into long-term/core memories.
+   * Inspired by human sleep consolidation: related weak memories merge into stronger ones.
+   * 
+   * Algorithm:
+   * 1. Cluster short/long memories by n-gram similarity (threshold ≥ 0.4)
+   * 2. For each cluster of 2+ memories, merge into a single memory
+   * 3. Merged memory gets: higher layer, combined entities/tags, boosted weight, references to originals
+   * 4. Original memories are deleted
+   * 
+   * @param {{similarityThreshold?: number, dryRun?: boolean}} opts
+   * @returns {Promise<{clusters: number, merged: number, promoted: Memory[]}>}
+   */
+  async consolidate(opts = {}) {
+    await this.#ensureLoaded();
+    const threshold = opts.similarityThreshold ?? 0.4;
+    const dryRun = opts.dryRun ?? false;
+
+    // Only consolidate non-core memories with weight > minWeight
+    const candidates = this.#store.all().filter(
+      m => m.layer !== 'core' && m.weight >= LAYERS[m.layer].minWeight
+    );
+
+    // Cluster by similarity (union-find)
+    const parent = new Map();
+    const find = (id) => {
+      if (!parent.has(id)) parent.set(id, id);
+      if (parent.get(id) !== id) parent.set(id, find(parent.get(id)));
+      return parent.get(id);
+    };
+    const union = (a, b) => {
+      const ra = find(a), rb = find(b);
+      if (ra !== rb) parent.set(ra, rb);
+    };
+
+    for (let i = 0; i < candidates.length; i++) {
+      for (let j = i + 1; j < candidates.length; j++) {
+        const sim = ngramSimilarity(candidates[i].content, candidates[j].content);
+        // Also consider shared entities/tags as similarity signals
+        const sharedEntities = candidates[i].entities.filter(e => candidates[j].entities.includes(e)).length;
+        const sharedTags = candidates[i].tags.filter(t => candidates[j].tags.includes(t)).length;
+        const effectiveSim = sim + sharedEntities * 0.1 + sharedTags * 0.05;
+        if (effectiveSim >= threshold) {
+          union(candidates[i].id, candidates[j].id);
+        }
+      }
+    }
+
+    // Group by root
+    const clusters = new Map();
+    for (const m of candidates) {
+      const root = find(m.id);
+      if (!clusters.has(root)) clusters.set(root, []);
+      clusters.get(root).push(m);
+    }
+
+    // Only merge clusters with 2+ memories
+    let clusterCount = 0;
+    let mergedCount = 0;
+    const promoted = [];
+
+    for (const [, group] of clusters) {
+      if (group.length < 2) continue;
+      clusterCount++;
+
+      // Sort by weight descending — strongest memory is the anchor
+      group.sort((a, b) => b.weight - a.weight);
+      const anchor = group[0];
+
+      // Determine target layer: if any is 'long', promote to 'core'; otherwise 'long'
+      const hasLong = group.some(m => m.layer === 'long');
+      const targetLayer = hasLong ? 'core' : 'long';
+
+      // Merge content: anchor content + unique fragments from others
+      const allContent = [anchor.content];
+      for (let i = 1; i < group.length; i++) {
+        // Only add content that's not too similar to anchor (> 0.8 overlap = skip)
+        const overlap = ngramSimilarity(anchor.content, group[i].content);
+        if (overlap < 0.8) {
+          allContent.push(group[i].content);
+        }
+      }
+      const mergedContent = allContent.join(' | ');
+
+      // Merge entities and tags
+      const mergedEntities = [...new Set(group.flatMap(m => m.entities))];
+      const mergedTags = [...new Set(group.flatMap(m => m.tags))];
+      const totalAccess = group.reduce((s, m) => s + m.accessCount, 0);
+      const earliestCreated = Math.min(...group.map(m => m.createdAt));
+
+      if (!dryRun) {
+        // Delete originals
+        for (const m of group) {
+          this.#store.delete(m.id);
+        }
+
+        // Create consolidated memory
+        const memory = await this.add({
+          content: mergedContent,
+          layer: targetLayer,
+          tags: mergedTags,
+          entities: mergedEntities,
+          source: `consolidated:${group.map(m => m.id.slice(0, 8)).join(',')}`,
+        });
+
+        // Preserve earliest creation time and total access count
+        const stored = this.#store.get(memory.id);
+        if (stored) {
+          stored.createdAt = earliestCreated;
+          stored.accessCount = totalAccess;
+          stored.weight = Math.min(MAX_WEIGHT, anchor.weight + BOOST_AMOUNT);
+        }
+        await this.#store.save();
+        promoted.push(stored);
+      } else {
+        promoted.push({
+          id: `dry-run-${clusterCount}`,
+          content: mergedContent,
+          layer: targetLayer,
+          tags: mergedTags,
+          entities: mergedEntities,
+          sourceGroup: group.map(m => ({ id: m.id.slice(0, 8), content: m.content.slice(0, 60) })),
+        });
+      }
+      mergedCount += group.length;
+    }
+
+    return { clusters: clusterCount, merged: mergedCount, promoted };
+  }
+
+  /**
+   * Link two memories with a typed association
+   * @param {{source: string, target: string, type: LinkType, strength?: number}} opts
+   * @returns {Promise<Link>}
+   */
+  async link(opts) {
+    await this.#ensureLoaded();
+    const { source, target, type, strength = 1.0 } = opts;
+    // Validate both memories exist
+    if (!this.#store.get(source)) throw new Error(`Source memory ${source} not found`);
+    if (!this.#store.get(target)) throw new Error(`Target memory ${target} not found`);
+    
+    const id = randomUUID();
+    /** @type {Link} */
+    const link = { id, source, target, type, strength, createdAt: now() };
+    this.#links.put(link);
+    await this.#links.save();
+    return link;
+  }
+
+  /**
+   * Remove a link by id
+   * @param {string} linkId
+   */
+  async unlink(linkId) {
+    await this.#ensureLoaded();
+    this.#links.delete(linkId);
+    await this.#links.save();
+  }
+
+  /**
+   * Get all links for a memory
+   * @param {string} memoryId
+   * @returns {Promise<Link[]>}
+   */
+  async getLinks(memoryId) {
+    await this.#ensureLoaded();
+    return this.#links.forMemory(memoryId);
+  }
+
+  /**
+   * Traverse the memory graph from a starting memory
+   * @param {string} startId
+   * @param {{depth?: number, types?: LinkType[], direction?: 'out'|'in'|'both'}} opts
+   * @returns {Promise<{neighbors: Array<{memory: Memory, link: Link, hop: number}>}>}
+   */
+  async traverse(startId, opts = {}) {
+    await this.#ensureLoaded();
+    const map = this.#links.traverse(startId, opts);
+    const neighbors = [];
+    for (const [memId, {link, hop}] of map) {
+      const memory = this.#store.get(memId);
+      if (memory) neighbors.push({ memory, link, hop });
+    }
+    return { neighbors };
+  }
+
+  /**
+   * Auto-link: automatically create associations between memories based on shared entities/tags
+   * @param {{types?: LinkType[], threshold?: number}} opts
+   * @returns {Promise<{created: number, skipped: number}>}
+   */
+  async autoLink(opts = {}) {
+    await this.#ensureLoaded();
+    const threshold = opts.threshold ?? 2; // min shared signals to link
+    const type = opts.types?.[0] ?? 'relates_to';
+    let created = 0, skipped = 0;
+
+    // Get existing link pairs to avoid duplicates
+    const existing = new Set();
+    for (const l of this.#links.all()) {
+      existing.add(`${l.source}->${l.target}`);
+      existing.add(`${l.target}->${l.source}`);
+    }
+
+    const memories = this.#store.all();
+    for (let i = 0; i < memories.length; i++) {
+      for (let j = i + 1; j < memories.length; j++) {
+        const a = memories[i], b = memories[j];
+        const key = `${a.id}->${b.id}`;
+        if (existing.has(key)) { skipped++; continue; }
+
+        // Count shared signals
+        const sharedEntities = a.entities.filter(e => b.entities.includes(e)).length;
+        const sharedTags = a.tags.filter(t => b.tags.includes(t)).length;
+        const sim = ngramSimilarity(a.content, b.content);
+        const signals = sharedEntities + sharedTags + (sim > 0.3 ? 1 : 0);
+
+        if (signals >= threshold) {
+          await this.link({
+            source: a.id,
+            target: b.id,
+            type,
+            strength: Math.min(1.0, signals * 0.25),
+          });
+          created++;
+        }
+      }
+    }
+    return { created, skipped };
+  }
+
+  /**
+   * Clear all memories
+   */
+  async clear() {
+    await this.#ensureLoaded();
+    const all = this.#store.all();
+    for (const m of all) {
+      this.#links.cleanForMemory(m.id);
+      this.#store.delete(m.id);
+    }
+    await this.#store.save();
+    await this.#links.save();
+  }
+}
+
+export { MemoryStore, MemoryExtractor, LinkStore, LAYERS, tokenize, ngramSimilarity, keywordScore };
