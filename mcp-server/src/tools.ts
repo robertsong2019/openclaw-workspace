@@ -103,6 +103,19 @@ export const OPENCLAW_TOOLS: Tool[] = [
       required: ["query"],
     },
   },
+  {
+    name: "edit",
+    description: "Edit a file by replacing exact text. Replaces all occurrences.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Path to the file to edit" },
+        oldText: { type: "string", description: "Exact text to find and replace (must match exactly)" },
+        newText: { type: "string", description: "New text to replace the old text with" },
+      },
+      required: ["path", "oldText", "newText"],
+    },
+  },
 ];
 
 // Handler map — name → async function
@@ -113,6 +126,7 @@ export const toolHandlers: Record<string, (args: any) => Promise<any>> = {
   write: executeWrite,
   exec: executeExec,
   memory_search: executeMemorySearch,
+  edit: executeEdit,
 };
 
 // --- Handler implementations ---
@@ -201,5 +215,26 @@ async function executeMemorySearch(args: any): Promise<any> {
     query,
     totalMatches: results.reduce((sum, r) => sum + r.matches.length, 0),
     results,
+  };
+}
+
+async function executeEdit(args: any): Promise<any> {
+  const { path, oldText, newText } = args;
+  const resolved = safePath(path);
+  const content = await readFile(resolved, "utf-8");
+
+  if (!content.includes(oldText)) {
+    return { tool: "edit", path, success: false, error: "oldText not found in file" };
+  }
+
+  const newContent = content.replaceAll(oldText, newText);
+  await writeFile(resolved, newContent, "utf-8");
+
+  return {
+    tool: "edit",
+    path,
+    success: true,
+    replacements: (content.match(new RegExp(oldText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "g")) || []).length,
+    bytesChanged: Buffer.byteLength(newContent, "utf-8") - Buffer.byteLength(content, "utf-8"),
   };
 }
