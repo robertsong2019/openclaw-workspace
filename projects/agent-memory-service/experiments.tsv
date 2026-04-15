@@ -1,3 +1,7 @@
 timestamp	commit	metric	value	status	description
+2026-04-15T11:00	baseline	test_count	66/66	baseline	agent-memory-service: 66 tests, 952 lines, no batch/timeline API
+2026-04-15T11:15	2289498	test_count	74/74	keep	batchAdd + batchDelete + searchAndLink — 8 new tests, 191 lines added
+2026-04-15T11:25	b0c8812	test_count	79/79	keep	timeline() with time range/layer/limit filters — 5 new tests, 86 lines added
 2026-04-14T16:00	baseline	test_pass_rate	31/31	keep	v0.1.0 baseline: three-layer storage + extraction + multi-strategy search
 2026-04-15T00:00	consolidate-v1	test_pass_rate	54/54	keep	v0.2.0: memory consolidation (merge related memories, auto-promote layers, dry-run mode)
+2026-04-15T01:06:22+08:00	7aa9e86	test_pass_rate	66/66	keep	memory associations: typed links, graph traversal, auto-link (v0.3.0)
