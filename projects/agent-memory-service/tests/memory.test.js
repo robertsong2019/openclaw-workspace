@@ -716,6 +716,134 @@ describe('Memory Associations (Links)', () => {
     } finally { cleanup(); }
   });
 
+  // ─── Batch Operations ───────────────────────────────
+
+  describe('Batch Operations', () => {
+    it('batchAdd creates multiple memories', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        const memories = await svc.batchAdd([
+          { content: 'Batch memory 1', layer: 'core', tags: ['test'] },
+          { content: 'Batch memory 2', layer: 'long', entities: ['node'] },
+          { content: 'Batch memory 3', layer: 'short' },
+        ]);
+        assert.equal(memories.length, 3);
+        assert.equal(memories[0].layer, 'core');
+        assert.equal(memories[1].entities[0], 'node');
+        assert.equal(memories[2].layer, 'short');
+        const stats = await svc.stats();
+        assert.equal(stats.total, 3);
+      } finally { cleanup(); }
+    });
+
+    it('batchAdd with empty array returns empty', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        const memories = await svc.batchAdd([]);
+        assert.deepEqual(memories, []);
+      } finally { cleanup(); }
+    });
+
+    it('batchDelete removes multiple memories', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        const m1 = await svc.add({ content: 'To delete 1', layer: 'short' });
+        const m2 = await svc.add({ content: 'To delete 2', layer: 'short' });
+        const m3 = await svc.add({ content: 'To keep', layer: 'core' });
+
+        const result = await svc.batchDelete([m1.id, m2.id]);
+        assert.equal(result.deleted, 2);
+        assert.equal(result.notFound, 0);
+
+        const stats = await svc.stats();
+        assert.equal(stats.total, 1);
+        const remaining = await svc.get(m3.id);
+        assert.ok(remaining);
+      } finally { cleanup(); }
+    });
+
+    it('batchDelete reports notFound for missing IDs', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        const result = await svc.batchDelete(['nonexistent-1', 'nonexistent-2']);
+        assert.equal(result.deleted, 0);
+        assert.equal(result.notFound, 2);
+      } finally { cleanup(); }
+    });
+
+    it('batchDelete cleans up associated links', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        const a = await svc.add({ content: 'A', layer: 'short' });
+        const b = await svc.add({ content: 'B', layer: 'short' });
+        const c = await svc.add({ content: 'C', layer: 'short' });
+        await svc.link({ source: a.id, target: b.id, type: 'relates_to' });
+        await svc.link({ source: b.id, target: c.id, type: 'derived_from' });
+
+        const result = await svc.batchDelete([a.id, b.id]);
+        assert.equal(result.deleted, 2);
+
+        // c should still exist, links to a and b should be gone
+        const cMem = await svc.get(c.id);
+        assert.ok(cMem);
+        const links = await svc.getLinks(c.id);
+        assert.equal(links.length, 0, 'links to deleted memories should be cleaned');
+      } finally { cleanup(); }
+    });
+  });
+
+  // ─── Search and Link ────────────────────────────────
+
+  describe('Search and Link', () => {
+    it('searchAndLink connects query results to a memory', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        const target = await svc.add({ content: 'Python web framework', layer: 'long', entities: ['python'] });
+        await svc.add({ content: 'Django is a Python framework', layer: 'long', entities: ['python', 'django'] });
+        await svc.add({ content: 'Flask lightweight Python web', layer: 'long', entities: ['python', 'flask'] });
+
+        const { linked } = await svc.searchAndLink({
+          memoryId: target.id,
+          query: 'Python framework',
+          linkType: 'relates_to',
+        });
+        assert.ok(linked.length >= 1, 'should link at least 1 result');
+        for (const { link } of linked) {
+          assert.equal(link.source, target.id);
+          assert.equal(link.type, 'relates_to');
+        }
+      } finally { cleanup(); }
+    });
+
+    it('searchAndLink skips self', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        const m = await svc.add({ content: 'Unique content xyz', layer: 'long' });
+        const { linked } = await svc.searchAndLink({
+          memoryId: m.id,
+          query: 'Unique content xyz',
+        });
+        assert.equal(linked.length, 0, 'should not link to self');
+      } finally { cleanup(); }
+    });
+
+    it('searchAndLink respects limit', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        const target = await svc.add({ content: 'Target', layer: 'short' });
+        for (let i = 0; i < 5; i++) {
+          await svc.add({ content: `Related item ${i} to target`, layer: 'short' });
+        }
+        const { linked } = await svc.searchAndLink({
+          memoryId: target.id,
+          query: 'Related item',
+          limit: 2,
+        });
+        assert.ok(linked.length <= 2, 'should respect limit');
+      } finally { cleanup(); }
+    });
+  });
+
   it('all link types are supported', async () => {
     const { svc, cleanup } = createService();
     try {

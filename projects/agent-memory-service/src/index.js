@@ -935,6 +935,69 @@ export class MemoryService {
   }
 
   /**
+   * Add multiple memories in one call (batch)
+   * @param {Array<{content: string, layer?: MemoryLayer, tags?: string[], entities?: string[], source?: string}>} items
+   * @returns {Promise<Memory[]>}
+   */
+  async batchAdd(items) {
+    await this.#ensureLoaded();
+    const memories = [];
+    for (const opts of items) {
+      const memory = await this.add(opts);
+      memories.push(memory);
+    }
+    return memories;
+  }
+
+  /**
+   * Delete multiple memories by ID (batch)
+   * Cleans up associated links for each.
+   * @param {string[]} ids
+   * @returns {Promise<{deleted: number, notFound: number}>}
+   */
+  async batchDelete(ids) {
+    await this.#ensureLoaded();
+    let deleted = 0, notFound = 0;
+    for (const id of ids) {
+      const m = this.#store.get(id);
+      if (!m) { notFound++; continue; }
+      this.#links.cleanForMemory(id);
+      this.#store.delete(id);
+      deleted++;
+    }
+    await this.#store.save();
+    await this.#links.save();
+    return { deleted, notFound };
+  }
+
+  /**
+   * Search and auto-link: search for a query, then link top results to a given memory.
+   * Useful for connecting a new memory to existing related ones.
+   * @param {{memoryId: string, query: string, limit?: number, linkType?: LinkType, strength?: number}} opts
+   * @returns {Promise<{linked: Array<{memory: Memory & {score: number}, link: Link}>}>}
+   */
+  async searchAndLink(opts) {
+    await this.#ensureLoaded();
+    const results = await this.search(opts.query, { limit: opts.limit || 3 });
+    const linked = [];
+    for (const r of results) {
+      if (r.id === opts.memoryId) continue; // skip self
+      try {
+        const link = await this.link({
+          source: opts.memoryId,
+          target: r.id,
+          type: opts.linkType || 'relates_to',
+          strength: opts.strength || Math.min(1.0, r.score * 0.5),
+        });
+        linked.push({ memory: r, link });
+      } catch {
+        // Memory might have been deleted between search and link
+      }
+    }
+    return { linked };
+  }
+
+  /**
    * Clear all memories
    */
   async clear() {
