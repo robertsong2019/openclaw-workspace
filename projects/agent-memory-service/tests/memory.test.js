@@ -1152,4 +1152,65 @@ describe('Memory Associations (Links)', () => {
       } finally { cleanup(); }
     });
   });
+
+  // ─── Merge ──────────────────────────────────────────────
+
+  describe('merge()', () => {
+    it('merges two memories into one', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        const m1 = await svc.add({ content: 'Likes Python', layer: 'long', tags: ['python'], entities: ['lang'] });
+        const m2 = await svc.add({ content: 'Uses VSCode', layer: 'short', tags: ['editor'], entities: ['tool'] });
+        const merged = await svc.merge(m1.id, m2.id);
+        assert.ok(merged.content.includes('Likes Python'));
+        assert.ok(merged.content.includes('Uses VSCode'));
+        assert.ok(merged.tags.includes('python'));
+        assert.ok(merged.tags.includes('editor'));
+        assert.ok(merged.entities.includes('lang'));
+        assert.ok(merged.entities.includes('tool'));
+        // Only one memory remains
+        const stats = await svc.stats();
+        assert.equal(stats.total, 1);
+      } finally { cleanup(); }
+    });
+
+    it('promotes to stronger layer', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        const m1 = await svc.add({ content: 'A', layer: 'short' });
+        const m2 = await svc.add({ content: 'B', layer: 'core' });
+        const merged = await svc.merge(m1.id, m2.id);
+        assert.equal(merged.layer, 'core');
+      } finally { cleanup(); }
+    });
+
+    it('returns null for non-existent ids', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        const result = await svc.merge('nope', 'nope2');
+        assert.equal(result, null);
+      } finally { cleanup(); }
+    });
+
+    it('handles self-merge gracefully', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        const m = await svc.add({ content: 'Self', layer: 'core' });
+        const result = await svc.merge(m.id, m.id);
+        assert.equal(result.id, m.id);
+        const stats = await svc.stats();
+        assert.equal(stats.total, 1);
+      } finally { cleanup(); }
+    });
+
+    it('accepts content override', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        const m1 = await svc.add({ content: 'Old content A', layer: 'long' });
+        const m2 = await svc.add({ content: 'Old content B', layer: 'long' });
+        const merged = await svc.merge(m1.id, m2.id, { content: 'New unified content' });
+        assert.equal(merged.content, 'New unified content');
+      } finally { cleanup(); }
+    });
+  });
 });

@@ -1169,6 +1169,57 @@ export class MemoryService {
   }
 
   /**
+   * Merge two memories into one — keeps the stronger, absorbs the weaker
+   * @param {string} keeperId - Memory to keep/absorb into
+   * @param {string} absorbedId - Memory to absorb and delete
+   * @param {{content?: string, layer?: MemoryLayer}} opts - Override merged content/layer
+   * @returns {Promise<Memory|null>} The merged memory
+   */
+  async merge(keeperId, absorbedId, opts = {}) {
+    await this.#ensureLoaded();
+    const keeper = this.#store.get(keeperId);
+    const absorbed = this.#store.get(absorbedId);
+    if (!keeper || !absorbed) return null;
+    if (keeperId === absorbedId) return keeper;
+
+    // Merge content: use override or concatenate
+    keeper.content = opts.content || `${keeper.content}; ${absorbed.content}`;
+    keeper.hash = contentHash(keeper.content);
+
+    // Merge tags and entities (union)
+    keeper.tags = [...new Set([...keeper.tags, ...absorbed.tags])];
+    keeper.entities = [...new Set([...keeper.entities, ...absorbed.entities])];
+
+    // Keep stronger layer (core > long > short)
+    const layerOrder = { core: 3, long: 2, short: 1 };
+    if (opts.layer) {
+      keeper.layer = opts.layer;
+    } else if (layerOrder[absorbed.layer] > layerOrder[keeper.layer]) {
+      keeper.layer = absorbed.layer;
+    }
+
+    // Combine weight (cap at MAX_WEIGHT)
+    keeper.weight = Math.min(MAX_WEIGHT, keeper.weight + absorbed.weight * 0.5);
+    keeper.accessCount += absorbed.accessCount;
+    keeper.accessedAt = Math.max(keeper.accessedAt, absorbed.accessedAt);
+
+    // Re-link any links pointing to absorbed → point to keeper
+    for (const link of this.#links.all()) {
+      if (link.source === absorbedId) link.source = keeperId;
+      if (link.target === absorbedId) link.target = keeperId;
+    }
+
+    // Delete absorbed memory
+    this.#store.delete(absorbedId);
+    this.#changelog.record('delete', absorbedId, absorbed.layer);
+    this.#store.put(keeper);
+    this.#changelog.record('update', keeperId, keeper.layer);
+    await this.#store.save();
+    await this.#changelog.save();
+    return keeper;
+  }
+
+  /**
    * Compact changelog by removing entries older than `maxAge` ms.
    * Keeps the store healthy for long-running agents.
    * @param {{maxAge?: number}} opts — maxAge defaults to 30 days (ms)
