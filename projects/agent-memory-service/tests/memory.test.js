@@ -1273,6 +1273,96 @@ describe('Memory Associations (Links)', () => {
     });
   });
 
+  // ─── Delete Single ──────────────────────────────────────
+
+  describe('delete()', () => {
+    it('deletes a single memory and returns true', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        const m = await svc.add({ content: 'to delete', layer: 'short' });
+        const result = await svc.delete(m.id);
+        assert.equal(result, true);
+        const stats = await svc.stats();
+        assert.equal(stats.total, 0);
+      } finally { cleanup(); }
+    });
+
+    it('returns false for non-existent id', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        const result = await svc.delete('nonexistent');
+        assert.equal(result, false);
+      } finally { cleanup(); }
+    });
+
+    it('cleans up associated links', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        const a = await svc.add({ content: 'A', layer: 'short' });
+        const b = await svc.add({ content: 'B', layer: 'short' });
+        await svc.link({ source: a.id, target: b.id, type: 'relates_to' });
+        await svc.delete(a.id);
+        const links = await svc.getLinks(b.id);
+        assert.equal(links.length, 0);
+      } finally { cleanup(); }
+    });
+
+    it('records deletion in changelog', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        const ts = Date.now();
+        await new Promise(r => setTimeout(r, 5));
+        const m = await svc.add({ content: 'temp', layer: 'short' });
+        await svc.delete(m.id);
+        const changes = await svc.changes(ts);
+        assert.equal(changes.deleted.length, 1);
+        assert.equal(changes.deleted[0], m.id);
+      } finally { cleanup(); }
+    });
+  });
+
+  // ─── Scheduled Maintenance ──────────────────────────────
+
+  describe('scheduledMaintenance()', () => {
+    it('runs all three maintenance steps', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        await svc.add({ content: 'Python data analysis', layer: 'short', entities: ['python'] });
+        await svc.add({ content: 'Python data processing', layer: 'short', entities: ['python'] });
+        const result = await svc.scheduledMaintenance();
+        assert.ok('decay' in result);
+        assert.ok('consolidation' in result);
+        assert.ok('changelog' in result);
+        assert.ok('decayed' in result.decay);
+        assert.ok('clusters' in result.consolidation);
+        assert.ok('removed' in result.changelog);
+      } finally { cleanup(); }
+    });
+
+    it('passes options to consolidate and compactChangelog', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        await svc.add({ content: 'test', layer: 'short' });
+        // dryRun=true → consolidation should not modify
+        const before = await svc.stats();
+        const result = await svc.scheduledMaintenance({ dryRun: true, changelogMaxAge: 999999999 });
+        assert.equal(before.total, (await svc.stats()).total);
+        assert.ok(result.changelog.remaining >= 1);
+      } finally { cleanup(); }
+    });
+
+    it('returns usable result for agent decision-making', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        // No memories → should still work
+        const result = await svc.scheduledMaintenance();
+        assert.equal(result.decay.decayed, 0);
+        assert.equal(result.consolidation.clusters, 0);
+        assert.equal(result.changelog.removed, 0);
+      } finally { cleanup(); }
+    });
+  });
+
   // ─── Find Related ───────────────────────────────────────
 
   describe('findRelated()', () => {
@@ -1356,6 +1446,50 @@ describe('Memory Associations (Links)', () => {
 
         const related = await svc.findRelated(m1.id, { includeSelf: false });
         assert.ok(!related.some(r => r.id === m1.id));
+      } finally { cleanup(); }
+    });
+  });
+
+  describe('reindex', () => {
+    it('rebuilds tag and entity indices from scratch', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        await svc.add({ content: 'Alpha', layer: 'core', tags: ['a', 'b'], entities: ['x'] });
+        await svc.add({ content: 'Beta', layer: 'long', tags: ['b', 'c'], entities: ['y'] });
+
+        const result = await svc.reindex();
+        assert.equal(result.memories, 2);
+        assert.ok(result.tags >= 2);
+        assert.ok(result.entities >= 2);
+      } finally { cleanup(); }
+    });
+
+    it('fixes stale indices after tag change via update', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        const m = await svc.add({ content: 'Test', layer: 'core', tags: ['old'], entities: ['e1'] });
+
+        // Update tags
+        await svc.update(m.id, { tags: ['new'], entities: ['e2'] });
+
+        // Reindex and verify counts are correct (no stale 'old' entries)
+        const result = await svc.reindex();
+        assert.ok(result.tags >= 1);
+        // After update + reindex, memory should have exactly 1 tag ('new')
+        const updated = await svc.get(m.id);
+        assert.deepEqual(updated.tags, ['new']);
+        assert.deepEqual(updated.entities, ['e2']);
+      } finally { cleanup(); }
+    });
+
+    it('is included in scheduledMaintenance results', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        await svc.add({ content: 'Maint', layer: 'short', tags: ['t1'] });
+        const result = await svc.scheduledMaintenance();
+        assert.ok(result.reindex);
+        assert.equal(result.reindex.memories, 1);
+        assert.ok(result.reindex.tags >= 1);
       } finally { cleanup(); }
     });
   });

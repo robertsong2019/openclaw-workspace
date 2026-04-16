@@ -224,9 +224,21 @@ class MemoryStore {
 
   /** @param {Memory} m */
   put(m) {
+    // Clean old indices if memory already exists (tags/entities may have changed)
+    const old = this.#memories.get(m.id);
+    if (old) this.#deindexMemory(old);
     this.#memories.set(m.id, m);
     this.#indexMemory(m);
     this.#dirty = true;
+  }
+
+  /**
+   * Remove a memory from tag/entity indices (does NOT remove from #memories)
+   * @param {Memory} m
+   */
+  #deindexMemory(m) {
+    for (const tag of m.tags) this.#tagIndex.get(tag)?.delete(m.id);
+    for (const entity of m.entities) this.#entityIndex.get(entity)?.delete(m.id);
   }
 
   /** @param {string} id */
@@ -253,6 +265,23 @@ class MemoryStore {
   byEntity(entity) {
     const ids = this.#entityIndex.get(entity);
     return ids ? Array.from(ids).map(id => this.#memories.get(id)).filter(Boolean) : [];
+  }
+
+  /**
+   * Rebuild all indices from scratch
+   * @returns {{ tags: number, entities: number, memories: number }}
+   */
+  reindex() {
+    this.#tagIndex.clear();
+    this.#entityIndex.clear();
+    for (const m of this.#memories.values()) {
+      this.#indexMemory(m);
+    }
+    return {
+      memories: this.#memories.size,
+      tags: this.#tagIndex.size,
+      entities: this.#entityIndex.size,
+    };
   }
 
   /** @param {MemoryLayer} layer */
@@ -511,13 +540,15 @@ export class MemoryService {
   #changelog;
   /** @type {MemoryExtractor} */
   #extractor;
+  /** @type {EmbeddingProvider} */
+  #embeddings;
   /** @type {string} */
   #dirPath;
   /** @type {boolean} */
   #loaded = false;
 
   /**
-   * @param {{dbPath?: string}} options
+   * @param {{dbPath?: string, embedFn?: EmbedFn}} options
    */
   constructor(options = {}) {
     this.#dirPath = options.dbPath || './data/memory';
@@ -525,6 +556,12 @@ export class MemoryService {
     this.#links = new LinkStore(this.#dirPath);
     this.#changelog = new ChangelogStore(this.#dirPath);
     this.#extractor = new MemoryExtractor();
+    this.#embeddings = new EmbeddingProvider(this.#dirPath, options.embedFn || null);
+  }
+
+  /** Access the embedding provider for configuration */
+  get embeddings() {
+    return this.#embeddings;
   }
 
   async init() {
@@ -532,6 +569,7 @@ export class MemoryService {
       await this.#store.load();
       await this.#links.load();
       await this.#changelog.load();
+      await this.#embeddings.loadCache();
       this.#loaded = true;
     }
   }
@@ -623,8 +661,14 @@ export class MemoryService {
 
     const queryTokens = tokenize(query);
 
+    // Pre-compute query embedding if available (async, done once)
+    let queryVec = null;
+    if (this.#embeddings.enabled) {
+      queryVec = await this.#embeddings.embed(query);
+    }
+
     // Score each candidate
-    const scored = candidates.map(m => {
+    const scored = await Promise.all(candidates.map(async m => {
       let score = 0;
 
       if (strategy === 'keyword' || strategy === 'hybrid') {
@@ -636,7 +680,17 @@ export class MemoryService {
       }
 
       if (strategy === 'semantic' || strategy === 'hybrid') {
-        score += ngramSimilarity(query, m.content) * 0.3;
+        // Use embedding similarity if available, else fallback to ngram
+        if (queryVec && this.#embeddings.enabled) {
+          const memVec = await this.#embeddings.embed(m.content);
+          if (memVec) {
+            score += cosineSimilarity(queryVec, memVec) * 0.3;
+          } else {
+            score += ngramSimilarity(query, m.content) * 0.3;
+          }
+        } else {
+          score += ngramSimilarity(query, m.content) * 0.3;
+        }
       }
 
       // Time decay bonus (prefer recent)
@@ -651,11 +705,14 @@ export class MemoryService {
       score *= layerBoost[m.layer];
 
       return { ...m, score };
-    });
+    }));
 
     // Sort by score, take top N
     scored.sort((a, b) => b.score - a.score);
     const results = scored.slice(0, limit);
+
+    // Persist any new embedding caches
+    await this.#embeddings.saveCache();
 
     // Boost accessed memories
     for (const m of results) {
@@ -1297,6 +1354,51 @@ export class MemoryService {
   }
 
   /**
+   * Delete a single memory by ID.
+   * Cleans up associated links and records in changelog.
+   * @param {string} id
+   * @returns {Promise<boolean>} true if deleted, false if not found
+   */
+  async delete(id) {
+    await this.#ensureLoaded();
+    const m = this.#store.get(id);
+    if (!m) return false;
+    this.#links.cleanForMemory(id);
+    this.#changelog.record('delete', id, m.layer);
+    this.#store.delete(id);
+    await this.#store.save();
+    await this.#links.save();
+    await this.#changelog.save();
+    return true;
+  }
+
+  /**
+   * Run scheduled maintenance: decay + consolidate + compact changelog.
+   * Agents should call this periodically (e.g., on session start or via heartbeat).
+   * @param {{consolidateThreshold?: number, changelogMaxAge?: number, dryRun?: boolean}} opts
+   * @returns {Promise<{decay: {decayed: number, removed: number}, consolidation: {clusters: number, merged: number}, changelog: {removed: number, remaining: number}}>}
+   */
+  async scheduledMaintenance(opts = {}) {
+    const decay = await this.decay();
+    const consolidation = await this.consolidate({
+      similarityThreshold: opts.consolidateThreshold ?? 0.4,
+      dryRun: opts.dryRun ?? false,
+    });
+    const changelog = await this.compactChangelog({ maxAge: opts.changelogMaxAge });
+    const reindex = this.#store.reindex();
+    return { decay, consolidation, changelog, reindex };
+  }
+
+  /**
+   * Rebuild all tag/entity indices from scratch
+   * @returns {Promise<{ memories: number, tags: number, entities: number }>}
+   */
+  async reindex() {
+    await this.#ensureLoaded();
+    return this.#store.reindex();
+  }
+
+  /**
    * Clear all memories
    */
   async clear() {
@@ -1418,4 +1520,123 @@ export class MemoryService {
   }
 }
 
-export { MemoryStore, MemoryExtractor, LinkStore, ChangelogStore, LAYERS, tokenize, ngramSimilarity, keywordScore };
+// ─── Embedding Provider Interface ────────────────────────
+
+/**
+ * Cosine similarity between two vectors
+ * @param {number[]} a
+ * @param {number[]} b
+ * @returns {number}
+ */
+function cosineSimilarity(a, b) {
+  if (a.length !== b.length || a.length === 0) return 0;
+  let dot = 0, normA = 0, normB = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  const denom = Math.sqrt(normA) * Math.sqrt(normB);
+  return denom === 0 ? 0 : dot / denom;
+}
+
+/**
+ * @typedef {(text: string) => Promise<number[]>} EmbedFn
+ */
+
+/**
+ * EmbeddingProvider wraps an async embedding function and manages a vector cache.
+ * Falls back gracefully if the embedding function is unavailable.
+ */
+class EmbeddingProvider {
+  /** @type {EmbedFn|null} */
+  #embedFn;
+  /** @type {Map<string, number[]>} */  // content hash -> vector
+  #cache = new Map();
+  #cachePath;
+  #dirty = false;
+
+  /**
+   * @param {string} dirPath - Directory to persist cache
+   * @param {EmbedFn|null} embedFn - Async function that returns a vector for text. null = disabled.
+   */
+  constructor(dirPath, embedFn = null) {
+    this.#cachePath = join(dirPath, 'embed-cache.json');
+    this.#embedFn = embedFn;
+  }
+
+  /** Set or replace the embedding function at runtime */
+  setEmbedFn(fn) {
+    this.#embedFn = fn;
+  }
+
+  /** Check if embeddings are available */
+  get enabled() {
+    return this.#embedFn !== null;
+  }
+
+  async loadCache() {
+    try {
+      const raw = await readFile(this.#cachePath, 'utf-8');
+      const obj = JSON.parse(raw);
+      this.#cache = new Map(Object.entries(obj));
+    } catch {
+      this.#cache = new Map();
+    }
+  }
+
+  async saveCache() {
+    if (!this.#dirty) return;
+    await mkdir(dirname(this.#cachePath), { recursive: true });
+    const obj = Object.fromEntries(this.#cache);
+    await writeFile(this.#cachePath, JSON.stringify(obj));
+    this.#dirty = false;
+  }
+
+  /**
+   * Get embedding for text (cached)
+   * @param {string} text
+   * @returns {Promise<number[]|null>}
+   */
+  async embed(text) {
+    if (!this.#embedFn) return null;
+    const key = contentHash(text);
+    if (this.#cache.has(key)) return this.#cache.get(key);
+    try {
+      const vec = await this.#embedFn(text);
+      if (vec && Array.isArray(vec) && vec.length > 0) {
+        this.#cache.set(key, vec);
+        this.#dirty = true;
+        return vec;
+      }
+    } catch {
+      // Embedding function failed; return null (graceful fallback)
+    }
+    return null;
+  }
+
+  /**
+   * Compute similarity between two texts via embeddings
+   * @param {string} a
+   * @param {string} b
+   * @returns {Promise<number|null>} null if unavailable
+   */
+  async similarity(a, b) {
+    const [vecA, vecB] = await Promise.all([this.embed(a), this.embed(b)]);
+    if (!vecA || !vecB) return null;
+    return cosineSimilarity(vecA, vecB);
+  }
+
+  /** Clear the cache */
+  clearCache() {
+    this.#cache.clear();
+    this.#dirty = true;
+  }
+
+  /** Get cache size */
+  get cacheSize() {
+    return this.#cache.size;
+  }
+}
+
+export { MemoryStore, MemoryExtractor, LinkStore, ChangelogStore, LAYERS, tokenize, ngramSimilarity, keywordScore, EmbeddingProvider, cosineSimilarity };

@@ -1,0 +1,44 @@
+[
+  {
+    "id": "ed2b0567-333f-42cf-9112-31c6e2c6ec4e",
+    "content": "I love JavaScript",
+    "layer": "core",
+    "tags": [
+      "lang"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1776359605377,
+    "accessedAt": 1776359605377,
+    "accessCount": 0,
+    "hash": "dcbd5d8eb39a8a0d"
+  },
+  {
+    "id": "46c9dd1d-8fe4-4ec9-9b9f-c2d72d5320ac",
+    "content": "Python is great for ML",
+    "layer": "core",
+    "tags": [
+      "lang"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1776359605378,
+    "accessedAt": 1776359605378,
+    "accessCount": 0,
+    "hash": "79850f3dd53429f9"
+  },
+  {
+    "id": "29e56989-bb89-420c-bedf-706f89bfbf50",
+    "content": "Rust is fast and safe",
+    "layer": "core",
+    "tags": [
+      "lang"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1776359605379,
+    "accessedAt": 1776359605379,
+    "accessCount": 0,
+    "hash": "57d3cfa0332beb09"
+  }
+]

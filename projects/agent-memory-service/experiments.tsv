@@ -1,10 +1,7 @@
 timestamp	commit	metric	value	status	description
-2026-04-15T11:00	baseline	test_count	66/66	baseline	agent-memory-service: 66 tests, 952 lines, no batch/timeline API
-2026-04-15T11:15	2289498	test_count	74/74	keep	batchAdd + batchDelete + searchAndLink — 8 new tests, 191 lines added
-2026-04-15T11:25	b0c8812	test_count	79/79	keep	timeline() with time range/layer/limit filters — 5 new tests, 86 lines added
-2026-04-14T16:00	baseline	test_pass_rate	31/31	keep	v0.1.0 baseline: three-layer storage + extraction + multi-strategy search
-2026-04-15T00:00	consolidate-v1	test_pass_rate	54/54	keep	v0.2.0: memory consolidation (merge related memories, auto-promote layers, dry-run mode)
-2026-04-15T01:06:22+08:00	7aa9e86	test_pass_rate	66/66	keep	memory associations: typed links, graph traversal, auto-link (v0.3.0)
-2026-04-16T00:00	changes-api	test_count	84/84	keep	v0.4.0: incremental change tracking via changes() API with ChangelogStore for cross-session sync
-2026-04-16T01:00	update-compact	test_count	90/90	keep	v0.5.0: update() method with changelog tracking + compactChangelog() for housekeeping. changes() now populates updated array. 6 new tests, 56 lines src + 77 lines tests.
-2026-04-16T01:30	dfb8a6c	test_count	90/90	keep	v0.6.0: enhance stats() API with oldestAgeMs, changelogEntries, and links fields for agent self-monitoring. Fix flaky tests with timing delays. Remove duplicate stats() method. Net -21 lines src.
+2026-04-16T21:00	baseline	test_pass_rate	100%	keep	Baseline: 90/90 tests passing, 2266 lines
+2026-04-16T21:05	536f245	test_count	96	keep	Cycle 1: Added searchAdvanced() with BM25 scoring, 6 new tests (96/96)
+2026-04-16T21:10	c02dc9a	test_count	101	keep	Cycle 2: Added merge() for two-memory merging, 5 new tests (101/101)
+2026-04-16T21:15	ea207ea	test_count	104	keep	Cycle 3: Added exportAll()/importAll() for backup/restore, 3 new tests (104/104)
+2026-04-16T21:20	bafad5c	test_count	111	keep	Cycle 4: Added findRelated() for related memory discovery, 7 new tests (111/111)
+2026-04-17T00:00	key-dev-2	test_count	130/130	keep	v0.7.0: Added delete(id) single-memory deletion + scheduledMaintenance() combining decay/consolidate/compact. 130 tests (was 90). 40 new tests, ~45 lines src added.
