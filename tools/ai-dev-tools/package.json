@@ -1,0 +1,37 @@
+{
+  "name": "ai-dev-tools",
+  "version": "1.0.0",
+  "description": "AI开发效率工具集 - 提示词管理、模型对比、任务生成、代码分析",
+  "type": "module",
+  "main": "lib/index.js",
+  "bin": {
+    "aid": "./bin/aid.js"
+  },
+  "scripts": {
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "lint": "eslint lib commands",
+    "dev": "node bin/aid.js"
+  },
+  "keywords": [
+    "ai",
+    "cli",
+    "developer-tools",
+    "prompt-engineering",
+    "productivity"
+  ],
+  "author": "OpenClaw",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.0.0",
+    "conf": "^12.0.0",
+    "fs-extra": "^11.2.0",
+    "inquirer": "^9.2.15",
+    "marked": "^12.0.0",
+    "marked-terminal": "^7.0.0",
+    "ora": "^8.0.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

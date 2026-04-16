@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edge Agent Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .log-container {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .log-line {
+            padding: 2px 8px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .log-line:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        .log-out { color: #10b981; }
+        .log-err { color: #ef4444; }
+        .status-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-running { background: #10b98120; color: #10b981; }
+        .status-stopped { background: #6b728020; color: #6b7280; }
+        .status-error { background: #ef444420; color: #ef4444; }
+        .status-starting { background: #f59e0b20; color: #f59e0b; }
+        .status-stopping { background: #f59e0b20; color: #f59e0b; }
+        .chart-container {
+            position: relative;
+            height: 200px;
+        }
+        .agent-card {
+            transition: all 0.2s;
+        }
+        .agent-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-6">
+        <!-- Header -->
+        <header class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-white flex items-center gap-3">
+                        <span>🎛️</span>
+                        Edge Agent Dashboard
+                    </h1>
+                    <p class="text-gray-400 mt-1">实时监控和管理边缘AI Agent</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div id="connection-status" class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+                        <span class="text-sm text-gray-400">连接中...</span>
+                    </div>
+                    <button onclick="showAddAgentModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2">
+                        <span>+</span> 添加Agent
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Metrics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-gray-800 rounded-lg p-4">
+                <div class="text-gray-400 text-sm mb-1">CPU使用率</div>
+                <div class="text-2xl font-bold text-white" id="cpu-value">--%</div>
+                <div class="h-2 bg-gray-700 rounded-full mt-2">
+                    <div class="h-2 bg-blue-500 rounded-full transition-all duration-300" id="cpu-bar" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-4">
+                <div class="text-gray-400 text-sm mb-1">内存使用</div>
+                <div class="text-2xl font-bold text-white" id="memory-value">--%</div>
+                <div class="h-2 bg-gray-700 rounded-full mt-2">
+                    <div class="h-2 bg-green-500 rounded-full transition-all duration-300" id="memory-bar" style="width: 0%"></div>
+                </div>
+                <div class="text-xs text-gray-500 mt-1" id="memory-detail">-- / -- MB</div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-4">
+                <div class="text-gray-400 text-sm mb-1">网络发送</div>
+                <div class="text-2xl font-bold text-white" id="network-sent">-- MB/s</div>
+                <div class="text-xs text-gray-500 mt-1">最近1秒</div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-4">
+                <div class="text-gray-400 text-sm mb-1">网络接收</div>
+                <div class="text-2xl font-bold text-white" id="network-recv">-- MB/s</div>
+                <div class="text-xs text-gray-500 mt-1">最近1秒</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+            <div class="bg-gray-800 rounded-lg p-4">
+                <h3 class="text-lg font-semibold text-white mb-4">CPU & 内存趋势</h3>
+                <div class="chart-container">
+                    <canvas id="resource-chart"></canvas>
+                </div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-4">
+                <h3 class="text-lg font-semibold text-white mb-4">网络流量</h3>
+                <div class="chart-container">
+                    <canvas id="network-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agents Grid -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white">Agents</h2>
+                <span class="text-gray-400 text-sm" id="agent-count">0 个Agent</span>
+            </div>
+            <div id="agents-grid" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                <!-- Agent cards will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- Log Viewer -->
+        <div class="bg-gray-800 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-white">日志查看器</h2>
+                <div class="flex items-center gap-4">
+                    <select id="log-agent-select" class="bg-gray-700 text-white rounded px-3 py-1 text-sm">
+                        <option value="">选择Agent...</option>
+                    </select>
+                    <button onclick="clearLogs()" class="text-gray-400 hover:text-white text-sm">清空</button>
+                </div>
+            </div>
+            <div id="log-viewer" class="log-container bg-gray-900 rounded-lg p-4 h-64 overflow-y-auto">
+                <div class="text-gray-500 text-center py-8">选择一个Agent查看日志</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Agent Modal -->
+    <div id="add-agent-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-lg p-6 w-full max-w-lg mx-4">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-white">添加新Agent</h3>
+                <button onclick="hideAddAgentModal()" class="text-gray-400 hover:text-white">✕</button>
+            </div>
+            <form id="add-agent-form" class="space-y-4">
+                <div>
+                    <label class="block text-gray-300 text-sm mb-1">Agent ID</label>
+                    <input type="text" id="agent-id" required class="w-full bg-gray-700 text-white rounded px-3 py-2" placeholder="my-agent">
+                </div>
+                <div>
+                    <label class="block text-gray-300 text-sm mb-1">名称</label>
+                    <input type="text" id="agent-name" required class="w-full bg-gray-700 text-white rounded px-3 py-2" placeholder="My Agent">
+                </div>
+                <div>
+                    <label class="block text-gray-300 text-sm mb-1">启动命令</label>
+                    <input type="text" id="agent-command" required class="w-full bg-gray-700 text-white rounded px-3 py-2" placeholder="python agent.py">
+                </div>
+                <div>
+                    <label class="block text-gray-300 text-sm mb-1">工作目录（可选）</label>
+                    <input type="text" id="agent-workdir" class="w-full bg-gray-700 text-white rounded px-3 py-2" placeholder="/path/to/agent">
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="agent-autostart" class="rounded">
+                    <label class="text-gray-300 text-sm">自动启动</label>
+                </div>
+                <div class="flex justify-end gap-2 mt-6">
+                    <button type="button" onclick="hideAddAgentModal()" class="px-4 py-2 text-gray-300 hover:text-white">取消</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">创建</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

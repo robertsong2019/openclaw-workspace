@@ -1,0 +1,13 @@
+name: chinese-text-processing
+description: Process mixed Chinese-English text
+
+steps:
+  # 1. 清理文本
+  - tool: text.clean
+    config:
+      trim_whitespace: true
+      
+  # 2. 统计信息（包含中文统计）
+  - tool: text.stats
+    config:
+      output_format: json

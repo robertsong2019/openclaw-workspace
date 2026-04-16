@@ -1,0 +1,13 @@
+name: basic-text-processing
+description: Basic text cleaning and statistics
+
+steps:
+  - tool: text.clean
+    config:
+      lowercase: true
+      remove_special_chars: true
+      trim_whitespace: true
+      
+  - tool: text.stats
+    config:
+      output_format: json

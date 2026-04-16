@@ -1,0 +1,162 @@
+#!/usr/bin/env bash
+# skill-test — Lightweight validator & tester for OpenClaw skills
+# Usage: skill-test [path] [--fix] [--verbose]
+
+set -uo pipefail
+
+SKILL_DIR="${1:-.}"
+[[ "${1:-}" == "--fix" || "${1:-}" == "--verbose" ]] && SKILL_DIR="."
+FIX=false
+VERBOSE=false
+
+for arg in "$@"; do
+  case "$arg" in
+    --fix) FIX=true ;;
+    --verbose) VERBOSE=true ;;
+  esac
+done
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+PASS=0
+FAIL=0
+WARN=0
+
+log_pass() { ((PASS++)); echo -e "  ${GREEN}✓${NC} $1"; }
+log_fail() { ((FAIL++)); echo -e "  ${RED}✗${NC} $1"; }
+log_warn() { ((WARN++)); echo -e "  ${YELLOW}⚠${NC} $1"; }
+log_info() { $VERBOSE && echo -e "  ${CYAN}→${NC} $1"; }
+
+# Resolve to absolute path
+SKILL_DIR="$(cd "$SKILL_DIR" && pwd)"
+SKILL_MD="$SKILL_DIR/SKILL.md"
+
+echo -e "${CYAN}━━━ skill-test ━━━${NC}"
+echo "  Testing: $SKILL_DIR"
+echo ""
+
+# ─── Checks ───
+
+# 1. SKILL.md exists
+if [[ -f "$SKILL_MD" ]]; then
+  log_pass "SKILL.md exists"
+else
+  log_fail "SKILL.md missing — every skill must have one"
+  echo ""
+  echo -e "${RED}Cannot continue without SKILL.md${NC}"
+  exit 1
+fi
+
+SKILL_CONTENT="$(cat "$SKILL_MD")"
+SKILL_LINES="$(wc -l < "$SKILL_MD")"
+
+# 2. Has a title (H1)
+if echo "$SKILL_CONTENT" | grep -q '^# '; then
+  TITLE="$(echo "$SKILL_CONTENT" | grep '^# ' | head -1 | sed 's/^# //')"
+  log_pass "Has title: $TITLE"
+else
+  log_fail "Missing H1 title in SKILL.md"
+fi
+
+# 3. Has description or trigger section
+if echo "$SKILL_CONTENT" | grep -qiE '(description|when to use|activate|trigger)'; then
+  log_pass "Has trigger/description section"
+else
+  log_warn "No clear trigger/description — agents won't know when to activate"
+fi
+
+# 4. Reasonable length
+if [[ "$SKILL_LINES" -lt 5 ]]; then
+  log_fail "SKILL.md too short ($SKILL_LINES lines) — needs meaningful content"
+elif [[ "$SKILL_LINES" -gt 500 ]]; then
+  log_warn "SKILL.md is long ($SKILL_LINES lines) — consider splitting into reference files"
+else
+  log_pass "Reasonable length ($SKILL_LINES lines)"
+fi
+
+# 5. Check for common anti-patterns
+if echo "$SKILL_CONTENT" | grep -qiE '(rm -rf|sudo rm|mkfs|dd if=|> /dev/sd)'; then
+  log_fail "Contains dangerous commands (rm -rf, dd, etc.)"
+else
+  log_pass "No dangerous command patterns"
+fi
+
+if echo "$SKILL_CONTENT" | grep -qiE '(curl.*\|.*sh|wget.*\|.*bash)'; then
+  log_warn "Contains pipe-to-shell pattern (curl|sh) — security risk"
+fi
+
+# 6. References to local files exist
+REFS=$(echo "$SKILL_CONTENT" | grep -oE '[A-Za-z0-9_/-]+\.(md|sh|py|js|ts|json|yaml|yml)' | sort -u 2>/dev/null || true)
+for ref in $REFS; do
+  # Skip common non-local refs
+  [[ "$ref" =~ ^/(usr|etc|tmp) ]] && continue
+  [[ "$ref" == "SKILL.md" ]] && continue
+  [[ "$ref" =~ YYYY|MM|DD|TODO|FIXME ]] && continue
+  
+  REF_PATH="$SKILL_DIR/$ref"
+  if [[ -f "$REF_PATH" ]]; then
+    log_info "Referenced file exists: $ref"
+  else
+    log_warn "Referenced file not found: $ref"
+  fi
+done
+
+# 7. Scripts are executable
+SCRIPTS=$(find "$SKILL_DIR" -name "*.sh" -not -path "*/node_modules/*" 2>/dev/null || true)
+for script in $SCRIPTS; do
+  if [[ -x "$script" ]]; then
+    log_pass "Script executable: $(basename "$script")"
+  else
+    if $FIX; then
+      chmod +x "$script"
+      log_pass "Fixed permissions: $(basename "$script")"
+    else
+      log_warn "Script not executable: $(basename "$script") (use --fix)"
+    fi
+  fi
+done
+
+# 8. Shellcheck scripts (if available)
+if command -v shellcheck &>/dev/null; then
+  for script in $SCRIPTS; do
+    if shellcheck "$script" 2>/dev/null; then
+      log_pass "shellcheck clean: $(basename "$script")"
+    else
+      SC_ISSUES=$(shellcheck "$script" 2>&1 | grep -c '^' || true)
+      log_warn "shellcheck issues ($SC_ISSUES): $(basename "$script")"
+    fi
+  done
+else
+  log_info "shellcheck not installed — skipping script linting"
+fi
+
+# 9. No hardcoded secrets
+if echo "$SKILL_CONTENT" | grep -qiE '(sk-[a-zA-Z0-9]{20,}|ghp_[a-zA-Z0-9]{20,}|AKIA[0-9A-Z]{16}|-----BEGIN.*PRIVATE KEY-----)'; then
+  log_fail "Possible hardcoded secret/API key detected"
+else
+  log_pass "No hardcoded secrets detected"
+fi
+
+# 10. Has usage examples
+if echo "$SKILL_CONTENT" | grep -qiE '(usage|example|how to use|``` )'; then
+  log_pass "Contains usage examples"
+else
+  log_warn "No usage examples — add examples for discoverability"
+fi
+
+# ─── Summary ───
+echo ""
+echo -e "${CYAN}━━━ Results ━━━${NC}"
+echo -e "  ${GREEN}Pass: $PASS${NC}  ${RED}Fail: $FAIL${NC}  ${YELLOW}Warn: $WARN${NC}"
+
+if [[ "$FAIL" -eq 0 ]]; then
+  echo -e "  ${GREEN}Skill looks good! ✓${NC}"
+  exit 0
+else
+  echo -e "  ${RED}Fix $FAIL issue(s) before publishing${NC}"
+  exit 1
+fi

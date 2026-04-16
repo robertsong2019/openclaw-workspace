@@ -1,0 +1,12 @@
+# Code Poetry Generator - Requirements
+# This skill uses only Python standard library modules.
+# No external dependencies required.
+
+# Standard library modules used:
+# - ast (Python AST parsing)
+# - json (JSON serialization)
+# - sys (system operations)
+# - pathlib (path handling)
+# - subprocess (running the analyzer)
+# - argparse (CLI argument parsing)
+# - unittest (testing)

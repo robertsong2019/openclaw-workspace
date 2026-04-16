@@ -1,0 +1,24 @@
+name: tokenize-pipeline
+description: Tokenize text and calculate statistics
+
+steps:
+  # 1. 清理文本
+  - tool: text.clean
+    config:
+      lowercase: true
+      remove_special_chars: true
+      
+  # 2. 分词
+  - tool: text.tokenize
+    config:
+      method: word
+      
+  # 3. 过滤短词
+  - tool: data.filter
+    config:
+      min_length: 3
+      
+  # 4. 转换为 JSON 数组
+  - tool: data.transform
+    config:
+      format: json

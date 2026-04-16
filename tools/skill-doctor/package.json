@@ -1,0 +1,8 @@
+{
+  "name": "skill-doctor",
+  "version": "1.0.0",
+  "description": "Diagnose and health-check OpenClaw Agent Skills",
+  "bin": { "skill-doctor": "./index.js" },
+  "keywords": ["openclaw", "agent", "skill", "lint", "diagnostic"],
+  "license": "MIT"
+}

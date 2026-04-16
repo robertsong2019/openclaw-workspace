@@ -1,0 +1,32 @@
+{
+  "name": "agent-trust-network",
+  "version": "1.0.0",
+  "description": "Multi-Agent trust network simulator with PageRank-style trust propagation",
+  "main": "dist/trust-network.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "ts-node src/server.ts",
+    "serve": "npm run build && node dist/src/server.js",
+    "demo": "ts-node demo.ts",
+    "test": "ts-node test.ts"
+  },
+  "keywords": [
+    "agent",
+    "trust",
+    "network",
+    "pagerank",
+    "simulation",
+    "decentralized"
+  ],
+  "author": "Robert Song",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@types/express": "^5.0.6",
+    "express": "^5.2.1"
+  }
+}

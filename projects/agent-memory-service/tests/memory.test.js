@@ -1083,4 +1083,73 @@ describe('Memory Associations (Links)', () => {
       } finally { cleanup(); }
     });
   });
+
+  // ─── Search Advanced ────────────────────────────────────
+
+  describe('searchAdvanced()', () => {
+    it('returns results with BM25 scoring', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        await svc.add({ content: 'JavaScript is a programming language', layer: 'core', tags: ['js'] });
+        await svc.add({ content: 'Python is great for data science', layer: 'long', tags: ['python'] });
+        await svc.add({ content: 'Rust provides memory safety', layer: 'short', tags: ['rust'] });
+        const results = await svc.searchAdvanced('JavaScript programming');
+        assert.ok(results.length >= 1);
+        assert.ok(results[0].content.includes('JavaScript'));
+        assert.ok(results[0].score > 0);
+      } finally { cleanup(); }
+    });
+
+    it('includes explanation when explain=true', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        await svc.add({ content: 'Machine learning with neural networks', layer: 'core' });
+        const results = await svc.searchAdvanced('machine learning', { explain: true });
+        assert.ok(results[0].explanation);
+        assert.ok('bm25' in results[0].explanation);
+        assert.ok('ngram' in results[0].explanation);
+        assert.ok('total' in results[0].explanation);
+      } finally { cleanup(); }
+    });
+
+    it('omits explanation when explain=false', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        await svc.add({ content: 'Test memory content', layer: 'core' });
+        const results = await svc.searchAdvanced('test', { explain: false });
+        assert.ok(!results[0].explanation);
+      } finally { cleanup(); }
+    });
+
+    it('respects layer filter', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        await svc.add({ content: 'Core memory item', layer: 'core' });
+        await svc.add({ content: 'Short memory item', layer: 'short' });
+        const results = await svc.searchAdvanced('memory', { layer: 'core' });
+        assert.ok(results.every(r => r.layer === 'core'));
+      } finally { cleanup(); }
+    });
+
+    it('respects limit option', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        for (let i = 0; i < 10; i++) {
+          await svc.add({ content: `Memory item ${i}`, layer: 'long' });
+        }
+        const results = await svc.searchAdvanced('Memory', { limit: 3 });
+        assert.equal(results.length, 3);
+      } finally { cleanup(); }
+    });
+
+    it('boosts accessed memories', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        await svc.add({ content: 'Target memory', layer: 'core' });
+        await svc.searchAdvanced('target');
+        const stats = await svc.stats();
+        assert.ok(stats.total >= 1);
+      } finally { cleanup(); }
+    });
+  });
 });

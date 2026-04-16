@@ -1,0 +1,12 @@
+{
+  "name": "agent-memory-kit",
+  "version": "1.0.0",
+  "description": "CLI for managing and searching AI agent memory files, session logs, and workspace context",
+  "bin": {
+    "amk": "./cli.mjs"
+  },
+  "type": "module",
+  "dependencies": {},
+  "keywords": ["ai-agent", "memory", "cli", "openclaw"],
+  "license": "MIT"
+}

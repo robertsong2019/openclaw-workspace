@@ -677,6 +677,86 @@ export class MemoryService {
   }
 
   /**
+   * Advanced search with BM25-inspired scoring and result explanations
+   * @param {string} query
+   * @param {{limit?: number, layer?: MemoryLayer, explain?: boolean}} opts
+   * @returns {Promise<Array<Memory & {score: number, explanation?: object}>>}
+   */
+  async searchAdvanced(query, opts = {}) {
+    await this.#ensureLoaded();
+    const limit = opts.limit || 5;
+    const explain = opts.explain !== false;
+    let candidates = this.#store.all();
+
+    if (opts.layer) {
+      candidates = candidates.filter(m => m.layer === opts.layer);
+    }
+    candidates = candidates.filter(m => m.weight >= LAYERS[m.layer].minWeight);
+
+    // Precompute IDF across corpus
+    const N = candidates.length;
+    const queryTokens = tokenize(query);
+    const df = {};
+    for (const t of queryTokens) {
+      df[t] = 0;
+      for (const m of candidates) {
+        if (tokenize(m.content).includes(t)) df[t]++;
+      }
+    }
+
+    const avgDl = candidates.reduce((s, m) => s + tokenize(m.content).length, 0) / (N || 1);
+    const k1 = 1.2, b = 0.75; // BM25 params
+
+    const scored = candidates.map(m => {
+      const dl = tokenize(m.content).length;
+      const parts = { bm25: 0, ngram: 0, recency: 0, weight: 0, layer: 0 };
+
+      // BM25 term scoring
+      for (const t of queryTokens) {
+        const tf = tokenize(m.content).filter(c => c === t).length;
+        const idf = Math.log((N - (df[t] || 0) + 0.5) / ((df[t] || 0) + 0.5) + 1);
+        const tfNorm = (tf * (k1 + 1)) / (tf + k1 * (1 - b + b * dl / (avgDl || 1)));
+        parts.bm25 += idf * tfNorm;
+      }
+
+      // N-gram similarity
+      parts.ngram = ngramSimilarity(query, m.content) * 0.3;
+
+      // Recency (prefer recent)
+      const ageDays = daysSince(m.createdAt);
+      parts.recency = Math.exp(-0.01 * ageDays);
+
+      // Memory weight
+      parts.weight = m.weight;
+
+      // Layer priority
+      parts.layer = { core: 1.5, long: 1.0, short: 0.7 }[m.layer];
+
+      const score = (parts.bm25 * 0.4 + parts.ngram) * parts.recency * parts.weight * parts.layer;
+
+      const result = { ...m, score };
+      if (explain) {
+        result.explanation = { ...parts, total: score };
+      }
+      return result;
+    });
+
+    scored.sort((a, b) => b.score - a.score);
+    const results = scored.slice(0, limit);
+
+    for (const m of results) {
+      const original = this.#store.get(m.id);
+      if (original) {
+        original.accessedAt = now();
+        original.accessCount++;
+        original.weight = Math.min(MAX_WEIGHT, original.weight + BOOST_AMOUNT);
+      }
+    }
+    await this.#store.save();
+    return results;
+  }
+
+  /**
    * Apply decay to all memories
    * @returns {{decayed: number, removed: number}}
    */

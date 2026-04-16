@@ -1,0 +1,254 @@
+"""
+Agent Memory Graph — AI Agent 的记忆网络
+
+概念演示：用知识图谱管理 Agent 的长期记忆。
+节点 = 概念/实体/事件，边 = 关系。
+支持：添加记忆、语义召回、遗忘衰减、摘要压缩。
+
+Usage:
+    python memory_graph.py
+
+依赖：仅需 Python 标准库（sqlite3 + json + math）
+"""
+
+import sqlite3
+import json
+import math
+import time
+import uuid
+from dataclasses import dataclass, field
+from typing import Optional
+from collections import defaultdict
+
+# ── 数据模型 ──────────────────────────────────────────────
+
+@dataclass
+class Node:
+    id: str
+    label: str           # 简短描述
+    kind: str            # fact | event | person | concept | skill
+    data: dict = field(default_factory=dict)
+    created: float = 0.0
+    accessed: float = 0.0
+    weight: float = 1.0  # 记忆强度 0~1
+
+@dataclass
+class Edge:
+    source: str
+    target: str
+    relation: str        # e.g. "likes", "works_on", "caused"
+    weight: float = 1.0
+
+# ── 记忆图谱 ──────────────────────────────────────────────
+
+class MemoryGraph:
+    """基于 SQLite 的轻量知识图谱，模拟人类长期记忆。"""
+
+    # 遗忘曲线参数（Ebbinghaus）
+    DECAY_RATE = 0.3          # 衰减速率
+    ACCESS_BOOST = 0.4        # 每次访问恢复量
+    MIN_WEIGHT = 0.05         # 低于此阈值视为"遗忘"
+
+    def __init__(self, db_path: str = ":memory:"):
+        self.conn = sqlite3.connect(db_path)
+        self.conn.row_factory = sqlite3.Row
+        self._init_schema()
+
+    def _init_schema(self):
+        self.conn.executescript("""
+            CREATE TABLE IF NOT EXISTS nodes (
+                id TEXT PRIMARY KEY,
+                label TEXT,
+                kind TEXT,
+                data TEXT DEFAULT '{}',
+                created REAL,
+                accessed REAL,
+                weight REAL DEFAULT 1.0
+            );
+            CREATE TABLE IF NOT EXISTS edges (
+                source TEXT,
+                target TEXT,
+                relation TEXT,
+                weight REAL DEFAULT 1.0,
+                PRIMARY KEY (source, target, relation)
+            );
+        """)
+
+    def add(self, label: str, kind: str = "fact", data: dict = None) -> Node:
+        """添加一个记忆节点。"""
+        node = Node(
+            id=uuid.uuid4().hex[:12],
+            label=label, kind=kind,
+            data=data or {},
+            created=time.time(), accessed=time.time(), weight=1.0
+        )
+        self.conn.execute(
+            "INSERT INTO nodes VALUES (?,?,?,?,?,?,?)",
+            (node.id, node.label, node.kind, json.dumps(node.data),
+             node.created, node.accessed, node.weight)
+        )
+        self.conn.commit()
+        return node
+
+    def link(self, source_id: str, target_id: str, relation: str, weight: float = 1.0):
+        """连接两个节点。"""
+        self.conn.execute(
+            "INSERT OR REPLACE INTO edges VALUES (?,?,?,?)",
+            (source_id, target_id, relation, weight)
+        )
+        self.conn.commit()
+
+    def recall(self, query: str, limit: int = 5) -> list[Node]:
+        """按关键词召回记忆，访问过的记忆强度增加。"""
+        now = time.time()
+        rows = self.conn.execute(
+            "SELECT * FROM nodes WHERE label LIKE ? ORDER BY weight DESC LIMIT ?",
+            (f"%{query}%", limit)
+        ).fetchall()
+
+        results = []
+        for r in rows:
+            # 应用遗忘衰减
+            elapsed_days = (now - r["accessed"]) / 86400
+            decayed = r["weight"] * math.exp(-self.DECAY_RATE * elapsed_days)
+            boosted = min(1.0, decayed + self.ACCESS_BOOST)
+
+            self.conn.execute(
+                "UPDATE nodes SET weight=?, accessed=? WHERE id=?",
+                (boosted, now, r["id"])
+            )
+            results.append(Node(
+                id=r["id"], label=r["label"], kind=r["kind"],
+                data=json.loads(r["data"]),
+                created=r["created"], accessed=now, weight=boosted
+            ))
+        self.conn.commit()
+        return results
+
+    def decay_all(self):
+        """对所有记忆应用遗忘衰减（模拟时间流逝）。"""
+        now = time.time()
+        rows = self.conn.execute("SELECT id, accessed, weight FROM nodes").fetchall()
+        for r in rows:
+            elapsed_days = (now - r["accessed"]) / 86400
+            new_w = max(0.0, r["weight"] * math.exp(-self.DECAY_RATE * elapsed_days))
+            self.conn.execute("UPDATE nodes SET weight=? WHERE id=?", (new_w, r["id"]))
+        # 清除已遗忘的
+        self.conn.execute("DELETE FROM nodes WHERE weight < ?", (self.MIN_WEIGHT,))
+        self.conn.commit()
+
+    def neighbors(self, node_id: str, depth: int = 1) -> list[Node]:
+        """获取关联记忆（BFS 遍历）。"""
+        visited = {node_id}
+        frontier = [node_id]
+        results = []
+        for _ in range(depth):
+            next_frontier = []
+            for nid in frontier:
+                rows = self.conn.execute(
+                    "SELECT n.* FROM nodes n JOIN edges e ON n.id=e.target WHERE e.source=?",
+                    (nid,)
+                ).fetchall()
+                for r in rows:
+                    if r["id"] not in visited:
+                        visited.add(r["id"])
+                        results.append(Node(
+                            r["id"], r["label"], r["kind"],
+                            json.loads(r["data"]), r["created"], r["accessed"], r["weight"]
+                        ))
+                        next_frontier.append(r["id"])
+            frontier = next_frontier
+        return results
+
+    def stats(self) -> dict:
+        """记忆网络统计。"""
+        n = self.conn.execute("SELECT COUNT(*) c FROM nodes").fetchone()["c"]
+        e = self.conn.execute("SELECT COUNT(*) c FROM edges").fetchone()["c"]
+        avg_w = self.conn.execute("SELECT AVG(weight) w FROM nodes").fetchone()["w"] or 0
+        kinds = self.conn.execute(
+            "SELECT kind, COUNT(*) c FROM nodes GROUP BY kind"
+        ).fetchall()
+        return {
+            "nodes": n, "edges": e,
+            "avg_weight": round(avg_w, 3),
+            "by_kind": {r["kind"]: r["c"] for r in kinds}
+        }
+
+    def visualize_ascii(self) -> str:
+        """简单的 ASCII 可视化。"""
+        lines = ["📊 Memory Network:"]
+        nodes = self.conn.execute(
+            "SELECT * FROM nodes ORDER BY weight DESC LIMIT 15"
+        ).fetchall()
+        for n in nodes:
+            bar = "█" * int(n["weight"] * 10)
+            lines.append(f"  [{n['kind']:7s}] {n['label'][:30]:30s} {bar} {n['weight']:.1f}")
+            edges = self.conn.execute(
+                "SELECT relation, target FROM edges WHERE source=?", (n["id"],)
+            ).fetchall()
+            for e in edges:
+                tgt = self.conn.execute(
+                    "SELECT label FROM nodes WHERE id=?", (e["target"],)
+                ).fetchone()
+                if tgt:
+                    lines.append(f"    ──{e['relation']}──▶ {tgt['label'][:25]}")
+        return "\n".join(lines)
+
+
+# ── 演示 ──────────────────────────────────────────────────
+
+def demo():
+    print("🧪 Agent Memory Graph Demo\n")
+    mg = MemoryGraph()
+
+    # 添加记忆
+    user = mg.add("罗嵩", "person", {"timezone": "Asia/Shanghai"})
+    catalyst = mg.add("Catalyst - 数字精灵", "person", {"vibe": "sharp & fast"})
+    project = mg.add("OpenClaw Agent", "concept", {"lang": "TypeScript"})
+    python_skill = mg.add("Python 快速原型", "skill")
+    rust_interest = mg.add("Rust 嵌入式AI", "concept")
+
+    # 建立关系
+    mg.link(user.id, catalyst.id, "created")
+    mg.link(user.id, project.id, "works_on")
+    mg.link(catalyst.id, project.id, "assists_with")
+    mg.link(user.id, python_skill.id, "skilled_in")
+    mg.link(user.id, rust_interest.id, "interested_in")
+    mg.link(rust_interest.id, project.id, "relevant_to")
+
+    # 添加一些事件
+    e1 = mg.add("深夜debug session", "event", {"hours": 3})
+    mg.link(e1.id, project.id, "about")
+    mg.link(user.id, e1.id, "experienced")
+
+    print(mg.visualize_ascii())
+    print()
+
+    # 召回
+    print("🔍 Recalling 'Python':")
+    for r in mg.recall("Python"):
+        print(f"  ✓ {r.label} (weight={r.weight:.2f})")
+    print()
+
+    # 关联记忆
+    print(f"🔗 Neighbors of '{user.label}':")
+    for n in mg.neighbors(user.id):
+        print(f"  → {n.label} [{n.kind}]")
+    print()
+
+    # 统计
+    print(f"📈 Stats: {json.dumps(mg.stats(), ensure_ascii=False, indent=2)}")
+
+    # 模拟遗忘
+    print("\n⏳ Simulating 7-day decay...")
+    # 手动模拟：降低 accessed 时间
+    mg.conn.execute("UPDATE nodes SET accessed = accessed - 604800")
+    mg.conn.commit()
+    mg.decay_all()
+    print(mg.visualize_ascii())
+
+    print("\n✅ Done. 这是一个 Agent 记忆管理的概念原型。")
+
+
+if __name__ == "__main__":
+    demo()

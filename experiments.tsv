@@ -1,0 +1,7 @@
+timestamp	commit	metric	value	status	description
+2026-04-14T23:00	03b8745	test_pass_rate	15/15	keep	mcp-server: replace mock read/write/exec with real filesystem ops + sandboxing
+2026-04-14T19:19	-	test_pass_rate	30/30	improve	mcp-server: add schema-validation.test.js (15 new tests for JSON Schema validation of tool inputs)
+2026-04-15T11:25	2289498+b0c8812	test_count	79/79	keep	agent-memory-service: batchAdd/batchDelete/searchAndLink/timeline — 13 new tests (66→79)
+date	project	baseline_tests	baseline_pass	baseline_fail	after_tests	after_pass	after_fail	change	notes
+2026-04-16	better-ralph-core	25	22	3	25	25	0	+3 pass	Fixed IterationContext missing notes field, added to_dict(), fixed get_memory_summary missing iterations_summary
+2026-04-16	catalyst-agent-mesh	68	68	0	83	83	0	+15 tests	Added test_pipeline_executor.py covering PipelineStage, CRUD, statistics, execution

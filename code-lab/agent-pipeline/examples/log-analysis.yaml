@@ -1,0 +1,26 @@
+name: log-analysis
+description: Analyze log files and extract errors/warnings
+
+steps:
+  # 1. 清理文本
+  - tool: text.clean
+    config:
+      trim_whitespace: true
+      
+  # 2. 提取错误和警告信息
+  - tool: agent.extract
+    config:
+      patterns:
+        - "ERROR: (?P<error>.+)"
+        - "WARNING: (?P<warning>.+)"
+        - "\\[(?P<timestamp>\\d{4}-\\d{2}-\\d{2}.*?)\\]"
+        
+  # 3. 过滤空结果
+  - tool: data.filter
+    config:
+      remove_empty: true
+      
+  # 4. 转换为 JSON
+  - tool: data.transform
+    config:
+      format: json

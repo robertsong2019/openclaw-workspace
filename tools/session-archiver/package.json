@@ -1,0 +1,15 @@
+{
+  "name": "session-archiver",
+  "version": "1.0.0",
+  "description": "CLI tool to archive, search, and export OpenClaw agent session histories",
+  "main": "index.js",
+  "bin": {
+    "session-archiver": "./bin/cli.js"
+  },
+  "scripts": {
+    "test": "node --test lib/*.test.js",
+    "start": "node bin/cli.js"
+  },
+  "keywords": ["openclaw", "session", "archive", "cli"],
+  "license": "MIT"
+}

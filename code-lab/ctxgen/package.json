@@ -1,0 +1,11 @@
+{
+  "name": "ctxgen",
+  "version": "0.1.0",
+  "description": "Auto-generate AI-friendly context files for your codebase",
+  "bin": {
+    "ctxgen": "./cli.js"
+  },
+  "files": ["cli.js", "lib/"],
+  "keywords": ["ai", "context", "agents", "cursor", "claude", "code-generator"],
+  "license": "MIT"
+}

@@ -1,0 +1,21 @@
+# Agent Framework Integration Requirements
+# Python dependencies for CrewAI and LangGraph adapters
+
+# Core dependencies (if installing actual frameworks)
+# crewai>=0.28.0
+# langgraph>=0.0.20
+# langchain>=0.1.0
+
+# For current prototype (simulated execution)
+# No external dependencies required - uses only Python stdlib
+
+# Future production dependencies:
+# aiohttp  # For async HTTP requests
+# redis    # For state persistence
+# pydantic # For data validation
+# click    # For CLI tools
+
+# Development dependencies (optional)
+# pytest   # For testing
+# black    # For code formatting
+# mypy     # For type checking

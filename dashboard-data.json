@@ -1,37 +1,36 @@
 {
-  "lastUpdated": "2026-04-14T06:00:00+08:00",
-  "generatedAt": "2026-04-13T22:00:00Z",
+  "lastUpdated": "2026-04-15T22:00:00Z",
+  "generatedAt": "2026-04-16 06:00 CST",
+  "actionRequired": [
+    "tool-development-evening: 1 consecutive error — edit failed in agent-task-cli/features.md",
+    "key-development-3: 1 consecutive error — all models timed out (glm-5.1 + glm-4.7)"
+  ],
+  "activeNow": [
+    { "job": "dashboard-update-morning", "status": "running" }
+  ],
+  "crons": [
+    { "name": "dashboard-update-morning", "schedule": "6:00 AM daily", "lastRun": "2026-04-15T22:00:00Z", "status": "running", "duration": null, "errors": 0 },
+    { "name": "essay-generation-morning", "schedule": "5:00 AM daily", "lastRun": "2026-04-15T21:00:00Z", "status": "ok", "duration": "2.8min", "errors": 0 },
+    { "name": "documentation-morning", "schedule": "4:00 AM daily", "lastRun": "2026-04-15T20:00:00Z", "status": "ok", "duration": "2.2min", "errors": 0 },
+    { "name": "project-testing-morning", "schedule": "3:00 AM daily", "lastRun": "2026-04-15T19:00:00Z", "status": "ok", "duration": "2.5min", "errors": 0 },
+    { "name": "knowledge-organization-morning", "schedule": "2:00 AM daily", "lastRun": "2026-04-15T18:00:00Z", "status": "ok", "duration": "2.1min", "errors": 0 },
+    { "name": "key-development-3", "schedule": "1:00 AM daily", "lastRun": "2026-04-15T17:00:00Z", "status": "error", "duration": "22.3min", "errors": 1, "errorDetail": "All models timed out (glm-5.1 + glm-4.7)" },
+    { "name": "key-development-2", "schedule": "12:00 AM daily", "lastRun": "2026-04-15T16:00:00Z", "status": "ok", "duration": "12.2min", "errors": 0 },
+    { "name": "key-development-1", "schedule": "11:00 PM daily", "lastRun": "2026-04-15T15:00:00Z", "status": "ok", "duration": "10.1min", "errors": 0 },
+    { "name": "tool-development-evening", "schedule": "10:00 PM daily", "lastRun": "2026-04-15T14:00:00Z", "status": "error", "duration": "9.4min", "errors": 1, "errorDetail": "Edit failed in agent-task-cli/features.md" },
+    { "name": "code-lab-evening", "schedule": "9:00 PM daily", "lastRun": "2026-04-15T13:00:00Z", "status": "ok", "duration": "12.3min", "errors": 0 },
+    { "name": "deep-exploration-evening", "schedule": "8:00 PM daily (×2)", "lastRun": "2026-04-15T12:00:00Z", "status": "ok", "duration": "10.5min", "errors": 0 },
+    { "name": "github-creative-evening", "schedule": "7:00 PM daily", "lastRun": "2026-04-15T11:00:00Z", "status": "ok", "duration": "0.8min", "errors": 0 },
+    { "name": "github-trending-daily", "schedule": "7:00 AM daily", "lastRun": "2026-04-14T23:00:00Z", "status": "ok", "duration": "0.8min", "errors": 0 }
+  ],
   "summary": {
     "totalCronJobs": 14,
-    "activeJobs": 14,
-    "healthyJobs": 10,
-    "errorJobs": 4,
-    "currentSessions": 1,
-    "currentModel": "zai/glm-5.1",
-    "contextUsage": "14%",
-    "healthRate": "71%"
-  },
-  "cronJobs": [
-    {"name": "dashboard-update-morning", "schedule": "0 6 * * *", "status": "running", "lastRun": "now", "consecutiveErrors": 0},
-    {"name": "github-trending-daily", "schedule": "0 7 * * * Asia/Shanghai", "status": "error", "lastRun": "22h ago", "consecutiveErrors": 6, "error": "Missing Feishu delivery target"},
-    {"name": "github-creative-evening", "schedule": "0 19 * * *", "status": "error", "lastRun": "11h ago", "consecutiveErrors": 1, "error": "API rate limit + timeout"},
-    {"name": "deep-exploration-evening", "schedule": "0 20 * * *", "status": "error", "lastRun": "10h ago", "consecutiveErrors": 1, "error": "API rate limit + timeout"},
-    {"name": "deep-exploration-evening (UTC)", "schedule": "0 12 * * * UTC", "status": "ok", "lastRun": "10h ago", "lastDuration": "15min", "consecutiveErrors": 0},
-    {"name": "code-lab-evening", "schedule": "0 21 * * *", "status": "error", "lastRun": "9h ago", "consecutiveErrors": 1, "error": "All models timed out"},
-    {"name": "tool-development-evening", "schedule": "0 22 * * *", "status": "ok", "lastRun": "8h ago", "lastDuration": "7min", "consecutiveErrors": 0},
-    {"name": "key-development-1", "schedule": "0 23 * * *", "status": "ok", "lastRun": "7h ago", "lastDuration": "2min", "consecutiveErrors": 0},
-    {"name": "key-development-2", "schedule": "0 0 * * *", "status": "ok", "lastRun": "6h ago", "lastDuration": "1min", "consecutiveErrors": 0},
-    {"name": "key-development-3", "schedule": "0 1 * * *", "status": "ok", "lastRun": "5h ago", "lastDuration": "34sec", "consecutiveErrors": 0},
-    {"name": "knowledge-organization-morning", "schedule": "0 2 * * *", "status": "ok", "lastRun": "4h ago", "lastDuration": "45sec", "consecutiveErrors": 0},
-    {"name": "project-testing-morning", "schedule": "0 3 * * *", "status": "ok", "lastRun": "3h ago", "lastDuration": "3min", "consecutiveErrors": 0},
-    {"name": "documentation-morning", "schedule": "0 4 * * *", "status": "ok", "lastRun": "2h ago", "lastDuration": "2min", "consecutiveErrors": 0},
-    {"name": "essay-generation-morning", "schedule": "0 5 * * *", "status": "ok", "lastRun": "1h ago", "lastDuration": "2min", "consecutiveErrors": 0}
-  ],
-  "system": {
-    "os": "Linux 6.8.0-71-generic (x64)",
-    "node": "v22.22.1",
-    "openclaw": "2026.3.8",
-    "host": "VM-0-5-ubuntu",
-    "timezone": "Asia/Shanghai"
+    "enabledJobs": 14,
+    "allHealthy": false,
+    "consecutiveErrors": 2,
+    "issues": [
+      "tool-development-evening: 1 error — edit failed in features.md",
+      "key-development-3: 1 error — LLM timeout on both models"
+    ]
   }
 }

@@ -1,0 +1,12 @@
+{
+  "name": "context-forge",
+  "version": "1.0.0",
+  "description": "Analyze your codebase and generate optimal context files for AI coding agents",
+  "type": "module",
+  "bin": {
+    "context-forge": "./context-forge.mjs"
+  },
+  "files": ["context-forge.mjs", "README.md"],
+  "keywords": ["ai", "agents", "cursor", "copilot", "claude", "context", "codebase-analysis"],
+  "license": "MIT"
+}

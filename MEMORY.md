@@ -35,11 +35,11 @@ AI Agent 协议与通信 — MCP+A2A双栈架构，Agent Memory 服务化，Agen
 
 ---
 
-## Next Actions (Updated 2026-04-15)
+## Next Actions (Updated 2026-04-16)
 
 ### High Priority (本周完成)
-- [ ] **实现 OpenClaw MCP Server** — 研究完成（见 [catalyst-research/exploration-notes/2026-04-15-mcp-server-implementation.md](catalyst-research/exploration-notes/2026-04-15-mcp-server-implementation.md)）。下一步：审计 lab/mcp-client-explorer 代码 → STDIO 模式 MVP（web_search, memory_search, exec 三个工具）→ MCP Inspector 验证 → Streamable HTTP transport + OAuth
-- [ ] **Agent Memory Service 增强** - 接入LLM记忆提取、添加embedding支持、探索OpenClaw插件化（✅ v0.6.0 基础功能完整，90/90 tests）
+- [ ] **实现 OpenClaw MCP Server** — 研究完成（TypeScript SDK + Streamable HTTP 方案已验证，见 [2026-04-16 笔记](catalyst-research/exploration-notes/2026-04-16-openclaw-mcp-server.md)）。关键决策: stateless Streamable HTTP + 官方 TS SDK + zod 验证。下一步: 创建 `openclaw-mcp-server` 项目，暴露 web_search/exec/list_files → MCP Inspector 验证 → 接入 OpenClaw 内部 API
+- [ ] **Agent Memory Service v0.7.0** — 研究完成（见 [2026-04-16 笔记](catalyst-research/exploration-notes/2026-04-16-llm-agent-memory-architecture.md)）。关键发现: ①2026行业标配三层记忆(Episodic/Semantic/Procedural) ②混合检索管线(Semantic+BM25+Temporal)是生产级标配 ③检索时不需要LLM推理是重要趋势。下一步: 在 core/long/short 基础上增加 procedural 层 → 实现 BM25+向量混合检索 → LLM记忆提取器
 - [ ] **A2A Agent Trust 集成原型** - Agent Card嵌入信任元数据，与Agent Trust Network对接
 - [ ] **集成多Agent框架** — 研究完成（见 [catalyst-research/exploration-notes/2026-04-15-multi-agent-framework-integration.md](catalyst-research/exploration-notes/2026-04-15-multi-agent-framework-integration.md)）。关键发现: LangGraph Supervisor 10行代码搞定编排；A2A是跨框架互操作标准；框架混合使用成常态。下一步: OpenClaw→LangGraph/CrewAI桥接原型 + Agent Card Schema设计
 

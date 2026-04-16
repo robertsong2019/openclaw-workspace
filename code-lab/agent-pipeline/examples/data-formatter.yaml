@@ -1,0 +1,13 @@
+name: data-formatter
+description: 演示数据格式化功能
+
+steps:
+  # 输入 JSON 数据
+  - tool: data.transform
+    config:
+      format: list
+
+  # 格式化为 Markdown 表格
+  - tool: data.format
+    config:
+      format: markdown

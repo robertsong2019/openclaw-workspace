@@ -1,0 +1,23 @@
+name: text-classification
+description: Classify text using keyword rules
+
+steps:
+  # 1. 清理文本
+  - tool: text.clean
+    config:
+      lowercase: true
+      trim_whitespace: true
+      
+  # 2. 分类
+  - tool: agent.classify
+    config:
+      rules:
+        bug: ["error", "crash", "fail", "broken", "bug"]
+        feature: ["add", "new", "feature", "implement", "support"]
+        question: ["how", "what", "why", "when", "help"]
+        docs: ["document", "readme", "guide", "tutorial", "example"]
+        
+  # 3. 转换为 JSON
+  - tool: data.transform
+    config:
+      format: json

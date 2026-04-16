@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Trust Network 🧪</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#c9d1d9;--text-dim:#8b949e;--accent:#58a6ff;--green:#3fb950;--yellow:#d29922;--red:#f85149;--purple:#bc8cff;--card:#1c2128}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh}
+.app{display:grid;grid-template-columns:280px 1fr 320px;grid-template-rows:48px 1fr;height:100vh}
+header{grid-column:1/-1;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:16px}
+header h1{font-size:16px;font-weight:600;color:var(--accent)}
+header .badge{background:var(--accent);color:var(--bg);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+header .step-count{color:var(--text-dim);font-size:13px;margin-left:auto}
+.panel{background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:16px}
+.panel-right{background:var(--surface);border-left:1px solid var(--border);overflow-y:auto;padding:16px}
+.canvas-area{position:relative;overflow:hidden;background:var(--bg)}
+section{margin-bottom:20px}
+section h3{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:8px}
+button{background:var(--accent);color:var(--bg);border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;width:100%;transition:opacity .2s}
+button:hover{opacity:.85}
+button:active{transform:scale(.98)}
+button.danger{background:var(--red)}
+button.secondary{background:var(--border);color:var(--text)}
+.btn-row{display:flex;gap:8px;margin-bottom:12px}
+.btn-row button{flex:1}
+input,select{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;margin-bottom:8px}
+input:focus,select:focus{outline:none;border-color:var(--accent)}
+label{display:block;font-size:12px;color:var(--text-dim);margin-bottom:4px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-card{background:var(--card);border-radius:8px;padding:10px 12px}
+.stat-card .value{font-size:20px;font-weight:700}
+.stat-card .label{font-size:11px;color:var(--text-dim);margin-top:2px}
+.agent-row{display:flex;align-items:center;gap:8px;padding:8px;background:var(--card);border-radius:6px;margin-bottom:4px;cursor:pointer;transition:background .2s}
+.agent-row:hover{background:var(--border)}
+.agent-row .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.agent-row .name{flex:1;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agent-row .score{font-size:12px;color:var(--text-dim);font-variant-numeric:tabular-nums}
+.behavior-cooperative{background:var(--green)}.behavior-neutral{background:var(--yellow)}.behavior-malicious{background:var(--red)}.behavior-adversarial{background:var(--purple)}
+.legend{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-dim)}
+.legend-item .dot{width:8px;height:8px;border-radius:50%}
+.tooltip{position:absolute;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:100;max-width:250px;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.tooltip.show{opacity:1}
+.tooltip .tt-name{font-weight:600;font-size:14px;margin-bottom:4px}
+.tooltip .tt-row{display:flex;justify-content:space-between;gap:12px;color:var(--text-dim)}
+.tooltip .tt-val{color:var(--text);font-variant-numeric:tabular-nums}
+.bar-chart{display:flex;align-items:flex-end;gap:3px;height:60px;margin-top:8px}
+.bar-chart .bar{flex:1;border-radius:2px 2px 0 0;min-width:4px;transition:height .3s}
+.health-bar{height:6px;background:var(--bg);border-radius:3px;margin-top:6px;overflow:hidden}
+.health-bar .fill{height:100%;border-radius:3px;transition:width .3s}
+.slider-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.slider-row input[type=range]{flex:1;margin:0}
+.slider-row .val{font-size:12px;color:var(--accent);min-width:36px;text-align:right;font-variant-numeric:tabular-nums}
+#graph-svg{width:100%;height:100%}
+.empty-state{display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-dim);font-size:14px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>🧪 Agent Trust Network</h1>
+    <span class="badge">PageRank</span>
+    <span class="step-count" id="stepCount">Step 0</span>
+  </header>
+
+  <!-- Left Panel: Controls -->
+  <div class="panel">
+    <section>
+      <h3>Simulation</h3>
+      <div class="btn-row">
+        <button onclick="simulate(1)">Step ▶</button>
+        <button onclick="simulate(10)">×10 ⏩</button>
+      </div>
+      <div class="btn-row">
+        <button class="secondary" onclick="simulate(50)">×50</button>
+        <button class="danger" onclick="resetNetwork()">Reset</button>
+      </div>
+    </section>
+
+    <section>
+      <h3>Add Agent</h3>
+      <label>Name</label>
+      <input id="agentName" placeholder="Agent name...">
+      <label>Behavior</label>
+      <select id="agentBehavior">
+        <option value="cooperative">🟢 Cooperative</option>
+        <option value="neutral">🟡 Neutral</option>
+        <option value="malicious">🔴 Malicious</option>
+        <option value="adversarial">⚫ Adversarial</option>
+      </select>
+      <button onclick="addAgent()">Add Agent</button>
+    </section>
+
+    <section>
+      <h3>Network Stats</h3>
+      <div class="stat-grid" id="statsGrid">
+        <div class="stat-card"><div class="value" id="statAgents">0</div><div class="label">Agents</div></div>
+        <div class="stat-card"><div class="value" id="statLinks">0</div><div class="label">Relations</div></div>
+        <div class="stat-card"><div class="value" id="statTrust">0%</div><div class="label">Avg Trust</div></div>
+        <div class="stat-card"><div class="value" id="statHealth">0%</div><div class="label">Health</div></div>
+      </div>
+    </section>
+
+    <section>
+      <h3>Trust Distribution</h3>
+      <div class="legend">
+        <div class="legend-item"><div class="dot" style="background:var(--green)"></div>High</div>
+        <div class="legend-item"><div class="dot" style="background:var(--yellow)"></div>Medium</div>
+        <div class="legend-item"><div class="dot" style="background:var(--red)"></div>Low</div>
+      </div>
+      <div class="bar-chart" id="distChart"></div>
+    </section>
+
+    <section>
+      <h3>Behavior Distribution</h3>
+      <div id="behaviorBars"></div>
+    </section>
+  </div>
+
+  <!-- Center: Graph -->
+  <div class="canvas-area" id="canvasArea">
+    <svg id="graph-svg"></svg>
+    <div class="tooltip" id="tooltip"></div>
+  </div>
+
+  <!-- Right Panel: Agents & Metrics -->
+  <div class="panel-right">
+    <section>
+      <h3>Agent Leaderboard</h3>
+      <div id="agentList"></div>
+    </section>
+    <section>
+      <h3>Network Metrics</h3>
+      <div id="metricsPanel"></div>
+    </section>
+  </div>
+</div>
+
+<script>
+const API = '';
+let graphData = null;
+let simulation = null;
+let selectedNode = null;
+
+const colorMap = {
+  cooperative: '#3fb950',
+  neutral: '#d29922',
+  malicious: '#f85149',
+  adversarial: '#bc8cff'
+};
+
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts
+  });
+  return res.json();
+}
+
+async function loadNetwork() {
+  const data = await api('/api/network');
+  graphData = data;
+  document.getElementById('stepCount').textContent = `Step ${data.stepCount || 0}`;
+  updateStats(data);
+  updateDistribution(data);
+  updateAgentList(data);
+  renderGraph(data);
+  loadMetrics();
+}
+
+async function simulate(steps) {
+  await api('/api/simulate', { method: 'POST', body: JSON.stringify({ steps }) });
+  loadNetwork();
+}
+
+async function resetNetwork() {
+  await api('/api/reset', { method: 'POST' });
+  loadNetwork();
+}
+
+async function addAgent() {
+  const name = document.getElementById('agentName').value.trim();
+  const behavior = document.getElementById('agentBehavior').value;
+  if (!name) return;
+  await api('/api/agent', { method: 'POST', body: JSON.stringify({ name, behavior }) });
+  document.getElementById('agentName').value = '';
+  loadNetwork();
+}
+
+function updateStats(data) {
+  document.getElementById('statAgents').textContent = data.stats?.totalAgents || 0;
+  document.getElementById('statLinks').textContent = data.stats?.totalRelations || 0;
+  document.getElementById('statTrust').textContent = ((data.stats?.averageTrust || 0) * 100).toFixed(0) + '%';
+}
+
+function updateDistribution(data) {
+  const agents = data.agents || [];
+  // Trust distribution bar chart
+  const bins = [0, 0, 0, 0, 0];
+  agents.forEach(a => {
+    const idx = Math.min(4, Math.floor(a.trustScore * 5));
+    bins[idx]++;
+  });
+  const maxBin = Math.max(1, ...bins);
+  const colors = ['#f85149', '#f85149', '#d29922', '#d29922', '#3fb950'];
+  const chart = document.getElementById('distChart');
+  chart.innerHTML = bins.map((c, i) =>
+    `<div class="bar" style="height:${(c / maxBin) * 100}%;background:${colors[i]}"></div>`
+  ).join('');
+
+  // Behavior distribution
+  const behaviors = { cooperative: 0, neutral: 0, malicious: 0, adversarial: 0 };
+  agents.forEach(a => { if (behaviors[a.behavior] !== undefined) behaviors[a.behavior]++; });
+  const total = Math.max(1, agents.length);
+  const bEl = document.getElementById('behaviorBars');
+  bEl.innerHTML = Object.entries(behaviors).map(([b, c]) =>
+    `<div style="margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px">
+        <span style="color:${colorMap[b]}">${b}</span><span style="color:var(--text-dim)">${c}</span>
+      </div>
+      <div class="health-bar"><div class="fill" style="width:${(c/total)*100}%;background:${colorMap[b]}"></div></div>
+    </div>`
+  ).join('');
+}
+
+function updateAgentList(data) {
+  const agents = (data.agents || []).sort((a, b) => b.trustScore - a.trustScore);
+  const el = document.getElementById('agentList');
+  el.innerHTML = agents.map(a => `
+    <div class="agent-row" onclick="highlightAgent('${a.id}')">
+      <div class="dot behavior-${a.behavior}"></div>
+      <div class="name">${a.name}</div>
+      <div class="score">${(a.trustScore * 100).toFixed(0)}%</div>
+    </div>
+  `).join('');
+}
+
+async function loadMetrics() {
+  try {
+    const data = await api('/api/metrics');
+    const n = data.network;
+    if (!n) return;
+    document.getElementById('statHealth').textContent = (n.networkHealth * 100).toFixed(0) + '%';
+    const el = document.getElementById('metricsPanel');
+    el.innerHTML = `
+      <div style="margin-bottom:8px">
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:2px">Network Health</div>
+        <div class="health-bar"><div class="fill" style="width:${n.networkHealth*100}%;background:${n.networkHealth>0.6?'var(--green)':n.networkHealth>0.3?'var(--yellow)':'var(--red)'}"></div></div>
+      </div>
+      <div style="margin-bottom:8px">
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:2px">Avg Reputation</div>
+        <div style="font-size:16px;font-weight:600">${(n.averageReputation*100).toFixed(1)}%</div>
+      </div>
+      <div style="margin-bottom:8px">
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:2px">Confidence Index</div>
+        <div style="font-size:16px;font-weight:600">${(n.confidenceIndex*100).toFixed(1)}%</div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:2px">Volatility Index</div>
+        <div style="font-size:16px;font-weight:600">${(n.volatilityIndex*100).toFixed(1)}%</div>
+      </div>
+    `;
+  } catch(e) {}
+}
+
+// ─── D3 Force Graph ───
+
+function renderGraph(data) {
+  const svg = d3.select('#graph-svg');
+  const container = document.getElementById('canvasArea');
+  const width = container.clientWidth;
+  const height = container.clientHeight;
+
+  svg.attr('viewBox', [0, 0, width, height]);
+
+  const agents = data.agents || [];
+  const relations = data.relations || [];
+
+  const nodes = agents.map(a => ({
+    id: a.id,
+    name: a.name,
+    behavior: a.behavior,
+    trustScore: a.trustScore,
+    interactions: a.interactions || 0,
+    successRate: a.successRate || 0,
+    radius: 10 + a.trustScore * 25
+  }));
+
+  const nodeMap = {};
+  nodes.forEach(n => nodeMap[n.id] = n);
+
+  const links = relations
+    .filter(r => nodeMap[r.from] && nodeMap[r.to])
+    .map(r => ({
+      source: r.from,
+      target: r.to,
+      weight: r.weight
+    }));
+
+  // Clear previous
+  svg.selectAll('*').remove();
+
+  // Arrow marker
+  const defs = svg.append('defs');
+  defs.append('marker')
+    .attr('id', 'arrow')
+    .attr('viewBox', '0 -5 10 10')
+    .attr('refX', 20)
+    .attr('refY', 0)
+    .attr('markerWidth', 6)
+    .attr('markerHeight', 6)
+    .attr('orient', 'auto')
+    .append('path')
+    .attr('fill', '#30363d')
+    .attr('d', 'M0,-5L10,0L0,5');
+
+  const g = svg.append('g');
+
+  // Zoom
+  const zoom = d3.zoom()
+    .scaleExtent([0.3, 4])
+    .on('zoom', (event) => g.attr('transform', event.transform));
+  svg.call(zoom);
+
+  // Links
+  const link = g.append('g')
+    .selectAll('line')
+    .data(links)
+    .join('line')
+    .attr('stroke', '#30363d')
+    .attr('stroke-width', d => Math.max(0.5, d.weight * 3))
+    .attr('stroke-opacity', d => 0.3 + d.weight * 0.5)
+    .attr('marker-end', 'url(#arrow)');
+
+  // Nodes
+  const node = g.append('g')
+    .selectAll('g')
+    .data(nodes)
+    .join('g')
+    .call(d3.drag()
+      .on('start', dragStarted)
+      .on('drag', dragged)
+      .on('end', dragEnded));
+
+  // Glow effect
+  const filter = defs.append('filter').attr('id', 'glow');
+  filter.append('feGaussianBlur').attr('stdDeviation', '3').attr('result', 'blur');
+  filter.append('feMerge').selectAll('feMergeNode')
+    .data(['blur', 'SourceGraphic'])
+    .join('feMergeNode')
+    .attr('in', d => d);
+
+  node.append('circle')
+    .attr('r', d => d.radius)
+    .attr('fill', d => colorMap[d.behavior] || '#8b949e')
+    .attr('fill-opacity', 0.85)
+    .attr('stroke', d => d3.color(colorMap[d.behavior]).brighter(0.5))
+    .attr('stroke-width', 2)
+    .style('filter', 'url(#glow)');
+
+  node.append('text')
+    .attr('dy', d => d.radius + 14)
+    .attr('text-anchor', 'middle')
+    .attr('fill', '#8b949e')
+    .attr('font-size', '10px')
+    .text(d => d.name);
+
+  // Tooltip
+  const tooltip = document.getElementById('tooltip');
+
+  node.on('mouseover', function(event, d) {
+    const rect = container.getBoundingClientRect();
+    tooltip.innerHTML = `
+      <div class="tt-name" style="color:${colorMap[d.behavior]}">${d.name}</div>
+      <div class="tt-row"><span>Behavior</span><span class="tt-val">${d.behavior}</span></div>
+      <div class="tt-row"><span>Trust Score</span><span class="tt-val">${(d.trustScore*100).toFixed(1)}%</span></div>
+      <div class="tt-row"><span>Interactions</span><span class="tt-val">${d.interactions}</span></div>
+      <div class="tt-row"><span>Success Rate</span><span class="tt-val">${(d.successRate*100).toFixed(1)}%</span></div>
+    `;
+    tooltip.style.left = (event.pageX - rect.left + 12) + 'px';
+    tooltip.style.top = (event.pageY - rect.top - 10) + 'px';
+    tooltip.classList.add('show');
+
+    // Highlight links
+    link.attr('stroke', l =>
+      (l.source.id || l.source) === d.id || (l.target.id || l.target) === d.id
+        ? (colorMap[d.behavior]) : '#30363d'
+    ).attr('stroke-opacity', l =>
+      (l.source.id || l.source) === d.id || (l.target.id || l.target) === d.id
+        ? 0.8 : 0.1
+    ).attr('stroke-width', l =>
+      (l.source.id || l.source) === d.id || (l.target.id || l.target) === d.id
+        ? Math.max(1, l.weight * 5) : Math.max(0.5, l.weight * 3)
+    );
+  })
+  .on('mouseout', function() {
+    tooltip.classList.remove('show');
+    link.attr('stroke', '#30363d')
+      .attr('stroke-opacity', d => 0.3 + d.weight * 0.5)
+      .attr('stroke-width', d => Math.max(0.5, d.weight * 3));
+  });
+
+  // Force simulation
+  simulation = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).id(d => d.id).distance(80).strength(d => d.weight * 0.3))
+    .force('charge', d3.forceManyBody().strength(-200))
+    .force('center', d3.forceCenter(width / 2, height / 2))
+    .force('collision', d3.forceCollide().radius(d => d.radius + 5));
+
+  simulation.on('tick', () => {
+    link
+      .attr('x1', d => d.source.x)
+      .attr('y1', d => d.source.y)
+      .attr('x2', d => d.target.x)
+      .attr('y2', d => d.target.y);
+
+    node.attr('transform', d => `translate(${d.x},${d.y})`);
+  });
+
+  function dragStarted(event, d) {
+    if (!event.active) simulation.alphaTarget(0.3).restart();
+    d.fx = d.x; d.fy = d.y;
+  }
+  function dragged(event, d) {
+    d.fx = event.x; d.fy = event.y;
+  }
+  function dragEnded(event, d) {
+    if (!event.active) simulation.alphaTarget(0);
+    d.fx = null; d.fy = null;
+  }
+}
+
+function highlightAgent(id) {
+  // Flash the node
+  d3.selectAll('#graph-svg g g').each(function(d) {
+    if (d && d.id === id) {
+      const circle = d3.select(this).select('circle');
+      const orig = circle.attr('stroke-width');
+      circle.attr('stroke-width', 5).attr('stroke', '#ffffff');
+      setTimeout(() => circle.attr('stroke-width', orig).attr('stroke', d3.color(colorMap[d.behavior]).brighter(0.5)), 1500);
+    }
+  });
+}
+
+// Handle resize
+window.addEventListener('resize', () => {
+  if (graphData) renderGraph(graphData);
+});
+
+// Initial load
+loadNetwork();
+</script>
+</body>
+</html>

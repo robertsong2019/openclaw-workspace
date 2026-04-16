@@ -1,0 +1,172 @@
+#!/usr/bin/env python3
+"""
+Code Poetry Generator CLI
+Transforms code to poetry prompts and poetry to code prompts.
+"""
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+
+def is_python_file(file_path):
+    """Check if a file is a Python file based on extension."""
+    if not file_path or file_path == '-':
+        return False
+    return Path(file_path).suffix.lower() in ['.py', '.pyw']
+
+
+def run_analyzer(source_code):
+    """Run the AST analyzer on Python code."""
+    try:
+        # Import the analyzer
+        skill_dir = Path(__file__).parent.parent
+        analyzer_path = skill_dir / 'scripts' / 'analyze.py'
+
+        if not analyzer_path.exists():
+            return {'error': True, 'message': 'Analyzer script not found'}
+
+        # Execute analyzer and get output
+        import subprocess
+        result = subprocess.run(
+            [sys.executable, str(analyzer_path)],
+            input=source_code,
+            capture_output=True,
+            text=True,
+            encoding='utf-8'
+        )
+
+        if result.returncode != 0:
+            return {'error': True, 'message': 'Analyzer execution failed', 'stderr': result.stderr}
+
+        try:
+            return json.loads(result.stdout)
+        except json.JSONDecodeError:
+            return {'error': True, 'message': 'Invalid analyzer output', 'raw_output': result.stdout}
+
+    except Exception as e:
+        return {'error': True, 'message': f'Analyzer error: {str(e)}'}
+
+
+def build_code_prompt(source_code, analysis, mode, lang):
+    """Build a structured prompt for code→poetry transformation."""
+    prompt = {
+        'task': 'code_to_poetry',
+        'mode': mode,
+        'language': lang,
+        'code': source_code,
+        'analysis': analysis if analysis else {'message': 'No analysis available'}
+    }
+
+    # Add mode-specific instructions
+    if mode == 'haiku':
+        prompt['instructions'] = 'Create a haiku (5-7-5 syllables) that captures the essence of this code.'
+    elif mode == 'sonnet':
+        prompt['instructions'] = 'Create a Shakespearean sonnet (14 lines, ABAB CDCD EFEF GG rhyme scheme) about this code.'
+    else:  # free
+        prompt['instructions'] = 'Create a free verse poem that reflects the structure and intent of this code.'
+
+    # Add language-specific instructions
+    if lang == 'zh':
+        prompt['instructions'] += ' 输出中文诗歌。'
+    else:
+        prompt['instructions'] += ' Output in English.'
+
+    return prompt
+
+
+def build_poem_prompt(poem_text, lang):
+    """Build a structured prompt for poem→code transformation."""
+    prompt = {
+        'task': 'poem_to_code',
+        'language': lang,
+        'poem': poem_text,
+        'instructions': 'Generate code that embodies the themes, structure, and imagery of this poem.'
+    }
+
+    if lang == 'zh':
+        prompt['instructions'] += ' 使用 Python 编写代码。'
+    else:
+        prompt['instructions'] += ' Use Python for the implementation.'
+
+    return prompt
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='Transform code to poetry prompts or poetry to code prompts',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Code to poetry (haiku)
+  %(prog)s --from-code main.py --mode haiku --lang en
+
+  # Code to poetry (stdin)
+  cat app.py | %(prog)s --from-code - --mode sonnet --lang zh
+
+  # Poem to code
+  %(prog)s --from-poem "Two roads diverged in a yellow wood" --lang en
+        """
+    )
+
+    # Mutually exclusive group for input source
+    input_group = parser.add_mutually_exclusive_group(required=True)
+    input_group.add_argument(
+        '--from-code',
+        metavar='FILE',
+        help='Path to code file (or - for stdin)'
+    )
+    input_group.add_argument(
+        '--from-poem',
+        metavar='TEXT',
+        help='Poem text to transform into code'
+    )
+
+    parser.add_argument(
+        '--mode',
+        choices=['haiku', 'sonnet', 'free'],
+        default='free',
+        help='Poetry mode (default: free)'
+    )
+    parser.add_argument(
+        '--lang',
+        choices=['en', 'zh'],
+        default='en',
+        help='Output language (default: en)'
+    )
+
+    args = parser.parse_args()
+
+    # Handle code input
+    if args.from_code:
+        if args.from_code == '-':
+            # Read from stdin
+            source_code = sys.stdin.read()
+            is_python = True  # Assume Python for stdin
+        else:
+            # Read from file
+            file_path = Path(args.from_code)
+            if not file_path.exists():
+                print(json.dumps({'error': True, 'message': f'File not found: {args.from_code}'}))
+                sys.exit(1)
+            source_code = file_path.read_text(encoding='utf-8')
+            is_python = is_python_file(args.from_code)
+
+        # Run analyzer if it's Python
+        analysis = None
+        if is_python:
+            analysis = run_analyzer(source_code)
+
+        # Build and output prompt
+        prompt = build_code_prompt(source_code, analysis, args.mode, args.lang)
+        print(json.dumps(prompt, indent=2, ensure_ascii=False))
+
+    # Handle poem input
+    elif args.from_poem:
+        prompt = build_poem_prompt(args.from_poem, args.lang)
+        print(json.dumps(prompt, indent=2, ensure_ascii=False))
+
+
+if __name__ == '__main__':
+    main()

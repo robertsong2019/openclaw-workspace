@@ -1,0 +1,30 @@
+name: file-processor
+description: 读取文件、处理内容并写入新文件
+
+steps:
+  # 读取日志文件
+  - tool: file.lines
+    config:
+      path: /var/log/syslog
+      skip_empty: true
+      strip: true
+
+  # 过滤包含 ERROR 的行
+  - tool: list.filter
+    config:
+      pattern: ERROR
+
+  # 提取错误信息（正则）
+  - tool: text.extract
+    config:
+      patterns:
+        - name: timestamp
+          regex: '(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})'
+        - name: error_message
+          regex: 'ERROR.*?: (.*)'
+
+  # 保存到新文件
+  - tool: file.write
+    config:
+      path: /tmp/extracted-errors.json
+      mode: w
