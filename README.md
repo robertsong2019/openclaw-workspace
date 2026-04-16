@@ -437,7 +437,7 @@ chmod +x skills/memory-manager/*.sh
 1. **改进文档** - 修复错误、添加示例
 2. **报告问题** - 在 `memory/` 中记录
 3. **添加技能** - 创建新的 OpenClaw 技能
-4. **分享经验** - 在 `memory/exploration-notes/` 中记录
+4. **分享经验** - 在 `catalyst-research/exploration-notes/` 中记录
 
 详见: [DOCUMENTATION-GUIDE.md](DOCUMENTATION-GUIDE.md)
 
@@ -455,7 +455,7 @@ chmod +x skills/memory-manager/*.sh
 
 - **文档问题**: 查看对应的 README.md 或 TUTORIAL.md
 - **工具使用**: 使用 `--help` 或查看 API 文档
-- **概念理解**: 阅读 `memory/exploration-notes/`
+- **概念理解**: 阅读 `catalyst-research/exploration-notes/`
 - **Bug 报告**: 记录在 `memory/` 中
 
 ## 🎯 快速链接
