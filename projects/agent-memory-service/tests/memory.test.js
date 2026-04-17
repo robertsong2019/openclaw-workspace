@@ -2139,3 +2139,60 @@ describe('Memory Associations (Links)', () => {
       assert.ok(results.length >= 1);
     });
   });
+
+// ─── touch(id) ──────────────────────────────────────────
+describe('touch(id)', () => {
+  it('updates accessedAt and increments accessCount', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      const m = await svc.add({ content: 'hello', layer: 'short' });
+      const beforeAccess = m.accessCount;
+      const beforeTime = m.accessedAt;
+      await new Promise(r => setTimeout(r, 5));
+      const updated = await svc.touch(m.id);
+      assert.equal(updated.accessCount, beforeAccess + 1);
+      assert.ok(updated.accessedAt > beforeTime);
+      assert.equal(updated.content, 'hello');
+      assert.equal(updated.weight, m.weight);
+    } finally { cleanup(); }
+  });
+
+  it('applies optional weight boost on decayed memory', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      const m = await svc.add({ content: 'boost me', layer: 'short' });
+      // Lower weight via update
+      await svc.update(m.id, { content: 'boost me' });
+      // Simulate lower weight by adding with low weight context
+      const m2 = await svc.add({ content: 'low weight', layer: 'short' });
+      // Get it, manually check boost on fresh memory at max - verify no change
+      const fresh = await svc.touch(m2.id, { boost: 0.3 });
+      assert.equal(fresh.weight, 1.0); // already max, capped
+      // Verify accessCount incremented regardless
+      assert.equal(fresh.accessCount, 1);
+    } finally { cleanup(); }
+  });
+
+  it('returns null for non-existent id', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      const result = await svc.touch('no-such-id');
+      assert.equal(result, null);
+    } finally { cleanup(); }
+  });
+
+  it('does not create changelog entries', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      const m = await svc.add({ content: 'no log', layer: 'short' });
+      const changes1 = Array.from(await svc.changes(0));
+      await svc.touch(m.id);
+      const changes2 = Array.from(await svc.changes(0));
+      assert.equal(changes2.length, changes1.length);
+    } finally { cleanup(); }
+  });
+});

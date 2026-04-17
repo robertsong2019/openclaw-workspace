@@ -1432,6 +1432,27 @@ export class MemoryService {
    * @param {string} id
    * @returns {Promise<boolean>} true if deleted, false if not found
    */
+  /**
+   * Lightweight access tracking — update accessedAt and accessCount without
+   * modifying content or recording a changelog entry.
+   * @param {string} id
+   * @param {{boost?: number}} [opts] - optional weight boost (default 0)
+   * @returns {Promise<Memory|null>}
+   */
+  async touch(id, opts = {}) {
+    await this.#ensureLoaded();
+    const m = this.#store.get(id);
+    if (!m) return null;
+    m.accessedAt = now();
+    m.accessCount++;
+    if (opts.boost) {
+      m.weight = Math.min(MAX_WEIGHT, m.weight + opts.boost);
+    }
+    this.#store.put(m);
+    await this.#store.save();
+    return m;
+  }
+
   async delete(id) {
     await this.#ensureLoaded();
     const m = this.#store.get(id);
