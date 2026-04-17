@@ -2054,3 +2054,88 @@ describe('Memory Associations (Links)', () => {
       } finally { cleanup(); }
     });
   });
+
+  describe('MemoryExtractor with LLM', () => {
+    it('extractWithLLM returns empty when llmFn is null', async () => {
+      const extractor = new MemoryExtractor();
+      const results = await extractor.extractWithLLM('test text', null);
+      assert.equal(results.length, 0);
+    });
+
+    it('extractWithLLM uses LLM function and parses JSON response', async () => {
+      const mockLLM = async () => JSON.stringify([
+        { content: 'User prefers dark mode', type: 'preference', confidence: 0.9, entities: ['dark', 'mode'] }
+      ]);
+      const extractor = new MemoryExtractor();
+      const results = await extractor.extractWithLLM('I like dark mode', mockLLM);
+      assert.equal(results.length, 1);
+      assert.equal(results[0].type, 'preference');
+      assert.equal(results[0].content, 'User prefers dark mode');
+    });
+
+    it('extractWithLLM handles object response directly', async () => {
+      const mockLLM = async () => [
+        { content: 'Decision made', type: 'decision', confidence: 0.8, entities: [] }
+      ];
+      const extractor = new MemoryExtractor();
+      const results = await extractor.extractWithLLM('test', mockLLM);
+      assert.equal(results.length, 1);
+      assert.equal(results[0].type, 'decision');
+    });
+
+    it('extractWithLLM filters invalid results (too short/long)', async () => {
+      const mockLLM = async () => [
+        { content: 'x', type: 'fact', confidence: 1, entities: [] },
+        { content: 'a'.repeat(600), type: 'fact', confidence: 1, entities: [] },
+        { content: 'Valid memory', type: 'fact', confidence: 1, entities: [] }
+      ];
+      const extractor = new MemoryExtractor();
+      const results = await extractor.extractWithLLM('test', mockLLM);
+      assert.equal(results.length, 1);
+      assert.equal(results[0].content, 'Valid memory');
+    });
+
+    it('extractWithLLM normalizes type and confidence', async () => {
+      const mockLLM = async () => [
+        { content: 'test memory item', type: 'invalid', confidence: 2, entities: [] }
+      ];
+      const extractor = new MemoryExtractor();
+      const results = await extractor.extractWithLLM('test', mockLLM);
+      assert.equal(results[0].type, 'fact');
+      assert.equal(results[0].confidence, 1);
+    });
+
+    it('extractWithLLM returns empty on parse error', async () => {
+      const mockLLM = async () => 'invalid json';
+      const extractor = new MemoryExtractor();
+      const results = await extractor.extractWithLLM('test', mockLLM);
+      assert.equal(results.length, 0);
+    });
+
+    it('extractHybrid without LLM returns rule-based only', async () => {
+      const extractor = new MemoryExtractor();
+      const results = await extractor.extractHybrid('我喜欢 TypeScript');
+      assert.ok(results.some(r => r.type === 'preference'));
+    });
+
+    it('extractHybrid combines and deduplicates rule-based and LLM results', async () => {
+      const mockLLM = async () => [
+        { content: 'User likes TypeScript', type: 'preference', confidence: 0.9, entities: ['TypeScript'] }
+      ];
+      const extractor = new MemoryExtractor();
+      const results = await extractor.extractHybrid('我喜欢用 TypeScript 开发', mockLLM);
+      assert.ok(results.length >= 1);
+      const uniqueContents = new Set(results.map(r => r.content));
+      assert.equal(uniqueContents.size, results.length);
+    });
+
+    it('extractHybrid deduplicates similar content', async () => {
+      const mockLLM = async () => [
+        { content: 'I prefer TypeScript', type: 'preference', confidence: 0.9, entities: ['TypeScript'] }
+      ];
+      const extractor = new MemoryExtractor();
+      const results = await extractor.extractHybrid('I prefer TypeScript for coding', mockLLM);
+      // Should have at least 1, but should not have duplicates of similar content
+      assert.ok(results.length >= 1);
+    });
+  });

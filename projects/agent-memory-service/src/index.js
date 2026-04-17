@@ -522,11 +522,83 @@ class MemoryExtractor {
         let layer = 'short';
         if (m.type === 'preference' || m.type === 'decision') layer = 'core';
         else if (m.type === 'fact' || m.type === 'entity') layer = 'long';
-        
+
         allMemories.push({ ...m, layer });
       }
     }
     return allMemories;
+  }
+
+  /**
+   * Extract memories using LLM
+   * @param {string} text
+   * @param {function} llmFn - Async function that takes a prompt and returns structured JSON
+   * @returns {Promise<Array<{content: string, type: string, confidence: number, entities: string[]}>>}
+   */
+  async extractWithLLM(text, llmFn) {
+    if (!llmFn) return [];
+
+    const prompt = `Extract meaningful memories from the following text. Return JSON array with objects: {content, type (preference|decision|fact|entity), confidence (0-1), entities (string[])}.
+Only extract high-quality, actionable information. Skip general chatter.
+
+Text: "${text}"
+
+Return only JSON array, no explanation.`;
+
+    try {
+      const response = await llmFn(prompt);
+      let parsed = response;
+      if (typeof response === 'string') {
+        parsed = JSON.parse(response);
+      }
+
+      if (Array.isArray(parsed)) {
+        return parsed
+          .filter(m => m.content && m.content.length > 5 && m.content.length < 500)
+          .map(m => ({
+            content: m.content.trim(),
+            type: ['preference', 'decision', 'fact', 'entity'].includes(m.type) ? m.type : 'fact',
+            confidence: Math.min(1, Math.max(0, m.confidence || 0.5)),
+            entities: Array.isArray(m.entities) ? m.entities : [],
+          }));
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Hybrid extraction: rule-based + LLM with deduplication
+   * @param {string} text
+   * @param {function} llmFn - Optional LLM function
+   * @returns {Promise<Array<{content: string, type: string, confidence: number, entities: string[]}>>}
+   */
+  async extractHybrid(text, llmFn = null) {
+    const ruleBased = this.extract(text);
+    if (!llmFn) return ruleBased;
+
+    const llmBased = await this.extractWithLLM(text, llmFn);
+    const combined = [...ruleBased, ...llmBased];
+
+    // Deduplicate by content similarity
+    const seen = new Set();
+    const unique = [];
+    for (const m of combined) {
+      const key = m.content.toLowerCase().slice(0, 50);
+      let duplicate = false;
+      for (const k of seen) {
+        if (ngramSimilarity(key, k) > 0.8) {
+          duplicate = true;
+          break;
+        }
+      }
+      if (!duplicate) {
+        seen.add(key);
+        unique.push(m);
+      }
+    }
+    return unique;
   }
 }
 
