@@ -1794,6 +1794,46 @@ export class MemoryService {
   }
 
   /**
+   * Pure semantic/vector search. Uses embeddings if available, falls back to ngram.
+   * @param {string} query
+   * @param {{limit?: number, layer?: MemoryLayer, threshold?: number}} opts
+   * @returns {Promise<Array<Memory & {score: number, method: string}>>}
+   */
+  async searchByEmbedding(query, opts = {}) {
+    await this.#ensureLoaded();
+    const limit = opts.limit || 5;
+    const threshold = opts.threshold || 0;
+    let candidates = this.#store.all();
+
+    if (opts.layer) {
+      candidates = candidates.filter(m => m.layer === opts.layer);
+    }
+    candidates = candidates.filter(m => m.weight >= LAYERS[m.layer].minWeight);
+
+    const useEmbedding = this.#embeddings.enabled;
+    const method = useEmbedding ? 'vector' : 'ngram';
+
+    const queryVec = useEmbedding ? await this.#embeddings.embed(query) : null;
+
+    const scored = await Promise.all(candidates.map(async m => {
+      let score;
+      if (useEmbedding && queryVec) {
+        const memVec = await this.#embeddings.embed(m.content);
+        score = memVec ? cosineSimilarity(queryVec, memVec) : ngramSimilarity(query, m.content);
+      } else {
+        score = ngramSimilarity(query, m.content);
+      }
+      return { ...m, score, method };
+    }));
+
+    scored.sort((a, b) => b.score - a.score);
+    const results = scored.filter(m => m.score >= threshold).slice(0, limit);
+
+    await this.#embeddings.saveCache();
+    return results;
+  }
+
+  /**
    * Compact the store by removing low-weight memories.
    * @param {{minWeight?: number, layer?: string, dryRun?: boolean}} opts
    * @returns {Promise<{removed: number, remaining: number}>}
@@ -1934,6 +1974,18 @@ class EmbeddingProvider {
   /** Get cache size */
   get cacheSize() {
     return this.#cache.size;
+  }
+
+  /**
+   * Get embedding cache statistics
+   * @returns {{enabled: boolean, cachedVectors: number, cachePath: string}}
+   */
+  stats() {
+    return {
+      enabled: this.enabled,
+      cachedVectors: this.#cache.size,
+      cachePath: this.#cachePath,
+    };
   }
 }
 

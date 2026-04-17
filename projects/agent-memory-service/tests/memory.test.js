@@ -1960,3 +1960,97 @@ describe('Memory Associations (Links)', () => {
       } finally { cleanup(); }
     });
   });
+
+  describe('searchByEmbedding', () => {
+    it('returns results sorted by similarity (ngram fallback)', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        await svc.add({ content: 'machine learning algorithms', layer: 'core' });
+        await svc.add({ content: 'cooking recipes for dinner', layer: 'core' });
+        await svc.add({ content: 'deep learning neural networks', layer: 'core' });
+
+        const results = await svc.searchByEmbedding('machine learning');
+        assert.ok(results.length >= 2);
+        assert.ok(results[0].score >= results[results.length - 1].score);
+        assert.equal(results[0].method, 'ngram');
+      } finally { cleanup(); }
+    });
+
+    it('uses vector similarity when embedFn provided', async () => {
+      let callCount = 0;
+      const mockEmbed = async (text) => {
+        callCount++;
+        // Simple: [1,0] for ML-related, [0,1] for other
+        if (text.toLowerCase().includes('machine') || text.toLowerCase().includes('learning')) return [1, 0];
+        return [0, 1];
+      };
+      const dir = mkdtempSync(join(tmpdir(), 'mem-test-'));
+      const svc = new MemoryService({ dbPath: dir, embedFn: mockEmbed });
+      const cleanup = () => { try { rmSync(dir, { recursive: true }); } catch {} };
+      try {
+        await svc.add({ content: 'machine learning model', layer: 'core' });
+        await svc.add({ content: 'cooking dinner tonight', layer: 'core' });
+
+        const results = await svc.searchByEmbedding('machine learning');
+        assert.equal(results[0].method, 'vector');
+        assert.ok(results[0].content.includes('machine'));
+        assert.ok(callCount > 0);
+      } finally { cleanup(); }
+    });
+
+    it('respects threshold option', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        await svc.add({ content: 'alpha beta gamma', layer: 'core' });
+        await svc.add({ content: 'completely unrelated xyz', layer: 'core' });
+
+        const results = await svc.searchByEmbedding('alpha beta', { threshold: 0.99 });
+        assert.ok(results.length === 0 || results.every(r => r.score >= 0.99));
+      } finally { cleanup(); }
+    });
+
+    it('respects layer filter', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        await svc.add({ content: 'core memory item', layer: 'core' });
+        await svc.add({ content: 'short memory item', layer: 'short' });
+
+        const results = await svc.searchByEmbedding('memory', { layer: 'core' });
+        assert.ok(results.every(r => r.layer === 'core'));
+      } finally { cleanup(); }
+    });
+
+    it('respects limit option', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        for (let i = 0; i < 10; i++) {
+          await svc.add({ content: `memory item ${i}`, layer: 'core' });
+        }
+        const results = await svc.searchByEmbedding('memory', { limit: 3 });
+        assert.equal(results.length, 3);
+      } finally { cleanup(); }
+    });
+  });
+
+  describe('EmbeddingProvider.stats', () => {
+    it('returns stats without embedFn', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        const stats = svc.embeddings.stats();
+        assert.equal(stats.enabled, false);
+        assert.equal(stats.cachedVectors, 0);
+        assert.ok(typeof stats.cachePath === 'string');
+      } finally { cleanup(); }
+    });
+
+    it('returns stats with embedFn', async () => {
+      const mockEmbed = async () => [0.1, 0.2];
+      const dir = mkdtempSync(join(tmpdir(), 'mem-test-'));
+      const svc = new MemoryService({ dbPath: dir, embedFn: mockEmbed });
+      const cleanup = () => { try { rmSync(dir, { recursive: true }); } catch {} };
+      try {
+        const stats = svc.embeddings.stats();
+        assert.equal(stats.enabled, true);
+      } finally { cleanup(); }
+    });
+  });
