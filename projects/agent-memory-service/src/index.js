@@ -1767,6 +1767,55 @@ export class MemoryService {
 
     return { merged, groups: dupes.length, details };
   }
+
+  /**
+   * Get memory graph: nodes (memories) + edges (links) for visualization.
+   * @param {{layer?: string, limit?: number}} opts
+   * @returns {Promise<{nodes: Array, edges: Array}>}
+   */
+  async memoryGraph(opts = {}) {
+    await this.#ensureLoaded();
+    let memories = this.#store.all();
+    if (opts.layer) memories = memories.filter(m => m.layer === opts.layer);
+    if (opts.limit) memories = memories.slice(0, opts.limit);
+
+    const ids = new Set(memories.map(m => m.id));
+    const nodes = memories.map(m => ({
+      id: m.id, content: m.content.slice(0, 80), layer: m.layer,
+      weight: m.weight, tags: m.tags
+    }));
+
+    const allLinks = this.#links.all();
+    const edges = allLinks
+      .filter(l => ids.has(l.source) && ids.has(l.target))
+      .map(l => ({ source: l.source, target: l.target, type: l.type, strength: l.strength }));
+
+    return { nodes, edges };
+  }
+
+  /**
+   * Compact the store by removing low-weight memories.
+   * @param {{minWeight?: number, layer?: string, dryRun?: boolean}} opts
+   * @returns {Promise<{removed: number, remaining: number}>}
+   */
+  async compact(opts = {}) {
+    await this.#ensureLoaded();
+    const minWeight = opts.minWeight ?? 0.1;
+    let memories = this.#store.all();
+    if (opts.layer) memories = memories.filter(m => m.layer === opts.layer);
+
+    const toRemove = memories.filter(m => m.weight < minWeight);
+    if (opts.dryRun) return { removed: toRemove.length, remaining: memories.length - toRemove.length };
+
+    for (const m of toRemove) {
+      this.#links.cleanForMemory(m.id);
+      this.#store.delete(m.id);
+    }
+    await this.#store.save();
+    await this.#links.save();
+
+    return { removed: toRemove.length, remaining: this.#store.all().length };
+  }
 }
 
 // ─── Embedding Provider Interface ────────────────────────

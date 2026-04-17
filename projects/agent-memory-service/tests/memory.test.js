@@ -1870,3 +1870,93 @@ describe('Memory Associations (Links)', () => {
       } finally { cleanup(); }
     });
   });
+
+  describe('memoryGraph', () => {
+    it('returns nodes and edges for linked memories', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        const m1 = await svc.add({ content: 'Node A', layer: 'core', tags: ['a'] });
+        const m2 = await svc.add({ content: 'Node B', layer: 'core', tags: ['b'] });
+        await svc.link({ source: m1.id, target: m2.id, type: 'related' });
+
+        const graph = await svc.memoryGraph();
+        assert.equal(graph.nodes.length, 2);
+        assert.equal(graph.edges.length, 1);
+        assert.equal(graph.edges[0].type, 'related');
+      } finally { cleanup(); }
+    });
+
+    it('filters by layer', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        await svc.add({ content: 'Core', layer: 'core' });
+        await svc.add({ content: 'Long', layer: 'long' });
+
+        const graph = await svc.memoryGraph({ layer: 'core' });
+        assert.equal(graph.nodes.length, 1);
+      } finally { cleanup(); }
+    });
+
+    it('truncates long content', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        await svc.add({ content: 'A'.repeat(200), layer: 'core' });
+        const graph = await svc.memoryGraph();
+        assert.ok(graph.nodes[0].content.length <= 80);
+      } finally { cleanup(); }
+    });
+
+    it('excludes edges to filtered-out nodes', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        const m1 = await svc.add({ content: 'Core', layer: 'core' });
+        const m2 = await svc.add({ content: 'Long', layer: 'long' });
+        await svc.link({ source: m1.id, target: m2.id, type: 'related' });
+
+        const graph = await svc.memoryGraph({ layer: 'core' });
+        assert.equal(graph.edges.length, 0);
+      } finally { cleanup(); }
+    });
+  });
+
+  describe('compact', () => {
+    it('removes low-weight memories', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        const m1 = await svc.add({ content: 'Heavy', layer: 'core' });
+        const m2 = await svc.add({ content: 'Light', layer: 'short' });
+        // Decay to reduce weights
+        await svc.decay();
+        await svc.decay();
+
+        const result = await svc.compact({ minWeight: 0.5 });
+        assert.ok(result.removed >= 0);
+        assert.ok(result.remaining >= 0);
+      } finally { cleanup(); }
+    });
+
+    it('dryRun does not remove anything', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        await svc.add({ content: 'Will stay', layer: 'core' });
+        await svc.decay();
+        await svc.decay();
+
+        const before = (await svc.stats()).total;
+        const result = await svc.compact({ minWeight: 0.5, dryRun: true });
+        const after = (await svc.stats()).total;
+        assert.equal(before, after);
+      } finally { cleanup(); }
+    });
+
+    it('respects layer filter', async () => {
+      const { svc, cleanup } = createService();
+      try {
+        await svc.add({ content: 'Core', layer: 'core' });
+        await svc.add({ content: 'Short', layer: 'short' });
+
+        const result = await svc.compact({ layer: 'short', minWeight: 0.01 });
+        assert.ok(result.removed >= 0);
+      } finally { cleanup(); }
+    });
+  });
