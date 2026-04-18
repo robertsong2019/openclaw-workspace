@@ -2305,3 +2305,56 @@ describe('random()', () => {
     } finally { cleanup(); }
   });
 });
+
+describe('recent()', () => {
+  it('returns most recent memories by createdAt', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      await svc.add({ content: 'first' });
+      await new Promise(r => setTimeout(r, 2));
+      await svc.add({ content: 'second' });
+      await new Promise(r => setTimeout(r, 2));
+      await svc.add({ content: 'third' });
+      const result = await svc.recent({ count: 2 });
+      assert.equal(result.length, 2);
+      assert.equal(result[0].content, 'third');
+      assert.equal(result[1].content, 'second');
+    } finally { cleanup(); }
+  });
+
+  it('sorts by accessedAt', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      const m1 = await svc.add({ content: 'old' });
+      await svc.add({ content: 'newer' });
+      // Touch m1 to make it most recently accessed
+      await svc.touch(m1.id);
+      const result = await svc.recent({ count: 1, sortBy: 'accessedAt' });
+      assert.equal(result[0].content, 'old');
+    } finally { cleanup(); }
+  });
+
+  it('respects layer filter', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      await svc.add({ content: 'a', layer: 'core' });
+      await svc.add({ content: 'b', layer: 'short' });
+      const result = await svc.recent({ count: 5, layer: 'core' });
+      assert.equal(result.length, 1);
+      assert.equal(result[0].layer, 'core');
+    } finally { cleanup(); }
+  });
+
+  it('defaults to count=10', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      for (let i = 0; i < 15; i++) await svc.add({ content: `m${i}` });
+      const result = await svc.recent();
+      assert.equal(result.length, 10);
+    } finally { cleanup(); }
+  });
+});

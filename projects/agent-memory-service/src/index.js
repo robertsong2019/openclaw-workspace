@@ -1965,6 +1965,21 @@ export class MemoryService {
   }
 
   /**
+   * Get most recent memories sorted by createdAt or accessedAt.
+   * @param {{count?: number, sortBy?: 'createdAt'|'accessedAt', layer?: string, tag?: string}} [opts]
+   * @returns {Promise<Memory[]>}
+   */
+  async recent(opts = {}) {
+    await this.#ensureLoaded();
+    let memories = this.#store.all();
+    if (opts.layer) memories = memories.filter(m => m.layer === opts.layer);
+    if (opts.tag) memories = memories.filter(m => m.tags && m.tags.includes(opts.tag));
+    const sortBy = opts.sortBy || 'createdAt';
+    memories.sort((a, b) => b[sortBy] - a[sortBy]);
+    return memories.slice(0, opts.count ?? 10);
+  }
+
+  /**
    * Get random memories (useful for serendipity/exploration).
    * @param {{count?: number, layer?: string, tag?: string}} [opts]
    * @returns {Promise<Memory[]>}
