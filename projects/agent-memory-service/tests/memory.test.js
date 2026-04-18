@@ -2421,3 +2421,174 @@ describe('mergeMemories()', () => {
     } finally { cleanup(); }
   });
 });
+
+// ─── query() ─────────────────────────────────────────────
+describe('query()', () => {
+  it('returns paginated results with total', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      await svc.add({ content: 'a', layer: 'core' });
+      await svc.add({ content: 'b', layer: 'long' });
+      await svc.add({ content: 'c', layer: 'short' });
+      const res = await svc.query({ layer: 'long' });
+      assert.equal(res.total, 1);
+      assert.equal(res.results[0].content, 'b');
+      assert.equal(res.limit, 20);
+    } finally { cleanup(); }
+  });
+
+  it('filters by tags with AND logic', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      await svc.add({ content: 'ab', tags: ['a', 'b'] });
+      await svc.add({ content: 'ac', tags: ['a', 'c'] });
+      await svc.add({ content: 'bc', tags: ['b', 'c'] });
+      const res = await svc.query({ tags: ['a', 'b'], tagsOp: 'and' });
+      assert.equal(res.total, 1);
+      assert.equal(res.results[0].content, 'ab');
+    } finally { cleanup(); }
+  });
+
+  it('filters by entities', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      await svc.add({ content: 'x', entities: ['alice', 'bob'] });
+      await svc.add({ content: 'y', entities: ['carol'] });
+      const res = await svc.query({ entities: ['alice'] });
+      assert.equal(res.total, 1);
+      assert.equal(res.results[0].content, 'x');
+    } finally { cleanup(); }
+  });
+
+  it('filters by weight range', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      const m1 = await svc.add({ content: 'heavy', layer: 'core' });
+      await svc.add({ content: 'light', layer: 'short' });
+      // manually set weight
+      const m = await svc.get(m1.id);
+      const res = await svc.query({ minWeight: 0.9 });
+      assert.ok(res.total >= 1);
+      assert.ok(res.results.every(r => r.weight >= 0.9));
+    } finally { cleanup(); }
+  });
+
+  it('sorts ascending', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      await svc.add({ content: 'first', layer: 'core' });
+      await svc.add({ content: 'second', layer: 'long' });
+      const res = await svc.query({ sortBy: 'createdAt', sortOrder: 'asc' });
+      assert.ok(res.results[0].createdAt <= res.results[1].createdAt);
+    } finally { cleanup(); }
+  });
+
+  it('paginates with offset', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      for (let i = 0; i < 5; i++) await svc.add({ content: `item${i}` });
+      const page1 = await svc.query({ limit: 2, offset: 0 });
+      const page2 = await svc.query({ limit: 2, offset: 2 });
+      assert.equal(page1.results.length, 2);
+      assert.equal(page2.results.length, 2);
+      assert.notEqual(page1.results[0].id, page2.results[0].id);
+      assert.equal(page1.total, 5);
+    } finally { cleanup(); }
+  });
+
+  it('filters by source', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      await svc.add({ content: 'chat', source: 'conversation' });
+      await svc.add({ content: 'api', source: 'manual' });
+      const res = await svc.query({ source: 'conversation' });
+      assert.equal(res.total, 1);
+    } finally { cleanup(); }
+  });
+});
+
+// ─── findByEntity() ──────────────────────────────────────
+describe('findByEntity()', () => {
+  it('finds memories by entity', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      await svc.add({ content: 'about alice', entities: ['alice'], layer: 'core' });
+      await svc.add({ content: 'about bob', entities: ['bob'] });
+      const res = await svc.findByEntity('alice');
+      assert.equal(res.length, 1);
+      assert.equal(res[0].content, 'about alice');
+    } finally { cleanup(); }
+  });
+
+  it('returns empty for unknown entity', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      await svc.add({ content: 'test', entities: ['alice'] });
+      const res = await svc.findByEntity('nobody');
+      assert.equal(res.length, 0);
+    } finally { cleanup(); }
+  });
+
+  it('filters by layer', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      await svc.add({ content: 'a', entities: ['x'], layer: 'core' });
+      await svc.add({ content: 'b', entities: ['x'], layer: 'short' });
+      const res = await svc.findByEntity('x', { layer: 'core' });
+      assert.equal(res.length, 1);
+    } finally { cleanup(); }
+  });
+});
+
+// ─── batchUpdate() ───────────────────────────────────────
+describe('batchUpdate()', () => {
+  it('updates multiple memories', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      const m1 = await svc.add({ content: 'a', tags: ['old'] });
+      const m2 = await svc.add({ content: 'b', tags: ['old'] });
+      const { updated, notFound } = await svc.batchUpdate([
+        { id: m1.id, tags: ['new1'] },
+        { id: m2.id, tags: ['new2'] },
+      ]);
+      assert.equal(updated, 2);
+      assert.equal(notFound.length, 0);
+      assert.deepEqual((await svc.get(m1.id)).tags, ['new1']);
+    } finally { cleanup(); }
+  });
+
+  it('reports not found ids', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      const { updated, notFound } = await svc.batchUpdate([
+        { id: 'nonexistent', tags: ['x'] },
+      ]);
+      assert.equal(updated, 0);
+      assert.deepEqual(notFound, ['nonexistent']);
+    } finally { cleanup(); }
+  });
+
+  it('clamps weight to valid range', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      const m = await svc.add({ content: 'test' });
+      await svc.batchUpdate([{ id: m.id, weight: 5.0 }]);
+      assert.ok((await svc.get(m.id)).weight <= 1.0);
+      await svc.batchUpdate([{ id: m.id, weight: -1 }]);
+      assert.ok((await svc.get(m.id)).weight >= 0);
+    } finally { cleanup(); }
+  });
+});

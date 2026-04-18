@@ -2044,6 +2044,118 @@ export class MemoryService {
     }
     return shuffled.slice(0, n);
   }
+
+  /**
+   * Structured query with filtering, sorting, and pagination.
+   * @param {{
+   *   layer?: MemoryLayer,
+   *   tags?: string[],
+   *   tagsOp?: 'and'|'or',
+   *   entities?: string[],
+   *   minWeight?: number,
+   *   maxWeight?: number,
+   *   source?: string,
+   *   createdAfter?: number,
+   *   createdBefore?: number,
+   *   sortBy?: 'createdAt'|'accessedAt'|'weight'|'accessCount',
+   *   sortOrder?: 'asc'|'desc',
+   *   offset?: number,
+   *   limit?: number
+   * }} opts
+   * @returns {Promise<{results: Memory[], total: number, offset: number, limit: number}>}
+   */
+  async query(opts = {}) {
+    await this.#ensureLoaded();
+    let memories = this.#store.all();
+
+    // Layer filter
+    if (opts.layer) memories = memories.filter(m => m.layer === opts.layer);
+
+    // Tag filter (AND or OR)
+    if (opts.tags && opts.tags.length > 0) {
+      const op = opts.tagsOp || 'or';
+      memories = memories.filter(m => {
+        if (!m.tags) return false;
+        return op === 'and'
+          ? opts.tags.every(t => m.tags.includes(t))
+          : opts.tags.some(t => m.tags.includes(t));
+      });
+    }
+
+    // Entity filter
+    if (opts.entities && opts.entities.length > 0) {
+      memories = memories.filter(m =>
+        m.entities && opts.entities.some(e => m.entities.includes(e))
+      );
+    }
+
+    // Weight range
+    if (opts.minWeight !== undefined) memories = memories.filter(m => m.weight >= opts.minWeight);
+    if (opts.maxWeight !== undefined) memories = memories.filter(m => m.weight <= opts.maxWeight);
+
+    // Source filter
+    if (opts.source) memories = memories.filter(m => m.source === opts.source);
+
+    // Created time range
+    if (opts.createdAfter) memories = memories.filter(m => m.createdAt >= opts.createdAfter);
+    if (opts.createdBefore) memories = memories.filter(m => m.createdAt <= opts.createdBefore);
+
+    const total = memories.length;
+
+    // Sort
+    const sortBy = opts.sortBy || 'createdAt';
+    const order = opts.sortOrder || 'desc';
+    memories.sort((a, b) => {
+      const av = a[sortBy] ?? 0;
+      const bv = b[sortBy] ?? 0;
+      return order === 'desc' ? bv - av : av - bv;
+    });
+
+    // Pagination
+    const offset = opts.offset || 0;
+    const limit = opts.limit ?? 20;
+    const results = memories.slice(offset, offset + limit);
+
+    return { results, total, offset, limit };
+  }
+
+  /**
+   * Find memories by entity name.
+   * @param {string} entity - Entity name to search for
+   * @param {{layer?: MemoryLayer, limit?: number}} [opts]
+   * @returns {Promise<Memory[]>}
+   */
+  async findByEntity(entity, opts = {}) {
+    await this.#ensureLoaded();
+    let memories = this.#store.all();
+    if (opts.layer) memories = memories.filter(m => m.layer === opts.layer);
+    memories = memories.filter(m => m.entities && m.entities.includes(entity));
+    memories.sort((a, b) => b.weight - a.weight);
+    return memories.slice(0, opts.limit ?? 10);
+  }
+
+  /**
+   * Batch update multiple memories.
+   * @param {Array<{id: string, tags?: string[], entities?: string[], weight?: number, layer?: MemoryLayer, source?: string}>} updates
+   * @returns {Promise<{updated: number, notFound: string[]}>}
+   */
+  async batchUpdate(updates) {
+    await this.#ensureLoaded();
+    const notFound = [];
+    let updated = 0;
+    for (const u of updates) {
+      const m = this.#store.get(u.id);
+      if (!m) { notFound.push(u.id); continue; }
+      if (u.tags !== undefined) m.tags = u.tags;
+      if (u.entities !== undefined) m.entities = u.entities;
+      if (u.weight !== undefined) m.weight = Math.min(MAX_WEIGHT, Math.max(0, u.weight));
+      if (u.layer !== undefined) m.layer = u.layer;
+      if (u.source !== undefined) m.source = u.source;
+      updated++;
+    }
+    await this.#store.save();
+    return { updated, notFound };
+  }
 }
 
 // ─── Embedding Provider Interface ────────────────────────
