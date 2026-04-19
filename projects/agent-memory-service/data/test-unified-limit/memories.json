@@ -1,0 +1,50 @@
+[
+  {
+    "id": "f9c2b091-486c-4941-8fd5-56976d532799",
+    "content": "apple fruit healthy",
+    "layer": "core",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1776614749310,
+    "accessedAt": 1776614749310,
+    "accessCount": 0,
+    "hash": "f786ae0912e7327b"
+  },
+  {
+    "id": "f0c38ccd-91fd-4444-a005-ebf39ed7378a",
+    "content": "banana fruit yellow",
+    "layer": "core",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1776614749310,
+    "accessedAt": 1776614749310,
+    "accessCount": 0,
+    "hash": "8122a45b0d216308"
+  },
+  {
+    "id": "84937661-5f22-4238-8d8a-935d626c49d4",
+    "content": "cherry fruit red",
+    "layer": "core",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1776614749311,
+    "accessedAt": 1776614749311,
+    "accessCount": 0,
+    "hash": "18903c5435911777"
+  },
+  {
+    "id": "f569613a-7b26-47e1-9dfb-8612283d25a6",
+    "content": "date fruit sweet",
+    "layer": "core",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1776614749315,
+    "accessedAt": 1776614749315,
+    "accessCount": 0,
+    "hash": "4ac4bb94583a3135"
+  }
+]

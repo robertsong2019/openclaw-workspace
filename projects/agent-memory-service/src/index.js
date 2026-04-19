@@ -1173,6 +1173,99 @@ export class MemoryService {
   }
 
   /**
+   * Unified 3-way RRF search combining BM25, semantic text, and vector embeddings.
+   * Falls back gracefully: if embeddings unavailable, does 2-way (BM25 + semantic).
+   * @param {string} query
+   * @param {{limit?: number, layer?: MemoryLayer, explain?: boolean}} opts
+   * @returns {Promise<Array<Memory & {score: number, explanation?: object}>>}
+   */
+  async searchUnified(query, opts = {}) {
+    await this.#ensureLoaded();
+    const limit = opts.limit || 5;
+    const K = 60;
+    const sources = [];
+
+    // BM25 results
+    const bm25Raw = this.#bm25.search(query, 100);
+    const bm25Scored = [];
+    for (const r of bm25Raw) {
+      const m = this.#store.get(r.id);
+      if (!m) continue;
+      if (opts.layer && m.layer !== opts.layer) continue;
+      if (m.weight < LAYERS[m.layer].minWeight) continue;
+      const ageDays = daysSince(m.createdAt);
+      const recency = Math.exp(-0.01 * ageDays);
+      const layerBoost = { core: 1.5, long: 1.0, short: 0.7 }[m.layer];
+      bm25Scored.push({ id: r.id, score: r.bm25Score * recency * m.weight * layerBoost });
+    }
+    if (bm25Scored.length) sources.push(bm25Scored);
+
+    // Semantic text search
+    const semResults = await this.search(query, { strategy: 'semantic', limit: 100, layer: opts.layer });
+    if (semResults.length) sources.push(semResults.map(r => ({ id: r.id, score: r.score })));
+
+    // Vector embedding search (optional)
+    let embedAvailable = false;
+    if (this.#embeddings.enabled) {
+      try {
+        const embedResults = await this.searchEmbedding(query, { limit: 100, layer: opts.layer, threshold: 0 });
+        if (embedResults.length) {
+          sources.push(embedResults.map(r => ({ id: r.id, score: r.score })));
+          embedAvailable = true;
+        }
+      } catch { /* embeddings unavailable, skip */ }
+    }
+
+    if (sources.length === 0) return [];
+
+    // RRF fusion across all sources
+    const rrfScores = new Map();
+    const sourceRanks = []; // per-source rank maps for explanation
+    for (const src of sources) {
+      const sorted = [...src].sort((a, b) => b.score - a.score);
+      const rankMap = new Map();
+      sorted.forEach((r, i) => rankMap.set(r.id, i + 1));
+      sourceRanks.push(rankMap);
+      for (let j = 0; j < sorted.length; j++) {
+        rrfScores.set(sorted[j].id, (rrfScores.get(sorted[j].id) || 0) + 1 / (K + j + 1));
+      }
+    }
+
+    const sorted = [...rrfScores.entries()]
+      .map(([id, score]) => {
+        const m = this.#store.get(id);
+        if (!m) return null;
+        const entry = { ...m, score };
+        if (opts.explain !== false) {
+          entry.explanation = {
+            sources: sourceRanks.map((rm, i) => {
+              const name = i === 0 ? 'bm25' : (i === 1 ? 'semantic' : 'embedding');
+              return { name, rank: rm.get(id) || null };
+            }),
+            rrfScore: score,
+            embeddingUsed: embedAvailable,
+          };
+        }
+        return entry;
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
+
+    // Boost accessed memories
+    for (const r of sorted) {
+      const original = this.#store.get(r.id);
+      if (original) {
+        original.accessedAt = now();
+        original.accessCount++;
+        original.weight = Math.min(MAX_WEIGHT, original.weight + BOOST_AMOUNT);
+      }
+    }
+    await this.#store.save();
+    return sorted;
+  }
+
+  /**
    * Apply decay to all memories
    * @returns {{decayed: number, removed: number}}
    */

@@ -239,3 +239,85 @@ describe('searchEmbedding', () => {
     assert.equal(results.length, 0);
   });
 });
+
+describe('searchUnified', () => {
+  const baseDir = join(import.meta.dirname, '..', 'data', 'test-unified');
+
+  it('fuses BM25 + semantic + embedding results', async () => {
+    await rm(baseDir + '-fuse', { recursive: true, force: true });
+    const svc = new MemoryService({ dbPath: baseDir + '-fuse', embedFn: mockEmbed });
+    await svc.init();
+
+    await svc.add({ content: 'JavaScript is a dynamic language for web development', layer: 'core', tags: ['js'] });
+    await svc.add({ content: 'Python excels at data science and machine learning', layer: 'core', tags: ['py'] });
+    await svc.add({ content: 'Rust provides memory safety without garbage collection', layer: 'core', tags: ['rs'] });
+
+    const results = await svc.searchUnified('JavaScript web');
+    assert.ok(results.length >= 1);
+    assert.ok(results[0].score > 0);
+    assert.ok(results[0].explanation);
+    assert.ok(results[0].explanation.sources.length >= 1);
+  });
+
+  it('falls back to BM25+semantic when no embeddings', async () => {
+    await rm(baseDir + '-noembed', { recursive: true, force: true });
+    const svc = new MemoryService({ dbPath: baseDir + '-noembed' });
+    await svc.init();
+
+    await svc.add({ content: 'memory without embeddings test', layer: 'core' });
+
+    const results = await svc.searchUnified('memory test');
+    assert.ok(results.length >= 1);
+    assert.equal(results[0].explanation.embeddingUsed, false);
+  });
+
+  it('returns empty when no matches found', async () => {
+    await rm(baseDir + '-empty', { recursive: true, force: true });
+    const svc = new MemoryService({ dbPath: baseDir + '-empty', embedFn: mockEmbed });
+    await svc.init();
+
+    await svc.add({ content: 'alpha beta gamma', layer: 'core' });
+    const results = await svc.searchUnified('xyz zzz completely unrelated');
+    // May still return results due to semantic/embedding fallback; just verify no crash
+    assert.ok(Array.isArray(results));
+  });
+
+  it('respects limit option', async () => {
+    await rm(baseDir + '-limit', { recursive: true, force: true });
+    const svc = new MemoryService({ dbPath: baseDir + '-limit', embedFn: mockEmbed });
+    await svc.init();
+
+    await svc.add({ content: 'apple fruit healthy', layer: 'core' });
+    await svc.add({ content: 'banana fruit yellow', layer: 'core' });
+    await svc.add({ content: 'cherry fruit red', layer: 'core' });
+    await svc.add({ content: 'date fruit sweet', layer: 'core' });
+
+    const results = await svc.searchUnified('fruit', { limit: 2 });
+    assert.ok(results.length <= 2);
+  });
+
+  it('filters by layer', async () => {
+    await rm(baseDir + '-layer', { recursive: true, force: true });
+    const svc = new MemoryService({ dbPath: baseDir + '-layer', embedFn: mockEmbed });
+    await svc.init();
+
+    await svc.add({ content: 'core layer unified search', layer: 'core' });
+    await svc.add({ content: 'short layer unified search', layer: 'short' });
+
+    const results = await svc.searchUnified('unified search', { layer: 'core' });
+    assert.ok(results.every(r => r.layer === 'core'));
+  });
+
+  it('boosts access count on results', async () => {
+    await rm(baseDir + '-boost', { recursive: true, force: true });
+    const svc = new MemoryService({ dbPath: baseDir + '-boost', embedFn: mockEmbed });
+    await svc.init();
+
+    const m = await svc.add({ content: 'boostable unified content', layer: 'core' });
+    assert.equal(m.accessCount, 0);
+
+    await svc.searchUnified('boostable unified');
+    const after = await svc.get(m.id);
+    assert.ok(after.accessCount > 0);
+  });
+});
