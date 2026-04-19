@@ -1127,6 +1127,52 @@ export class MemoryService {
   }
 
   /**
+   * Pure vector similarity search using embedding provider.
+   * Returns memories ranked by cosine similarity to the query embedding.
+   * Throws if embeddings are not enabled.
+   * @param {string} query - Query text to embed and search
+   * @param {{limit?: number, layer?: MemoryLayer, threshold?: number}} opts
+   * @returns {Promise<Array<Memory & {score: number}>>}
+   */
+  async searchEmbedding(query, opts = {}) {
+    await this.#ensureLoaded();
+    if (!this.#embeddings.enabled) {
+      throw new Error('Embeddings not enabled. Provide embedFn in constructor options.');
+    }
+    const limit = opts.limit || 5;
+    const threshold = opts.threshold || 0;
+    const queryVec = await this.#embeddings.embed(query);
+    if (!queryVec) return [];
+
+    const scored = [];
+    for (const m of this.#store.all()) {
+      if (opts.layer && m.layer !== opts.layer) continue;
+      if (m.weight < LAYERS[m.layer].minWeight) continue;
+      const memVec = await this.#embeddings.embed(m.content);
+      if (!memVec) continue;
+      const sim = cosineSimilarity(queryVec, memVec);
+      if (sim >= threshold) {
+        scored.push({ ...m, score: sim });
+      }
+    }
+
+    scored.sort((a, b) => b.score - a.score);
+    const results = scored.slice(0, limit);
+
+    // Boost accessed memories
+    for (const r of results) {
+      const original = this.#store.get(r.id);
+      if (original) {
+        original.accessedAt = now();
+        original.accessCount++;
+        original.weight = Math.min(MAX_WEIGHT, original.weight + BOOST_AMOUNT);
+      }
+    }
+    await this.#store.save();
+    return results;
+  }
+
+  /**
    * Apply decay to all memories
    * @returns {{decayed: number, removed: number}}
    */

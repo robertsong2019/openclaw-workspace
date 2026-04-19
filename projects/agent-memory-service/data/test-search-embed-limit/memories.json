@@ -1,0 +1,38 @@
+[
+  {
+    "id": "cbc29174-3ee0-4a96-9638-153ec54a7a0c",
+    "content": "alpha beta gamma",
+    "layer": "core",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1776611111262,
+    "accessedAt": 1776611111262,
+    "accessCount": 0,
+    "hash": "64989ccbf3efa9c8"
+  },
+  {
+    "id": "1a935462-788f-4fdd-b300-19f49d401e17",
+    "content": "delta epsilon zeta",
+    "layer": "core",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1776611111263,
+    "accessedAt": 1776611111263,
+    "accessCount": 0,
+    "hash": "dfab0f8a5f646e8f"
+  },
+  {
+    "id": "90f23ec2-396c-427a-933f-096b1aafff5e",
+    "content": "eta theta iota",
+    "layer": "core",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1776611111263,
+    "accessedAt": 1776611111263,
+    "accessCount": 0,
+    "hash": "c5467baf96686a58"
+  }
+]

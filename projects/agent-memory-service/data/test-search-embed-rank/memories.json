@@ -1,0 +1,38 @@
+[
+  {
+    "id": "0a5e86ae-a7e1-451d-aede-16225931781e",
+    "content": "JavaScript programming language",
+    "layer": "core",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1776611111253,
+    "accessedAt": 1776611111253,
+    "accessCount": 0,
+    "hash": "44d639aa872adfd9"
+  },
+  {
+    "id": "0aa92901-1f76-4689-858f-494833b7e598",
+    "content": "Rust systems programming",
+    "layer": "core",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1776611111254,
+    "accessedAt": 1776611111254,
+    "accessCount": 0,
+    "hash": "bbb4a64f22f25868"
+  },
+  {
+    "id": "82e97791-e368-4b09-9b26-d7e06d50264a",
+    "content": "Python machine learning",
+    "layer": "core",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1776611111255,
+    "accessedAt": 1776611111255,
+    "accessCount": 0,
+    "hash": "b261c4d0b52471a1"
+  }
+]

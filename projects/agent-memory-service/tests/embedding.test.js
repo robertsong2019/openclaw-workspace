@@ -142,3 +142,100 @@ describe('MemoryService with embeddings', () => {
     assert.equal(results[0].content, 'test memory');
   });
 });
+
+describe('searchEmbedding', () => {
+  const svcDir = join(import.meta.dirname, '..', 'data', 'test-search-embed');
+
+  it('throws when embeddings not enabled', async () => {
+    await rm(svcDir + '-noembed', { recursive: true, force: true });
+    const svc = new MemoryService({ dbPath: svcDir + '-noembed' });
+    await svc.init();
+    await assert.rejects(() => svc.searchEmbedding('test'), /not enabled/);
+  });
+
+  it('returns results ranked by cosine similarity', async () => {
+    await rm(svcDir + '-rank', { recursive: true, force: true });
+    const svc = new MemoryService({ dbPath: svcDir + '-rank', embedFn: mockEmbed });
+    await svc.init();
+
+    await svc.add({ content: 'JavaScript programming language', layer: 'core' });
+    await svc.add({ content: 'Rust systems programming', layer: 'core' });
+    await svc.add({ content: 'Python machine learning', layer: 'core' });
+
+    const results = await svc.searchEmbedding('JavaScript programming');
+    assert.ok(results.length >= 1);
+    assert.ok(results[0].content.includes('JavaScript'));
+    assert.ok(results[0].score > 0);
+    // Results should be sorted by score descending
+    for (let i = 1; i < results.length; i++) {
+      assert.ok(results[i - 1].score >= results[i].score);
+    }
+  });
+
+  it('respects limit option', async () => {
+    await rm(svcDir + '-limit', { recursive: true, force: true });
+    const svc = new MemoryService({ dbPath: svcDir + '-limit', embedFn: mockEmbed });
+    await svc.init();
+
+    await svc.add({ content: 'alpha beta gamma', layer: 'core' });
+    await svc.add({ content: 'delta epsilon zeta', layer: 'core' });
+    await svc.add({ content: 'eta theta iota', layer: 'core' });
+
+    const results = await svc.searchEmbedding('alpha', { limit: 2 });
+    assert.ok(results.length <= 2);
+  });
+
+  it('filters by layer', async () => {
+    await rm(svcDir + '-layer', { recursive: true, force: true });
+    const svc = new MemoryService({ dbPath: svcDir + '-layer', embedFn: mockEmbed });
+    await svc.init();
+
+    await svc.add({ content: 'core memory item', layer: 'core' });
+    await svc.add({ content: 'short memory item', layer: 'short' });
+
+    const results = await svc.searchEmbedding('memory', { layer: 'core' });
+    assert.ok(results.every(r => r.layer === 'core'));
+  });
+
+  it('applies threshold filter', async () => {
+    await rm(svcDir + '-thresh', { recursive: true, force: true });
+    const svc = new MemoryService({ dbPath: svcDir + '-thresh', embedFn: mockEmbed });
+    await svc.init();
+
+    await svc.add({ content: 'cat dog bird', layer: 'core' });
+    await svc.add({ content: 'quantum physics relativity', layer: 'core' });
+
+    const results = await svc.searchEmbedding('cat', { threshold: 0.99 });
+    // With a high threshold, only very similar results should appear
+    for (const r of results) {
+      assert.ok(r.score >= 0.99);
+    }
+  });
+
+  it('boosts access count on matched results', async () => {
+    await rm(svcDir + '-boost', { recursive: true, force: true });
+    const svc = new MemoryService({ dbPath: svcDir + '-boost', embedFn: mockEmbed });
+    await svc.init();
+
+    await svc.add({ content: 'boostable memory content', layer: 'core', tags: ['test'] });
+    const before = (await svc.search('boostable', { strategy: 'exact' }))[0];
+
+    const results = await svc.searchEmbedding('boostable memory');
+    assert.ok(results.length >= 1);
+
+    // Verify access was boosted (re-query)
+    const after = await svc.get(results[0].id);
+    assert.ok(after.accessCount > (before ? before.accessCount : 0));
+  });
+
+  it('returns empty array when query embedding fails', async () => {
+    await rm(svcDir + '-fail', { recursive: true, force: true });
+    const failEmbed = async () => { throw new Error('API down'); };
+    const svc = new MemoryService({ dbPath: svcDir + '-fail', embedFn: failEmbed });
+    await svc.init();
+    await svc.add({ content: 'test', layer: 'core' });
+
+    const results = await svc.searchEmbedding('test');
+    assert.equal(results.length, 0);
+  });
+});

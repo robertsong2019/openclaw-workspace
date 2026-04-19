@@ -1,0 +1,26 @@
+[
+  {
+    "id": "9de5e81c-3230-4a67-a510-7a81e4580285",
+    "content": "core memory item",
+    "layer": "core",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1776611111275,
+    "accessedAt": 1776611111275,
+    "accessCount": 0,
+    "hash": "31fb83124676005c"
+  },
+  {
+    "id": "28f5d36f-45e6-4dfa-afb7-dc190fa344e0",
+    "content": "short memory item",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1776611111276,
+    "accessedAt": 1776611111276,
+    "accessCount": 0,
+    "hash": "0049e9efdcf94369"
+  }
+]

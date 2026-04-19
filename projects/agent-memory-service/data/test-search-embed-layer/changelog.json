@@ -1,0 +1,14 @@
+[
+  {
+    "ts": 1776611111275,
+    "action": "add",
+    "memoryId": "9de5e81c-3230-4a67-a510-7a81e4580285",
+    "layer": "core"
+  },
+  {
+    "ts": 1776611111276,
+    "action": "add",
+    "memoryId": "28f5d36f-45e6-4dfa-afb7-dc190fa344e0",
+    "layer": "short"
+  }
+]
