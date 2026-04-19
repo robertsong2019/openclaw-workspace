@@ -2707,6 +2707,74 @@ export class MemoryService {
     }
     return { updated, notFound };
   }
+
+  /**
+   * Suggest tags for content based on existing tag patterns and co-occurrence
+   * @param {string} content - Text content to analyze
+   * @param {{limit?: number, minScore?: number, layer?: string}} opts
+   * @returns {Promise<{tag: string, score: number, reason: string}[]>}
+   */
+  async suggestTags(content, opts = {}) {
+    await this.#ensureLoaded();
+    const limit = opts.limit || 5;
+    const minScore = opts.minScore || 0.1;
+    let memories = this.#store.all();
+    if (opts.layer) memories = memories.filter(m => m.layer === opts.layer);
+
+    // Build tag co-occurrence map and tag→content patterns
+    const tagContent = {}; // tag → concatenated content of memories with that tag
+    const tagFreq = {};    // tag → count
+    for (const m of memories) {
+      if (!m.tags || m.tags.length === 0) continue;
+      const text = (m.content || '').toLowerCase();
+      for (const tag of m.tags) {
+        tagFreq[tag] = (tagFreq[tag] || 0) + 1;
+        if (!tagContent[tag]) tagContent[tag] = '';
+        tagContent[tag] += ' ' + text;
+      }
+    }
+
+    const lowerContent = content.toLowerCase();
+    const contentWords = lowerContent.split(/\s+/).filter(w => w.length > 2);
+    const scores = {};
+
+    for (const [tag, freq] of Object.entries(tagFreq)) {
+      let score = 0;
+      let reason = '';
+
+      // 1. Direct tag name match in content
+      const tagLower = tag.toLowerCase();
+      if (lowerContent.includes(tagLower)) {
+        score += 0.5;
+        reason = 'tag name found in content';
+      }
+
+      // 2. Tag content keyword overlap
+      const tagWords = (tagContent[tag] || '').split(/\s+/).filter(w => w.length > 2);
+      const tagWordSet = new Set(tagWords.slice(0, 500)); // sample for perf
+      let overlap = 0;
+      for (const w of contentWords) {
+        if (tagWordSet.has(w)) overlap++;
+      }
+      if (contentWords.length > 0) {
+        const overlapRatio = overlap / contentWords.length;
+        score += overlapRatio * 0.4;
+        if (!reason && overlapRatio > 0.05) reason = `${Math.round(overlapRatio * 100)}% keyword overlap`;
+      }
+
+      // 3. Frequency bonus (popular tags get slight boost)
+      const maxFreq = Math.max(...Object.values(tagFreq));
+      score += (freq / maxFreq) * 0.1;
+
+      if (score >= minScore) {
+        scores[tag] = { tag, score: Math.round(score * 1000) / 1000, reason: reason || 'frequency match' };
+      }
+    }
+
+    return Object.values(scores)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
+  }
 }
 
 // ─── Embedding Provider Interface ────────────────────────

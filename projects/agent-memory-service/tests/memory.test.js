@@ -2892,3 +2892,69 @@ describe('bulkTag', () => {
     } finally { cleanup(); }
   });
 });
+
+describe('suggestTags()', () => {
+  it('suggests tags based on content keyword overlap', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      await svc.add({ content: 'machine learning neural network training', tags: ['ai', 'ml'] });
+      await svc.add({ content: 'deep learning model training data', tags: ['ai', 'deep-learning'] });
+      const suggestions = await svc.suggestTags('training a neural network with data');
+      assert.ok(suggestions.length > 0);
+      assert.ok(suggestions.some(s => s.tag === 'ai'));
+      assert.ok(suggestions[0].score > 0);
+    } finally { cleanup(); }
+  });
+
+  it('returns empty when no tagged memories exist', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      await svc.add({ content: 'no tags here' });
+      const suggestions = await svc.suggestTags('something');
+      assert.equal(suggestions.length, 0);
+    } finally { cleanup(); }
+  });
+
+  it('matches tag name found in content', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      await svc.add({ content: 'python code example', tags: ['python', 'coding'] });
+      const suggestions = await svc.suggestTags('I love python programming');
+      assert.ok(suggestions.some(s => s.tag === 'python' && s.reason.includes('tag name found')));
+    } finally { cleanup(); }
+  });
+
+  it('respects limit option', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      await svc.add({ content: 'a b c', tags: ['t1', 't2', 't3', 't4', 't5'] });
+      const suggestions = await svc.suggestTags('a b c', { limit: 2 });
+      assert.ok(suggestions.length <= 2);
+    } finally { cleanup(); }
+  });
+
+  it('respects minScore option', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      await svc.add({ content: 'unique xyz content', tags: ['rare-tag'] });
+      const suggestions = await svc.suggestTags('completely different unrelated text', { minScore: 0.8 });
+      assert.equal(suggestions.length, 0);
+    } finally { cleanup(); }
+  });
+
+  it('filters by layer when specified', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      await svc.add({ content: 'short term python code', tags: ['python'], layer: 'short' });
+      await svc.add({ content: 'long term java code', tags: ['java'], layer: 'long' });
+      const suggestions = await svc.suggestTags('python code', { layer: 'long' });
+      assert.ok(!suggestions.some(s => s.tag === 'python'));
+    } finally { cleanup(); }
+  });
+});
