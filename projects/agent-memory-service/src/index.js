@@ -1476,6 +1476,71 @@ export class MemoryService {
     };
   }
 
+  /**
+   * Compute memory system health score (0-100)
+   * @param {{weights?: {expiry?: number, access?: number, weight?: number, changelog?: number}, horizonDays?: number}} opts
+   * @returns {Promise<{score: number, details: {expiry: number, access: number, weight: number, changelog: number}, recommendations: string[]}>}
+   */
+  async healthScore(opts = {}) {
+    await this.#ensureLoaded();
+    const all = this.#store.all();
+    const nowTs = now();
+    const horizonMs = (opts.horizonDays || 7) * 24 * 60 * 60 * 1000;
+
+    const weights = {
+      expiry: opts.weights?.expiry ?? 0.4,
+      access: opts.weights?.access ?? 0.3,
+      weight: opts.weights?.weight ?? 0.2,
+      changelog: opts.weights?.changelog ?? 0.1,
+    };
+
+    // 1. Expired / expiring soon
+    const expired = all.filter(m => m.expiresAt && m.expiresAt <= nowTs).length;
+    const expiringSoon = all.filter(m => m.expiresAt && m.expiresAt > nowTs && m.expiresAt <= nowTs + horizonMs).length;
+    const expiryScore = all.length === 0 ? 100 : Math.max(0, 100 - ((expired * 20 + expiringSoon * 10) / all.length) * 100);
+
+    // 2. Low access activity (no access in 30 days)
+    const staleMs = 30 * 24 * 60 * 60 * 1000;
+    const staleCount = all.filter(m => nowTs - m.accessedAt > staleMs).length;
+    const accessScore = all.length === 0 ? 100 : Math.max(0, 100 - (staleCount / all.length) * 100);
+
+    // 3. Low weight (near cleanup threshold)
+    const lowWeightCount = all.filter(m => {
+      const layerConfig = LAYERS[m.layer] || LAYERS.short;
+      return m.weight < layerConfig.minWeight * 1.5;
+    }).length;
+    const weightScore = all.length === 0 ? 100 : Math.max(0, 100 - (lowWeightCount / all.length) * 100);
+
+    // 4. Changelog bloat (>1000 entries needs attention)
+    const changelogCount = this.#changelog.all().length;
+    const changelogScore = Math.max(0, 100 - Math.min(100, (changelogCount / 2000) * 100));
+
+    const score = Math.round(
+      expiryScore * weights.expiry +
+      accessScore * weights.access +
+      weightScore * weights.weight +
+      changelogScore * weights.changelog
+    );
+
+    const recommendations = [];
+    if (expired > 0) recommendations.push(`Purge ${expired} expired memories (call purgeExpired())`);
+    if (expiringSoon > 0) recommendations.push(`Review ${expiringSoon} memories expiring soon`);
+    if (staleCount > all.length * 0.5) recommendations.push(`Consider consolidating stale memories (call consolidate())`);
+    if (lowWeightCount > all.length * 0.3) recommendations.push(`Many low-weight memories may decay soon (check weight distribution)`);
+    if (changelogCount > 1000) recommendations.push(`Compact changelog (${changelogCount} entries > 1000, call compactChangelog())`);
+
+    return {
+      score,
+      details: {
+        expiry: Math.round(expiryScore),
+        access: Math.round(accessScore),
+        weight: Math.round(weightScore),
+        changelog: Math.round(changelogScore),
+      },
+      recommendations,
+    };
+  }
+
   // ─── Skill / SOP Layer (L3) ────────────────────────────
 
   /**

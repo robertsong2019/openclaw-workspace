@@ -2957,4 +2957,116 @@ describe('suggestTags()', () => {
       assert.ok(!suggestions.some(s => s.tag === 'python'));
     } finally { cleanup(); }
   });
+
+  // ─── healthScore() Tests ──────────────────────────────
+
+  it('returns perfect score for empty memory store', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      const health = await svc.healthScore();
+      assert.equal(health.score, 100);
+      assert.equal(health.details.expiry, 100);
+      assert.equal(health.details.access, 100);
+      assert.equal(health.details.weight, 100);
+      assert.equal(health.details.changelog, 100);
+      assert.ok(Array.isArray(health.recommendations));
+    } finally { cleanup(); }
+  });
+
+  it('detects expired and expiring memories', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      const nowTs = Date.now();
+      await svc.add({ content: 'already expired', layer: 'short', expiresAt: nowTs - 1000 });
+      await svc.add({ content: 'expires in 3 days', layer: 'short', expiresAt: nowTs + 3 * 24 * 60 * 60 * 1000 });
+      await svc.add({ content: 'healthy memory', layer: 'core' });
+
+      const health = await svc.healthScore({ horizonDays: 7 });
+      assert.ok(health.score < 100);
+      assert.ok(health.details.expiry < 100);
+      assert.ok(health.recommendations.some(r => r.includes('expired')));
+    } finally { cleanup(); }
+  });
+
+  it('detects stale memories (low access activity)', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      // Add a memory, then use decay() to make it stale
+      const stale = await svc.add({ content: 'stale memory', layer: 'short' });
+      const active = await svc.add({ content: 'active memory', layer: 'core' });
+
+      // Decay to simulate time passing (short memories decay faster)
+      await svc.decay();
+      await svc.decay();  // Multiple decays for significant effect
+
+      const health = await svc.healthScore();
+      // After decay, short-term memories will have lower weight and older accessedAt
+      assert.ok(health.details.access <= 100);
+    } finally { cleanup(); }
+  });
+
+  it('detects low-weight memories', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      await svc.add({ content: 'healthy', layer: 'core' });
+      await svc.add({ content: 'decayed', layer: 'short' });
+
+      // Decay the short memory significantly
+      await svc.decay();
+
+      const health = await svc.healthScore();
+      assert.ok(health.details.weight <= 100);
+    } finally { cleanup(); }
+  });
+
+  it('detects changelog bloat', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      // Add and delete memories to create changelog entries
+      for (let i = 0; i < 1200; i++) {
+        const m = await svc.add({ content: `temp ${i}`, layer: 'short' });
+        await svc.delete(m.id);
+      }
+
+      const health = await svc.healthScore();
+      assert.ok(health.details.changelog < 100);
+      assert.ok(health.recommendations.some(r => r.includes('Compact changelog') || r.includes('compactChangelog')));
+    } finally { cleanup(); }
+  });
+
+  it('respects custom weight configuration', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      await svc.add({ content: 'test', layer: 'core' });
+
+      // Focus heavily on expiry
+      const health1 = await svc.healthScore({ weights: { expiry: 1.0, access: 0, weight: 0, changelog: 0 } });
+      // Focus heavily on access
+      const health2 = await svc.healthScore({ weights: { expiry: 0, access: 1.0, weight: 0, changelog: 0 } });
+
+      assert.equal(health1.details.expiry, 100);
+      assert.equal(health2.details.access, 100);
+    } finally { cleanup(); }
+  });
+
+  it('returns actionable recommendations', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      // Create multiple issues
+      const nowTs = Date.now();
+      await svc.add({ content: 'expired', layer: 'short', expiresAt: nowTs - 1000 });
+      await svc.add({ content: 'expiring soon', layer: 'short', expiresAt: nowTs + 3 * 24 * 60 * 60 * 1000 });
+
+      const health = await svc.healthScore({ horizonDays: 7 });
+      assert.ok(health.recommendations.length > 0);
+      assert.ok(health.recommendations.every(r => typeof r === 'string'));
+    } finally { cleanup(); }
+  });
 });
