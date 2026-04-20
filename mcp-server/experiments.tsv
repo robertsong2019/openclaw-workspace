@@ -1,3 +1,4 @@
 timestamp	commit	metric	value	status	description
 2026-04-15T23:10	5957283	tests	38	pass	add edit tool: replace text in files (all occurrences)
 2026-04-20T19:10	cf02057	tests	45	pass	add Streamable HTTP transport + refactor (parseArgs, createServerInstance)
+2026-04-20T19:30	f84a0a9	tests	50	pass	add system_status tool (platform, version, memory, workspace)

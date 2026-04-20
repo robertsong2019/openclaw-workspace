@@ -13,6 +13,33 @@ const execAsync = promisify(execCb);
 // Workspace root for sandboxing file operations
 export const WORKSPACE_ROOT = process.env.OPENCLAW_WORKSPACE || process.cwd();
 
+// Dangerous command patterns to block
+const DANGEROUS_COMMANDS: RegExp[] = [
+  new RegExp("rm\\s+-rf\\s*\\/", "i"),          // rm -rf /
+  new RegExp("rm\\s+-rf\\s+\\.\\.", "i"),        // rm -rf ../
+  new RegExp("dd\\s+if=", "i"),                 // dd (disk destruction)
+  new RegExp("mkfs", "i"),                      // filesystem formatting
+  new RegExp(":>.*\\/", "i"),                   // emptying files directly
+  new RegExp("format\\s+[a-z]:", "i"),          // Windows format
+  new RegExp("del\\s+\\/[sfq]\\s+\\*", "i"),    // Windows del
+  new RegExp("chmod\\s+777\\s+\\/", "i"),       // chmod 777 /
+  new RegExp("chown\\s+.*:\\*\\s+\\/", "i"),    // chown to root
+  new RegExp("wget.*\\|\\s*sh", "i"),           // wget | sh (remote execution)
+  new RegExp("curl.*\\|\\s*sh", "i"),           // curl | sh
+  new RegExp("eval\\s*\\$\\(.*\\)", "i"),       // command injection
+  new RegExp(">\\s*\\/dev\\/.*[a-z]d[a-z]", "i"), // writing to device files
+];
+
+// Validate exec command for dangerous patterns
+export function validateExecCommand(command: string): { valid: boolean; reason?: string } {
+  for (const pattern of DANGEROUS_COMMANDS) {
+    if (pattern.test(command)) {
+      return { valid: false, reason: "Command contains dangerous pattern" };
+    }
+  }
+  return { valid: true };
+}
+
 // Resolve and sandbox a path to WORKSPACE_ROOT
 export function safePath(inputPath: string): string {
   const resolved = resolve(WORKSPACE_ROOT, inputPath);
@@ -165,6 +192,20 @@ async function executeWrite(args: any): Promise<any> {
 
 async function executeExec(args: any): Promise<any> {
   const { command, workdir, timeout = 30 } = args;
+
+  // Validate command for dangerous patterns
+  const validation = validateExecCommand(command);
+  if (!validation.valid) {
+    return {
+      tool: "exec",
+      command,
+      exitCode: -1,
+      stdout: "",
+      stderr: `Command rejected: ${validation.reason}`,
+      error: "Command validation failed",
+    };
+  }
+
   const options: any = { cwd: workdir || WORKSPACE_ROOT, timeout: timeout * 1000, maxBuffer: 1024 * 1024 };
   try {
     const { stdout, stderr } = await execAsync(command, options);
