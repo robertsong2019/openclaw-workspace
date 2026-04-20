@@ -496,6 +496,122 @@ class LinkStore {
   get size() { return this.#links.size; }
 }
 
+// ─── SkillStore (L3: SOP Layer) ─────────────────────────
+
+/**
+ * @typedef {{
+ *   id: string,
+ *   name: string,
+ *   steps: string[],
+ *   trigger: string,
+ *   successRate: number,
+ *   usageCount: number,
+ *   createdAt: number,
+ *   updatedAt: number
+ * }} Skill
+ */
+
+class SkillStore {
+  /** @type {Map<string, Skill>} */
+  #skills = new Map();
+  /** @type {string} */
+  #filePath;
+  #dirty = false;
+
+  constructor(dirPath) {
+    this.#filePath = join(dirPath, 'skills.json');
+  }
+
+  async load() {
+    try {
+      const data = await readFile(this.#filePath, 'utf-8');
+      const arr = JSON.parse(data);
+      this.#skills.clear();
+      for (const s of arr) this.#skills.set(s.id, s);
+    } catch {
+      this.#skills.clear();
+    }
+  }
+
+  async save() {
+    if (!this.#dirty) return;
+    const arr = Array.from(this.#skills.values());
+    await mkdir(dirname(this.#filePath), { recursive: true });
+    await writeFile(this.#filePath, JSON.stringify(arr, null, 2));
+    this.#dirty = false;
+  }
+
+  /**
+   * @param {{name: string, steps: string[], trigger: string, successRate?: number}} opts
+   * @returns {Skill}
+   */
+  put(opts) {
+    const ts = now();
+    /** @type {Skill} */
+    const skill = {
+      id: randomUUID(),
+      name: opts.name,
+      steps: opts.steps,
+      trigger: opts.trigger,
+      successRate: opts.successRate ?? 1.0,
+      usageCount: 0,
+      createdAt: ts,
+      updatedAt: ts,
+    };
+    this.#skills.set(skill.id, skill);
+    this.#dirty = true;
+    return skill;
+  }
+
+  /** @param {string} id */
+  delete(id) {
+    this.#skills.delete(id);
+    this.#dirty = true;
+  }
+
+  /** @param {string} id @returns {Skill|undefined} */
+  get(id) { return this.#skills.get(id); }
+
+  /**
+   * Match skills by trigger keywords (simple keyword matching)
+   * @param {string} query
+   * @returns {Skill[]}
+   */
+  match(query) {
+    const q = query.toLowerCase();
+    const results = [];
+    for (const s of this.#skills.values()) {
+      const triggerLower = s.trigger.toLowerCase();
+      // Check if any trigger keyword appears in the query
+      const keywords = triggerLower.split(/[,，\s]+/).filter(Boolean);
+      if (keywords.some(kw => q.includes(kw))) {
+        results.push(s);
+      }
+    }
+    // Sort by successRate desc, then usageCount desc
+    results.sort((a, b) => b.successRate - a.successRate || b.usageCount - a.usageCount);
+    return results;
+  }
+
+  /**
+   * Record a skill usage outcome
+   * @param {string} id
+   * @param {{success: boolean}} opts
+   */
+  recordUsage(id, opts) {
+    const s = this.#skills.get(id);
+    if (!s) return;
+    const total = s.successRate * s.usageCount;
+    s.usageCount++;
+    s.successRate = (total + (opts.success ? 1 : 0)) / s.usageCount;
+    s.updatedAt = now();
+    this.#dirty = true;
+  }
+
+  all() { return Array.from(this.#skills.values()); }
+  get size() { return this.#skills.size; }
+}
+
 // ─── Extractor ───────────────────────────────────────────
 
 /**
@@ -698,6 +814,8 @@ export class MemoryService {
   #embeddings;
   /** @type {string} */
   #dirPath;
+  /** @type {SkillStore} */
+  #skills;
   /** @type {BM25Index} */
   #bm25 = new BM25Index();
   /** @type {boolean} */
@@ -713,6 +831,7 @@ export class MemoryService {
     this.#changelog = new ChangelogStore(this.#dirPath);
     this.#extractor = new MemoryExtractor();
     this.#embeddings = new EmbeddingProvider(this.#dirPath, options.embedFn || null);
+    this.#skills = new SkillStore(this.#dirPath);
   }
 
   /** Access the embedding provider for configuration */
@@ -726,6 +845,7 @@ export class MemoryService {
       await this.#links.load();
       await this.#changelog.load();
       await this.#embeddings.loadCache();
+      await this.#skills.load();
       // Rebuild BM25 index from loaded memories
       for (const m of this.#store.all()) this.#bm25.add(m.id, m.content);
       this.#loaded = true;
@@ -1327,6 +1447,67 @@ export class MemoryService {
       changelogEntries: this.#changelog.all().length,
       links: this.#links.size,
     };
+  }
+
+  // ─── Skill / SOP Layer (L3) ────────────────────────────
+
+  /**
+   * Learn a new skill (SOP) from experience
+   * @param {{name: string, steps: string[], trigger: string, successRate?: number}} opts
+   * @returns {Promise<Skill>}
+   */
+  async learnSkill(opts) {
+    await this.#ensureLoaded();
+    const skill = this.#skills.put(opts);
+    await this.#skills.save();
+    return skill;
+  }
+
+  /**
+   * Find skills matching a trigger/query
+   * @param {string} trigger
+   * @returns {Promise<Skill[]>}
+   */
+  async getSkill(trigger) {
+    await this.#ensureLoaded();
+    return this.#skills.match(trigger);
+  }
+
+  /**
+   * List all skills
+   * @returns {Promise<Skill[]>}
+   */
+  async listSkills() {
+    await this.#ensureLoaded();
+    return this.#skills.all();
+  }
+
+  /**
+   * Delete a skill
+   * @param {string} id
+   * @returns {Promise<boolean>}
+   */
+  async deleteSkill(id) {
+    await this.#ensureLoaded();
+    const existed = this.#skills.get(id) !== undefined;
+    this.#skills.delete(id);
+    await this.#skills.save();
+    return existed;
+  }
+
+  /**
+   * Record a skill usage outcome (updates successRate)
+   * @param {string} id
+   * @param {{success: boolean}} opts
+   * @returns {Promise<boolean>}
+   */
+  async recordSkillUsage(id, opts) {
+    await this.#ensureLoaded();
+    const skill = this.#skills.get(id);
+    if (!skill) return false;
+    this.#skills.recordUsage(id, opts);
+    await this.#skills.save();
+    return true;
   }
 
   /**
@@ -2908,4 +3089,4 @@ class EmbeddingProvider {
   }
 }
 
-export { MemoryStore, MemoryExtractor, LinkStore, ChangelogStore, LAYERS, tokenize, ngramSimilarity, keywordScore, EmbeddingProvider, cosineSimilarity, BM25Index };
+export { MemoryStore, MemoryExtractor, LinkStore, ChangelogStore, SkillStore, LAYERS, tokenize, ngramSimilarity, keywordScore, EmbeddingProvider, cosineSimilarity, BM25Index };

@@ -35,16 +35,17 @@ Autoresearch 方法论实践 — Agent Memory Service 已从 v0.6.0 迭代至 v1
 
 ---
 
-## Next Actions (Updated 2026-04-18)
+## Next Actions (Updated 2026-04-20)
 
 ### High Priority (本周完成)
 - [ ] **Agent Memory Service v1.0** — ✅ 搜索三阶段完成(BM25+Embedding+Unified RRF, 284 tests, suggestTags)。下一步: EmbeddingProvider真实接入(ONNX/远程API), 生产化
-- [ ] **实现 OpenClaw MCP Server** — ✅ 研究完成(2026-04-19)。完整实现模式已就绪：
-  - 研究笔记: [技术选型](catalyst-research/exploration-notes/2026-04-18-mcp-server-typescript-streamable-http.md) + [实现模式](catalyst-research/exploration-notes/2026-04-19-mcp-server-implementation-patterns.md)
+- [ ] **实现 OpenClaw MCP Server** — ✅ 研究完成(2026-04-19 + 2026-04-20 深度研究)。完整实现模式已就绪：
+  - 研究笔记: [技术选型](catalyst-research/exploration-notes/2026-04-18-mcp-server-typescript-streamable-http.md) + [实现模式](catalyst-research/exploration-notes/2026-04-19-mcp-server-implementation-patterns.md) + [深度研究(含可运行代码)](catalyst-research/exploration-notes/2026-04-20-mcp-server-streamable-http.md)
   - SDK v2: registerTool API、多会话工厂模式、createMcpExpressApp、Zod v4
-  - **Step 1 MVP**: 3 tools (search_memories, system_status, list_memories) + Streamable HTTP + MCP Inspector 验证
+  - **Step 1 MVP**: 3 tools (status, search_memory, run_command) + Streamable HTTP 无状态模式 + curl 测试脚本 ✅ 代码已写
   - **Step 2**: 接入 Agent Memory Service query() + OpenClaw Gateway 状态
   - **Step 3**: Bearer auth + rate limit + Docker 部署
+  - **关键洞察**: Streamable HTTP 已取代 SSE；SDK v2 模块化拆分(Express/Hono中间件)；无状态模式适合MVP；OpenClaw差异化定位是"AI agent的操作系统接口"
 - [ ] **A2A Agent Trust 集成原型** - Agent Card嵌入信任元数据，与Agent Trust Network对接
 - [ ] **集成多Agent框架** — LangGraph Supervisor桥接OpenClaw原型 + Agent Card Schema设计
 
