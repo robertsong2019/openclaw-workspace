@@ -3,7 +3,10 @@
 ## 待办任务
 
 ### 🔥 今晚任务（4/20）
-- [ ] **AMS 加 Skill/SOP 层** — 借鉴 GenericAgent，实现 `learnSkill()` + `getSkill()` API
+- [x] **AMS 加 Skill/SOP 层** — ✅ 完成 (commit 462f06d, 297/297 tests)
+  - SkillStore class: put/match/recordUsage/delete + persistence
+  - MemoryService API: learnSkill/getSkill/listSkills/deleteSkill/recordSkillUsage
+  - 13 new tests, ~160 lines code
   - 新增 L3 Skill 层（可复用执行流程，永不衰减）
   - `learnSkill({name, steps, trigger, successRate})` — 从执行经验中提炼 SOP
   - `getSkill(trigger)` — 按触发条件匹配已有 Skill

@@ -878,6 +878,7 @@ export class MemoryService {
       accessCount: 0,
       source: opts.source,
       hash: contentHash(opts.content),
+      ...(opts.expiresAt ? { expiresAt: opts.expiresAt } : {}),
     };
     this.#store.put(memory);
     this.#bm25.add(id, memory.content);
@@ -1417,6 +1418,32 @@ export class MemoryService {
 
     await this.#store.save();
     return { decayed, removed };
+  }
+
+  /**
+   * Purge memories whose expiresAt timestamp has passed.
+   * @returns {Promise<{purged: string[]}>}
+   */
+  async purgeExpired() {
+    await this.#ensureLoaded();
+    const nowTs = now();
+    const purged = [];
+
+    for (const m of this.#store.all()) {
+      if (m.expiresAt && m.expiresAt <= nowTs) {
+        purged.push(m.id);
+        this.#store.delete(m.id);
+        this.#bm25.remove(m.id);
+      }
+    }
+
+    if (purged.length > 0) {
+      await this.#store.save();
+      this.#changelog.record('purgeExpired', purged.join(','), '');
+      await this.#changelog.save();
+    }
+
+    return { purged };
   }
 
   /**
