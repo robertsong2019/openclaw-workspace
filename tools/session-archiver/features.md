@@ -10,8 +10,8 @@
 - [x] CLI interface (commander)
 
 ## Planned
-- [ ] **Tag system** — add/remove tags on archives, filter/search by tag
-- [ ] **Date-range listing** — filter listArchives by from/to dates
+- [x] **Tag system** — add/remove tags on archives, filter/search by tag ✅ 2026-04-21
+- [x] **Date-range listing** — filter listArchives by from/to dates ✅ 2026-04-21
 - [ ] **Merge archives** — combine multiple sessions into one
 - [ ] **Diff** — compare two archived sessions
 - [ ] **Config file** — default export format, retention policy
