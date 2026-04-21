@@ -1541,6 +1541,44 @@ export class MemoryService {
     };
   }
 
+  /**
+   * Automatically run maintenance tasks based on health score
+   * @param {{threshold?: number, tasks?: string[], dryRun?: boolean}} opts
+   *   threshold — overall score below this triggers maintenance (default 80)
+   *   tasks — whitelist of tasks to run: ['purge','consolidate','compactChangelog','decay','reindex']
+   *   dryRun — if true, report what would be done without executing
+   * @returns {Promise<{triggered: boolean, score: number, actions: object}>}
+   */
+  async autoMaintain(opts = {}) {
+    const threshold = opts.threshold ?? 80;
+    const health = await this.healthScore();
+    const result = { triggered: health.score < threshold, score: health.score, actions: {} };
+
+    if (!result.triggered) return result;
+    if (opts.dryRun) {
+      result.actions = health.recommendations;
+      return result;
+    }
+
+    const tasks = opts.tasks || ['purge', 'compactChangelog', 'decay', 'reindex'];
+    if (tasks.includes('purge') && health.details.expiry < 90) {
+      result.actions.purge = await this.purgeExpired();
+    }
+    if (tasks.includes('compactChangelog') && health.details.changelog < 90) {
+      result.actions.compactChangelog = await this.compactChangelog();
+    }
+    if (tasks.includes('decay')) {
+      result.actions.decay = await this.decay();
+    }
+    if (tasks.includes('consolidate') && health.details.access < 70) {
+      result.actions.consolidate = await this.consolidate({ dryRun: false });
+    }
+    if (tasks.includes('reindex')) {
+      result.actions.reindex = this.#store.reindex();
+    }
+    return result;
+  }
+
   // ─── Skill / SOP Layer (L3) ────────────────────────────
 
   /**
@@ -2816,6 +2854,23 @@ export class MemoryService {
     }
     memories.sort((a, b) => b.weight - a.weight);
     return memories.slice(0, opts.limit ?? 20);
+  }
+
+  /**
+   * Find memories similar to a given memory by ID.
+   * Uses the memory's content as a search query via searchUnified, excluding itself.
+   * @param {string} id - Source memory ID
+   * @param {{limit?: number, layer?: MemoryLayer, minScore?: number}} opts
+   * @returns {Promise<Array<{id: string, content: string, score: number, layer: MemoryLayer, tags: string[]}>>}
+   */
+  async searchSimilar(id, opts = {}) {
+    await this.#ensureLoaded();
+    const source = this.#store.get(id);
+    if (!source) return [];
+    const results = await this.searchUnified(source.content, { limit: (opts.limit ?? 10) + 1, layer: opts.layer });
+    return results
+      .filter(r => r.id !== id && (opts.minScore === undefined || r.score >= opts.minScore))
+      .slice(0, opts.limit ?? 10);
   }
 
   /**
