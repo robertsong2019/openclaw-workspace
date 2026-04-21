@@ -144,6 +144,19 @@ export const OPENCLAW_TOOLS: Tool[] = [
     },
   },
   {
+    name: "append",
+    description: "Append content to an existing file. Creates the file if it doesn't exist.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Path to the file to append to" },
+        content: { type: "string", description: "Content to append" },
+        newline: { type: "boolean", description: "Prepend a newline before content if file is non-empty", default: true },
+      },
+      required: ["path", "content"],
+    },
+  },
+  {
     name: "search_files",
     description: "Search file contents by regex pattern across the workspace. Returns matching files, lines, and line numbers.",
     inputSchema: {
@@ -174,6 +187,7 @@ export const toolHandlers: Record<string, (args: any) => Promise<any>> = {
   read: executeRead,
   write: executeWrite,
   exec: executeExec,
+  append: executeAppend,
   memory_search: executeMemorySearch,
   edit: executeEdit,
   search_files: executeSearchFiles,
@@ -203,6 +217,26 @@ async function executeWrite(args: any): Promise<any> {
   await mkdir(dirname(resolved), { recursive: true });
   await writeFile(resolved, content, "utf-8");
   return { tool: "write", path, success: true, bytesWritten: Buffer.byteLength(content, "utf-8") };
+}
+
+async function executeAppend(args: any): Promise<any> {
+  const { path, content, newline = true } = args;
+  const resolved = safePath(path);
+  await mkdir(dirname(resolved), { recursive: true });
+  let existing = "";
+  try {
+    existing = await readFile(resolved, "utf-8");
+  } catch { /* file doesn't exist yet */ }
+  const separator = existing && newline ? "\n" : "";
+  const newContent = existing + separator + content;
+  await writeFile(resolved, newContent, "utf-8");
+  return {
+    tool: "append",
+    path,
+    success: true,
+    bytesWritten: Buffer.byteLength(content, "utf-8"),
+    totalSize: Buffer.byteLength(newContent, "utf-8"),
+  };
 }
 
 async function executeExec(args: any): Promise<any> {
