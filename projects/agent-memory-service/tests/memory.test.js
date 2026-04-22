@@ -3441,4 +3441,85 @@ describe('MemoryService — inspect', () => {
       assert.equal(r.links.length, 2);
     } finally { cleanup(); }
   });
+
+}); // close inspect describe
+
+describe('MemoryService — clusterByTopic', () => {
+  it('groups memories by tags', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      await svc.add({ content: 'alpha', tags: ['ai', 'ml'] });
+      await svc.add({ content: 'beta', tags: ['ai'] });
+      await svc.add({ content: 'gamma', tags: ['ml'] });
+      await svc.add({ content: 'delta', tags: ['rust'] });
+      await svc.add({ content: 'epsilon', tags: [] });
+      const result = await svc.clusterByTopic();
+      const aiCluster = result.clusters.find(c => c.topic === 'ai');
+      assert.ok(aiCluster, 'ai cluster exists');
+      assert.ok(aiCluster.count >= 2);
+      assert.equal(result.total, 5);
+      assert.ok(result.unclustered.length >= 1);
+    } finally { cleanup(); }
+  });
+
+  it('respects minClusterSize', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      await svc.add({ content: 'only one', tags: ['unique'] });
+      const result = await svc.clusterByTopic({ minClusterSize: 2 });
+      assert.equal(result.clusters.length, 0);
+    } finally { cleanup(); }
+  });
+
+  it('filters by layer', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      await svc.add({ content: 'st1', layer: 'short_term', tags: ['x'] });
+      await svc.add({ content: 'st2', layer: 'short_term', tags: ['x'] });
+      await svc.add({ content: 'lt1', layer: 'long_term', tags: ['x'] });
+      const result = await svc.clusterByTopic({ layer: 'short_term' });
+      const c = result.clusters.find(c2 => c2.topic === 'x');
+      assert.ok(c);
+      assert.equal(c.count, 2);
+    } finally { cleanup(); }
+  });
+
+  it('does not double-assign memories', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      await svc.add({ content: 'a', tags: ['shared', 'extra'] });
+      await svc.add({ content: 'b', tags: ['shared', 'extra'] });
+      await svc.add({ content: 'c', tags: ['shared'] });
+      const result = await svc.clusterByTopic({ minClusterSize: 2 });
+      const allIds = result.clusters.flatMap(c2 => c2.ids);
+      assert.equal(allIds.length, new Set(allIds).size);
+    } finally { cleanup(); }
+  });
+
+  it('returns empty for empty store', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      const result = await svc.clusterByTopic();
+      assert.equal(result.clusters.length, 0);
+      assert.equal(result.unclustered.length, 0);
+      assert.equal(result.total, 0);
+    } finally { cleanup(); }
+  });
+
+  it('respects limit', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      for (let i = 0; i < 10; i++) await svc.add({ content: `m${i}`, tags: ['batch'] });
+      const result = await svc.clusterByTopic({ limit: 5 });
+      const c = result.clusters.find(c2 => c2.topic === 'batch');
+      assert.ok(c);
+      assert.ok(c.count <= 5);
+    } finally { cleanup(); }
+  });
 });

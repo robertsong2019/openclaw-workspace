@@ -3306,6 +3306,50 @@ export class MemoryService {
       removedIds: toRemove.map(m => m.id),
     };
   }
+
+  /**
+   * Cluster memories into topic groups based on tag co-occurrence.
+   * Memories without tags are assigned to an "untagged" group.
+   * @param {{minClusterSize?: number, layer?: string, limit?: number}} opts
+   * @returns {Promise<{clusters: {topic: string, ids: string[], count: number}[], unclustered: string[], total: number}>}
+   */
+  async clusterByTopic(opts = {}) {
+    await this.#ensureLoaded();
+    const minClusterSize = opts.minClusterSize ?? 2;
+    let memories = this.#store.all();
+    if (opts.layer) memories = memories.filter(m => m.layer === opts.layer);
+    const limit = opts.limit ?? memories.length;
+    memories = memories.slice(0, limit);
+
+    // Group by tags: each tag becomes a potential cluster
+    const tagMap = new Map(); // tag -> Set of memory ids
+    for (const m of memories) {
+      const tags = (m.tags || []).filter(t => t && t.length > 0);
+      for (const tag of tags) {
+        if (!tagMap.has(tag)) tagMap.set(tag, new Set());
+        tagMap.get(tag).add(m.id);
+      }
+    }
+
+    // Build clusters: tags with >= minClusterSize memories, biggest first
+    const clusters = [];
+    const seenIds = new Set();
+    const sortedTags = [...tagMap.entries()].sort((a, b) => b[1].size - a[1].size);
+
+    for (const [tag, ids] of sortedTags) {
+      if (ids.size < minClusterSize) continue;
+      const uniqueIds = [...ids].filter(id => !seenIds.has(id));
+      if (uniqueIds.length < minClusterSize) continue;
+      for (const id of uniqueIds) seenIds.add(id);
+      clusters.push({ topic: tag, ids: uniqueIds, count: uniqueIds.length });
+    }
+
+    const unclustered = memories
+      .filter(m => !seenIds.has(m.id) && (m.tags || []).length === 0)
+      .map(m => m.id);
+
+    return { clusters, unclustered, total: memories.length };
+  }
 }
 
 // ─── Embedding Provider Interface ────────────────────────
