@@ -3439,4 +3439,46 @@ class EmbeddingProvider {
   }
 }
 
+/**
+ * Create an embedFn that calls an OpenAI-compatible /v1/embeddings API.
+ * @param {{baseUrl?: string, model?: string, apiKey?: string, dimensions?: number}} opts
+ *   - baseUrl: API base (default 'https://api.openai.com/v1')
+ *   - model: model name (default 'text-embedding-3-small')
+ *   - apiKey: Bearer token (reads OPENAI_API_KEY env if omitted)
+ *   - dimensions: optional output dimensions for supported models
+ * @returns {EmbedFn}
+ */
+export function createOpenAIEmbedFn(opts = {}) {
+  const baseUrl = opts.baseUrl || 'https://api.openai.com/v1';
+  const model = opts.model || 'text-embedding-3-small';
+  const apiKey = opts.apiKey || process.env.OPENAI_API_KEY || '';
+  const dimensions = opts.dimensions;
+
+  return async (text) => {
+    const body = { input: text, model };
+    if (dimensions) body.dimensions = dimensions;
+
+    const res = await fetch(`${baseUrl}/embeddings`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const err = await res.text().catch(() => '');
+      throw new Error(`Embedding API ${res.status}: ${err}`);
+    }
+
+    const json = await res.json();
+    const vec = json?.data?.[0]?.embedding;
+    if (!Array.isArray(vec) || vec.length === 0) {
+      throw new Error('No embedding vector in API response');
+    }
+    return vec;
+  };
+}
+
 export { MemoryStore, MemoryExtractor, LinkStore, ChangelogStore, SkillStore, LAYERS, tokenize, ngramSimilarity, keywordScore, EmbeddingProvider, cosineSimilarity, BM25Index };

@@ -20,6 +20,11 @@
 ### Active Theme
 Autoresearch 方法论实践 — Agent Memory Service v1.0-dev 持续迭代 (334 tests)。新增 autoMaintain()（健康分数驱动的自动维护）+ searchSimilar(id)（基于ID的相似记忆发现）。下一步：MCP Server 实现。⚠️ 关键教训：key-dev sessions 必须在每次实验成功后 git commit，否则代码会在 session 重置时丢失
 
+### Next Actions
+- [ ] 初始化 openclaw-mcp-server 项目（TypeScript SDK + Streamable HTTP，3 tools MVP）— 详见 [研究笔记](catalyst-research/exploration-notes/2026-04-22-mcp-server-typescript-streamable-http.md) ✅ 最新研究 2026-04-22
+- [ ] 实现 3 tools: memory_search(对接AMS), memory_write(写入md), task_create(创建任务)
+- [ ] MCP Server Docker 化部署 + Bearer Token 认证
+
 ### Core Projects
 1. **Agent Task CLI** - 多 Agent 任务编排 (109 tests, 80%+ coverage, ✅ 已完成)
 2. **Local Embedding Memory** - MEMORY.md 语义搜索 (✅ 插件v1.1.0, 7/7 tests pass, 561 chunks indexed)
@@ -46,6 +51,7 @@ Autoresearch 方法论实践 — Agent Memory Service v1.0-dev 持续迭代 (334
   - **Step 2**: 接入 Agent Memory Service query() + OpenClaw Gateway 状态
   - **Step 3**: Bearer auth + rate limit + Docker 部署
   - **关键洞察**: Streamable HTTP 已取代 SSE；SDK v2 模块化拆分(Express/Hono中间件)；无状态模式适合MVP；OpenClaw差异化定位是"AI agent的操作系统接口"
+  - **2026-04-22 更新**: v1.x 是生产推荐（v2 仍 pre-alpha）；Streamable HTTP 响应可以是 JSON 或 SSE 流；Session 管理（Map→Redis）是生产级关键差异；Taskade 的 OpenAPI codegen 方法值得借鉴（自动生成 tool 定义避免手工维护）；middleware 包是最简集成路径
 - [ ] **A2A Agent Trust 集成原型** - Agent Card嵌入信任元数据，与Agent Trust Network对接
 - [ ] **集成多Agent框架** — LangGraph Supervisor桥接OpenClaw原型 + Agent Card Schema设计
 
