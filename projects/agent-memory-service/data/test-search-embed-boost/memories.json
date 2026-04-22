@@ -1,6 +1,6 @@
 [
   {
-    "id": "68ca9ef0-145d-4efd-83a4-9941a5c9cb6d",
+    "id": "8be574c6-138e-4077-ae25-c2fb0db6788a",
     "content": "boostable memory content",
     "layer": "core",
     "tags": [
@@ -8,8 +8,8 @@
     ],
     "entities": [],
     "weight": 1,
-    "createdAt": 1776791088323,
-    "accessedAt": 1776791088323,
+    "createdAt": 1776856338100,
+    "accessedAt": 1776856338100,
     "accessCount": 0,
     "hash": "b4f1b77db5cb1148"
   }

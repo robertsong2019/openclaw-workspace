@@ -55,6 +55,42 @@ context-forge /path/to/project --update
 | `.github/copilot-instructions.md` | GitHub Copilot | PR/code review guidelines |
 | `.claude/CLAUDE.md` | Claude Code | Detailed project instructions |
 
+## Tutorial: First Run
+
+### 1. Install
+```bash
+cp context-forge.mjs /usr/local/bin/context-forge
+chmod +x /usr/local/bin/context-forge
+```
+
+### 2. Preview (no files changed)
+```bash
+context-forge ~/my-project --dry-run
+```
+You'll see a summary of detected project type, dependencies, and what each generated file will contain.
+
+### 3. Generate
+```bash
+context-forge ~/my-project
+```
+This creates `AGENTS.md`, `.cursorrules`, `.github/copilot-instructions.md`, and `.claude/CLAUDE.md` in your project root.
+
+### 4. Add custom content
+Edit any generated file and wrap your additions:
+```markdown
+<!-- context-forge:start -->
+Your custom rules here — preserved on update
+<!-- context-forge:end -->
+```
+
+### 5. Keep fresh
+```bash
+context-forge ~/my-project --update
+```
+Regenerates auto-detected sections while keeping your manual additions.
+
+---
+
 ## How It Works
 
 ```

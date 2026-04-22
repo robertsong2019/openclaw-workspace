@@ -3374,3 +3374,71 @@ describe('MemoryService — searchSimilar', () => {
     } finally { cleanup(); }
   });
 });
+
+// ─── inspect() ──────────────────────────────
+describe('MemoryService — inspect', () => {
+  it('returns null for nonexistent memory', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      const r = await svc.inspect('nonexistent');
+      assert.equal(r, null);
+    } finally { cleanup(); }
+  });
+
+  it('returns comprehensive inspection for a memory', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      const mem = await svc.add({ content: 'test memory for inspect', layer: 'core', tags: ['test', 'inspect'] });
+      const linked = await svc.add({ content: 'linked memory', layer: 'long' });
+      await svc.link({ source: mem.id, target: linked.id, type: 'related' });
+      await svc.update(mem.id, { content: 'updated test memory for inspect' });
+      const r = await svc.inspect(mem.id);
+      assert.ok(r);
+      assert.equal(r.memory.id, mem.id);
+      assert.ok(r.memory.content.includes('updated'));
+      assert.equal(r.links.length, 1);
+      assert.ok(r.timeline.length >= 1);
+      assert.ok(r.health);
+      assert.ok(r.tags.includes('test'));
+      assert.ok(Array.isArray(r.similar));
+    } finally { cleanup(); }
+  });
+
+  it('includes health score details', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      const mem = await svc.add({ content: 'health test', layer: 'long' });
+      const r = await svc.inspect(mem.id);
+      assert.ok(typeof r.health.score === 'number');
+      assert.ok(r.health.details);
+    } finally { cleanup(); }
+  });
+
+  it('returns empty arrays for isolated memory', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      const mem = await svc.add({ content: 'isolated', layer: 'short' });
+      const r = await svc.inspect(mem.id);
+      assert.equal(r.links.length, 0);
+      assert.equal(r.timeline.length, 1); // add() creates a changelog entry
+    } finally { cleanup(); }
+  });
+
+  it('tracks multiple links', async () => {
+    const { svc, cleanup } = createService();
+    await svc.init();
+    try {
+      const mem = await svc.add({ content: 'hub memory', layer: 'core' });
+      const m2 = await svc.add({ content: 'spoke 1', layer: 'long' });
+      const m3 = await svc.add({ content: 'spoke 2', layer: 'short' });
+      await svc.link({ source: mem.id, target: m2.id, type: 'related' });
+      await svc.link({ source: mem.id, target: m3.id, type: 'depends' });
+      const r = await svc.inspect(mem.id);
+      assert.equal(r.links.length, 2);
+    } finally { cleanup(); }
+  });
+});

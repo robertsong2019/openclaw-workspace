@@ -15,10 +15,10 @@
 
 ---
 
-## Current Focus (2026-04-20)
+## Current Focus (2026-04-22)
 
 ### Active Theme
-Autoresearch 方法论实践 — Agent Memory Service v1.0-dev 持续迭代 (309 tests)。搜索能力三阶段完成：BM25→Embedding→Unified RRF。新增 healthScore() 自监控 API（4维度评分+可操作建议）。下一步：MCP Server 实现。⚠️ 关键教训：key-dev sessions 必须在每次实验成功后 git commit，否则代码会在 session 重置时丢失
+Autoresearch 方法论实践 — Agent Memory Service v1.0-dev 持续迭代 (334 tests)。新增 autoMaintain()（健康分数驱动的自动维护）+ searchSimilar(id)（基于ID的相似记忆发现）。下一步：MCP Server 实现。⚠️ 关键教训：key-dev sessions 必须在每次实验成功后 git commit，否则代码会在 session 重置时丢失
 
 ### Core Projects
 1. **Agent Task CLI** - 多 Agent 任务编排 (109 tests, 80%+ coverage, ✅ 已完成)
@@ -30,7 +30,7 @@ Autoresearch 方法论实践 — Agent Memory Service v1.0-dev 持续迭代 (309
 7. **agent-log** - OpenClaw 日志搜索/汇总 CLI (✅ 单文件 Bash，零依赖)
 8. **ctxgen** - AI 上下文文件生成器 (✅ v1.0, 纯Node.js零依赖, 支持4种目标格式)
 9. **tiny-agent-workshop** - 单文件 Agent 模式教学集 (✅ 7个模式: ReAct/ToolCall/Memory/Router/Guardrail/Chain/EdgeAgent)
-10. **Agent Memory Service** - Mem0风格Agent记忆管理 (✅ v1.0-dev, 309/309 tests, 三层存储+LLM提取+语义检索+Consolidation+变更追踪+自监控+搜索三阶段(BM25+Embedding+Unified RRF)+suggestTags()+**healthScore() 4维度健康监控+可操作建议**)
+10. **Agent Memory Service** - Mem0风格Agent记忆管理 (✅ v1.0-dev, 334/334 tests, 三层存储+LLM提取+语义检索+Consolidation+变更追踪+自监控+搜索三阶段(BM25+Embedding+Unified RRF)+suggestTags()+healthScore()+autoMaintain()+searchSimilar())
 11. **A2A Protocol Lab** - Agent-to-Agent通信协议实验 (✅ 零依赖Python实现, Server+Client+Federation Demo)
 
 ---
@@ -38,7 +38,7 @@ Autoresearch 方法论实践 — Agent Memory Service v1.0-dev 持续迭代 (309
 ## Next Actions (Updated 2026-04-20)
 
 ### High Priority (本周完成)
-- [ ] **Agent Memory Service v1.0** — ✅ 搜索三阶段完成(BM25+Embedding+Unified RRF, 284 tests, suggestTags)。下一步: EmbeddingProvider真实接入(ONNX/远程API), 生产化
+- [ ] **Agent Memory Service v1.0** — ✅ 334/334 tests。搜索三阶段+healthScore()+autoMaintain()+searchSimilar()完成。下一步: EmbeddingProvider真实接入(ONNX/远程API), 生产化
 - [ ] **实现 OpenClaw MCP Server** — ✅ 研究完成(2026-04-19 + 2026-04-20 深度研究)。完整实现模式已就绪：
   - 研究笔记: [技术选型](catalyst-research/exploration-notes/2026-04-18-mcp-server-typescript-streamable-http.md) + [实现模式](catalyst-research/exploration-notes/2026-04-19-mcp-server-implementation-patterns.md) + [深度研究(含可运行代码)](catalyst-research/exploration-notes/2026-04-20-mcp-server-streamable-http.md)
   - SDK v2: registerTool API、多会话工厂模式、createMcpExpressApp、Zod v4
@@ -150,6 +150,12 @@ curl -X POST "https://api.tavily.com/search" \
 ---
 
 ## Recent Achievements
+
+### 2026-04-22
+- ✅ **Agent Memory Service v1.0-dev 续升** — 309→334 tests
+  - **autoMaintain(opts?)**: 健康分数驱动的自动维护（threshold/tasks whitelist/dryRun），5 new tests
+  - **searchSimilar(id, opts)**: 基于ID的相似记忆发现，复用searchUnified，排除源记忆，5 new tests
+  - 两个API均极简实现（autoMaintain ~39行, searchSimilar ~16行），零回滚
 
 ### 2026-04-21
 - ✅ **Agent Memory Service v1.0-dev 续升** — 284→309 tests
@@ -322,5 +328,5 @@ curl -X POST "https://api.tavily.com/search" \
 
 ---
 
-*Last updated: 2026-04-21 02:00*
-*Next review: 2026-04-22*
+*Last updated: 2026-04-22 02:00*
+*Next review: 2026-04-23*

@@ -79,6 +79,39 @@ await mem.decay();
 
 仅使用 Node.js 内置模块（sqlite3 除外，通过 better-sqlite33）。
 
+## Tutorial: Extracting Memories from a Chat
+
+```typescript
+import { MemoryService } from './src';
+const mem = new MemoryService();
+
+// 1. Feed a conversation — the extractor auto-detects entities, facts, preferences
+await mem.extractFromConversation([
+  { role: 'user', content: 'I\'m migrating our auth from JWT to Paseto tokens' },
+  { role: 'assistant', content: 'Noted. Paseto has built-in versioning and no algorithm confusion.' },
+  { role: 'user', content: 'Also, I prefer dark mode in all my editors.' }
+]);
+
+// 2. Check what was extracted
+const results = await mem.search('auth migration');
+console.log(results);
+// → [{ content: 'Migrating auth from JWT to Paseto', layer: 'long', tags: ['auth','migration'] }]
+
+// 3. Core preferences auto-promoted to L0
+const prefs = await mem.search('dark mode');
+// → [{ content: 'Prefers dark mode in editors', layer: 'core' }]
+
+// 4. Run decay periodically (e.g., daily cron)
+await mem.decay(); // applies Ebbinghaus curve, expires L2 items
+```
+
+## Concepts
+
+- **Layer** — Memory tier (core/long/short). Higher importance = slower decay.
+- **Extraction** — NLP pipeline that identifies entities, relations, facts, preferences, and decisions from raw conversation.
+- **Decay** — Ebbinghaus-inspired forgetting curve. L2 memories fade in ~1 day, L1 in ~30 days, L0 never.
+- **Search strategies** — Keyword (exact), semantic (embedding similarity), associative (graph traversal), temporal (recency-weighted).
+
 ## License
 
 MIT

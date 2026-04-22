@@ -1,4 +1,4 @@
-# HEARTBEAT.md - April 21, 2026 (Tuesday)
+# HEARTBEAT.md - April 22, 2026 (Wednesday)
 
 ## 待办任务
 
@@ -12,13 +12,13 @@
 - [ ] Hindsight 多策略检索原型
 - [ ] Agent Trust Network Web UI
 - [ ] Edge Agent Runtime Dashboard
-- [ ] Edge Agent Mesh 继续开发
+- [ ] AMS: deduplicate(), clusterByTopic(), searchByEntity()
 
 ### 探索性（下季度）
 - [ ] Edge Agent Runtime 增强
 - [ ] Agent Mesh Network P2P通信协议
 
 ## 系统状态
-- **AMS v1.0-dev**: 309/309 tests, 搜索三阶段+healthScore()自监控完成
+- **AMS v1.0-dev**: 334/334 tests, autoMaintain()+searchSimilar()完成
 - **本周重点**: MCP Server 实现 + AMS 生产化
 - **cron**: 全部任务正常运行

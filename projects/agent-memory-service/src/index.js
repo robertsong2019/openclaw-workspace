@@ -1604,6 +1604,23 @@ export class MemoryService {
   }
 
   /**
+   * Deep inspection of a single memory — returns all metadata for diagnostics.
+   * @param {string} id
+   * @returns {Promise<{memory: object, links: object[], timeline: object[], health: object, similar: object[], tags: string[]}|null>}
+   */
+  async inspect(id) {
+    await this.#ensureLoaded();
+    const mem = this.#store.get(id);
+    if (!mem) return null;
+    const links = this.#links.all().filter(l => l.source === id || l.target === id);
+    const timeline = this.#changelog.all().filter(c => c.memoryId === id);
+    const health = await this.healthScore({ memories: [mem] });
+    let similar = [];
+    try { similar = await this.searchSimilar(id, { limit: 5 }); } catch { /* no embedding is ok */ }
+    return { memory: mem, links, timeline, health, similar, tags: mem.tags || [] };
+  }
+
+  /**
    * List all skills
    * @returns {Promise<Skill[]>}
    */

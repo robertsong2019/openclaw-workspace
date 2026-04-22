@@ -31,3 +31,4 @@ timestamp	commit	metric	value	status	description
 2026-04-21T13:13	371ba60	test_count	319/319	keep	searchByTags() — tag filter with AND/OR logic. Fix: add() respects passed weight. 6 new tests (313→319).
 2026-04-21T13:16	6f6780f	test_count	324/324	keep	exportCompact() — lightweight export. 5 new tests (319→324).
 2026-04-21T16:12	key-dev-2-loopB	test_count	329/329	keep	autoMaintain() API — automatic maintenance triggered by health score thresholds. Supports threshold, tasks whitelist, dryRun. 5 new tests (324→329), ~93 lines added.
+2026-04-22T01:00	key-dev-3-loopC	test_count	334/334	keep	searchSimilar(id, opts) — find similar memories by ID using searchUnified. Supports limit, layer, minScore. Excludes source. 5 new tests (329→334), ~16 lines src.

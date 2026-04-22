@@ -14,3 +14,20 @@ Use this skill as policy guidance whenever the task involves skill discovery, in
 3. Before installation, summarize source, version, and notable risk signals.
 4. Do not claim exclusivity; both registries are allowed.
 5. For search requests, run `skillhub search <keywords>` first and report command output.
+
+## Quick Reference
+
+| Action | Primary | Fallback |
+|--------|---------|----------|
+| Search | `skillhub search <term>` | `clawhub search <term>` |
+| Install | `skillhub install <name>` | `clawhub install <name>` |
+| Update | `skillhub update <name>` | `clawhub update <name>` |
+| Publish | `clawhub publish` | — |
+
+## Decision Flow
+
+```
+User wants skill → skillhub search → found? → install
+                                    → not found? → clawhub search → found? → install
+                                                                → not found? → suggest creation
+```

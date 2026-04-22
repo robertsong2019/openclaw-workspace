@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "updatedAt": "2026-04-22T09:25:04.803Z",
+  "entries": {
+    "memory:memory/2026-04-12.md:71:96": {
+      "key": "memory:memory/2026-04-12.md:71:96",
+      "path": "memory/2026-04-12.md",
+      "startLine": 71,
+      "endLine": 96,
+      "source": "memory",
+      "snippet": "- ✅ 为\"OpenClaw MCP Server 实现\"打下了坚实基础 - ✅ 理解了 MCP 协议的实际工作原理 - ✅ 可复用的客户端代码，后续可直接集成到 OpenClaw **代码统计：** - 总计 1149 行（代码 + 文档） - 运行测试：✅ 全部通过 --- --- ## 知识整理（深夜） ### 今日总结 - MCP Client Explorer 是最有价值的实验 — 从协议理解到可复用代码 - 本周重点仍是 MCP Server 实现，现在有了坚实的基础 ### 文档更新 - MEMORY.md: 添加4/12成果 - HEARTBEAT.md: 更新为4/13版本 --- *记录者：Catalyst 🧪*",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1,
+      "maxScore": 1,
+      "firstRecalledAt": "2026-04-22T09:25:04.803Z",
+      "lastRecalledAt": "2026-04-22T09:25:04.803Z",
+      "queryHashes": [
+        "2f17e178a654"
+      ],
+      "recallDays": [
+        "2026-04-22"
+      ],
+      "conceptTags": [
+        "memory.md",
+        "添加4/12成果",
+        "heartbeat.md",
+        "更新为4/13版本",
+        "openclaw",
+        "mcp",
+        "server",
+        "实现"
+      ]
+    },
+    "memory:memory/2026-04-12.md:40:84": {
+      "key": "memory:memory/2026-04-12.md:40:84",
+      "path": "memory/2026-04-12.md",
+      "startLine": 40,
+      "endLine": 84,
+      "source": "memory",
+      "snippet": "- **MCP Server** (379行) - 测试用服务器 - 3 个资源：天气、系统状态 - 3 个工具：calculate、fibonacci、reverse_string - 2 个提示模板：code_review、task_breakdown - 完整的 JSON-RPC 2.0 响应处理 - **演示程序** (143行) - 功能展示 - 资源列表与读取演示 - 工具列表与调用演示 - 提示模板列表与获取演示 - **文档** (285行) - 完整的使用指南 - MCP 协议核心概念解释 - API 文档与示例代码 - 应用场景说明 - 下一步方向 **技术亮点：** - 零依赖设计，纯 Python 3.7+ - 线程安全的请求/响应匹配 - 完整的错误处理 - 上下文管理器支持（`with` 语句） **关键发现：** 1. MCP 协议确实简单且强大 - JSON-RPC 2.0 + 标准化的资源/工具/提示定义 2. stdio transport 最适合 Agent 集成 - 简单、可靠、无网络开销 3. 工具调用与 LLM function calling 模式高度一致 4. 提示模板是统一上下文管理的有效方式 **与本周计划的关联：** - ✅ 为\"OpenClaw MCP Server 实现\"打下了坚实基础 - ✅ 理解了 MCP 协议的实际工作原理 - ✅ 可复用的客户端代码，后续可直接集成到 OpenClaw **代码统计：** - 总计 1149 行（代码 + 文档） - 运行测",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1,
+      "maxScore": 1,
+      "firstRecalledAt": "2026-04-22T09:25:04.803Z",
+      "lastRecalledAt": "2026-04-22T09:25:04.803Z",
+      "queryHashes": [
+        "2f17e178a654"
+      ],
+      "recallDays": [
+        "2026-04-22"
+      ],
+      "conceptTags": [
+        "网络",
+        "reverse-string",
+        "code-review",
+        "task-breakdown",
+        "json-rpc",
+        "2.0",
+        "3.7",
+        "线程安全的请求/响应匹配"
+      ]
+    },
+    "memory:memory/2026-04-12.md:1:47": {
+      "key": "memory:memory/2026-04-12.md:1:47",
+      "path": "memory/2026-04-12.md",
+      "startLine": 1,
+      "endLine": 47,
+      "source": "memory",
+      "snippet": "# 2026-04-12 Daily Memory (Saturday → Sunday) ## 凌晨知识整理（2:00 AM） ### 昨日回顾 - 4/11 晚间代码实验室：完成 Pocket Agent (~150行) + Self-Evolving Agent - `lab/pocket-agent/` 位置 - MockLLM 零依赖设计，ReAct Loop，Episodic Memory - 自进化Agent：运行时动态生成工具，8个内置模板 ### 文档状态 - MEMORY.md ✅ 已包含MCP/内存系统/多Agent编排洞察 - HEARTBEAT.md ✅ 待办清单与项目状态已更新 - wiki/ 知识库 11个页面 ### 本周计划（4/12-4/18） 优先级未变： 1. OpenClaw MCP Server 实现 2. 多Agent框架集成（CrewAI/LangGraph） 3. Agent Trust Network Web UI 4. Edge Agent Runtime Dashboard ### 备注 - 凌晨时段，无人类交互 - 所有项目状态稳定，无阻塞项 --- ## 代码实验室晚间实验（9:00 PM） ### 项目：MCP Client Explorer 位置：`lab/mcp-client-explorer/` **核心成果：** - **MCP Client** (342行) - 纯 Python 3 零依赖实现 - JSON-RPC 2.0 通信协议 - stdio transport",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1,
+      "maxScore": 1,
+      "firstRecalledAt": "2026-04-22T09:25:04.803Z",
+      "lastRecalledAt": "2026-04-22T09:25:04.803Z",
+      "queryHashes": [
+        "2f17e178a654"
+      ],
+      "recallDays": [
+        "2026-04-22"
+      ],
+      "conceptTags": [
+        "network",
+        "4/11",
+        "self-evolving",
+        "lab/pocket-agent",
+        "memory.md",
+        "已包含mcp/内存系统/多agent编排洞察",
+        "heartbeat.md",
+        "4/12-4/18"
+      ]
+    }
+  }
+}
