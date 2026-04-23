@@ -3419,6 +3419,42 @@ export class MemoryService {
       contentPreview
     };
   }
+
+  /**
+   * Compare two memories in detail
+   * @param {string} id1
+   * @param {string} id2
+   * @returns {Promise<{id1: string, id2: string, contentSimilarity: number, sharedTags: string[], uniqueTags1: string[], uniqueTags2: string[], sameLayer: boolean, layer1: string, layer2: string, weightDiff: number, mergeRecommendation: string}>}
+   */
+  async compareMemories(id1, id2) {
+    await this.#ensureLoaded();
+    const m1 = this.#store.get(id1);
+    const m2 = this.#store.get(id2);
+    if (!m1) throw new Error(`Memory not found: ${id1}`);
+    if (!m2) throw new Error(`Memory not found: ${id2}`);
+
+    const contentSimilarity = Math.round(ngramSimilarity(m1.content, m2.content) * 1000) / 1000;
+    const tags1 = new Set(m1.tags || []);
+    const tags2 = new Set(m2.tags || []);
+    const sharedTags = [...tags1].filter(t => tags2.has(t));
+    const uniqueTags1 = [...tags1].filter(t => !tags2.has(t));
+    const uniqueTags2 = [...tags2].filter(t => !tags1.has(t));
+    const sameLayer = m1.layer === m2.layer;
+
+    let mergeRecommendation = 'keep_both';
+    if (contentSimilarity > 0.9 && sameLayer) mergeRecommendation = 'merge';
+    else if (contentSimilarity > 0.7 && sharedTags.length > 0) mergeRecommendation = 'consolidate';
+    else if (contentSimilarity > 0.5) mergeRecommendation = 'link';
+
+    return {
+      id1, id2,
+      contentSimilarity,
+      sharedTags, uniqueTags1, uniqueTags2,
+      sameLayer, layer1: m1.layer, layer2: m2.layer,
+      weightDiff: Math.round(Math.abs(m1.weight - m2.weight) * 1000) / 1000,
+      mergeRecommendation,
+    };
+  }
 }
 
 // ─── Embedding Provider Interface ────────────────────────

@@ -15,15 +15,16 @@
 
 ---
 
-## Current Focus (2026-04-22)
+## Current Focus (2026-04-23)
 
 ### Active Theme
-Autoresearch 方法论实践 — Agent Memory Service v1.0-dev 持续迭代 (334 tests)。新增 autoMaintain()（健康分数驱动的自动维护）+ searchSimilar(id)（基于ID的相似记忆发现）。下一步：MCP Server 实现。⚠️ 关键教训：key-dev sessions 必须在每次实验成功后 git commit，否则代码会在 session 重置时丢失
+Autoresearch 方法论实践 — Agent Memory Service v1.0-dev 持续迭代 (371 tests)。4/22-4/23 新增：findDuplicatePairs/exportJSON/importJSON/pruneLowWeight/inspect/clusterByTopic/summarizeCluster。下一步：MCP Server 实现。⚠️ 关键教训：key-dev sessions 必须在每次实验成功后 git commit，否则代码会在 session 重置时丢失
 
 ### Next Actions
 - [ ] 初始化 openclaw-mcp-server 项目（TypeScript SDK + Streamable HTTP，3 tools MVP）— 详见 [研究笔记](catalyst-research/exploration-notes/2026-04-22-mcp-server-typescript-streamable-http.md) ✅ 最新研究 2026-04-22
 - [ ] 实现 3 tools: memory_search(对接AMS), memory_write(写入md), task_create(创建任务)
 - [ ] MCP Server Docker 化部署 + Bearer Token 认证
+- [ ] AMS: searchByEntity(), autoTag(), contentVersioning() — 下一步 API 候选
 
 ### Core Projects
 1. **Agent Task CLI** - 多 Agent 任务编排 (109 tests, 80%+ coverage, ✅ 已完成)
@@ -35,7 +36,7 @@ Autoresearch 方法论实践 — Agent Memory Service v1.0-dev 持续迭代 (334
 7. **agent-log** - OpenClaw 日志搜索/汇总 CLI (✅ 单文件 Bash，零依赖)
 8. **ctxgen** - AI 上下文文件生成器 (✅ v1.0, 纯Node.js零依赖, 支持4种目标格式)
 9. **tiny-agent-workshop** - 单文件 Agent 模式教学集 (✅ 7个模式: ReAct/ToolCall/Memory/Router/Guardrail/Chain/EdgeAgent)
-10. **Agent Memory Service** - Mem0风格Agent记忆管理 (✅ v1.0-dev, 334/334 tests, 三层存储+LLM提取+语义检索+Consolidation+变更追踪+自监控+搜索三阶段(BM25+Embedding+Unified RRF)+suggestTags()+healthScore()+autoMaintain()+searchSimilar())
+10. **Agent Memory Service** - Mem0风格Agent记忆管理 (✅ v1.0-dev, 371/371 tests, 三层存储+LLM提取+语义检索+Consolidation+变更追踪+自监控+搜索三阶段(BM25+Embedding+Unified RRF)+suggestTags()+healthScore()+autoMaintain()+searchSimilar()+findDuplicatePairs()+exportJSON/importJSON()+pruneLowWeight()+inspect()+clusterByTopic()+summarizeCluster())
 11. **A2A Protocol Lab** - Agent-to-Agent通信协议实验 (✅ 零依赖Python实现, Server+Client+Federation Demo)
 
 ---
@@ -156,6 +157,13 @@ curl -X POST "https://api.tavily.com/search" \
 ---
 
 ## Recent Achievements
+
+### 2026-04-23
+- ✅ **Agent Memory Service v1.0-dev 续升** — 334→371 tests (+37)
+  - **clusterByTopic(opts)**: 标签共现聚类，贪心无重复分配，6 new tests
+  - **summarizeCluster(topic, opts)**: 聚类摘要统计(计数/权重/层/标签/时间范围)，6 new tests
+  - 4/22晚间: findDuplicatePairs/exportJSON/importJSON/pruneLowWeight/inspect — 334→353 tests
+  - 零回滚率持续保持
 
 ### 2026-04-22
 - ✅ **Agent Memory Service v1.0-dev 续升** — 309→334 tests
@@ -334,5 +342,5 @@ curl -X POST "https://api.tavily.com/search" \
 
 ---
 
-*Last updated: 2026-04-22 02:00*
-*Next review: 2026-04-23*
+*Last updated: 2026-04-23 02:00*
+*Next review: 2026-04-24*

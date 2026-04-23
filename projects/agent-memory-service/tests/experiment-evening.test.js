@@ -2,6 +2,7 @@ import { describe, it, before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { MemoryService } from '../src/index.js';
 import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -140,4 +141,87 @@ describe('pruneLowWeight()', () => {
     const result = await svc.pruneLowWeight({ minWeight: 0.1 });
     assert.equal(result.removed, 0);
   });
+});
+
+// ─── compareMemories(id1, id2) ────────────────────────
+describe('compareMemories()', () => {
+it('compareMemories — detailed comparison', async () => {
+  const tmp = mkdtempSync(join(tmpdir(), 'ams-cmp-'));
+  const svc = new MemoryService(tmp);
+  await svc.init();
+
+  const m1 = await svc.add({ content: 'Agent memory architecture patterns', tags: ['agent', 'memory'], layer: 'core', weight: 0.9 });
+  const m2 = await svc.add({ content: 'Agent memory design patterns overview', tags: ['agent', 'design'], layer: 'core', weight: 0.7 });
+
+  const result = await svc.compareMemories(m1.id, m2.id);
+
+  assert.equal(result.id1, m1.id);
+  assert.equal(result.id2, m2.id);
+  assert.ok(result.contentSimilarity > 0.3, `Expected similarity > 0.3, got ${result.contentSimilarity}`);
+  assert.deepEqual(result.sharedTags, ['agent']);
+  assert.deepEqual(result.uniqueTags1, ['memory']);
+  assert.deepEqual(result.uniqueTags2, ['design']);
+  assert.equal(result.sameLayer, true);
+  assert.equal(result.layer1, 'core');
+  assert.ok(result.weightDiff > 0);
+  assert.ok(['keep_both', 'merge', 'consolidate', 'link'].includes(result.mergeRecommendation));
+
+  rmSync(tmp, { recursive: true, force: true });
+});
+
+it('compareMemories — identical content suggests merge', async () => {
+  const tmp = mkdtempSync(join(tmpdir(), 'ams-cmp2-'));
+  const svc = new MemoryService(tmp);
+  await svc.init();
+
+  const m1 = await svc.add({ content: 'exact same content here', layer: 'long' });
+  const m2 = await svc.add({ content: 'exact same content here', layer: 'long' });
+
+  const result = await svc.compareMemories(m1.id, m2.id);
+  assert.equal(result.contentSimilarity, 1);
+  assert.equal(result.mergeRecommendation, 'merge');
+
+  rmSync(tmp, { recursive: true, force: true });
+});
+
+it('compareMemories — different content keep both', async () => {
+  const tmp = mkdtempSync(join(tmpdir(), 'ams-cmp3-'));
+  const svc = new MemoryService(tmp);
+  await svc.init();
+
+  const m1 = await svc.add({ content: 'Python web framework comparison' });
+  const m2 = await svc.add({ content: 'Rust systems programming guide' });
+
+  const result = await svc.compareMemories(m1.id, m2.id);
+  assert.equal(result.mergeRecommendation, 'keep_both');
+
+  rmSync(tmp, { recursive: true, force: true });
+});
+
+it('compareMemories — throws for missing id', async () => {
+  const tmp = mkdtempSync(join(tmpdir(), 'ams-cmp4-'));
+  const svc = new MemoryService(tmp);
+  await svc.init();
+
+  const m = await svc.add({ content: 'test' });
+  await assert.rejects(() => svc.compareMemories(m.id, 'nonexistent'), /Memory not found/);
+
+  rmSync(tmp, { recursive: true, force: true });
+});
+
+it('compareMemories — respects different layers', async () => {
+  const tmp = mkdtempSync(join(tmpdir(), 'ams-cmp5-'));
+  const svc = new MemoryService(tmp);
+  await svc.init();
+
+  const m1 = await svc.add({ content: 'same content here', layer: 'core' });
+  const m2 = await svc.add({ content: 'same content here', layer: 'short' });
+
+  const result = await svc.compareMemories(m1.id, m2.id);
+  assert.equal(result.sameLayer, false);
+  // Identical content but different layers → not 'merge' (merge requires sameLayer)
+  assert.notEqual(result.mergeRecommendation, 'merge');
+
+  rmSync(tmp, { recursive: true, force: true });
+});
 });
