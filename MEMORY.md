@@ -21,9 +21,9 @@
 Autoresearch 方法论实践 — Agent Memory Service v1.0-dev 持续迭代 (371 tests)。4/22-4/23 新增：findDuplicatePairs/exportJSON/importJSON/pruneLowWeight/inspect/clusterByTopic/summarizeCluster。下一步：MCP Server 实现。⚠️ 关键教训：key-dev sessions 必须在每次实验成功后 git commit，否则代码会在 session 重置时丢失
 
 ### Next Actions
-- [ ] 初始化 openclaw-mcp-server 项目（TypeScript SDK + Streamable HTTP，3 tools MVP）— 详见 [研究笔记](catalyst-research/exploration-notes/2026-04-22-mcp-server-typescript-streamable-http.md) ✅ 最新研究 2026-04-22
-- [ ] 实现 3 tools: memory_search(对接AMS), memory_write(写入md), task_create(创建任务)
-- [ ] MCP Server Docker 化部署 + Bearer Token 认证
+- [ ] 初始化 openclaw-mcp-server 项目（TypeScript SDK + Streamable HTTP，3 tools MVP）— 详见 [研究笔记](catalyst-research/exploration-notes/2026-04-23-mcp-server-streamable-http.md) ✅ 2026-04-23 晚间：完整 Streamable HTTP 研究笔记 + 可运行 3-tool MVP 代码（echo/get_time/format_json）
+- [ ] 实现 3 tools: search_memory(对接AMS), run_command(OpenClaw exec), system_status
+- [ ] MCP Server Express/Hono 包装 + Docker 化部署
 - [ ] AMS: searchByEntity(), autoTag(), contentVersioning() — 下一步 API 候选
 
 ### Core Projects

@@ -3,7 +3,7 @@
  */
 
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { readFile, writeFile, mkdir, readdir, stat, unlink, rmdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, readdir, stat, unlink, rmdir, rename } from "node:fs/promises";
 import { dirname, resolve, join } from "node:path";
 import { exec as execCb } from "node:child_process";
 import { promisify } from "node:util";
@@ -11,7 +11,11 @@ import { promisify } from "node:util";
 const execAsync = promisify(execCb);
 
 // Workspace root for sandboxing file operations
-export const WORKSPACE_ROOT = process.env.OPENCLAW_WORKSPACE || process.cwd();
+let _workspaceRoot = process.env.OPENCLAW_WORKSPACE || process.cwd();
+export const WORKSPACE_ROOT = _workspaceRoot;
+export function setWorkspaceRoot(path: string) { _workspaceRoot = path; }
+
+function getWorkspaceRoot() { return _workspaceRoot; }
 
 // Dangerous command patterns to block
 const DANGEROUS_COMMANDS: RegExp[] = [
@@ -42,8 +46,9 @@ export function validateExecCommand(command: string): { valid: boolean; reason?:
 
 // Resolve and sandbox a path to WORKSPACE_ROOT
 export function safePath(inputPath: string): string {
-  const resolved = resolve(WORKSPACE_ROOT, inputPath);
-  if (!resolved.startsWith(WORKSPACE_ROOT)) {
+  const root = getWorkspaceRoot();
+  const resolved = resolve(root, inputPath);
+  if (!resolved.startsWith(root)) {
     throw new Error(`Path traversal denied: ${inputPath}`);
   }
   return resolved;
@@ -182,6 +187,18 @@ export const OPENCLAW_TOOLS: Tool[] = [
     },
   },
   {
+    name: "move",
+    description: "Move or rename a file or directory within the workspace.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        source: { type: "string", "description": "Source path relative to workspace root" },
+        destination: { type: "string", "description": "Destination path relative to workspace root" },
+      },
+      required: ["source", "destination"],
+    },
+  },
+  {
     name: "system_status",
     description: "Get system status information: platform, Node.js version, uptime, memory usage, workspace info.",
     inputSchema: {
@@ -203,6 +220,7 @@ export const toolHandlers: Record<string, (args: any) => Promise<any>> = {
   edit: executeEdit,
   search_files: executeSearchFiles,
   delete: executeDelete,
+  move: executeMove,
   system_status: executeSystemStatus,
 };
 
@@ -267,7 +285,7 @@ async function executeExec(args: any): Promise<any> {
     };
   }
 
-  const options: any = { cwd: workdir || WORKSPACE_ROOT, timeout: timeout * 1000, maxBuffer: 1024 * 1024 };
+  const options: any = { cwd: workdir || getWorkspaceRoot(), timeout: timeout * 1000, maxBuffer: 1024 * 1024 };
   try {
     const { stdout, stderr } = await execAsync(command, options);
     return { tool: "exec", command, exitCode: 0, stdout, stderr };
@@ -283,7 +301,7 @@ async function executeListFiles(args: any): Promise<any> {
   const files = await Promise.all(
     entries.map(async (entry) => {
       const fullPath = join(resolved, entry.name);
-      const relativePath = fullPath.slice(WORKSPACE_ROOT.length + 1);
+      const relativePath = fullPath.slice(getWorkspaceRoot().length + 1);
       try {
         const s = await stat(fullPath);
         return { name: entry.name, path: relativePath, type: entry.isDirectory() ? "directory" : "file", size: s.size };
@@ -311,10 +329,10 @@ async function executeMemorySearch(args: any): Promise<any> {
     } catch { /* skip */ }
   };
 
-  await searchFile(join(WORKSPACE_ROOT, "MEMORY.md"), "MEMORY.md");
+  await searchFile(join(getWorkspaceRoot(), "MEMORY.md"), "MEMORY.md");
 
   try {
-    const memDir = join(WORKSPACE_ROOT, "memory");
+    const memDir = join(getWorkspaceRoot(), "memory");
     const entries = await readdir(memDir);
     for (const entry of entries) {
       if (entry.endsWith(".md")) await searchFile(join(memDir, entry), `memory/${entry}`);
@@ -423,6 +441,28 @@ async function executeDelete(args: any): Promise<any> {
   return { tool: "delete", path, success: true };
 }
 
+async function executeMove(args: any): Promise<any> {
+  const { source, destination } = args;
+  const srcResolved = safePath(source);
+  const dstResolved = safePath(destination);
+
+  try {
+    await stat(srcResolved);
+  } catch {
+    return { tool: "move", success: false, error: "Source not found" };
+  }
+
+  await mkdir(dirname(dstResolved), { recursive: true });
+
+  try {
+    await rename(srcResolved, dstResolved);
+  } catch (err: any) {
+    return { tool: "move", success: false, error: err.message };
+  }
+
+  return { tool: "move", source, destination, success: true };
+}
+
 async function executeSystemStatus(): Promise<any> {
   const memUsage = process.memoryUsage();
   return {
@@ -437,6 +477,6 @@ async function executeSystemStatus(): Promise<any> {
       heapUsed: `${Math.round(memUsage.heapUsed / 1024 / 1024)}MB`,
       heapTotal: `${Math.round(memUsage.heapTotal / 1024 / 1024)}MB`,
     },
-    workspace: WORKSPACE_ROOT,
+    workspace: getWorkspaceRoot(),
   };
 }
