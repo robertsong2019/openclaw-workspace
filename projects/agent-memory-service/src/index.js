@@ -3514,6 +3514,37 @@ export class MemoryService {
 
     return { hierarchy: Object.fromEntries(hierarchy), roots, stats: { totalTags, totalPairs, depth: maxDepth } };
   }
+
+  /**
+   * Rebalance memory weights based on recency, access frequency, and layer
+   * @param {{decayFactor?: number, accessBonus?: number, layerWeights?: object}} opts
+   * @returns {Promise<{updated: number, changes: {id: string, oldWeight: number, newWeight: number}[]}>}
+   */
+  async rebalance(opts = {}) {
+    await this.#ensureLoaded();
+    const decayFactor = opts.decayFactor || 0.001; // per day
+    const accessBonus = opts.accessBonus || 0.05;
+    const layerWeights = opts.layerWeights || { core: 0.3, long: 0.15, short: 0.05 };
+    const now = Date.now();
+    const memories = this.#store.all();
+    const changes = [];
+
+    for (const m of memories) {
+      const ageDays = (now - new Date(m.createdAt).getTime()) / 86400000;
+      const decay = Math.exp(-decayFactor * ageDays);
+      const accessBoost = Math.min((m.accessCount || 0) * accessBonus, 0.5);
+      const layerBoost = layerWeights[m.layer] || 0;
+      const newWeight = Math.round(Math.min(decay + accessBoost + layerBoost, 1.0) * 1000) / 1000;
+
+      if (Math.abs(newWeight - m.weight) > 0.001) {
+        changes.push({ id: m.id, oldWeight: m.weight, newWeight });
+        m.weight = newWeight;
+        this.#store.put(m);
+      }
+    }
+
+    return { updated: changes.length, changes };
+  }
 }
 
 // ─── Embedding Provider Interface ────────────────────────
