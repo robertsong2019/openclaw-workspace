@@ -3672,3 +3672,74 @@ describe('autoTag', () => {
     } finally { cleanup(); }
   });
 });
+
+describe('mergeClusters', () => {
+  it('merges memories from multiple topics into target tag', async () => {
+    const { svc, cleanup } = createService();
+    try {
+      await svc.add({ content: 'alpha one', tags: ['alpha'] });
+      await svc.add({ content: 'alpha two', tags: ['alpha'] });
+      await svc.add({ content: 'beta one', tags: ['beta'] });
+      await svc.add({ content: 'beta two', tags: ['beta'] });
+      const result = await svc.mergeClusters(['alpha', 'beta'], { targetTag: 'merged' });
+      assert.strictEqual(result.mergedCount, 4);
+      assert.strictEqual(result.targetTag, 'merged');
+      // Verify tags were updated
+      const all = await svc.query();
+      const mergedTag = all.results.filter(m => m.tags.includes('merged'));
+      assert.strictEqual(mergedTag.length, 4);
+    } finally { cleanup(); }
+  });
+
+  it('removes source tags by default', async () => {
+    const { svc, cleanup } = createService();
+    try {
+      await svc.add({ content: 'a1', tags: ['alpha'] });
+      await svc.add({ content: 'b1', tags: ['beta'] });
+      await svc.mergeClusters(['alpha', 'beta'], { targetTag: 'merged' });
+      const all = await svc.query();
+      assert.ok(!all.results.some(m => m.tags.includes('alpha')));
+      assert.ok(!all.results.some(m => m.tags.includes('beta')));
+    } finally { cleanup(); }
+  });
+
+  it('keeps source tags when removeSourceTags is false', async () => {
+    const { svc, cleanup } = createService();
+    try {
+      await svc.add({ content: 'a1', tags: ['alpha', 'other'] });
+      await svc.add({ content: 'b1', tags: ['beta'] });
+      await svc.mergeClusters(['alpha', 'beta'], { targetTag: 'merged', removeSourceTags: false });
+      const all = await svc.query();
+      const a = all.results.find(m => m.content === 'a1');
+      assert.ok(a.tags.includes('alpha'));
+      assert.ok(a.tags.includes('merged'));
+    } finally { cleanup(); }
+  });
+
+  it('uses first topic as default targetTag', async () => {
+    const { svc, cleanup } = createService();
+    try {
+      await svc.add({ content: 'a1', tags: ['alpha'] });
+      await svc.add({ content: 'b1', tags: ['beta'] });
+      const result = await svc.mergeClusters(['alpha', 'beta']);
+      assert.strictEqual(result.targetTag, 'alpha');
+    } finally { cleanup(); }
+  });
+
+  it('throws with fewer than 2 topics', async () => {
+    const { svc, cleanup } = createService();
+    try {
+      await assert.rejects(() => svc.mergeClusters(['only']), /at least 2 topics/);
+    } finally { cleanup(); }
+  });
+
+  it('skips memories already having target tag', async () => {
+    const { svc, cleanup } = createService();
+    try {
+      await svc.add({ content: 'a1', tags: ['alpha', 'merged'] });
+      await svc.add({ content: 'b1', tags: ['beta'] });
+      const result = await svc.mergeClusters(['alpha', 'beta'], { targetTag: 'merged' });
+      assert.strictEqual(result.mergedCount, 1); // only b1
+    } finally { cleanup(); }
+  });
+});

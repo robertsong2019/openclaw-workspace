@@ -3421,6 +3421,53 @@ export class MemoryService {
   }
 
   /**
+   * Merge multiple topic clusters into one unified cluster
+   * @param {string[]} topics - Topic tags to merge
+   * @param {{targetTag?: string, removeSourceTags?: boolean}} opts
+   * @returns {Promise<{targetTag: string, mergedCount: number, sourceTopics: string[], duplicateIds: number}>}
+   */
+  async mergeClusters(topics, opts = {}) {
+    if (!topics || topics.length < 2) throw new Error('mergeClusters requires at least 2 topics');
+    await this.#ensureLoaded();
+    const removeSourceTags = opts.removeSourceTags ?? true;
+    const targetTag = opts.targetTag || topics[0];
+    const memories = this.#store.all();
+
+    const sourceSet = new Set(topics.map(t => t.toLowerCase()));
+    let mergedCount = 0;
+
+    for (const m of memories) {
+      if (!m.tags) continue;
+      const hasSource = m.tags.some(t => sourceSet.has(t.toLowerCase()));
+      if (!hasSource) continue;
+      const hasTarget = m.tags.some(t => t.toLowerCase() === targetTag.toLowerCase());
+      if (hasTarget && removeSourceTags) {
+        // Just remove source tags
+        m.tags = m.tags.filter(t => !sourceSet.has(t.toLowerCase()));
+        mergedCount++;
+        continue;
+      }
+      if (hasTarget) { mergedCount++; continue; }
+
+      if (removeSourceTags) {
+        m.tags = m.tags.filter(t => !sourceSet.has(t.toLowerCase()));
+        m.tags.push(targetTag);
+      } else {
+        m.tags.push(targetTag);
+      }
+      mergedCount++;
+    }
+
+    if (mergedCount > 0) this.#store.reindex();
+
+    return {
+      targetTag,
+      mergedCount,
+      sourceTopics: topics
+    };
+  }
+
+  /**
    * Compare two memories in detail
    * @param {string} id1
    * @param {string} id2
