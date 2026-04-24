@@ -1,35 +1,239 @@
 {
-  "updatedAt": "2026-04-24T06:00:00+08:00",
-  "generatedAt": "2026-04-23T22:00:00Z",
-  "cronJobs": [
-    {"id": "f38e0365", "name": "dashboard-update-morning", "schedule": "0 6 * * *", "status": "running", "lastRun": "<1m ago"},
-    {"id": "9b2a8701", "name": "github-trending-daily", "schedule": "0 7 * * *", "status": "ok", "lastRun": "23h ago"},
-    {"id": "610a8d6d", "name": "github-creative-evening", "schedule": "0 19 * * *", "status": "ok", "lastRun": "11h ago"},
-    {"id": "265091b6", "name": "deep-exploration-evening", "schedule": "0 20 * * *", "status": "ok", "lastRun": "10h ago"},
-    {"id": "bb46cb70", "name": "deep-exploration-evening", "schedule": "0 12 * * * (UTC)", "status": "ok", "lastRun": "10h ago"},
-    {"id": "13a2f284", "name": "code-lab-evening", "schedule": "0 21 * * *", "status": "ok", "lastRun": "9h ago"},
-    {"id": "ce2fb615", "name": "tool-development-evening", "schedule": "0 22 * * *", "status": "ok", "lastRun": "8h ago"},
-    {"id": "78eac6fc", "name": "key-development-1", "schedule": "0 23 * * *", "status": "ok", "lastRun": "7h ago"},
-    {"id": "88679f9e", "name": "key-development-2", "schedule": "0 0 * * *", "status": "ok", "lastRun": "6h ago"},
-    {"id": "b0fd7e8d", "name": "key-development-3", "schedule": "0 1 * * *", "status": "error", "lastRun": "5h ago"},
-    {"id": "fd0515b0", "name": "knowledge-organization", "schedule": "0 2 * * *", "status": "ok", "lastRun": "4h ago"},
-    {"id": "f7510f1f", "name": "project-testing-morning", "schedule": "0 3 * * *", "status": "ok", "lastRun": "3h ago"},
-    {"id": "77a5bcc6", "name": "documentation-morning", "schedule": "0 4 * * *", "status": "ok", "lastRun": "2h ago"},
-    {"id": "686ec55c", "name": "essay-generation-morning", "schedule": "0 5 * * *", "status": "ok", "lastRun": "1h ago"}
-  ],
-  "sessions": {
-    "total": 1,
-    "activeNow": 1,
-    "channels": {
-      "cron": 1
-    }
+  "generated_at": "2026-04-25T06:01:54.317376+08:00",
+  "timezone": "Asia/Shanghai",
+  "summary": {
+    "total_cron_jobs": 14,
+    "active_cron_jobs": 13,
+    "running_cron_jobs": 1,
+    "total_sessions": 27,
+    "model": "glm-5.1"
   },
-  "systemHealth": {
-    "model": "glm-5.1",
-    "provider": "zai",
-    "contextTokens": 204800,
-    "cronErrors": 1,
-    "cronErrorJob": "key-development-3 (b0fd7e8d)",
-    "previousErrorsResolved": ["code-lab-evening (13a2f284)"]
-  }
+  "cron_jobs": [
+    {
+      "id": "f38e0365",
+      "name": "dashboard-update-morning",
+      "schedule": "0 6 * * *",
+      "status": "running"
+    },
+    {
+      "id": "9b2a8701",
+      "name": "github-trending-daily",
+      "schedule": "0 7 * * *",
+      "status": "ok"
+    },
+    {
+      "id": "610a8d6d",
+      "name": "github-creative-evening",
+      "schedule": "0 19 * * *",
+      "status": "ok"
+    },
+    {
+      "id": "265091b6",
+      "name": "deep-exploration-evening",
+      "schedule": "0 20 * * *",
+      "status": "ok"
+    },
+    {
+      "id": "bb46cb70",
+      "name": "deep-exploration-evening",
+      "schedule": "0 12 * * * UTC",
+      "status": "ok"
+    },
+    {
+      "id": "13a2f284",
+      "name": "code-lab-evening",
+      "schedule": "0 21 * * *",
+      "status": "ok"
+    },
+    {
+      "id": "ce2fb615",
+      "name": "tool-development-evening",
+      "schedule": "0 22 * * *",
+      "status": "ok"
+    },
+    {
+      "id": "78eac6fc",
+      "name": "key-development-1",
+      "schedule": "0 23 * * *",
+      "status": "ok"
+    },
+    {
+      "id": "88679f9e",
+      "name": "key-development-2",
+      "schedule": "0 0 * * *",
+      "status": "ok"
+    },
+    {
+      "id": "b0fd7e8d",
+      "name": "key-development-3",
+      "schedule": "0 1 * * *",
+      "status": "ok"
+    },
+    {
+      "id": "fd0515b0",
+      "name": "knowledge-organization",
+      "schedule": "0 2 * * *",
+      "status": "ok"
+    },
+    {
+      "id": "f7510f1f",
+      "name": "project-testing-morning",
+      "schedule": "0 3 * * *",
+      "status": "ok"
+    },
+    {
+      "id": "77a5bcc6",
+      "name": "documentation-morning",
+      "schedule": "0 4 * * *",
+      "status": "ok"
+    },
+    {
+      "id": "686ec55c",
+      "name": "essay-generation-morning",
+      "schedule": "0 5 * * *",
+      "status": "ok"
+    }
+  ],
+  "sessions": [
+    {
+      "key": "agent:main:cron:f38e0365-7bbf-46fd-bab7-14d51a5d4df0",
+      "updatedAt": 1777068002065,
+      "model": "glm-5.1",
+      "totalTokens": 27565,
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:main",
+      "updatedAt": 1777067264062,
+      "model": "glm-5.1",
+      "totalTokens": 96433,
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:cron:686ec55c-17ca-43a9-9977-65a3c320ec3a",
+      "updatedAt": 1777064400017,
+      "model": "glm-5.1",
+      "totalTokens": 33096,
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:cron:77a5bcc6-1342-4ff4-836a-f640973006dc",
+      "updatedAt": 1777060800010,
+      "model": "glm-5.1",
+      "totalTokens": 37002,
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:cron:f7510f1f-9db8-46e7-8019-3c9a4858db2e",
+      "updatedAt": 1777057200014,
+      "model": "glm-5.1",
+      "totalTokens": 44998,
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:cron:fd0515b0-f483-411d-b110-3a16fbc49983",
+      "updatedAt": 1777053600012,
+      "model": "glm-5.1",
+      "totalTokens": 36007,
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:cron:b0fd7e8d-f946-4228-bb85-1baaa3502c7c",
+      "updatedAt": 1777050000013,
+      "model": "glm-5.1",
+      "totalTokens": 38207,
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:cron:88679f9e-ba09-4e1a-8dbd-a2dc12808544",
+      "updatedAt": 1777046400013,
+      "model": "glm-5.1",
+      "totalTokens": 37902,
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:cron:78eac6fc-c2d7-41d2-a5d1-9a52892f89ab",
+      "updatedAt": 1777042800014,
+      "model": "glm-5.1",
+      "totalTokens": 31068,
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:cron:ce2fb615-132a-4c40-864f-86de27bea24c",
+      "updatedAt": 1777039990960,
+      "model": "glm-5.1",
+      "totalTokens": 34142,
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:cron:13a2f284-a1ed-4394-979a-5392fbdf50f7",
+      "updatedAt": 1777035600014,
+      "model": "glm-5.1",
+      "totalTokens": 41142,
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:cron:bb46cb70-ec67-4790-b98d-bdacf280f2a1",
+      "updatedAt": 1777032210187,
+      "model": "glm-5.1",
+      "totalTokens": 45232,
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:cron:265091b6-6c5f-4afb-8485-7108945fe1f7",
+      "updatedAt": 1777032000012,
+      "model": "glm-5.1",
+      "totalTokens": 34458,
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:cron:610a8d6d-faba-40c2-945c-9ba8472c4839",
+      "updatedAt": 1777030702010,
+      "model": "glm-5.1",
+      "totalTokens": 55499,
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:feishu:direct:ou_448ef51fcfb4524e2596b1696b4b2769",
+      "updatedAt": 1777013247400,
+      "model": "glm-4.7",
+      "totalTokens": 63520,
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:cron:9b2a8701-ab69-49b0-bef4-d9ef6d7ecf9e",
+      "updatedAt": 1776985200013,
+      "model": "glm-5.1",
+      "totalTokens": 25703,
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:cron:f38e0365-7bbf-46fd-bab7-14d51a5d4df0:run:dbfae561-3e89-4bb3-bcbb-7ddcf0971631",
+      "updatedAt": 1776981600009,
+      "model": "glm-5.1",
+      "totalTokens": 27064,
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:wecom:direct:luosong",
+      "updatedAt": 1774867599885,
+      "model": "glm-5.1",
+      "totalTokens": 18645,
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:cron:4234c58c-aec2-4af0-934a-40a6a2617ba5",
+      "updatedAt": 1773788400200,
+      "model": "glm-5",
+      "totalTokens": 52623,
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:cron:e257f25e-de69-4f09-888f-deb83448ca23",
+      "updatedAt": 1773784800194,
+      "model": "glm-5",
+      "totalTokens": 63708,
+      "kind": "direct"
+    }
+  ]
 }
