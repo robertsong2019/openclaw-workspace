@@ -3700,6 +3700,17 @@ export class MemoryService {
 
     return report;
   }
+
+  /**
+   * Fetch multiple memories by ID in one call
+   * @param {string[]} ids
+   * @returns {Promise<Array<Memory>>}
+   */
+  async batchGet(ids) {
+    await this.#ensureLoaded();
+    if (!Array.isArray(ids)) throw new Error('batchGet requires an array of ids');
+    return ids.map(id => this.#store.get(id)).filter(Boolean);
+  }
 }
 
 // ─── Embedding Provider Interface ────────────────────────

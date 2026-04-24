@@ -3807,3 +3807,43 @@ describe('memoryReport', () => {
     } finally { cleanup(); }
   });
 });
+
+// ── batchGet ──────────────────────────────────────────
+describe('batchGet', () => {
+  it('fetches multiple memories by id', async () => {
+    const { svc, cleanup } = createService();
+    try {
+      const m1 = await svc.add({ content: 'a' });
+      const m2 = await svc.add({ content: 'b' });
+      await svc.add({ content: 'c' });
+      const results = await svc.batchGet([m1.id, m2.id]);
+      assert.strictEqual(results.length, 2);
+      assert.strictEqual(results[0].content, 'a');
+      assert.strictEqual(results[1].content, 'b');
+    } finally { cleanup(); }
+  });
+
+  it('skips missing ids', async () => {
+    const { svc, cleanup } = createService();
+    try {
+      const m = await svc.add({ content: 'x' });
+      const results = await svc.batchGet([m.id, 'nonexistent']);
+      assert.strictEqual(results.length, 1);
+    } finally { cleanup(); }
+  });
+
+  it('throws on non-array input', async () => {
+    const { svc, cleanup } = createService();
+    try {
+      await assert.rejects(() => svc.batchGet('not-array'), /array of ids/);
+    } finally { cleanup(); }
+  });
+
+  it('returns empty for empty array', async () => {
+    const { svc, cleanup } = createService();
+    try {
+      const results = await svc.batchGet([]);
+      assert.deepStrictEqual(results, []);
+    } finally { cleanup(); }
+  });
+});
