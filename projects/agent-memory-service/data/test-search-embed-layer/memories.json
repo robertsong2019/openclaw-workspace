@@ -1,25 +1,25 @@
 [
   {
-    "id": "b026e68f-21c8-48d2-b4e3-ddb53009da72",
+    "id": "5c5d5764-e322-44cf-8f12-2ffea5a4930e",
     "content": "core memory item",
     "layer": "core",
     "tags": [],
     "entities": [],
     "weight": 1,
-    "createdAt": 1777035809035,
-    "accessedAt": 1777035809035,
+    "createdAt": 1777036204381,
+    "accessedAt": 1777036204381,
     "accessCount": 0,
     "hash": "31fb83124676005c"
   },
   {
-    "id": "288270ae-9c61-45a2-89d9-5c0345d1254f",
+    "id": "d97bf9c9-c159-463c-a031-9db4d9c15a2a",
     "content": "short memory item",
     "layer": "short",
     "tags": [],
     "entities": [],
     "weight": 1,
-    "createdAt": 1777035809037,
-    "accessedAt": 1777035809037,
+    "createdAt": 1777036204384,
+    "accessedAt": 1777036204384,
     "accessCount": 0,
     "hash": "0049e9efdcf94369"
   }

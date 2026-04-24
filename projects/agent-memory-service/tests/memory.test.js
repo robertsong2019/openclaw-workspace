@@ -3743,3 +3743,67 @@ describe('mergeClusters', () => {
     } finally { cleanup(); }
   });
 });
+
+// ── memoryReport ──────────────────────────────────────
+describe('memoryReport', () => {
+  it('returns report for empty store', async () => {
+    const { svc, cleanup } = createService();
+    try {
+      const report = await svc.memoryReport();
+      assert.strictEqual(report.total, 0);
+      assert.strictEqual(report.layers.core, 0);
+      assert.strictEqual(report.tagCount, 0);
+      assert.strictEqual(report.timeRange.oldest, null);
+      assert.deepStrictEqual(report.warnings, []);
+    } finally { cleanup(); }
+  });
+
+  it('reports layer distribution and top tags', async () => {
+    const { svc, cleanup } = createService();
+    try {
+      await svc.add({ content: 'c1', tags: ['a', 'b'], layer: 'core' });
+      await svc.add({ content: 'c2', tags: ['a'], layer: 'long' });
+      await svc.add({ content: 'c3', tags: ['a', 'c'], layer: 'short' });
+      const report = await svc.memoryReport();
+      assert.strictEqual(report.total, 3);
+      assert.strictEqual(report.layers.core, 1);
+      assert.strictEqual(report.layers.long, 1);
+      assert.strictEqual(report.layers.short, 1);
+      assert.strictEqual(report.topTags[0].tag, 'a');
+      assert.strictEqual(report.topTags[0].count, 3);
+      assert.strictEqual(report.tagCount, 3);
+    } finally { cleanup(); }
+  });
+
+  it('includes weight histogram when requested', async () => {
+    const { svc, cleanup } = createService();
+    try {
+      await svc.add({ content: 'low' });
+      await svc.add({ content: 'high' });
+      const report = await svc.memoryReport({ includeWeightHistogram: true });
+      assert.ok(report.weightHistogram);
+      assert.ok('0.0-0.2' in report.weightHistogram);
+      const total = Object.values(report.weightHistogram).reduce((s, v) => s + v, 0);
+      assert.strictEqual(total, 2);
+    } finally { cleanup(); }
+  });
+
+  it('warns about expired memories', async () => {
+    const { svc, cleanup } = createService();
+    try {
+      await svc.add({ content: 'old', expiresAt: Date.now() - 1000 });
+      const report = await svc.memoryReport();
+      assert.ok(report.warnings.some(w => w.includes('expired')));
+    } finally { cleanup(); }
+  });
+
+  it('reports time range', async () => {
+    const { svc, cleanup } = createService();
+    try {
+      await svc.add({ content: 'x' });
+      const report = await svc.memoryReport();
+      assert.ok(report.timeRange.oldest);
+      assert.ok(report.timeRange.newest);
+    } finally { cleanup(); }
+  });
+});

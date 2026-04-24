@@ -3630,6 +3630,76 @@ export class MemoryService {
 
     return result;
   }
+
+  /**
+   * Generate a human-readable diagnostic report of the memory store
+   * @param {object} [opts]
+   * @param {number} [opts.topTags=10] - Number of top tags to show
+   * @param {boolean} [opts.includeWeightHistogram=false] - Include weight distribution histogram
+   * @returns {Promise<object>}
+   */
+  async memoryReport(opts = {}) {
+    await this.#ensureLoaded();
+    const all = this.#store.all();
+    const nowTs = now();
+    const topN = opts.topTags || 10;
+
+    // Layer distribution
+    const layers = { core: 0, long: 0, short: 0 };
+    for (const m of all) layers[m.layer] = (layers[m.layer] || 0) + 1;
+
+    // Tag frequency
+    const tagFreq = new Map();
+    for (const m of all) {
+      for (const t of (m.tags || [])) tagFreq.set(t, (tagFreq.get(t) || 0) + 1);
+    }
+    const topTags = [...tagFreq.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, topN)
+      .map(([tag, count]) => ({ tag, count }));
+
+    // Time range
+    const timestamps = all.map(m => m.createdAt).filter(Boolean);
+    const oldest = timestamps.length ? new Date(Math.min(...timestamps)).toISOString() : null;
+    const newest = timestamps.length ? new Date(Math.max(...timestamps)).toISOString() : null;
+
+    // Weight stats
+    const weights = all.map(m => m.weight).filter(w => w != null);
+    const avgWeight = weights.length ? Math.round((weights.reduce((s, w) => s + w, 0) / weights.length) * 1000) / 1000 : 0;
+    const minWeight = weights.length ? Math.min(...weights) : 0;
+    const maxWeight = weights.length ? Math.max(...weights) : 0;
+
+    // Warnings
+    const expired = all.filter(m => m.expiresAt && m.expiresAt <= nowTs).length;
+    const untagged = all.filter(m => !m.tags || m.tags.length === 0).length;
+    const warnings = [];
+    if (expired > 0) warnings.push(`${expired} expired memories need cleanup`);
+    if (untagged > all.length * 0.3 && all.length > 0) warnings.push(`${untagged} memories without tags (${Math.round(untagged/all.length*100)}%)`);
+
+    const report = {
+      total: all.length,
+      layers,
+      topTags,
+      timeRange: { oldest, newest },
+      weights: { avg: avgWeight, min: minWeight, max: maxWeight },
+      tagCount: tagFreq.size,
+      warnings,
+    };
+
+    if (opts.includeWeightHistogram) {
+      const buckets = [0, 0, 0, 0, 0]; // 0-0.2, 0.2-0.4, 0.4-0.6, 0.6-0.8, 0.8-1.0
+      for (const w of weights) {
+        const idx = Math.min(4, Math.floor(w * 5));
+        buckets[idx]++;
+      }
+      report.weightHistogram = {
+        '0.0-0.2': buckets[0], '0.2-0.4': buckets[1], '0.4-0.6': buckets[2],
+        '0.6-0.8': buckets[3], '0.8-1.0': buckets[4],
+      };
+    }
+
+    return report;
+  }
 }
 
 // ─── Embedding Provider Interface ────────────────────────
