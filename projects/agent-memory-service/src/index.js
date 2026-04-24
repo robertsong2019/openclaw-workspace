@@ -3706,6 +3706,52 @@ export class MemoryService {
    * @param {string[]} ids
    * @returns {Promise<Array<Memory>>}
    */
+  /**
+   * Compute health metrics for topic clusters.
+   * @param {{minClusterSize?: number}} opts
+   * @returns {Promise<{clusters: {topic: string, size: number, avgWeight: number, uniqueLayers: string[], orphaned: boolean}[], summary: {totalClusters: number, totalMemories: number, avgClusterSize: number, orphanedClusters: number, largestCluster: string|null}}}>}
+   */
+  async clusterHealth(opts = {}) {
+    await this.#ensureLoaded();
+    const minSize = opts.minClusterSize || 1;
+    const memories = this.#store.all();
+    const tagMap = new Map();
+    for (const m of memories) {
+      for (const tag of (m.tags || [])) {
+        if (!tagMap.has(tag)) tagMap.set(tag, []);
+        tagMap.get(tag).push(m);
+      }
+    }
+
+    const clusters = [];
+    for (const [topic, mems] of tagMap) {
+      if (mems.length < minSize) continue;
+      const avgWeight = mems.reduce((s, m) => s + (m.weight || 0), 0) / mems.length;
+      const layers = [...new Set(mems.map(m => m.layer))];
+      clusters.push({
+        topic,
+        size: mems.length,
+        avgWeight: Math.round(avgWeight * 1000) / 1000,
+        uniqueLayers: layers,
+        orphaned: mems.length === 1
+      });
+    }
+
+    clusters.sort((a, b) => b.size - a.size);
+    const totalMemories = clusters.reduce((s, c) => s + c.size, 0);
+
+    return {
+      clusters,
+      summary: {
+        totalClusters: clusters.length,
+        totalMemories,
+        avgClusterSize: clusters.length > 0 ? Math.round(totalMemories / clusters.length * 10) / 10 : 0,
+        orphanedClusters: clusters.filter(c => c.orphaned).length,
+        largestCluster: clusters.length > 0 ? clusters[0].topic : null
+      }
+    };
+  }
+
   async batchGet(ids) {
     await this.#ensureLoaded();
     if (!Array.isArray(ids)) throw new Error('batchGet requires an array of ids');

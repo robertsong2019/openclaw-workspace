@@ -3847,3 +3847,63 @@ describe('batchGet', () => {
     } finally { cleanup(); }
   });
 });
+
+describe('clusterHealth', () => {
+  it('returns health metrics for tagged clusters', async () => {
+    const { svc, cleanup } = createService();
+    await svc.add({ content: 'alpha memory', tags: ['topic-a'], weight: 0.8 });
+    await svc.add({ content: 'beta memory', tags: ['topic-a'], weight: 0.4 });
+    await svc.add({ content: 'gamma memory', tags: ['topic-b'], weight: 0.6 });
+    try {
+      const health = await svc.clusterHealth();
+      assert.strictEqual(health.clusters.length, 2);
+      assert.strictEqual(health.summary.totalClusters, 2);
+      assert.strictEqual(health.summary.totalMemories, 3);
+      assert.strictEqual(health.clusters[0].topic, 'topic-a');
+      assert.strictEqual(health.clusters[0].size, 2);
+      assert.ok(health.clusters[0].avgWeight > 0);
+    } finally { cleanup(); }
+  });
+
+  it('identifies orphaned clusters', async () => {
+    const { svc, cleanup } = createService();
+    await svc.add({ content: 'lonely', tags: ['solo'] });
+    try {
+      const health = await svc.clusterHealth();
+      assert.strictEqual(health.summary.orphanedClusters, 1);
+      assert.strictEqual(health.clusters[0].orphaned, true);
+    } finally { cleanup(); }
+  });
+
+  it('respects minClusterSize option', async () => {
+    const { svc, cleanup } = createService();
+    await svc.add({ content: 'a', tags: ['small'] });
+    await svc.add({ content: 'b', tags: ['big'] });
+    await svc.add({ content: 'c', tags: ['big'] });
+    try {
+      const health = await svc.clusterHealth({ minClusterSize: 2 });
+      assert.strictEqual(health.clusters.length, 1);
+      assert.strictEqual(health.clusters[0].topic, 'big');
+    } finally { cleanup(); }
+  });
+
+  it('reports unique layers per cluster', async () => {
+    const { svc, cleanup } = createService();
+    await svc.add({ content: 'core item', tags: ['mixed'], layer: 'core' });
+    await svc.add({ content: 'long item', tags: ['mixed'], layer: 'long' });
+    try {
+      const health = await svc.clusterHealth();
+      assert.deepStrictEqual(health.clusters[0].uniqueLayers, ['core', 'long']);
+    } finally { cleanup(); }
+  });
+
+  it('returns empty summary when no tagged memories', async () => {
+    const { svc, cleanup } = createService();
+    await svc.add({ content: 'no tags here' });
+    try {
+      const health = await svc.clusterHealth();
+      assert.strictEqual(health.summary.totalClusters, 0);
+      assert.strictEqual(health.summary.largestCluster, null);
+    } finally { cleanup(); }
+  });
+});
