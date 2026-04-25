@@ -3852,6 +3852,38 @@ export class MemoryService {
       .sort((a, b) => b.score - a.score || b.memoryCount - a.memoryCount)
       .slice(0, limit);
   }
+
+  /**
+   * Compare two memories with detailed diff breakdown
+   * @param {string} id1
+   * @param {string} id2
+   * @returns {Promise<{id1: string, id2: string, found1: boolean, found2: boolean, contentSimilarity: number, tags: {only1: string[], only2: string[], common: string[]}, entities: {only1: string[], only2: string[], common: string[]}, layers: {m1: string, m2: string, same: boolean}, weights: {m1: number, m2: number, diff: number}}>}
+   */
+  async memoryDiff(id1, id2) {
+    await this.#ensureLoaded();
+    const m1 = this.#store.get(id1);
+    const m2 = this.#store.get(id2);
+    const result = { id1, id2, found1: !!m1, found2: !!m2 };
+    if (!m1 || !m2) return result;
+    const t1 = new Set(m1.tags || []);
+    const t2 = new Set(m2.tags || []);
+    const e1 = new Set(m1.entities || []);
+    const e2 = new Set(m2.entities || []);
+    result.contentSimilarity = ngramSimilarity(m1.content, m2.content);
+    result.tags = {
+      only1: [...t1].filter(t => !t2.has(t)),
+      only2: [...t2].filter(t => !t1.has(t)),
+      common: [...t1].filter(t => t2.has(t)),
+    };
+    result.entities = {
+      only1: [...e1].filter(e => !e2.has(e)),
+      only2: [...e2].filter(e => !e1.has(e)),
+      common: [...e1].filter(e => e2.has(e)),
+    };
+    result.layers = { m1: m1.layer, m2: m2.layer, same: m1.layer === m2.layer };
+    result.weights = { m1: m1.weight || 0, m2: m2.weight || 0, diff: Math.abs((m1.weight || 0) - (m2.weight || 0)) };
+    return result;
+  }
 }
 
 // ─── Embedding Provider Interface ────────────────────────
