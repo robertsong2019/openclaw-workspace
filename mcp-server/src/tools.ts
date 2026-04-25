@@ -211,6 +211,17 @@ export const OPENCLAW_TOOLS: Tool[] = [
     },
   },
   {
+    name: "create_directory",
+    description: "Create a directory and any necessary parent directories within the workspace.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Directory path relative to workspace root" },
+      },
+      required: ["path"],
+    },
+  },
+  {
     name: "system_status",
     description: "Get system status information: platform, Node.js version, uptime, memory usage, workspace info.",
     inputSchema: {
@@ -234,6 +245,7 @@ export const toolHandlers: Record<string, (args: any) => Promise<any>> = {
   delete: executeDelete,
   move: executeMove,
   copy: executeCopy,
+  create_directory: executeCreateDirectory,
   system_status: executeSystemStatus,
 };
 
@@ -497,6 +509,25 @@ async function executeCopy(args: any): Promise<any> {
   }
 
   return { tool: "copy", source, destination, success: true };
+}
+
+async function executeCreateDirectory(args: any): Promise<any> {
+  const { path } = args;
+  const resolved = safePath(path);
+
+  // Check if already exists
+  let existed = false;
+  try {
+    const s = await stat(resolved);
+    if (s.isDirectory()) {
+      existed = true;
+    } else {
+      return { tool: "create_directory", path, success: false, error: "A file with this name already exists" };
+    }
+  } catch { /* doesn't exist, good */ }
+
+  await mkdir(resolved, { recursive: true });
+  return { tool: "create_directory", path, success: true, created: !existed };
 }
 
 async function executeSystemStatus(): Promise<any> {
