@@ -400,6 +400,34 @@ function mergeArchives(ids, { label, id } = {}) {
   return { ...result, sourceCount: archives.length, totalMessages: mergedHistory.length };
 }
 
+/**
+ * Compare two archived sessions and return a diff summary.
+ */
+function diffArchives(idA, idB) {
+  const a = _readArchive(idA);
+  const b = _readArchive(idB);
+  if (!a) throw new Error(`Archive not found: ${idA}`);
+  if (!b) throw new Error(`Archive not found: ${idB}`);
+
+  const setA = new Set((a.history || []).map((m) => `${m.role}:${(m.content || m.text || "").trim()}`));
+  const setB = new Set((b.history || []).map((m) => `${m.role}:${(m.content || m.text || "").trim()}`));
+
+  const onlyInA = (a.history || []).filter((m) => !setB.has(`${m.role}:${(m.content || m.text || "").trim()}`));
+  const onlyInB = (b.history || []).filter((m) => !setA.has(`${m.role}:${(m.content || m.text || "").trim()}`));
+  const common = (a.history || []).filter((m) => setB.has(`${m.role}:${(m.content || m.text || "").trim()}`));
+
+  return {
+    a: { id: a.id, label: a.label, messageCount: a.messageCount },
+    b: { id: b.id, label: b.label, messageCount: b.messageCount },
+    onlyInA: onlyInA.map((m) => ({ role: m.role, text: (m.content || m.text || "").slice(0, 200) })),
+    onlyInB: onlyInB.map((m) => ({ role: m.role, text: (m.content || m.text || "").slice(0, 200) })),
+    commonCount: common.length,
+    similarity: a.messageCount + b.messageCount > 0
+      ? (2 * common.length / (a.messageCount + b.messageCount)).toFixed(2)
+      : "0.00",
+  };
+}
+
 module.exports = {
   archiveSession,
   listArchives,
@@ -411,4 +439,5 @@ module.exports = {
   removeTags,
   searchByTag,
   mergeArchives,
+  diffArchives,
 };

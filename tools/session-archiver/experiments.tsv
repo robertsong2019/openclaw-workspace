@@ -1,3 +1,5 @@
 timestamp	commit	metric	value	status	description
 2026-04-21T14:00	3597823	test_pass_rate	19/19=100%	keep	baseline + tag system + date-range filtering
 2026-04-21T14:00	3597823	test_count	19	keep	10 original + 6 tag + 3 date-range
+2026-04-25T14:00	46953a5	test_pass_rate	24/24=100%	keep	+ mergeArchives (5 new tests)
+2026-04-25T14:00	46953a5	test_count	24	keep	19 prev + 5 merge

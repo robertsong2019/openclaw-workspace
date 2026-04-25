@@ -14,6 +14,7 @@ const {
   removeTags,
   searchByTag,
   mergeArchives,
+  diffArchives,
 } = require("./archive");
 
 const TMP_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "sa-test-"));
@@ -202,4 +203,43 @@ test("mergeArchives custom label defaults to source labels joined", () => {
   const json = JSON.parse(exportSession(result.id, "json"));
   assert.ok(json.label.includes("Session A"));
   assert.ok(json.label.includes("Session B"));
+});
+
+// === Feature: Diff archives ===
+
+test("diffArchives shows only-in messages", () => {
+  archiveSession({ id: "diff-a", label: "Diff A", history: [
+    { role: "user", content: "shared msg" },
+    { role: "user", content: "unique to A" },
+  ] });
+  archiveSession({ id: "diff-b", label: "Diff B", history: [
+    { role: "user", content: "shared msg" },
+    { role: "user", content: "unique to B" },
+  ] });
+
+  const diff = diffArchives("diff-a", "diff-b");
+  assert.equal(diff.commonCount, 1);
+  assert.equal(diff.onlyInA.length, 1);
+  assert.equal(diff.onlyInB.length, 1);
+  assert.equal(diff.onlyInA[0].text, "unique to A");
+  assert.equal(diff.onlyInB[0].text, "unique to B");
+});
+
+test("diffArchives identical sessions", () => {
+  archiveSession({ id: "diff-c", label: "Same", history: [
+    { role: "user", content: "same content" },
+  ] });
+  archiveSession({ id: "diff-d", label: "Same", history: [
+    { role: "user", content: "same content" },
+  ] });
+
+  const diff = diffArchives("diff-c", "diff-d");
+  assert.equal(diff.commonCount, 1);
+  assert.equal(diff.onlyInA.length, 0);
+  assert.equal(diff.onlyInB.length, 0);
+  assert.equal(diff.similarity, "1.00");
+});
+
+test("diffArchives throws for missing archive", () => {
+  assert.throws(() => diffArchives("nope", "diff-c"), /not found/);
 });
