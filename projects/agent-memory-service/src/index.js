@@ -3859,6 +3859,54 @@ export class MemoryService {
    * @param {string} id2
    * @returns {Promise<{id1: string, id2: string, found1: boolean, found2: boolean, contentSimilarity: number, tags: {only1: string[], only2: string[], common: string[]}, entities: {only1: string[], only2: string[], common: string[]}, layers: {m1: string, m2: string, same: boolean}, weights: {m1: number, m2: number, diff: number}}>}
    */
+  async clusterAutoMerge(opts = {}) {
+    await this.#ensureLoaded();
+    const maxSize = opts.maxSourceSize ?? 1; // only merge clusters with <= N memories
+    const minTargetSize = opts.minTargetSize || 2;
+    const dryRun = opts.dryRun ?? false;
+
+    const health = await this.clusterHealth({ minClusterSize: 1 });
+    const candidates = health.clusters.filter(c => c.size <= maxSize);
+    const targets = health.clusters.filter(c => c.size >= minTargetSize);
+
+    if (candidates.length === 0 || targets.length === 0) {
+      return { merged: [], skipped: candidates.length, dryRun };
+    }
+
+    const memories = this.#store.all();
+    // Build tag co-occurrence map for similarity scoring
+    const cooccur = new Map();
+    for (const m of memories) {
+      const tags = (m.tags || []).map(t => t.toLowerCase());
+      for (let i = 0; i < tags.length; i++) {
+        for (let j = i + 1; j < tags.length; j++) {
+          const key = [tags[i], tags[j]].sort().join('||');
+          cooccur.set(key, (cooccur.get(key) || 0) + 1);
+        }
+      }
+    }
+
+    const merged = [];
+    for (const cand of candidates) {
+      let bestTarget = null;
+      let bestScore = 0;
+      for (const tgt of targets) {
+        const key = [cand.topic.toLowerCase(), tgt.topic.toLowerCase()].sort().join('||');
+        const score = cooccur.get(key) || 0;
+        if (score > bestScore) { bestScore = score; bestTarget = tgt; }
+      }
+      if (!bestTarget || bestScore === 0) continue;
+      const plan = { source: cand.topic, target: bestTarget.topic, cooccurrence: bestScore, memoriesMoved: cand.size };
+      merged.push(plan);
+
+      if (!dryRun) {
+        await this.mergeClusters([cand.topic, bestTarget.topic], { targetTag: bestTarget.topic, removeSourceTags: true });
+      }
+    }
+
+    return { merged, skipped: 0, dryRun };
+  }
+
   async memoryDiff(id1, id2) {
     await this.#ensureLoaded();
     const m1 = this.#store.get(id1);
