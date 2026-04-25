@@ -13,6 +13,7 @@ const {
   addTags,
   removeTags,
   searchByTag,
+  mergeArchives,
 } = require("./archive");
 
 const TMP_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "sa-test-"));
@@ -153,4 +154,52 @@ test("listArchives filters by to date (far past = empty)", () => {
 test("listArchives filters by date range", () => {
   const results = listArchives({ from: "2020-01-01", to: "2030-12-31" });
   assert.ok(results.length >= 1);
+});
+
+// === Feature: Merge archives ===
+
+test("mergeArchives combines two sessions", () => {
+  // Create two sessions with different timestamps
+  archiveSession({ id: "merge-a", label: "Session A", history: [
+    { role: "user", content: "from A" },
+  ] });
+  archiveSession({ id: "merge-b", label: "Session B", history: [
+    { role: "assistant", content: "from B" },
+  ] });
+
+  const result = mergeArchives(["merge-a", "merge-b"], { label: "Merged" });
+  assert.equal(result.sourceCount, 2);
+  assert.equal(result.totalMessages, 2);
+  assert.ok(result.id.startsWith("merged-"));
+
+  // Verify content via export
+  const json = JSON.parse(exportSession(result.id, "json"));
+  assert.equal(json.label, "Merged");
+  assert.equal(json.history.length, 2);
+  assert.equal(json.history[0]._source, "merge-a");
+  assert.equal(json.history[1]._source, "merge-b");
+  assert.ok(json.meta.sources.length === 2);
+});
+
+test("mergeArchives preserves tags from all sources", () => {
+  addTags("merge-a", ["alpha"]);
+  addTags("merge-b", ["beta"]);
+  const result = mergeArchives(["merge-a", "merge-b"], { id: "merge-tagged" });
+  const json = JSON.parse(exportSession("merge-tagged", "json"));
+  assert.deepEqual(json.tags.sort(), ["alpha", "beta"]);
+});
+
+test("mergeArchives throws for less than 2 ids", () => {
+  assert.throws(() => mergeArchives(["only-one"]), /at least 2/);
+});
+
+test("mergeArchives throws for missing archive", () => {
+  assert.throws(() => mergeArchives(["merge-a", "nonexistent"]), /not found/);
+});
+
+test("mergeArchives custom label defaults to source labels joined", () => {
+  const result = mergeArchives(["merge-a", "merge-b"]);
+  const json = JSON.parse(exportSession(result.id, "json"));
+  assert.ok(json.label.includes("Session A"));
+  assert.ok(json.label.includes("Session B"));
 });

@@ -21,6 +21,8 @@
 Autoresearch 方法论实践 — Agent Memory Service v1.0-dev 持续迭代 (**415 tests**)。4/24-4/25 新增：clusterHealth + searchByEntity。autoresearch 零回滚率持续保持（**连续14天**）。**agent-role-orchestrator**: 修复3个broken test suites → 151/151 pass + 23x性能优化(134s→6s)。
 
 ### Next Actions
+- [ ] **A2A Trust Extension 实现模块** — `lab/a2a-trust-extension/` Python 模块，集成 a2a_minimal + 信任扩展（[研究笔记](catalyst-research/exploration-notes/2026-04-25-a2a-agent-trust-integration.md)）
+- [ ] **桥接 TypeScript TrustNetwork → Python TrustEngine** — 跨语言信任数据一致
 - [ ] 初始化 openclaw-mcp-server 项目（TypeScript SDK + Streamable HTTP，3 tools MVP）— 研究笔记已就绪
 - [ ] 实现 3 tools: search_memory(对接AMS), run_command(OpenClaw exec), system_status
 - [ ] MCP Server Express/Hono 包装 + Docker 化部署
@@ -160,6 +162,12 @@ curl -X POST "https://api.tavily.com/search" \
 ## Recent Achievements
 
 ### 2026-04-25
+- ✅ **A2A Agent Trust 集成深度研究** — A2A Extension 机制 + EigenTrust 信任嵌入 Agent Card（[笔记](catalyst-research/exploration-notes/2026-04-25-a2a-agent-trust-integration.md)）
+  - **核心发现**: A2A v1.0 Extension 机制是嵌入信任的标准路径；Agent Card 充当信任传播载体
+  - **可运行代码**: TrustEngine (EigenTrust) + 信任扩展 Agent Card + 信任感知路由（`/tmp/a2a_trust_demo.py` 验证通过）
+  - **关键洞察**: Public vs Extended Card 信任分层；Curated Registry 天然信任中心；Trust Extension 可成 A2A 官方贡献
+  - **5 个核心概念**: Extension 机制、Trust-Extended Card、信任传播、信任感知路由、Registry+Trust
+  - **项目关联**: A2A Lab + Agent Trust Network + MCP Server + MEMORY.md 设计原则
 - ✅ **Agent Memory Service v1.0-dev 续升** — 395→415 tests (+20)
   - **clusterHealth(opts)**: 集群健康诊断(孤立检测/avgWeight/uniqueLayers/minClusterSize过滤), 5 tests
   - **searchByEntity(entity, opts)**: 实体级检索(精确+模糊匹配/层级过滤/分页), 6 tests

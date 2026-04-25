@@ -354,6 +354,52 @@ function _writeArchive(data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
 }
 
+/**
+ * Merge multiple archives into one combined session.
+ * Messages are concatenated in chronological order (by source archivedAt).
+ */
+function mergeArchives(ids, { label, id } = {}) {
+  if (!Array.isArray(ids) || ids.length < 2) {
+    throw new Error("mergeArchives requires at least 2 archive ids");
+  }
+
+  const archives = ids.map((aid) => {
+    const data = _readArchive(aid);
+    if (!data) throw new Error(`Archive not found: ${aid}`);
+    return data;
+  });
+
+  // Sort sources by archivedAt to keep chronological order
+  archives.sort((a, b) => new Date(a.archivedAt) - new Date(b.archivedAt));
+
+  const mergedHistory = [];
+  const mergedMeta = { sources: [] };
+  const allTags = new Set();
+
+  for (const src of archives) {
+    for (const msg of src.history || []) {
+      mergedHistory.push({ ...msg, _source: src.id });
+    }
+    mergedMeta.sources.push({ id: src.id, label: src.label, archivedAt: src.archivedAt, messageCount: src.messageCount });
+    for (const t of src.tags || []) allTags.add(t);
+  }
+
+  const mergedId = id || `merged-${Date.now()}`;
+  const result = archiveSession({
+    id: mergedId,
+    label: label || archives.map((a) => a.label || a.id).join(" + "),
+    history: mergedHistory,
+    meta: mergedMeta,
+  });
+
+  // Apply merged tags
+  if (allTags.size > 0) {
+    addTags(mergedId, [...allTags]);
+  }
+
+  return { ...result, sourceCount: archives.length, totalMessages: mergedHistory.length };
+}
+
 module.exports = {
   archiveSession,
   listArchives,
@@ -364,4 +410,5 @@ module.exports = {
   addTags,
   removeTags,
   searchByTag,
+  mergeArchives,
 };
