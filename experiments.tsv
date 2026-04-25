@@ -20,3 +20,4 @@ date	project	baseline_tests	baseline_pass	baseline_fail	after_tests	after_pass	a
 2026-04-24T03:04	edge-agent-dashboard	5 pass + 5 errors	38	38	0	+33 unit tests (23 manager + 15 monitor), fixed fixture bug	renamed integration test script, created proper unit tests
 2026-04-24	agent-task-cli	282	282	0	295	295	0	+13 tests	F17: EventBus.once (4), F18: Cache.getOrSet (5), F19: RetryHandler.executeUntil (4)
 2026-04-25T03:00	catalyst-agent-mesh	182	207	+25	TaskScheduler reschedule/fail/overdue/stats/clear/next_batch edge cases, select_agents_for_task, ScheduledTask comparison, DesignAgent process	all pass	autoresearch cron
+2026-04-26T03:00	ai-dev-tools	22 pass + 2 broken	44/44 pass	fixed ESM mock (jest.unstable_mockModule + Proxy chalk), fixed async dir creation race condition	autoresearch cron

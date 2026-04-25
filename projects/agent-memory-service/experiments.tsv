@@ -46,3 +46,4 @@ timestamp	commit	metric	value	status	description
 2026-04-25T19:08:38+08:00	c8ccc9d	test_count	421/421	keep	topEntities() API — entity ranking by frequency*avgWeight. Supports limit, layer, minCount, topTags. 6 new tests (415→421), ~35 lines src.
 2026-04-25T19:10:40+08:00	0f2be50	test_count	427/427	keep	tagSearch() API — fuzzy tag discovery with exact/prefix/substring/overlap scoring. Supports limit, minScore. 6 new tests (421→427), ~30 lines src.
 2026-04-25T19:14:39+08:00	1b2d111	test_count	433/433	keep	memoryDiff(id1,id2) API — content similarity + tags/entities/layers/weights diff. 6 new tests (427→433), ~25 lines src.
+2026-04-26T00:00	f49296f	test_count	438/438	keep	clusterAutoMerge(opts) — auto-merge orphaned/small clusters by tag co-occurrence. Uses clusterHealth to find candidates, merges into best target. 5 new tests (433→438), ~40 lines src.

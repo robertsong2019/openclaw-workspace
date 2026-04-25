@@ -21,7 +21,7 @@ export class DataStorage {
       }
     });
     
-    this.ensureDirectories();
+    this._dirsReady = this.ensureDirectories();
   }
 
   async ensureDirectories() {
@@ -40,6 +40,7 @@ export class DataStorage {
 
   // Prompts
   async savePrompt(prompt) {
+    await this._dirsReady;
     const prompts = this.config.get('prompts') || [];
     const newPrompt = {
       id: Date.now().toString(),
@@ -106,6 +107,7 @@ export class DataStorage {
 
   // Sessions
   async saveSession(session) {
+    await this._dirsReady;
     const sessions = this.config.get('sessions') || [];
     const newSession = {
       id: Date.now().toString(),
@@ -220,6 +222,7 @@ export class DataStorage {
 
   // Export/Import
   async exportData(type, outputPath) {
+    await this._dirsReady;
     const data = {
       prompts: this.config.get('prompts') || [],
       sessions: this.config.get('sessions') || [],

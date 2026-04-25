@@ -18,15 +18,15 @@
 ## Current Focus (2026-04-25)
 
 ### Active Theme
-Autoresearch 方法论实践 — Agent Memory Service v1.0-dev 持续迭代 (**415 tests**)。4/24-4/25 新增：clusterHealth + searchByEntity。autoresearch 零回滚率持续保持（**连续14天**）。**agent-role-orchestrator**: 修复3个broken test suites → 151/151 pass + 23x性能优化(134s→6s)。
+Autoresearch 方法论实践 — Agent Memory Service v1.0-dev 持续迭代 (**445 tests**, 415→445 in 24h)。4/25 晚间+4/26 凌晨新增：topEntities + tagSearch + memoryDiff + clusterAutoMerge + contentHistory + contentVersionDiff。autoresearch 零回滚率持续保持（**连续15天**）。**agent-role-orchestrator**: 修复3个broken test suites → 151/151 pass + 23x性能优化(134s→6s)。
 
 ### Next Actions
 - [ ] **A2A Trust Extension 实现模块** — `lab/a2a-trust-extension/` Python 模块，集成 a2a_minimal + 信任扩展（[研究笔记](catalyst-research/exploration-notes/2026-04-25-a2a-agent-trust-integration.md)）
 - [ ] **桥接 TypeScript TrustNetwork → Python TrustEngine** — 跨语言信任数据一致
-- [ ] 初始化 openclaw-mcp-server 项目（TypeScript SDK + Streamable HTTP，3 tools MVP）— 研究笔记已就绪
+- [ ] 初始化 openclaw-mcp-server 项目（TypeScript SDK v2 + Streamable HTTP，3 tools MVP）— 研究笔记已就绪（[v2实现指南](catalyst-research/exploration-notes/2026-04-25-mcp-server-v2-implementation.md)）
 - [ ] 实现 3 tools: search_memory(对接AMS), run_command(OpenClaw exec), system_status
 - [ ] MCP Server Express/Hono 包装 + Docker 化部署
-- [ ] AMS: contentVersioning(), clusterAutoMerge() — 下一步 API 候选
+- [ ] AMS: searchByTimeRange(opts), contentRollback(id, versionIndex) — 下一批 API 候选
 - [ ] AMS 生产化：EmbeddingProvider真实接入(ONNX/远程API), Docker化
 
 ### Core Projects
@@ -39,7 +39,7 @@ Autoresearch 方法论实践 — Agent Memory Service v1.0-dev 持续迭代 (**4
 7. **agent-log** - OpenClaw 日志搜索/汇总 CLI (✅ 单文件 Bash，零依赖)
 8. **ctxgen** - AI 上下文文件生成器 (✅ v1.0, 纯Node.js零依赖, 支持4种目标格式)
 9. **tiny-agent-workshop** - 单文件 Agent 模式教学集 (✅ 7个模式: ReAct/ToolCall/Memory/Router/Guardrail/Chain/EdgeAgent)
-10. **Agent Memory Service** - Mem0风格Agent记忆管理 (✅ v1.0-dev, 415/415 tests, 三层存储+LLM提取+语义检索+Consolidation+变更追踪+自监控+搜索三阶段(BM25+Embedding+Unified RRF)+suggestTags()+healthScore()+autoMaintain()+searchSimilar()+findDuplicatePairs()+exportJSON/importJSON()+pruneLowWeight()+inspect()+clusterByTopic()+summarizeCluster()+compareMemories()+tagHierarchy()+rebalance()+autoTag()+mergeClusters()+clusterHealth()+searchByEntity())
+10. **Agent Memory Service** - Mem0风格Agent记忆管理 (✅ v1.0-dev, 445/445 tests, 三层存储+LLM提取+语义检索+Consolidation+变更追踪+自监控+搜索三阶段(BM25+Embedding+Unified RRF)+suggestTags()+healthScore()+autoMaintain()+searchSimilar()+findDuplicatePairs()+exportJSON/importJSON()+pruneLowWeight()+inspect()+clusterByTopic()+summarizeCluster()+compareMemories()+tagHierarchy()+rebalance()+autoTag()+mergeClusters()+clusterHealth()+searchByEntity()+topEntities()+tagSearch()+memoryDiff()+clusterAutoMerge()+contentHistory()+contentVersionDiff())
 11. **A2A Protocol Lab** - Agent-to-Agent通信协议实验 (✅ 零依赖Python实现, Server+Client+Federation Demo)
 
 ---
@@ -168,13 +168,16 @@ curl -X POST "https://api.tavily.com/search" \
   - **关键洞察**: Public vs Extended Card 信任分层；Curated Registry 天然信任中心；Trust Extension 可成 A2A 官方贡献
   - **5 个核心概念**: Extension 机制、Trust-Extended Card、信任传播、信任感知路由、Registry+Trust
   - **项目关联**: A2A Lab + Agent Trust Network + MCP Server + MEMORY.md 设计原则
-- ✅ **Agent Memory Service v1.0-dev 续升** — 395→415 tests (+20)
-  - **clusterHealth(opts)**: 集群健康诊断(孤立检测/avgWeight/uniqueLayers/minClusterSize过滤), 5 tests
-  - **searchByEntity(entity, opts)**: 实体级检索(精确+模糊匹配/层级过滤/分页), 6 tests
-  - 零回滚率持续保持（连续14天）
+- ✅ **Agent Memory Service v1.0-dev 续升** — 395→445 tests (+50 in 2 days)
+  - 4/25晚间: topEntities(实体排名) + tagSearch(模糊标签搜索) + memoryDiff(跨记忆对比) → 433 tests
+  - 4/26凌晨: clusterAutoMerge(孤立集群自动合并) + contentHistory/contentVersionDiff(内容版本追踪) → 445 tests
+  - 零回滚率持续保持（连续15天）
 - ✅ **agent-role-orchestrator 修复+优化** — 0%→100% test pass (151/151)
   - 修复3个broken suites: EventBus同步throw未catch、TaskQueue mock非确定性、Worker未initialize
   - **23x性能优化**: 134s→6s (simulateDelay可配置化)
+- ✅ **MCP Server v2 实现指南研究** — SDK v2 registerTool + Zod v4 + createMcpExpressApp（[笔记](catalyst-research/exploration-notes/2026-04-25-mcp-server-v2-implementation.md)）
+  - 可运行代码: 3-tools MVP (read_file, run_command, search_memory) + Streamable HTTP
+  - structuredContent + outputSchema 契合 OpenClaw 结构化工具返回值
 
 ### 2026-04-24
 - ✅ **Agent Memory Service v1.0-dev 续升** — 371→395 tests (+24)
@@ -372,5 +375,5 @@ curl -X POST "https://api.tavily.com/search" \
 
 ---
 
-*Last updated: 2026-04-25 02:00*
-*Next review: 2026-04-26*
+*Last updated: 2026-04-26 02:00*
+*Next review: 2026-04-27*

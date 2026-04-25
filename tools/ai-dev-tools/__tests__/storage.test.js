@@ -22,8 +22,9 @@ describe('DataStorage', () => {
     }
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     storage = new DataStorage();
+    await storage._dirsReady;
   });
 
   describe('constructor', () => {
