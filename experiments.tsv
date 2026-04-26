@@ -21,3 +21,4 @@ date	project	baseline_tests	baseline_pass	baseline_fail	after_tests	after_pass	a
 2026-04-24	agent-task-cli	282	282	0	295	295	0	+13 tests	F17: EventBus.once (4), F18: Cache.getOrSet (5), F19: RetryHandler.executeUntil (4)
 2026-04-25T03:00	catalyst-agent-mesh	182	207	+25	TaskScheduler reschedule/fail/overdue/stats/clear/next_batch edge cases, select_agents_for_task, ScheduledTask comparison, DesignAgent process	all pass	autoresearch cron
 2026-04-26T03:00	ai-dev-tools	22 pass + 2 broken	44/44 pass	fixed ESM mock (jest.unstable_mockModule + Proxy chalk), fixed async dir creation race condition	autoresearch cron
+2026-04-27T03:01:28+08:00	-	test_pass_rate	65/65 (was 58/58)	improve	better-ralph-core: added 7 tests for MemoryManager (to_dict, save_session_summary, persistence roundtrip, edge cases)

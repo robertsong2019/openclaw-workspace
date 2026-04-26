@@ -193,3 +193,109 @@ class TestMemoryManager:
         assert "project_context" in summary
         assert "iterations_summary" in summary
         assert summary["project_context"]["project_name"] == "test_project"
+
+    def test_iteration_context_to_dict(self):
+        """测试 IterationContext.to_dict 方法"""
+        context = IterationContext(
+            story_id="story-123",
+            story_title="Test to_dict",
+            timestamp="2026-04-27T00:00:00",
+            artifacts=["a.py", "b.py"],
+            learnings=["l1"],
+            patterns=["p1"],
+            errors=["e1"],
+            metrics={"duration": 5.0},
+            notes="some notes"
+        )
+        d = context.to_dict()
+        assert d["story_id"] == "story-123"
+        assert d["story_title"] == "Test to_dict"
+        assert d["artifacts"] == ["a.py", "b.py"]
+        assert d["learnings"] == ["l1"]
+        assert d["patterns"] == ["p1"]
+        assert d["errors"] == ["e1"]
+        assert d["metrics"] == {"duration": 5.0}
+        assert d["notes"] == "some notes"
+
+    def test_save_session_summary(self, memory_manager, tmp_path):
+        """测试保存会话摘要"""
+        summary = {
+            "total_stories": 5,
+            "completed": 3,
+            "failed": 1,
+            "skipped": 1
+        }
+        memory_manager.save_session_summary(summary)
+
+        # Find the session file
+        session_files = list(tmp_path.glob("session_*.json"))
+        assert len(session_files) == 1
+
+        with open(session_files[0]) as f:
+            saved = json.load(f)
+        assert saved["total_stories"] == 5
+        assert saved["completed"] == 3
+
+    def test_progress_with_zero_iterations(self, memory_manager):
+        """测试无迭代时的进度"""
+        progress = memory_manager.get_progress()
+        assert progress["total_iterations"] == 0
+        assert progress["successful_iterations"] == 0
+        assert progress["failed_iterations"] == 0
+        assert progress["success_rate"] == 0.0
+        assert progress["average_metrics"] == {}
+
+    def test_progress_success_rate(self, memory_manager):
+        """测试成功率计算"""
+        for i in range(3):
+            memory_manager.add_iteration_result(
+                story_id=f"story-{i}",
+                story_title=f"Story {i}",
+                artifacts=[],
+                learnings=[],
+                patterns=[],
+                errors=[] if i < 2 else ["error"],
+                metrics={"duration": float(i + 1)}
+            )
+        progress = memory_manager.get_progress()
+        assert progress["success_rate"] == pytest.approx(2.0 / 3.0)
+        assert progress["average_metrics"]["duration"] == pytest.approx(2.0)
+
+    def test_persistence_roundtrip(self, memory_manager, tmp_path):
+        """测试数据持久化和加载"""
+        memory_manager.add_iteration_result(
+            story_id="story-persist",
+            story_title="Persistence Test",
+            artifacts=["main.py"],
+            learnings=["learned"],
+            patterns=["pat"],
+            errors=[],
+            metrics={"t": 1}
+        )
+
+        # Create a new manager loading from same dir
+        manager2 = MemoryManager(memory_dir=tmp_path)
+        assert len(manager2.iterations) == 1
+        assert manager2.iterations[0].story_id == "story-persist"
+        assert manager2.iterations[0].artifacts == ["main.py"]
+
+    def test_add_story_completion_no_existing_iteration(self, memory_manager):
+        """测试对不存在的 story 添加完成数据"""
+        # Should not raise, just log warning
+        memory_manager.add_story_completion("nonexistent", {"notes": "test"})
+        assert len(memory_manager.iterations) == 0
+
+    def test_progress_unique_artifacts_and_stories(self, memory_manager):
+        """测试唯一 artifacts 和 stories 统计"""
+        memory_manager.add_iteration_result(
+            "s1", "S1", ["a.py", "b.py"], [], [], [], {}
+        )
+        memory_manager.add_iteration_result(
+            "s2", "S2", ["b.py", "c.py"], [], [], [], {}
+        )
+        memory_manager.add_iteration_result(
+            "s1", "S1 again", ["d.py"], [], [], [], {}
+        )
+        progress = memory_manager.get_progress()
+        assert progress["total_artifacts"] == 4  # a, b, c, d
+        assert progress["unique_stories"] == 2  # s1, s2
