@@ -47,3 +47,4 @@ timestamp	commit	metric	value	status	description
 2026-04-25T19:10:40+08:00	0f2be50	test_count	427/427	keep	tagSearch() API — fuzzy tag discovery with exact/prefix/substring/overlap scoring. Supports limit, minScore. 6 new tests (421→427), ~30 lines src.
 2026-04-25T19:14:39+08:00	1b2d111	test_count	433/433	keep	memoryDiff(id1,id2) API — content similarity + tags/entities/layers/weights diff. 6 new tests (427→433), ~25 lines src.
 2026-04-26T00:00	f49296f	test_count	438/438	keep	clusterAutoMerge(opts) — auto-merge orphaned/small clusters by tag co-occurrence. Uses clusterHealth to find candidates, merges into best target. 5 new tests (433→438), ~40 lines src.
+2026-04-27T00:00	6534473	test_count	456/456	keep	searchByTimeRange(opts) — temporal search by createdAt with layer/tag/sort/pagination. 11 new tests (445→456), ~25 lines src. Build on key-development-2/3 (clusterAutoMerge + contentHistory).

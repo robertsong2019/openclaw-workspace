@@ -3976,6 +3976,30 @@ export class MemoryService {
   }
 
   /**
+   * Roll back a memory's content to a previous version.
+   * @param {string} id - Memory ID
+   * @param {number} versionIndex - 0-based index into contentHistory versions
+   * @returns {Promise<{id: string, found: boolean, rolledBack: boolean, version: object|null, current: object|null}>}
+   */
+  async contentRollback(id, versionIndex) {
+    await this.#ensureLoaded();
+    const m = this.#store.get(id);
+    if (!m) return { id, found: false, rolledBack: false, version: null, current: null };
+    const history = await this.contentHistory(id);
+    if (versionIndex < 0 || versionIndex >= history.versions.length) {
+      return { id, found: true, rolledBack: false, version: null, current: null, error: 'invalid version index' };
+    }
+    const target = history.versions[versionIndex];
+    if (target.current) {
+      return { id, found: true, rolledBack: false, version: target, current: target, error: 'already current version' };
+    }
+    const before = { content: m.content, hash: m.hash };
+    // update() will auto-snapshot the current content before changing it
+    await this.update(id, { content: target.content });
+    return { id, found: true, rolledBack: true, version: target, current: { content: target.content, hash: contentHash(target.content) }, previous: before };
+  }
+
+  /**
    * Search memories within a time range (by createdAt or updatedAt)
    * @param {{start?: number, end?: number, field?: 'createdAt'|'updatedAt', layer?: string, tags?: string[], limit?: number, offset?: number, sort?: 'asc'|'desc'}} opts
    * @returns {Promise<{total: number, results: object[]}>}

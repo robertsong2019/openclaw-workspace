@@ -9,3 +9,4 @@ timestamp	commit	metric	value	status	description
 2026-04-23T23:08:44+08:00	652f7b7	tests	85	keep	add move tool (rename/move with path safety, 7 new tests)
 2026-04-24T23:00:00+08:00	08eed0b	tests	92	keep	add copy tool (file/directory recursive copy, 7 new tests)
 2026-04-25T23:10:00+08:00	0b2cb75	tests	97	keep	add create_directory tool (mkdir recursive + conflict detection, 5 new tests)
+2026-04-26T23:02:53+08:00	6cf9967	tests	102	keep	add file_info tool — detailed metadata (size, timestamps, permissions) for files/dirs (5 new tests)
