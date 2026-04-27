@@ -4167,6 +4167,34 @@ export class MemoryService {
     if (results.length) await this.#store.save();
     return { reclassified: results.length, results };
   }
+
+  /**
+   * Create a branch (fork) of a memory as a new independent memory.
+   * The new memory starts as a copy but can evolve independently.
+   * A bidirectional link is created between source and branch.
+   * @param {string} id - Source memory id to branch from
+   * @param {{content?: string, layer?: MemoryLayer, tags?: string[], entities?: string[]}} opts - Override fields
+   * @returns {Promise<{branch: Memory, linkId: string}|null>}
+   */
+  async contentBranch(id, opts = {}) {
+    await this.#ensureLoaded();
+    const source = this.#store.get(id);
+    if (!source) return null;
+
+    const branch = await this.add({
+      content: opts.content || source.content,
+      layer: opts.layer || source.layer,
+      tags: opts.tags || [...source.tags],
+      entities: opts.entities || [...source.entities],
+      source: `branch:${id}`,
+    });
+
+    // Create bidirectional links: source→branch (derived_from), branch→source (derived_from)
+    const l1 = await this.link({ source: id, target: branch.id, type: 'derived_from' });
+    const l2 = await this.link({ source: branch.id, target: id, type: 'derived_from' });
+
+    return { branch, linkIds: [l1.id, l2.id] };
+  }
 }
 
 // ─── Embedding Provider Interface ────────────────────────
