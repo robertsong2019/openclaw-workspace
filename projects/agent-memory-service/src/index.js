@@ -239,7 +239,7 @@ class ChangelogStore {
 
   /** Return all entries since a given timestamp */
   since(ts) {
-    return this.#entries.filter(e => e.ts > ts);
+    return this.#entries.filter(e => e.ts >= ts);
   }
 }
 

@@ -27,10 +27,16 @@ Autoresearch 方法论实践 - 连续20天零回滚率。AMS 达 463 tests。**0
   - Phase 3: searchTemporal() 时间衰减 + 范围过滤
   - Phase 4: Opinion 网络带 confidence，新证据驱动置信度演化
 - [ ] **实现 Hindsight Mini 原型** — `lab/hindsight-mini/` 验证四网络 + 四路检索(代码已在研究笔记中验证通过)
+- [ ] **OpenClaw MCP Server MVP** — TypeScript SDK v2 + Streamable HTTP，3 tools (memory-search/memory-get/workspace-read)，[研究笔记](catalyst-research/exploration-notes/2026-04-27-mcp-server-sdk-v2.md)
 - [ ] **A2A Trust Extension 实现模块** - `lab/a2a-trust-extension/` Python 模块,集成 a2a_minimal + 信任扩展([研究笔记](catalyst-research/exploration-notes/2026-04-25-a2a-agent-trust-integration.md))
 - [ ] **桥接 TypeScript TrustNetwork → Python TrustEngine** - 跨语言信任数据一致
 - [ ] 初始化 openclaw-mcp-server 项目(TypeScript SDK v2 + Streamable HTTP,3 tools MVP)- 研究笔记已就绪([v2实现指南](catalyst-research/exploration-notes/2026-04-25-mcp-server-v2-implementation.md))
-- [ ] 实现 `openclaw-langgraph-bridge` Python 模块: tools.py + supervisor.py + config.py（基于 04-26 研究笔记）
+- [x] **LangGraph Supervisor 研究** — [研究笔记](catalyst-research/exploration-notes/2026-04-27-langgraph-supervisor-openclaw.md) ✅ 代码已验证通过（Supervisor pattern + conditional routing）
+- [ ] 实现 `openclaw-langgraph-bridge` Python 模块: tools.py + supervisor.py + config.py（基于 04-26 + 04-27 研究笔记）
+  - Step 1: `OpenClawBridgeNode` 类，包装 sessions_spawn 为 LangGraph async node
+  - Step 2: Supervisor router（LLM 驱动的动态路由）
+  - Step 3: 文件系统 checkpoint（不需要 Redis）
+  - **新发现**: Deep Agents (langchain-ai/deepagents) — 开箱即用 Agent Harness，trust-the-LLM 哲学，MCP 支持
 - [ ] AMS: searchByTimeRange(opts), contentRollback(id, versionIndex) — 下一批 API 候选
 - [ ] AMS 生产化:EmbeddingProvider真实接入(ONNX/远程API), Docker化
 
@@ -62,7 +68,12 @@ Autoresearch 方法论实践 - 连续20天零回滚率。AMS 达 463 tests。**0
   - **关键洞察**: Streamable HTTP 已取代 SSE;SDK v2 模块化拆分(Express/Hono中间件);无状态模式适合MVP;OpenClaw差异化定位是"AI agent的操作系统接口"
   - **2026-04-22 更新**: v1.x 是生产推荐(v2 仍 pre-alpha);Streamable HTTP 响应可以是 JSON 或 SSE 流;Session 管理(Map→Redis)是生产级关键差异;Taskade 的 OpenAPI codegen 方法值得借鉴(自动生成 tool 定义避免手工维护);middleware 包是最简集成路径
 - [ ] **A2A Agent Trust 集成原型** - Agent Card嵌入信任元数据,与Agent Trust Network对接
-- [ ] **集成多Agent框架** - LangGraph Supervisor桥接OpenClaw原型（[研究笔记](catalyst-research/exploration-notes/2026-04-26-langgraph-supervisor-bridge-openclaw.md) ✅ 已验证）→ 下一步: 实现 `lab/openclaw-langgraph-bridge/` 模块 + Agent Card Schema设计
+- [ ] **集成多Agent框架** - LangGraph Supervisor桥接OpenClaw原型
+  - [研究笔记 04-26](catalyst-research/exploration-notes/2026-04-26-langgraph-supervisor-bridge-openclaw.md) ✅
+  - [研究笔记 04-27](catalyst-research/exploration-notes/2026-04-27-langgraph-supervisor-openclaw.md) ✅ 代码已验证通过
+  - **核心洞察**: LangGraph=编排层(状态图+路由), OpenClaw=执行层(sessions_spawn+channel集成)
+  - **新发现**: Deep Agents (deepagents) — 开箱即用 Agent Harness, MCP 集成, trust-the-LLM
+  - 下一步: 实现 `lab/openclaw-langgraph-bridge/` 模块
 
 ### Medium Priority (本月完成)
 - [ ] **实现 A2A Agent Trust 集成** - 在 Agent Card 中嵌入信任元数据,为 A2A 联邦添加信任层
