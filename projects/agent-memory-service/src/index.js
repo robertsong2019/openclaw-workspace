@@ -61,6 +61,26 @@ function now() {
   return Date.now();
 }
 
+/**
+ * Heuristic fact-type classifier (Hindsight-inspired).
+ * Returns one of: 'world' | 'experience' | 'opinion' | 'observation'
+ * - world: factual statements about the world (definitions, properties, identifiers)
+ * - experience: personal experiences, events, interactions
+ * - opinion: subjective views, preferences, evaluations
+ * - observation: neutral observations, measurements, status
+ */
+function classifyFact(content) {
+  const c = content.toLowerCase();
+  // Opinion: subjective markers
+  if (/(?:i (?:think|believe|feel|prefer|like|dislike|hate|love|recommend|suggest)|should|ought to|best|worst|great|terrible|amazing|awful|in my opinion|imo|personally)/i.test(c)) return 'opinion';
+  // Experience: personal event markers
+  if (/(?:i (?:went|did|had|used|tried|visited|met|talked|worked|built|created|learned|read|wrote|fixed|deployed|implemented)|yesterday|last (?:week|month|year)|today i|we (?:did|went|had|built)|my (?:team|project|code))/i.test(c)) return 'experience';
+  // World: factual definitions/properties
+  if (/(?:is a|is an|are |was |has |have |can |will |defines? |means? |consists? of|contains?|belongs? to|located at|version|released?|founded|population|capital)/i.test(c) && !/(?:i think|i feel)/i.test(c)) return 'world';
+  // Default: observation
+  return 'observation';
+}
+
 function daysSince(timestamp) {
   return (now() - timestamp) / (1000 * 60 * 60 * 24);
 }
@@ -880,6 +900,7 @@ export class MemoryService {
       accessCount: 0,
       source: opts.source,
       hash: contentHash(opts.content),
+      factType: opts.factType || classifyFact(opts.content),
       ...(opts.expiresAt ? { expiresAt: opts.expiresAt } : {}),
     };
     this.#store.put(memory);
@@ -4027,6 +4048,24 @@ export class MemoryService {
       end: end ?? null,
       results: paged.map(m => ({ id: m.id, content: m.content, layer: m.layer, tags: m.tags, weight: m.weight, createdAt: m.createdAt, updatedAt: m.updatedAt })),
     };
+  }
+
+  /**
+   * Search memories by factType (Hindsight-inspired: world/experience/opinion/observation)
+   * @param {'world'|'experience'|'opinion'|'observation'} factType
+   * @param {{limit?: number, offset?: number, sort?: 'asc'|'desc', sortBy?: string}} [opts]
+   * @returns {Promise<{total: number, results: Memory[]}>}
+   */
+  async searchByFactType(factType, opts = {}) {
+    await this.#ensureLoaded();
+    const valid = ['world', 'experience', 'opinion', 'observation'];
+    if (!valid.includes(factType)) throw new Error(`Invalid factType '${factType}'. Must be one of: ${valid.join(', ')}`);
+    const { limit = 20, offset = 0, sort = 'desc', sortBy = 'createdAt' } = opts;
+    let matches = this.#store.all().filter(m => m.factType === factType);
+    matches.sort((a, b) => sort === 'desc' ? (b[sortBy] ?? 0) - (a[sortBy] ?? 0) : (a[sortBy] ?? 0) - (b[sortBy] ?? 0));
+    const total = matches.length;
+    const results = matches.slice(offset, offset + limit);
+    return { total, results };
   }
 }
 

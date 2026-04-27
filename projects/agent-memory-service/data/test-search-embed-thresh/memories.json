@@ -1,26 +1,28 @@
 [
   {
-    "id": "4447690f-4e5e-4157-9530-58ba5e008e36",
+    "id": "0eb0fcf1-cac1-4281-928c-3f81686942c2",
     "content": "cat dog bird",
     "layer": "core",
     "tags": [],
     "entities": [],
     "weight": 1,
-    "createdAt": 1777295083979,
-    "accessedAt": 1777295083979,
+    "createdAt": 1777295671218,
+    "accessedAt": 1777295671218,
     "accessCount": 0,
-    "hash": "166f4e5e6788a15f"
+    "hash": "166f4e5e6788a15f",
+    "factType": "observation"
   },
   {
-    "id": "650b75bc-4272-4e72-840d-53aaf101e0fe",
+    "id": "c727517d-1162-4b29-ad90-4ecaeab0acb6",
     "content": "quantum physics relativity",
     "layer": "core",
     "tags": [],
     "entities": [],
     "weight": 1,
-    "createdAt": 1777295083980,
-    "accessedAt": 1777295083980,
+    "createdAt": 1777295671219,
+    "accessedAt": 1777295671219,
     "accessCount": 0,
-    "hash": "16e396a9ef283ca6"
+    "hash": "16e396a9ef283ca6",
+    "factType": "observation"
   }
 ]

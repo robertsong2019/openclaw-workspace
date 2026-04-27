@@ -1,14 +1,15 @@
 [
   {
-    "id": "b7f22b26-6841-4173-8527-3f228b1600f3",
+    "id": "50473e51-2e60-4682-9f7e-f5ee75d24022",
     "content": "test",
     "layer": "core",
     "tags": [],
     "entities": [],
     "weight": 1,
-    "createdAt": 1777295083986,
-    "accessedAt": 1777295083986,
+    "createdAt": 1777295671225,
+    "accessedAt": 1777295671225,
     "accessCount": 0,
-    "hash": "9f86d081884c7d65"
+    "hash": "9f86d081884c7d65",
+    "factType": "observation"
   }
 ]

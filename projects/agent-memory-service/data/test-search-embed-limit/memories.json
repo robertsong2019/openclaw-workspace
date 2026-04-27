@@ -1,38 +1,41 @@
 [
   {
-    "id": "5b4145d0-fd89-46d1-8790-247fd0ec79b9",
+    "id": "4e948cf8-eca4-47a0-b3e8-8cc40f328ff1",
     "content": "alpha beta gamma",
     "layer": "core",
     "tags": [],
     "entities": [],
     "weight": 1,
-    "createdAt": 1777295083964,
-    "accessedAt": 1777295083964,
+    "createdAt": 1777295671202,
+    "accessedAt": 1777295671202,
     "accessCount": 0,
-    "hash": "64989ccbf3efa9c8"
+    "hash": "64989ccbf3efa9c8",
+    "factType": "observation"
   },
   {
-    "id": "1efded43-0632-4208-8a04-2f56b26208a7",
+    "id": "aef92c72-c5cc-44a5-8bac-1f3380f26331",
     "content": "delta epsilon zeta",
     "layer": "core",
     "tags": [],
     "entities": [],
     "weight": 1,
-    "createdAt": 1777295083965,
-    "accessedAt": 1777295083965,
+    "createdAt": 1777295671203,
+    "accessedAt": 1777295671203,
     "accessCount": 0,
-    "hash": "dfab0f8a5f646e8f"
+    "hash": "dfab0f8a5f646e8f",
+    "factType": "observation"
   },
   {
-    "id": "ca04aaac-bd88-46b7-9f33-646372357740",
+    "id": "1f2de0a3-1f30-462a-8e51-324493eda587",
     "content": "eta theta iota",
     "layer": "core",
     "tags": [],
     "entities": [],
     "weight": 1,
-    "createdAt": 1777295083965,
-    "accessedAt": 1777295083965,
+    "createdAt": 1777295671204,
+    "accessedAt": 1777295671204,
     "accessCount": 0,
-    "hash": "c5467baf96686a58"
+    "hash": "c5467baf96686a58",
+    "factType": "observation"
   }
 ]

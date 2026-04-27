@@ -1,38 +1,41 @@
 [
   {
-    "id": "56d03d1c-53ff-4c16-98dd-35c3f964ac87",
+    "id": "442591e7-bbaf-48d7-b656-8add0ba7c5b0",
     "content": "JavaScript programming language",
     "layer": "core",
     "tags": [],
     "entities": [],
     "weight": 1,
-    "createdAt": 1777295083959,
-    "accessedAt": 1777295083959,
+    "createdAt": 1777295671197,
+    "accessedAt": 1777295671197,
     "accessCount": 0,
-    "hash": "44d639aa872adfd9"
+    "hash": "44d639aa872adfd9",
+    "factType": "observation"
   },
   {
-    "id": "c2be3ffb-f929-4a4b-971e-6fc81e69060b",
+    "id": "bdfb345c-56db-4d14-96d5-168f819ba24e",
     "content": "Rust systems programming",
     "layer": "core",
     "tags": [],
     "entities": [],
     "weight": 1,
-    "createdAt": 1777295083960,
-    "accessedAt": 1777295083960,
+    "createdAt": 1777295671198,
+    "accessedAt": 1777295671198,
     "accessCount": 0,
-    "hash": "bbb4a64f22f25868"
+    "hash": "bbb4a64f22f25868",
+    "factType": "observation"
   },
   {
-    "id": "71701ead-7827-4f8c-9023-f4fa39a1c31e",
+    "id": "901c0da9-3aa4-4603-b3b2-876593d845b0",
     "content": "Python machine learning",
     "layer": "core",
     "tags": [],
     "entities": [],
     "weight": 1,
-    "createdAt": 1777295083961,
-    "accessedAt": 1777295083961,
+    "createdAt": 1777295671199,
+    "accessedAt": 1777295671199,
     "accessCount": 0,
-    "hash": "b261c4d0b52471a1"
+    "hash": "b261c4d0b52471a1",
+    "factType": "observation"
   }
 ]

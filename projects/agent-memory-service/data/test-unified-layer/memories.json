@@ -1,26 +1,28 @@
 [
   {
-    "id": "fd1d1230-8508-451a-8c69-1fdfd59610b3",
+    "id": "47b89838-23db-4865-adcd-8b86d88beeae",
     "content": "core layer unified search",
     "layer": "core",
     "tags": [],
     "entities": [],
     "weight": 1,
-    "createdAt": 1777295084013,
-    "accessedAt": 1777295084013,
+    "createdAt": 1777295671252,
+    "accessedAt": 1777295671252,
     "accessCount": 0,
-    "hash": "a8620d3a76e24ec7"
+    "hash": "a8620d3a76e24ec7",
+    "factType": "observation"
   },
   {
-    "id": "090fba46-3522-460a-987a-16c8513bf990",
+    "id": "917a103b-94db-43cb-a973-ea113f13ebcf",
     "content": "short layer unified search",
     "layer": "short",
     "tags": [],
     "entities": [],
     "weight": 1,
-    "createdAt": 1777295084013,
-    "accessedAt": 1777295084013,
+    "createdAt": 1777295671252,
+    "accessedAt": 1777295671252,
     "accessCount": 0,
-    "hash": "5f48f5b713081251"
+    "hash": "5f48f5b713081251",
+    "factType": "observation"
   }
 ]
