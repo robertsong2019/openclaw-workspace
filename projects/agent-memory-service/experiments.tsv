@@ -52,3 +52,5 @@ timestamp	commit	metric	value	status	description
 2026-04-27T21:00	01fca9a	test_count	463/463	keep	fix: ChangelogStore.since() >= race — changes() test no longer flaky on same-ms timestamps
 2026-04-27T21:10	272c5f6	test_count	472/472	keep	Hindsight Phase 1: classifyFact() + searchByFactType(). 9 new tests (463→472), auto-classify on add, manual override, pagination.
 2026-04-27T21:20	fcc4bad	test_count	477/477	keep	statsByFactType() + reclassifyFact(). 5 new tests (472→477). Hindsight Phase 1 complete.
+2026-04-27T21:30	3eb9b3a	test_count	335/335	keep	agent-task-cli: Cache resetStats() + entries(). 4 new tests (331→335).
+2026-04-27T21:45	c1ae30c	test_count	481/481	keep	AMS: bulkReclassify(opts). 4 new tests (477→481). Batch reclassify by factType/layer/tags.
