@@ -10,3 +10,4 @@ timestamp	commit	metric	value	status	description
 2026-04-24T23:00:00+08:00	08eed0b	tests	92	keep	add copy tool (file/directory recursive copy, 7 new tests)
 2026-04-25T23:10:00+08:00	0b2cb75	tests	97	keep	add create_directory tool (mkdir recursive + conflict detection, 5 new tests)
 2026-04-26T23:02:53+08:00	6cf9967	tests	102	keep	add file_info tool — detailed metadata (size, timestamps, permissions) for files/dirs (5 new tests)
+2026-04-27T23:02:59+08:00	bc11771	tests	102	keep	upgrade @modelcontextprotocol/sdk 1.0.4 → 1.29.0 (all pass, no breaking changes)

@@ -4113,6 +4113,36 @@ export class MemoryService {
   }
 
   /**
+   * Search memories by content pattern (regex or substring)
+   * @param {string} pattern - Regex pattern or plain substring
+   * @param {{regex?: boolean, layer?: MemoryLayer, tags?: string[], caseSensitive?: boolean, limit?: number, offset?: number}} opts
+   * @returns {Promise<{total: number, offset: number, limit: number, pattern: string, results: Array<{id: string, content: string, layer: string, tags: string[], match: string}>}>}
+   */
+  async searchByContent(pattern, opts = {}) {
+    await this.#ensureLoaded();
+    const { regex = false, layer, tags, caseSensitive = false, limit = 20, offset = 0 } = opts;
+    let re;
+    try {
+      re = regex ? new RegExp(pattern, caseSensitive ? '' : 'i') : new RegExp(pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), caseSensitive ? '' : 'i');
+    } catch {
+      return { total: 0, offset, limit, pattern, results: [] };
+    }
+    let matches = this.#store.all();
+    if (layer) matches = matches.filter(m => m.layer === layer);
+    if (tags && tags.length > 0) {
+      const tagSet = new Set(tags);
+      matches = matches.filter(m => (m.tags || []).some(t => tagSet.has(t)));
+    }
+    const results = [];
+    for (const m of matches) {
+      const match = re.exec(m.content);
+      if (match) results.push({ id: m.id, content: m.content, layer: m.layer, tags: m.tags, match: match[0] });
+    }
+    const total = results.length;
+    return { total, offset, limit, pattern, results: results.slice(offset, offset + limit) };
+  }
+
+  /**
    * Bulk reclassify memories by filter
    * @param {{factType?: string, layer?: MemoryLayer, tags?: string[], newType: string}} opts
    * @returns {Promise<{reclassified: number, results: Array<{id: string, oldType: string, newType: string}>}>}
