@@ -4268,6 +4268,103 @@ export class MemoryService {
 
     return { branch, linkIds: [l1.id, l2.id] };
   }
+
+  /**
+   * Merge two memories into one with conflict resolution.
+   * @param {string} id1 - Primary memory (kept)
+   * @param {string} id2 - Secondary memory (deleted after merge)
+   * @param {object} opts
+   * @param {'concat'|'keep-longer'|'keep-newer'|'manual'} opts.contentStrategy - How to merge content (default: 'concat')
+   * @param {string} [opts.content] - Manual content when strategy is 'manual'
+   * @param {string} [opts.layer] - Override layer for merged memory
+   * @param {'union'|'primary'|'secondary'} opts.tagStrategy - How to merge tags (default: 'union')
+   * @param {'rewire'|'drop'} opts.linkStrategy - What to do with id2's links (default: 'rewire')
+   * @returns {Promise<object|null>} Merged memory + stats
+   */
+  async memoryMerge(id1, id2, opts = {}) {
+    await this.#ensureLoaded();
+    const primary = this.#store.get(id1);
+    const secondary = this.#store.get(id2);
+    if (!primary || !secondary) return null;
+    if (id1 === id2) return null;
+
+    const contentStrategy = opts.contentStrategy || 'concat';
+    const tagStrategy = opts.tagStrategy || 'union';
+    const linkStrategy = opts.linkStrategy || 'rewire';
+
+    // Resolve content
+    let mergedContent;
+    switch (contentStrategy) {
+      case 'keep-longer':
+        mergedContent = primary.content.length >= secondary.content.length ? primary.content : secondary.content;
+        break;
+      case 'keep-newer':
+        mergedContent = primary.updatedAt >= secondary.updatedAt ? primary.content : secondary.content;
+        break;
+      case 'manual':
+        mergedContent = opts.content || primary.content;
+        break;
+      default: // concat
+        mergedContent = primary.content + '\n' + secondary.content;
+    }
+
+    // Resolve tags
+    let mergedTags;
+    switch (tagStrategy) {
+      case 'primary':
+        mergedTags = [...primary.tags];
+        break;
+      case 'secondary':
+        mergedTags = [...secondary.tags];
+        break;
+      default: // union
+        mergedTags = [...new Set([...primary.tags, ...secondary.tags])];
+    }
+
+    // Resolve entities (always union)
+    const mergedEntities = [...new Set([...primary.entities, ...secondary.entities])];
+
+    // Update primary with merged content
+    await this.update(id1, {
+      content: mergedContent,
+      tags: mergedTags,
+      entities: mergedEntities,
+      ...(opts.layer ? { layer: opts.layer } : {}),
+    });
+
+    // Rewire or drop secondary's links
+    const secondaryLinks = this.#links.forMemory(id2);
+    let rewiredCount = 0;
+    for (const link of secondaryLinks) {
+      if (linkStrategy === 'rewire') {
+        // Don't create self-links or duplicates of existing links
+        const otherId = link.source === id2 ? link.target : link.source;
+        if (otherId === id1) continue; // skip link between the two being merged
+        const direction = link.source === id2 ? 'source' : 'target';
+        try {
+          await this.link({
+            source: direction === 'source' ? id1 : otherId,
+            target: direction === 'source' ? otherId : id1,
+            type: link.type,
+            weight: link.weight,
+          });
+          rewiredCount++;
+        } catch (_) { /* duplicate link, skip */ }
+      }
+      this.#links.delete(link.id);
+    }
+
+    // Delete secondary memory
+    this.#store.delete(id2);
+    this.#bm25.remove(id2);
+    await this.#store.save();
+
+    return {
+      merged: this.#store.get(id1),
+      deletedId: id2,
+      stats: { rewiredLinks: rewiredCount, droppedLinks: linkStrategy === 'drop' ? secondaryLinks.length : 0 },
+    };
+  }
 }
 
 // ─── Embedding Provider Interface ────────────────────────
