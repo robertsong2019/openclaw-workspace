@@ -4365,6 +4365,82 @@ export class MemoryService {
       stats: { rewiredLinks: rewiredCount, droppedLinks: linkStrategy === 'drop' ? secondaryLinks.length : 0 },
     };
   }
+
+  /**
+   * Find all branches derived from a memory via derived_from links.
+   * @param {string} id - Root memory ID
+   * @param {{depth?: number, includeSelf?: boolean}} opts
+   * @returns {Promise<{branches: Array<{memory: Memory, depth: number, link: Link}>}>}
+   */
+  async searchByBranch(id, opts = {}) {
+    await this.#ensureLoaded();
+    const root = this.#store.get(id);
+    if (!root) return { branches: [] };
+
+    const maxDepth = opts.depth || Infinity;
+    const visited = new Set();
+    const branches = [];
+    const queue = [{ id, depth: 0 }];
+
+    while (queue.length > 0) {
+      const { id: currentId, depth } = queue.shift();
+      if (visited.has(currentId)) continue;
+      visited.add(currentId);
+
+      // Skip root unless includeSelf
+      if (depth > 0 || opts.includeSelf) {
+        const mem = this.#store.get(currentId);
+        if (mem) {
+          const links = this.#links.forMemory(currentId).filter(l => l.type === 'derived_from');
+          branches.push({ memory: mem, depth, link: depth > 0 ? links[0] : null });
+        }
+      }
+
+      if (depth < maxDepth) {
+        // Find outgoing derived_from links (source→branch)
+        const outLinks = this.#links.forMemory(currentId)
+          .filter(l => l.type === 'derived_from' && l.source === currentId);
+        for (const l of outLinks) {
+          if (!visited.has(l.target)) queue.push({ id: l.target, depth: depth + 1 });
+        }
+      }
+    }
+
+    return { branches };
+  }
+
+  /**
+   * Batch merge multiple pairs of memories.
+   * @param {Array<[string, string]>} pairs - Array of [primaryId, secondaryId]
+   * @param {object} opts - Options passed to each memoryMerge call
+   * @returns {Promise<{results: Array, errors: Array<{pair: [string,string], error: string}>}>}
+   */
+  async bulkMerge(pairs, opts = {}) {
+    await this.#ensureLoaded();
+    const results = [];
+    const errors = [];
+
+    for (const pair of pairs) {
+      const [id1, id2] = pair;
+      try {
+        // Skip if either was already deleted by a prior merge in this batch
+        if (!this.#store.get(id1) || !this.#store.get(id2)) {
+          errors.push({ pair, error: 'Memory not found (may have been merged already)' });
+          continue;
+        }
+        const result = await this.memoryMerge(id1, id2, opts);
+        if (result) {
+          results.push(result);
+        } else {
+          errors.push({ pair, error: 'Merge returned null (same id or invalid)' });
+        }
+      } catch (err) {
+        errors.push({ pair, error: err.message });
+      }
+    }
+
+    return { results, errors, merged: results.length, failed: errors.length };
+  }
 }
 
 // ─── Embedding Provider Interface ────────────────────────
