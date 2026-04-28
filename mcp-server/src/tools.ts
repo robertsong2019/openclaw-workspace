@@ -79,6 +79,7 @@ export const OPENCLAW_TOOLS: Tool[] = [
       properties: {
         path: { type: "string", description: "Directory path relative to workspace root", default: "." },
         recursive: { type: "boolean", description: "Recursively list all files in subdirectories", default: false },
+        maxDepth: { type: "number", description: "Maximum directory depth when recursive (1 = direct children only)", default: 0 },
       },
     },
   },
@@ -332,20 +333,45 @@ async function executeExec(args: any): Promise<any> {
 }
 
 async function executeListFiles(args: any): Promise<any> {
-  const { path: inputPath = ".", recursive = false } = args;
+  const { path: inputPath = ".", recursive = false, maxDepth = 0 } = args;
   const resolved = safePath(inputPath);
-  const entries = await readdir(resolved, { recursive, withFileTypes: true });
+  if (!recursive) {
+    const entries = await readdir(resolved, { withFileTypes: true });
+    const files = await Promise.all(
+      entries.map(async (entry) => {
+        const fullPath = join(resolved, entry.name);
+        const relativePath = fullPath.slice(getWorkspaceRoot().length + 1);
+        try {
+          const s = await stat(fullPath);
+          return { name: entry.name, path: relativePath, type: entry.isDirectory() ? "directory" : "file", size: s.size };
+        } catch {
+          return { name: entry.name, path: relativePath, type: "file", size: 0 };
+        }
+      })
+    );
+    return { tool: "list_files", path: inputPath, count: files.length, files };
+  }
+  // Recursive mode: build correct paths using parentPath
+  const entries = await readdir(resolved, { recursive: true, withFileTypes: true });
   const files = await Promise.all(
-    entries.map(async (entry) => {
-      const fullPath = join(resolved, entry.name);
-      const relativePath = fullPath.slice(getWorkspaceRoot().length + 1);
-      try {
-        const s = await stat(fullPath);
-        return { name: entry.name, path: relativePath, type: entry.isDirectory() ? "directory" : "file", size: s.size };
-      } catch {
-        return { name: entry.name, path: relativePath, type: "file", size: 0 };
-      }
-    })
+    entries
+      .filter((entry) => {
+        if (maxDepth <= 0) return true;
+        const relFromRoot = (entry.parentPath + "/" + entry.name).slice(resolved.length + 1);
+        const depth = relFromRoot.split("/").length - 1;
+        // For directories at maxDepth, include them but don't descend deeper (readdir already got everything)
+        return depth <= maxDepth;
+      })
+      .map(async (entry) => {
+        const fullPath = join(entry.parentPath, entry.name);
+        const relativePath = fullPath.slice(getWorkspaceRoot().length + 1);
+        try {
+          const s = await stat(fullPath);
+          return { name: entry.name, path: relativePath, type: entry.isDirectory() ? "directory" : "file", size: s.size };
+        } catch {
+          return { name: entry.name, path: relativePath, type: "file", size: 0 };
+        }
+      })
   );
   return { tool: "list_files", path: inputPath, count: files.length, files };
 }

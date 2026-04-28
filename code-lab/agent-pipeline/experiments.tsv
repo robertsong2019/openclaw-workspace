@@ -1,0 +1,5 @@
+timestamp	commit	metric	value	status	description
+2026-04-28T21:00	7700ff7	test_pass_rate	56/56 (100%)	keep	cycle1: retry, continue_on_error, validate, to_dict/from_dict (+49 tests)
+2026-04-28T21:10	ad3d5f3	test_pass_rate	61/61 (100%)	keep	cycle2: run_batch, insert_step, remove_step (+5 tests)
+2026-04-28T21:15	3a312a6	test_pass_rate	64/64 (100%)	keep	cycle3: conditional step execution (+3 tests)
+2026-04-28T21:20	45ca828	test_pass_rate	67/67 (100%)	keep	cycle4: pipeline merge, step_count (+3 tests)

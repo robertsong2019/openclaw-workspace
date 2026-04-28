@@ -27,16 +27,18 @@ Autoresearch 方法论实践 - **连续22天零回滚率**。AMS 达 **499 tests
   - Phase 3: searchTemporal() 时间衰减 + 范围过滤
   - Phase 4: Opinion 网络带 confidence，新证据驱动置信度演化
 - [ ] **实现 Hindsight Mini 原型** — `lab/hindsight-mini/` 验证四网络 + 四路检索(代码已在研究笔记中验证通过)
-- [ ] **OpenClaw MCP Server MVP** — TypeScript SDK v2 + Streamable HTTP，3 tools (memory-search/memory-get/workspace-read)，[研究笔记](catalyst-research/exploration-notes/2026-04-27-mcp-server-sdk-v2.md)
+- [ ] **OpenClaw MCP Server MVP** — TypeScript SDK v2 + Streamable HTTP，3 tools (memory-search/memory-get/workspace-read)，[研究笔记](catalyst-research/exploration-notes/2026-04-28-mcp-server-typescript-v2.md) ✅ 代码已验证(echo+add tools 通过 curl 测试)
 - [ ] **A2A Trust Extension 实现模块** - `lab/a2a-trust-extension/` Python 模块,集成 a2a_minimal + 信任扩展([研究笔记](catalyst-research/exploration-notes/2026-04-25-a2a-agent-trust-integration.md))
 - [ ] **桥接 TypeScript TrustNetwork → Python TrustEngine** - 跨语言信任数据一致
 - [ ] 初始化 openclaw-mcp-server 项目(TypeScript SDK v2 + Streamable HTTP,3 tools MVP)- 研究笔记已就绪([v2实现指南](catalyst-research/exploration-notes/2026-04-25-mcp-server-v2-implementation.md))
 - [x] **LangGraph Supervisor 研究** — [研究笔记](catalyst-research/exploration-notes/2026-04-27-langgraph-supervisor-openclaw.md) ✅ 代码已验证通过（Supervisor pattern + conditional routing）
-- [ ] 实现 `openclaw-langgraph-bridge` Python 模块: tools.py + supervisor.py + config.py（基于 04-26 + 04-27 研究笔记）
-  - Step 1: `OpenClawBridgeNode` 类，包装 sessions_spawn 为 LangGraph async node
-  - Step 2: Supervisor router（LLM 驱动的动态路由）
-  - Step 3: 文件系统 checkpoint（不需要 Redis）
-  - **新发现**: Deep Agents (langchain-ai/deepagents) — 开箱即用 Agent Harness，trust-the-LLM 哲学，MCP 支持
+- [ ] 实现 `openclaw-langgraph-bridge` 模块 — **已转向 LangGraph.js (TypeScript)** 避免引入 Python 依赖
+  - **关键发现**: LangGraph.js v1.2.9 in-process > Python out-of-process，零额外运行时
+  - Step 1: `createOpenClawNode()` 工厂函数，包装 sessions_spawn 为 LangGraph.js async node
+  - Step 2: Supervisor router（纯函数优先，需要时升级 LLM 路由）
+  - Step 3: 核心难题 = 子代理结果解析（推荐 JSON mode 输出）
+  - [JS 研究笔记](catalyst-research/exploration-notes/2026-04-28-langgraphjs-supervisor-openclaw-bridge.md) ✅ 代码已验证
+  - [Python 研究笔记](catalyst-research/exploration-notes/2026-04-27-langgraph-supervisor-openclaw.md) (参考)
 - [x] ~~AMS: searchByTimeRange(opts), contentRollback(id, versionIndex)~~ ✅ 完成 (04-27)
 - [ ] AMS 生产化:EmbeddingProvider真实接入(ONNX/远程API), Docker化
 
@@ -183,6 +185,12 @@ curl -X POST "https://api.tavily.com/search" \
   - **contentBranch(id, opts)**: 记忆分叉，创建独立副本+双向derived_from链接，支持链式分支，8 tests
   - 搜索API全景: BM25(search)+向量(embedding)+融合(unified)+实体(entity)+时间(temporal)+事实类型(factType)+标签(tagSearch)+内容模式(content) — 8路检索
   - 零回滚率持续保持(连续22天)
+- ✅ **Agent Pipeline 代码实验室 x4 cycles** — 7→67 tests (+60)
+  - **cycle1**: retry + continue_on_error + validate() + to_dict/from_dict 序列化 (+49)
+  - **cycle2**: run_batch 批量执行 + insert_step/remove_step 步骤管理 (+5)
+  - **cycle3**: conditional step execution — lambda条件跳过步骤 (+3)
+  - **cycle4**: pipeline merge 组合 + step_count 属性 (+3)
+  - 1286→1394 lines, 零回滚, 4/4 cycles keep
 
 ### 2026-04-27
 - ✅ **Agent Memory Service v1.0-dev 续升** - 445→481 tests (+36)

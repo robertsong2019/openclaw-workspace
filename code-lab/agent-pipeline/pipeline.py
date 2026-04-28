@@ -73,50 +73,56 @@ class ToolRegistry:
 
 class PipelineStep:
     """Pipeline 步骤"""
-    def __init__(self, tool_name: str, config: Dict = None):
+    def __init__(self, tool_name: str, config: Dict = None, retry: int = 0,
+                 continue_on_error: bool = False, name: str = None,
+                 condition: Callable = None):
         self.tool_name = tool_name
         self.config = config or {}
+        self.retry = retry
+        self.continue_on_error = continue_on_error
+        self.name = name or tool_name
+        self.condition = condition
         self.tool = ToolRegistry.get(tool_name)
         
         if not self.tool:
             raise ValueError(f"Tool not found: {tool_name}")
     
     def execute(self, input_data: Any, debug: bool = False) -> ToolResult:
-        """执行步骤"""
-        if debug:
-            print(f"[DEBUG] Step: {self.tool_name}")
-            print(f"[DEBUG] Config: {self.config}")
-            print(f"[DEBUG] Input type: {type(input_data).__name__}")
+        """执行步骤，支持重试"""
+        last_error = None
+        attempts = 1 + self.retry
         
-        start_time = datetime.now()
+        for attempt in range(attempts):
+            if debug and attempt > 0:
+                print(f"[DEBUG] Retry {attempt}/{self.retry}")
+            
+            start_time = datetime.now()
+            try:
+                output = self.tool.process(input_data, self.config)
+                elapsed = (datetime.now() - start_time).total_seconds()
+                return ToolResult(
+                    data=output,
+                    metadata={
+                        "tool": self.tool_name,
+                        "elapsed_seconds": elapsed,
+                        "success": True,
+                        "attempts": attempt + 1
+                    }
+                )
+            except Exception as e:
+                elapsed = (datetime.now() - start_time).total_seconds()
+                last_error = e
         
-        try:
-            output = self.tool.process(input_data, self.config)
-            elapsed = (datetime.now() - start_time).total_seconds()
-            
-            if debug:
-                print(f"[DEBUG] Output type: {type(output).__name__}")
-                print(f"[DEBUG] Elapsed: {elapsed:.3f}s")
-            
-            return ToolResult(
-                data=output,
-                metadata={
-                    "tool": self.tool_name,
-                    "elapsed_seconds": elapsed,
-                    "success": True
-                }
-            )
-        except Exception as e:
-            elapsed = (datetime.now() - start_time).total_seconds()
-            return ToolResult(
-                data=None,
-                metadata={
-                    "tool": self.tool_name,
-                    "elapsed_seconds": elapsed,
-                    "success": False,
-                    "error": str(e)
-                }
-            )
+        return ToolResult(
+            data=None,
+            metadata={
+                "tool": self.tool_name,
+                "elapsed_seconds": elapsed,
+                "success": False,
+                "error": str(last_error),
+                "attempts": attempts
+            }
+        )
 
 
 class Pipeline:
@@ -172,8 +178,18 @@ class Pipeline:
         """添加步骤"""
         self.steps.append(step)
     
+    def insert_step(self, index: int, step: PipelineStep):
+        """在指定位置插入步骤"""
+        self.steps.insert(index, step)
+    
+    def remove_step(self, index: int) -> PipelineStep:
+        """移除指定位置的步骤"""
+        if index < 0 or index >= len(self.steps):
+            raise IndexError(f"Step index {index} out of range (0-{len(self.steps)-1})")
+        return self.steps.pop(index)
+    
     def run(self, input_data: Any, debug: bool = False) -> ToolResult:
-        """运行 pipeline"""
+        """运行 pipeline，支持步骤级 continue_on_error"""
         self.debug = debug
         
         if debug:
@@ -184,16 +200,26 @@ class Pipeline:
         
         current_data = input_data
         results_metadata = []
+        errors = []
         
         for i, step in enumerate(self.steps, 1):
             if debug:
                 print(f"\n--- Step {i}/{len(self.steps)} ---")
             
+            # Condition check
+            if step.condition and not step.condition(current_data):
+                results_metadata.append({"tool": step.tool_name, "skipped": True, "reason": "condition not met"})
+                continue
+            
             result = step.execute(current_data, debug=debug)
             results_metadata.append(result.metadata)
             
             if not result.metadata.get('success', False):
-                # 步骤失败，停止执行
+                errors.append({"step": i, "tool": step.tool_name, "error": result.metadata.get('error')})
+                if step.continue_on_error:
+                    # 跳过失败步骤，继续用当前数据
+                    continue
+                # 停止执行
                 return ToolResult(
                     data=None,
                     metadata={
@@ -223,6 +249,88 @@ class Pipeline:
                 "step_results": results_metadata
             }
         )
+    
+    def run_batch(self, inputs: List[Any], debug: bool = False) -> List[ToolResult]:
+        """批量运行 pipeline，每个输入独立执行"""
+        return [self.run(inp, debug=debug) for inp in inputs]
+    
+    def merge(self, other: 'Pipeline', separator: PipelineStep = None) -> 'Pipeline':
+        """合并两个 pipeline，可选在中间插入分隔步骤"""
+        merged = Pipeline(name=f"{self.name}+{other.name}")
+        merged.steps = list(self.steps)
+        if separator:
+            merged.steps.append(separator)
+        merged.steps.extend(other.steps)
+        return merged
+    
+    @property
+    def step_count(self) -> int:
+        """步骤数"""
+        return len(self.steps)
+    
+    def validate(self) -> Dict:
+        """验证 pipeline 完整性"""
+        issues = []
+        warnings = []
+        seen = set()
+        
+        if not self.steps:
+            issues.append("Pipeline has no steps")
+        
+        for i, step in enumerate(self.steps, 1):
+            if not step.tool:
+                issues.append(f"Step {i}: tool '{step.tool_name}' not found")
+            if step.tool_name in seen:
+                warnings.append(f"Step {i}: duplicate tool '{step.tool_name}'")
+            seen.add(step.tool_name)
+            if step.retry > 5:
+                warnings.append(f"Step {i}: retry={step.retry} is unusually high")
+        
+        return {
+            "valid": len(issues) == 0,
+            "issues": issues,
+            "warnings": warnings,
+            "step_count": len(self.steps)
+        }
+    
+    def to_dict(self) -> Dict:
+        """序列化 pipeline 为字典"""
+        return {
+            "name": self.name,
+            "description": self.description,
+            "steps": [
+                {
+                    "tool": step.tool_name,
+                    "config": step.config,
+                    "retry": step.retry,
+                    "continue_on_error": step.continue_on_error,
+                    "name": step.name
+                }
+                for step in self.steps
+            ]
+        }
+    
+    def to_json(self) -> str:
+        """序列化 pipeline 为 JSON"""
+        return json.dumps(self.to_dict(), ensure_ascii=False, indent=2)
+    
+    @classmethod
+    def from_dict(cls, data: Dict) -> 'Pipeline':
+        """从字典创建 pipeline"""
+        pipeline = cls(
+            name=data.get('name', 'unnamed'),
+            description=data.get('description', '')
+        )
+        for step_data in data.get('steps', []):
+            step = PipelineStep(
+                tool_name=step_data['tool'],
+                config=step_data.get('config', {}),
+                retry=step_data.get('retry', 0),
+                continue_on_error=step_data.get('continue_on_error', False),
+                name=step_data.get('name')
+            )
+            pipeline.add_step(step)
+        return pipeline
     
     @staticmethod
     def register_tool(tool: Tool):
