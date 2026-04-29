@@ -268,6 +268,66 @@ def test_memory_entry_to_dict():
     print("✅ MemoryEntry 序列化测试通过")
 
 
+def test_memory_remove():
+    """测试记忆删除"""
+    memory = Memory()
+    memory.add("keep")
+    memory.add("delete")
+    memory.add("keep2")
+    assert memory.remove(1) is True
+    assert len(memory.get_all()) == 2
+    assert memory.get_all()[1].content == "keep2"
+    print("✅ 记忆删除测试通过")
+
+
+def test_memory_remove_invalid():
+    """测试删除无效索引"""
+    memory = Memory()
+    memory.add("test")
+    assert memory.remove(5) is False
+    assert memory.remove(-1) is False
+    assert len(memory.get_all()) == 1
+    print("✅ 无效索引删除测试通过")
+
+
+def test_memory_update():
+    """测试记忆更新"""
+    memory = Memory()
+    memory.add("original")
+    assert memory.update(0, "updated") is True
+    assert memory.get_all()[0].content == "updated"
+    print("✅ 记忆更新测试通过")
+
+
+def test_memory_update_with_metadata():
+    """测试带元数据的记忆更新"""
+    memory = Memory()
+    memory.add("old", metadata={"v": 1})
+    memory.update(0, "new", metadata={"v": 2})
+    entry = memory.get_all()[0]
+    assert entry.content == "new"
+    assert entry.metadata == {"v": 2}
+    print("✅ 带元数据更新测试通过")
+
+
+def test_memory_update_invalid():
+    """测试更新无效索引"""
+    memory = Memory()
+    assert memory.update(99, "x") is False
+    print("✅ 无效索引更新测试通过")
+
+
+def test_memory_count():
+    """测试记忆计数"""
+    memory = Memory()
+    assert memory.count() == 0
+    memory.add("a")
+    assert memory.count() == 1
+    memory.add("b")
+    assert memory.count() == 2
+    print("✅ 记忆计数测试通过")
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("🧪 Nano-Agent 高级测试")

@@ -27,10 +27,16 @@ Autoresearch 方法论实践 - **连续23天零回滚率**。AMS 达 **569 tests
   - Phase 3: ~~searchTemporal() 时间衰减 + 范围过滤~~ ✅ 完成 (04-28)
   - Phase 4: ~~Opinion 网络带 confidence，新证据驱动置信度演化~~ ✅ 完成 (04-29晚: 6 APIs, 29 new tests)
 - [ ] **实现 Hindsight Mini 原型** — `lab/hindsight-mini/` 验证四网络 + 四路检索(代码已在研究笔记中验证通过)
-- [ ] **OpenClaw MCP Server MVP** — TypeScript SDK v2 + Streamable HTTP，3 tools (memory-search/memory-get/workspace-read)，[研究笔记](catalyst-research/exploration-notes/2026-04-28-mcp-server-typescript-v2.md) ✅ 代码已验证(echo+add tools 通过 curl 测试)
+- [ ] **OpenClaw MCP Server MVP** — TypeScript SDK v2 + Streamable HTTP，3 tools (exec/memory_search/memory_get)
+  - [研究笔记 v3](catalyst-research/exploration-notes/2026-04-29-mcp-server-typescript-streamable-http.md) ✅ 完整代码(3-tool server+client+Inspector调试)
+  - [研究笔记 v2](catalyst-research/exploration-notes/2026-04-29-mcp-server-streamable-http.md) ✅ 完整代码+curl测试（2026-04-29）
+  - [研究笔记 v1](catalyst-research/exploration-notes/2026-04-28-mcp-server-typescript-v2.md) ✅ 代码已验证(echo+add tools)
+  - **关键洞察**: Streamable HTTP 单端点(/mcp) 替代旧 SSE; McpServer.tool() + Zod 自动生成 schema; 会话管理需 Express 层维护 sessionId→transport 映射; MCP Inspector 是调试利器
+  - **实施路径**: Phase1 MVP(3 tools) → Phase2 Resources+Prompts → Phase3 Bearer auth+Docker → Phase4 sampling/elicitation
+  - **下一步**: 创建 lab/openclaw-mcp-server/ → 用 McpServer 高层 API 实现 → MCP Inspector 验证
 - [ ] **A2A Trust Extension 实现模块** - `lab/a2a-trust-extension/` Python 模块,集成 a2a_minimal + 信任扩展([研究笔记](catalyst-research/exploration-notes/2026-04-25-a2a-agent-trust-integration.md))
 - [ ] **桥接 TypeScript TrustNetwork → Python TrustEngine** - 跨语言信任数据一致
-- [ ] 初始化 openclaw-mcp-server 项目(TypeScript SDK v2 + Streamable HTTP,3 tools MVP)- 研究笔记已就绪([v2实现指南](catalyst-research/exploration-notes/2026-04-25-mcp-server-v2-implementation.md))
+- [ ] 初始化 openclaw-mcp-server 项目 — 合并到上方 MCP Server MVP 任务
 - [x] **LangGraph Supervisor 研究** — [研究笔记](catalyst-research/exploration-notes/2026-04-27-langgraph-supervisor-openclaw.md) ✅ 代码已验证通过（Supervisor pattern + conditional routing）
 - [ ] 实现 `openclaw-langgraph-bridge` 模块 — **已转向 LangGraph.js (TypeScript)** 避免引入 Python 依赖
   - **关键发现**: LangGraph.js v1.2.9 in-process > Python out-of-process，零额外运行时

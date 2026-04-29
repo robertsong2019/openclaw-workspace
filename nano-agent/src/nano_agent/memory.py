@@ -53,6 +53,29 @@ class Memory:
         ]
         return matched[-limit:]  # 返回最近的匹配
 
+    def remove(self, index: int) -> bool:
+        """按索引删除记忆，返回是否成功"""
+        if 0 <= index < len(self._entries):
+            self._entries.pop(index)
+            self._save()
+            return True
+        return False
+
+    def update(self, index: int, content: str, metadata: Optional[Dict[str, Any]] = None) -> bool:
+        """按索引更新记忆内容，返回是否成功"""
+        if 0 <= index < len(self._entries):
+            self._entries[index].content = content
+            if metadata is not None:
+                self._entries[index].metadata = metadata
+            self._entries[index].timestamp = datetime.now()
+            self._save()
+            return True
+        return False
+
+    def count(self) -> int:
+        """返回记忆条目数"""
+        return len(self._entries)
+
     def get_recent(self, n: int = 5) -> List[MemoryEntry]:
         """获取最近的记忆"""
         return self._entries[-n:]

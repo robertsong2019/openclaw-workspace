@@ -1,0 +1,2 @@
+timestamp	commit	metric	value	status	description
+2026-04-29T21:00	baseline	test_pass_rate	23/23	baseline	nano-agent baseline: 560 lines source, 369 lines tests
