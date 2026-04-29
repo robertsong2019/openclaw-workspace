@@ -841,6 +841,8 @@ export class MemoryService {
   /** @type {Map<string, Array<{content: string, hash: string, ts: number}>>} */
   #contentVersions = new Map();
   /** @type {boolean} */
+  #contentVersionsDirty = false;
+  /** @type {boolean} */
   #loaded = false;
 
   /**
@@ -868,10 +870,33 @@ export class MemoryService {
       await this.#changelog.load();
       await this.#embeddings.loadCache();
       await this.#skills.load();
+      // Load content versions from sidecar
+      await this.#loadContentVersions();
       // Rebuild BM25 index from loaded memories
       for (const m of this.#store.all()) this.#bm25.add(m.id, m.content);
       this.#loaded = true;
     }
+  }
+
+  async #contentVersionsPath() {
+    return join(this.#dirPath, 'content-versions.json');
+  }
+
+  async #loadContentVersions() {
+    try {
+      const raw = await readFile(await this.#contentVersionsPath(), 'utf-8');
+      const obj = JSON.parse(raw);
+      this.#contentVersions = new Map(Object.entries(obj));
+    } catch { this.#contentVersions = new Map(); }
+    this.#contentVersionsDirty = false;
+  }
+
+  async #saveContentVersions() {
+    if (!this.#contentVersionsDirty) return;
+    const obj = Object.fromEntries(this.#contentVersions);
+    await mkdir(this.#dirPath, { recursive: true });
+    await writeFile(await this.#contentVersionsPath(), JSON.stringify(obj, null, 2));
+    this.#contentVersionsDirty = false;
   }
 
   async #ensureLoaded() {
@@ -2070,6 +2095,8 @@ export class MemoryService {
       if (m.content !== opts.content) {
         if (!this.#contentVersions.has(id)) this.#contentVersions.set(id, []);
         this.#contentVersions.get(id).push({ content: m.content, hash: m.hash, ts: Date.now() });
+        this.#contentVersionsDirty = true;
+        this.#saveContentVersions();
       }
       m.content = opts.content;
       m.hash = contentHash(opts.content);

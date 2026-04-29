@@ -12,3 +12,4 @@ timestamp	commit	metric	value	status	description
 2026-04-26T23:02:53+08:00	6cf9967	tests	102	keep	add file_info tool — detailed metadata (size, timestamps, permissions) for files/dirs (5 new tests)
 2026-04-27T23:02:59+08:00	bc11771	tests	102	keep	upgrade @modelcontextprotocol/sdk 1.0.4 → 1.29.0 (all pass, no breaking changes)
 2026-04-28T23:15:57+08:00	2836fc9	test_pass_rate	100%	keep	fix list_files test assertions (maxDepth depth semantics + subdirectory count)
+2026-04-29T23:07:30+08:00	00b4a8e	tests	111	keep	add find_files tool — Node.js fs.glob based file finder with pattern/depth/maxResults (7 new tests)

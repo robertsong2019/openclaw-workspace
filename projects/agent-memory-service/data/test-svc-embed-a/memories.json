@@ -1,6 +1,6 @@
 [
   {
-    "id": "52877963-9f32-4f5a-b871-3e7b4f3299c7",
+    "id": "a803c20f-0b14-4acf-be30-e7d9a97ed6e9",
     "content": "I love JavaScript",
     "layer": "core",
     "tags": [
@@ -8,14 +8,14 @@
     ],
     "entities": [],
     "weight": 1,
-    "createdAt": 1777461480856,
-    "accessedAt": 1777461480856,
+    "createdAt": 1777478688525,
+    "accessedAt": 1777478688525,
     "accessCount": 0,
     "hash": "dcbd5d8eb39a8a0d",
     "factType": "opinion"
   },
   {
-    "id": "2d4df4a9-1f0a-469d-83bf-587f16017893",
+    "id": "53843f5d-0fab-4c09-ac2c-84f328bca2b2",
     "content": "Python is great for ML",
     "layer": "core",
     "tags": [
@@ -23,14 +23,14 @@
     ],
     "entities": [],
     "weight": 1,
-    "createdAt": 1777461480857,
-    "accessedAt": 1777461480857,
+    "createdAt": 1777478688526,
+    "accessedAt": 1777478688526,
     "accessCount": 0,
     "hash": "79850f3dd53429f9",
     "factType": "opinion"
   },
   {
-    "id": "b8c49e6b-d873-4ab6-a4fc-e484a02c2117",
+    "id": "118b4b87-3ecf-4f56-8ef3-063cfdc28757",
     "content": "Rust is fast and safe",
     "layer": "core",
     "tags": [
@@ -38,8 +38,8 @@
     ],
     "entities": [],
     "weight": 1,
-    "createdAt": 1777461480859,
-    "accessedAt": 1777461480859,
+    "createdAt": 1777478688527,
+    "accessedAt": 1777478688527,
     "accessCount": 0,
     "hash": "57d3cfa0332beb09",
     "factType": "observation"
