@@ -93,7 +93,12 @@ cmd_date() {
 
 cmd_summary() {
   local days="${1:-7}"
-  echo -e "${CYAN}📊 Activity summary (last $days days)${RESET}"
+  local keyword="${2:-}"
+
+  local title="Activity summary (last $days days)"
+  [[ -n "$keyword" ]] && title+=" [filter: $keyword]"
+
+  echo -e "${CYAN}📊 $title${RESET}"
   echo
 
   local total_lines=0 total_files=0
@@ -102,6 +107,13 @@ cmd_summary() {
     d=$(date -d "$i days ago" +%Y-%m-%d 2>/dev/null || date -v-${i}d +%Y-%m-%d 2>/dev/null)
     local file="$MEMORY_DIR/${d}.md"
     if [[ -f "$file" ]]; then
+      # Check keyword filter
+      if [[ -n "$keyword" ]]; then
+        if ! grep -qi "$keyword" "$file" 2>/dev/null; then
+          continue
+        fi
+      fi
+
       local lines
       lines=$(wc -l < "$file")
       total_lines=$((total_lines + lines))
@@ -179,7 +191,7 @@ case "${1:-help}" in
   search)  shift; cmd_search "$@" ;;
   today)   cmd_today ;;
   date)    [[ -z "${2:-}" ]] && die "Usage: agent-log date YYYY-MM-DD"; cmd_date "$2" ;;
-  summary) cmd_summary "${2:-7}" ;;
+  summary) cmd_summary "${2:-7}" "${3:-}" ;;
   cron)    cmd_cron ;;
   stats)   cmd_stats ;;
   help|*)  usage ;;
