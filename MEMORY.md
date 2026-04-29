@@ -18,14 +18,14 @@
 ## Current Focus (2026-04-29)
 
 ### Active Theme
-Autoresearch 方法论实践 - **连续23天零回滚率**。AMS 达 **540 tests**。04-28: searchGraph+searchTemporal → 519。04-29凌晨: memoryMerge(冲突合并) → 529 → searchByBranch(分支遍历)+bulkMerge(批量合并) → 540。
+Autoresearch 方法论实践 - **连续23天零回滚率**。AMS 达 **569 tests**。04-28: searchGraph+searchTemporal → 519。04-29凌晨: memoryMerge+searchByBranch+bulkMerge → 540。04-29晚: Hindsight Phase 4 — addOpinion+searchOpinions+evolveConfidence+opinionConsensus+opinionDrift+opinionEvolveFromEvidence → 569 (+29 tests, 3 cycles)。
 
 ### Next Actions
 - [ ] **AMS 升级: Hindsight 风格四网络 + 图遍历检索** — 基于 [研究笔记](catalyst-research/exploration-notes/2026-04-26-hindsight-multi-strategy-memory.md)
   - Phase 1: ~~classifyFact + searchByFactType + statsByFactType + reclassifyFact + bulkReclassify~~ ✅ 完成
   - Phase 2: ~~searchGraph() 基于 entity_index 多跳遍历~~ ✅ 完成 (04-28)
   - Phase 3: ~~searchTemporal() 时间衰减 + 范围过滤~~ ✅ 完成 (04-28)
-  - Phase 4: Opinion 网络带 confidence，新证据驱动置信度演化
+  - Phase 4: ~~Opinion 网络带 confidence，新证据驱动置信度演化~~ ✅ 完成 (04-29晚: 6 APIs, 29 new tests)
 - [ ] **实现 Hindsight Mini 原型** — `lab/hindsight-mini/` 验证四网络 + 四路检索(代码已在研究笔记中验证通过)
 - [ ] **OpenClaw MCP Server MVP** — TypeScript SDK v2 + Streamable HTTP，3 tools (memory-search/memory-get/workspace-read)，[研究笔记](catalyst-research/exploration-notes/2026-04-28-mcp-server-typescript-v2.md) ✅ 代码已验证(echo+add tools 通过 curl 测试)
 - [ ] **A2A Trust Extension 实现模块** - `lab/a2a-trust-extension/` Python 模块,集成 a2a_minimal + 信任扩展([研究笔记](catalyst-research/exploration-notes/2026-04-25-a2a-agent-trust-integration.md))
@@ -52,7 +52,7 @@ Autoresearch 方法论实践 - **连续23天零回滚率**。AMS 达 **540 tests
 7. **agent-log** - OpenClaw 日志搜索/汇总 CLI (✅ 单文件 Bash,零依赖)
 8. **ctxgen** - AI 上下文文件生成器 (✅ v1.0, 纯Node.js零依赖, 支持4种目标格式)
 9. **tiny-agent-workshop** - 单文件 Agent 模式教学集 (✅ 7个模式: ReAct/ToolCall/Memory/Router/Guardrail/Chain/EdgeAgent)
-10. **Agent Memory Service** - Mem0风格Agent记忆管理 (✅ v1.0-dev, 540/540 tests, 三层存储+LLM提取+语义检索+Consolidation+变更追踪+自监控+搜索三阶段(BM25+Embedding+Unified RRF)+suggestTags()+healthScore()+autoMaintain()+searchSimilar()+findDuplicatePairs()+exportJSON/importJSON()+pruneLowWeight()+inspect()+clusterByTopic()+summarizeCluster()+compareMemories()+tagHierarchy()+rebalance()+autoTag()+mergeClusters()+clusterHealth()+searchByEntity()+topEntities()+tagSearch()+memoryDiff()+clusterAutoMerge()+contentHistory()+contentVersionDiff()+searchByTimeRange()+contentRollback()+classifyFact()+searchByFactType()+statsByFactType()+reclassifyFact()+bulkReclassify()+searchByContent()+contentBranch()+searchGraph()+searchTemporal()+memoryMerge()+searchByBranch()+bulkMerge())
+10. **Agent Memory Service** - Mem0风格Agent记忆管理 (✅ v1.0-dev, 569/569 tests, 三层存储+LLM提取+语义检索+Consolidation+变更追踪+自监控+搜索三阶段(BM25+Embedding+Unified RRF)+suggestTags()+healthScore()+autoMaintain()+searchSimilar()+findDuplicatePairs()+exportJSON/importJSON()+pruneLowWeight()+inspect()+clusterByTopic()+summarizeCluster()+compareMemories()+tagHierarchy()+rebalance()+autoTag()+mergeClusters()+clusterHealth()+searchByEntity()+topEntities()+tagSearch()+memoryDiff()+clusterAutoMerge()+contentHistory()+contentVersionDiff()+searchByTimeRange()+contentRollback()+classifyFact()+searchByFactType()+statsByFactType()+reclassifyFact()+bulkReclassify()+searchByContent()+contentBranch()+searchGraph()+searchTemporal()+memoryMerge()+searchByBranch()+bulkMerge()+addOpinion()+searchOpinions()+evolveConfidence()+opinionConsensus()+opinionDrift()+opinionEvolveFromEvidence())
 11. **A2A Protocol Lab** - Agent-to-Agent通信协议实验 (✅ 零依赖Python实现, Server+Client+Federation Demo)
 
 ---
@@ -180,11 +180,18 @@ curl -X POST "https://api.tavily.com/search" \
 ## Recent Achievements
 
 ### 2026-04-29
-- ✅ **Agent Memory Service v1.0-dev 续升** - 499→540 tests (+41)
+- ✅ **Agent Memory Service v1.0-dev 续升** - 499→569 tests (+70)
   - **memoryMerge(id1, id2, opts)**: 冲突合并，4种content策略+tag策略+entity union+link rewiring，10 tests
   - **searchByBranch(id, opts)**: BFS分支遍历，支持depth限制+includeSelf，6 tests
   - **bulkMerge(pairs, opts)**: 批量合并，顺序执行+错误处理，5 tests
-  - API全景: 10路检索+内容版本化+冲突合并+批量操作
+  - **Hindsight Phase 4 — Opinion Network** (04-29晚, 29 new tests):
+    - **addOpinion(topic, content, opts)**: 带confidence和topic的opinion记忆, 4 tests
+    - **searchOpinions(topic, opts)**: topic过滤+confidence排序+minConfidence/limit, 5 tests
+    - **evolveConfidence(id, delta, opts)**: 证据驱动的confidence演化+历史追踪, 7 tests
+    - **opinionConsensus(topic)**: 加权平均+分歧度(标准差)+多数方向检测, 5 tests
+    - **opinionDrift(id)**: confidence变更历史+证据轨迹, 3 tests
+    - **opinionEvolveFromEvidence(topic, evidence, delta)**: 批量证据驱动演化, 5 tests
+  - API全景: 10路检索+内容版本化+冲突合并+批量操作+6个opinion APIs
   - 零回滚率持续保持(连续23天)
 - ✅ **agent-task-cli StreamManager tests** - 344→359 tests (+15)
 
@@ -444,5 +451,5 @@ curl -X POST "https://api.tavily.com/search" \
 
 ---
 
-*Last updated: 2026-04-29 02:00*
+*Last updated: 2026-04-29 19:30*
 *Next review: 2026-04-30*
