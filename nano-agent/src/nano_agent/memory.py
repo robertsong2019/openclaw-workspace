@@ -23,6 +23,11 @@ class MemoryEntry:
             "metadata": self.metadata
         }
 
+    def __eq__(self, other):
+        if not isinstance(other, MemoryEntry):
+            return False
+        return self.content == other.content
+
 
 class Memory:
     """记忆管理器"""
@@ -51,6 +56,8 @@ class Memory:
             entry for entry in self._entries
             if query_lower in entry.content.lower()
         ]
+        if limit <= 0:
+            return matched
         return matched[-limit:]  # 返回最近的匹配
 
     def remove(self, index: int) -> bool:

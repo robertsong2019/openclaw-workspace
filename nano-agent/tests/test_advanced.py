@@ -440,6 +440,43 @@ def test_agent_multi_turn_memory():
     print("✅ 多轮记忆积累测试通过")
 
 
+def test_memory_search_no_limit():
+    """测试搜索 limit=0 返回全部匹配"""
+    memory = Memory()
+    for i in range(10):
+        memory.add(f"python item {i}")
+    results = memory.search("python", limit=0)
+    assert len(results) == 10
+    print("✅ 搜索无限制测试通过")
+
+
+def test_memory_entry_equality():
+    """测试 MemoryEntry 相等性"""
+    memory = Memory()
+    memory.add("same content")
+    entries = memory.get_all()
+    from nano_agent.memory import MemoryEntry
+    assert entries[0] == MemoryEntry(content="same content")
+    print("✅ MemoryEntry 相等性测试通过")
+
+
+def test_memory_persistence_with_update():
+    """测试更新后持久化"""
+    with tempfile.NamedTemporaryFile(suffix='.json', delete=False) as f:
+        path = f.name
+    try:
+        m1 = Memory(persistence_path=path)
+        m1.add("original")
+        m1.update(0, "modified")
+        del m1
+
+        m2 = Memory(persistence_path=path)
+        assert m2.get_all()[0].content == "modified"
+        print("✅ 更新持久化测试通过")
+    finally:
+        os.unlink(path)
+
+
     print("=" * 60)
     print("🧪 Nano-Agent 高级测试")
     print("=" * 60)
