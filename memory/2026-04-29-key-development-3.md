@@ -81,3 +81,29 @@ bulkMerge:
 
 **Generated**: 2026-04-29 01:00 AM
 **Status:** ✅ Complete — searchByBranch() + bulkMerge() added, 11 new tests, 540/540 passing
+
+---
+
+## 代码实验室 — nano-agent 实验循环 (21:00-21:20)
+
+**项目**: nano-agent (超轻量AI Agent框架)
+**方法**: autoresearch — 4 cycles, 20min each
+
+### 基线 → 最终
+- Tests: 23 → 42 (+19)
+- Source: 560 → 628 lines
+- Test code: 369 → 575 lines
+- 零回滚 (4/4 cycles keep)
+
+### Cycle 1: Memory CRUD — remove(index) + update(index, content) + count()
+- +6 tests, 完善记忆管理基础操作
+
+### Cycle 2: Tool 系统 — 参数类型推断 + validate_args() + unregister_tool()
+- +6 tests, 从硬编码 "string" → 基于type annotation推断
+- 新增参数校验和工具注销能力
+
+### Cycle 3: Agent 对话追踪 — history() + turn_count + 多轮记忆积累
+- +4 tests, Agent 现在追踪完整对话历史
+
+### Cycle 4: Memory 增强 — search(limit=0) + MemoryEntry.__eq__ + 更新后持久化
+- +3 tests, 搜索行为更灵活, 条目可比较

@@ -3,7 +3,7 @@
  */
 
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { readFile, writeFile, mkdir, readdir, stat, unlink, rmdir, rename, cp } from "node:fs/promises";
+import { readFile, writeFile, mkdir, readdir, stat, unlink, rmdir, rename, cp, glob } from "node:fs/promises";
 import { dirname, resolve, join } from "node:path";
 import { exec as execCb } from "node:child_process";
 import { promisify } from "node:util";
@@ -231,6 +231,20 @@ export const OPENCLAW_TOOLS: Tool[] = [
     },
   },
   {
+    name: "find_files",
+    description: "Find files by glob pattern. Returns matching file paths relative to workspace root.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        pattern: { type: "string", description: "Glob pattern to match file names (e.g. '**/*.ts', 'src/*.test.js')" },
+        path: { type: "string", description: "Directory path relative to workspace root", default: "." },
+        maxDepth: { type: "number", description: "Maximum directory depth to search", default: 10 },
+        maxResults: { type: "number", description: "Maximum number of results to return", default: 100, minimum: 1, maximum: 500 },
+      },
+      required: ["pattern"],
+    },
+  },
+  {
     name: "file_info",
     description: "Get detailed metadata for a file or directory: size, type, timestamps, permissions.",
     inputSchema: {
@@ -258,6 +272,7 @@ export const toolHandlers: Record<string, (args: any) => Promise<any>> = {
   move: executeMove,
   copy: executeCopy,
   create_directory: executeCreateDirectory,
+  find_files: executeFindFiles,
   system_status: executeSystemStatus,
   file_info: executeFileInfo,
 };
@@ -589,6 +604,29 @@ async function executeFileInfo(args: any): Promise<any> {
     accessed: s.atime.toISOString(),
     permissions: s.mode.toString(8).slice(-3),
   };
+}
+
+async function executeFindFiles(args: any): Promise<any> {
+  const { pattern, path: inputPath = ".", maxResults = 100 } = args;
+  const resolved = safePath(inputPath);
+  const root = getWorkspaceRoot();
+  const results: string[] = [];
+
+  // Use Node.js 22+ fs.glob for proper glob matching
+  const absPattern = join(resolved, pattern);
+  for await (const entry of glob(absPattern)) {
+    if (results.length >= maxResults) break;
+    // Skip directories (only return files)
+    try {
+      const s = await stat(entry);
+      if (!s.isFile()) continue;
+    } catch { continue; }
+    // Convert to relative path from workspace root
+    const rel = entry.startsWith(root + "/") ? entry.slice(root.length + 1) : entry;
+    results.push(rel);
+  }
+
+  return { tool: "find_files", pattern, path: inputPath, count: results.length, files: results };
 }
 
 async function executeSystemStatus(): Promise<any> {

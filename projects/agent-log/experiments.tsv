@@ -1,1 +1,3 @@
 timestamp	commit	metric	value	status	description
+2026-04-29T22:15\t7798c8a\ttest_pass_rate\t6/6 (100%)\tkeep\tF1: search with regex support — -r/--regex flag, 6 test cases, all passing
+2026-04-29T22:30\t7ff53d4\ttest_pass_rate\t6/6 (100%)\tkeep\tF4: summary with keyword filtering — optional keyword param, case-insensitive filter, 6 test cases, all passing
