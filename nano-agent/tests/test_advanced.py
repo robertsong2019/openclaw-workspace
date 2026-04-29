@@ -9,12 +9,84 @@ import tempfile
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from nano_agent import Agent, tool, Memory, LLM
-from nano_agent.tools import clear_tools, list_tools, get_tool
+from nano_agent.tools import clear_tools, list_tools, get_tool, unregister_tool
 
 
 def setup_module():
     """每个测试模块前清空工具注册表"""
     clear_tools()
+
+
+def test_tool_type_inference():
+    """测试工具参数类型推断"""
+    @tool
+    def typed_func(name: str, count: int, ratio: float, flag: bool) -> str:
+        """有类型的函数"""
+        return name
+
+    t = get_tool("typed_func")
+    assert t.parameters["name"]["type"] == "string"
+    assert t.parameters["count"]["type"] == "integer"
+    assert t.parameters["ratio"]["type"] == "number"
+    assert t.parameters["flag"]["type"] == "boolean"
+    print("✅ 类型推断测试通过")
+
+
+def test_tool_validate_args_ok():
+    """测试参数验证-正常"""
+    @tool
+    def need_x(x: int) -> int:
+        """需要x"""
+        return x
+
+    t = get_tool("need_x")
+    assert t.validate_args(x=1) == []
+    print("✅ 参数验证正常测试通过")
+
+
+def test_tool_validate_args_missing():
+    """测试参数验证-缺少参数"""
+    @tool
+    def need_y(y: int) -> int:
+        """需要y"""
+        return y
+
+    t = get_tool("need_y")
+    errors = t.validate_args()
+    assert len(errors) == 1
+    assert "y" in errors[0]
+    print("✅ 参数验证缺少参数测试通过")
+
+
+def test_tool_validate_args_with_default():
+    """测试参数验证-有默认值不算缺少"""
+    @tool
+    def optional_z(z: int = 0) -> int:
+        """可选z"""
+        return z
+
+    t = get_tool("optional_z")
+    assert t.validate_args() == []
+    print("✅ 默认参数验证测试通过")
+
+
+def test_unregister_tool():
+    """测试注销工具"""
+    @tool
+    def temp_tool() -> str:
+        """临时"""
+        return "temp"
+
+    assert get_tool("temp_tool") is not None
+    assert unregister_tool("temp_tool") is True
+    assert get_tool("temp_tool") is None
+    print("✅ 注销工具测试通过")
+
+
+def test_unregister_nonexistent():
+    """测试注销不存在的工具"""
+    assert unregister_tool("no_such_tool") is False
+    print("✅ 注销不存在工具测试通过")
 
 
 def test_memory_max_entries():

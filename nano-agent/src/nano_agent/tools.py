@@ -15,6 +15,15 @@ class Tool:
     func: Callable
     parameters: Dict[str, Any] = field(default_factory=dict)
 
+    def validate_args(self, **kwargs) -> List[str]:
+        """验证参数，返回错误列表（空=有效）"""
+        errors = []
+        required = [n for n, p in self.parameters.items() if "default" not in p]
+        for name in required:
+            if name not in kwargs:
+                errors.append(f"缺少必要参数: {name}")
+        return errors
+
     def execute(self, **kwargs) -> Any:
         """执行工具"""
         return self.func(**kwargs)
@@ -61,7 +70,12 @@ def tool(func: Callable = None, *, name: str = None, description: str = None) ->
         for param_name, param in sig.parameters.items():
             if param_name == "self":
                 continue
-            param_info = {"type": "string"}  # 简化处理，默认字符串
+            # 类型推断
+            type_map = {str: "string", int: "integer", float: "number", bool: "boolean", list: "array", dict: "object"}
+            annotation = param.annotation if param.annotation != inspect.Parameter.empty else str
+            origin = getattr(annotation, "__origin__", None)
+            actual = origin or annotation
+            param_info = {"type": type_map.get(actual, "string")}
             if param.default != inspect.Parameter.empty:
                 param_info["default"] = param.default
             params[param_name] = param_info
@@ -107,3 +121,11 @@ def list_tools() -> List[Tool]:
 def clear_tools() -> None:
     """清除所有工具"""
     _tools.clear()
+
+
+def unregister_tool(name: str) -> bool:
+    """注销工具，返回是否成功"""
+    if name in _tools:
+        del _tools[name]
+        return True
+    return False
