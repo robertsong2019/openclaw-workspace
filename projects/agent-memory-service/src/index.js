@@ -4491,6 +4491,42 @@ export class MemoryService {
     return mem;
   }
 
+  /**
+   * Compute opinion consensus for a topic: weighted average confidence + divergence.
+   * @param {string} topic
+   * @returns {Promise<{topic: string, count: number, avgConfidence: number, divergence: number, majority: 'for'|'against'|'mixed', opinions: Memory[]}>}
+   */
+  async opinionConsensus(topic) {
+    await this.#ensureLoaded();
+    const opinions = await this.searchOpinions(topic);
+    if (opinions.length === 0) {
+      return { topic, count: 0, avgConfidence: 0, divergence: 0, majority: 'mixed', opinions: [] };
+    }
+    const confs = opinions.map(o => o._confidence ?? 0.5);
+    const avg = confs.reduce((s, c) => s + c, 0) / confs.length;
+    const variance = confs.reduce((s, c) => s + (c - avg) ** 2, 0) / confs.length;
+    const divergence = Math.round(Math.sqrt(variance) * 1000) / 1000; // std dev
+    const majority = avg >= 0.6 ? 'for' : avg <= 0.4 ? 'against' : 'mixed';
+    return { topic, count: opinions.length, avgConfidence: Math.round(avg * 1000) / 1000, divergence, majority, opinions };
+  }
+
+  /**
+   * Get confidence drift history for an opinion.
+   * @param {string} id
+   * @returns {Promise<{id: string, current: number, history: Array<{delta: number, from: number, to: number, evidence: string|null, timestamp: number}>}>}
+   */
+  async opinionDrift(id) {
+    await this.#ensureLoaded();
+    const mem = this.#store.get(id);
+    if (!mem) throw new Error(`Memory '${id}' not found`);
+    if (mem.factType !== 'opinion') throw new Error(`Memory '${id}' is not an opinion`);
+    return {
+      id,
+      current: mem._confidence ?? 0.5,
+      history: mem._confidenceHistory || [],
+    };
+  }
+
   async bulkMerge(pairs, opts = {}) {
     await this.#ensureLoaded();
     const results = [];
