@@ -3292,6 +3292,67 @@ export class MemoryService {
    * @param {{includeChangelog?: boolean, includeLinks?: boolean, includeSkills?: boolean}} opts
    * @returns {Promise<{version: string, exported: string, memories: object[], links?: object[], changelog?: object[], skills?: object[]}>}
    */
+  /**
+   * Suggest merge candidates using content similarity + shared entities/tags
+   * @param {{minScore?: number, layer?: string, limit?: number, strategies?: string[]}} opts
+   * @returns {Promise<Array<{id1: string, id2: string, score: number, reasons: string[], suggestedStrategy: object}>>}
+   */
+  async mergeSuggestions(opts = {}) {
+    await this.#ensureLoaded();
+    const minScore = opts.minScore ?? 0.5;
+    const limit = opts.limit ?? 20;
+    let memories = this.#store.all();
+    if (opts.layer) memories = memories.filter(m => m.layer === opts.layer);
+
+    const suggestions = [];
+    for (let i = 0; i < memories.length; i++) {
+      for (let j = i + 1; j < memories.length; j++) {
+        const a = memories[i], b = memories[j];
+        const reasons = [];
+        let score = 0;
+
+        // Content similarity (ngram)
+        const contentSim = ngramSimilarity(a.content, b.content);
+        if (contentSim >= 0.4) {
+          score += contentSim * 0.5;
+          reasons.push(`content:${Math.round(contentSim * 100)}%`);
+        }
+
+        // Shared entities
+        const sharedEntities = (a.entities || []).filter(e => (b.entities || []).includes(e));
+        if (sharedEntities.length > 0) {
+          const entityOverlap = sharedEntities.length / Math.max(1, Math.min(a.entities.length, b.entities.length));
+          score += entityOverlap * 0.3;
+          reasons.push(`entities:${sharedEntities.length}`);
+        }
+
+        // Shared tags
+        const sharedTags = (a.tags || []).filter(t => (b.tags || []).includes(t));
+        if (sharedTags.length > 0) {
+          const tagOverlap = sharedTags.length / Math.max(1, Math.min(a.tags.length, b.tags.length));
+          score += tagOverlap * 0.2;
+          reasons.push(`tags:${sharedTags.length}`);
+        }
+
+        if (score >= minScore) {
+          // Suggest strategy based on content
+          const suggestedStrategy = {
+            content: a.content.length >= b.content.length ? 'keep-longer' : 'concat',
+            tags: 'union',
+          };
+          suggestions.push({
+            id1: a.id, id2: b.id,
+            score: Math.round(score * 1000) / 1000,
+            reasons,
+            suggestedStrategy,
+          });
+        }
+      }
+    }
+    suggestions.sort((a, b) => b.score - a.score);
+    return suggestions.slice(0, limit);
+  }
+
   async exportJSON(opts = {}) {
     await this.#ensureLoaded();
     const result = {
