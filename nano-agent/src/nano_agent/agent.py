@@ -80,6 +80,10 @@ class Agent:
 
         # 保存到记忆
         final_response = response.get("content", "处理完成")
+
+        # 记录助手回复到对话历史
+        self._conversation_history.append({"role": "assistant", "content": final_response})
+
         self.memory.add(
             f"用户: {user_input}\n回复: {final_response}",
             metadata={"agent": self.name}
@@ -99,6 +103,9 @@ class Agent:
 
         # 添加当前输入
         messages.append({"role": "user", "content": user_input})
+
+        # 记录到对话历史
+        self._conversation_history.append({"role": "user", "content": user_input})
 
         return messages
 
@@ -155,3 +162,12 @@ class Agent:
     def reset(self) -> None:
         """重置对话历史"""
         self._conversation_history.clear()
+
+    def history(self, limit: int = 10) -> List[Dict[str, str]]:
+        """获取对话历史"""
+        return self._conversation_history[-limit:]
+
+    @property
+    def turn_count(self) -> int:
+        """返回对话轮次"""
+        return len([m for m in self._conversation_history if m["role"] == "user"])

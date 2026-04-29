@@ -400,7 +400,46 @@ def test_memory_count():
     print("✅ 记忆计数测试通过")
 
 
-if __name__ == "__main__":
+def test_agent_conversation_history():
+    """测试 Agent 对话历史追踪"""
+    agent = Agent(name="test", instructions="test", llm=LLM.mock(), verbose=False)
+    agent.run("hello")
+    assert len(agent.history()) == 2  # user + assistant
+    assert agent.history()[0]["role"] == "user"
+    assert agent.history()[1]["role"] == "assistant"
+    print("✅ 对话历史追踪测试通过")
+
+
+def test_agent_turn_count():
+    """测试 Agent 轮次计数"""
+    agent = Agent(name="test", instructions="test", llm=LLM.mock(), verbose=False)
+    assert agent.turn_count == 0
+    agent.run("first")
+    assert agent.turn_count == 1
+    agent.run("second")
+    assert agent.turn_count == 2
+    print("✅ 轮次计数测试通过")
+
+
+def test_agent_history_limit():
+    """测试对话历史限制"""
+    agent = Agent(name="test", instructions="test", llm=LLM.mock(), verbose=False)
+    for i in range(5):
+        agent.run(f"msg{i}")
+    # 5 turns = 10 messages (5 user + 5 assistant)
+    assert len(agent.history(limit=4)) == 4
+    print("✅ 历史限制测试通过")
+
+
+def test_agent_multi_turn_memory():
+    """测试多轮对话记忆积累"""
+    agent = Agent(name="test", instructions="test", llm=LLM.mock(), verbose=False)
+    agent.run("topic A")
+    agent.run("topic B")
+    assert agent.memory.count() == 2
+    print("✅ 多轮记忆积累测试通过")
+
+
     print("=" * 60)
     print("🧪 Nano-Agent 高级测试")
     print("=" * 60)
