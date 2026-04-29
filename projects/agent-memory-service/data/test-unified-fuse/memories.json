@@ -1,6 +1,6 @@
 [
   {
-    "id": "ed51a8bb-5309-4a81-8a16-6ac1f3fa6313",
+    "id": "dc512a0f-6cca-4991-bd2f-131ffc4717d4",
     "content": "JavaScript is a dynamic language for web development",
     "layer": "core",
     "tags": [
@@ -8,14 +8,14 @@
     ],
     "entities": [],
     "weight": 1,
-    "createdAt": 1777393239348,
-    "accessedAt": 1777393239348,
+    "createdAt": 1777461063367,
+    "accessedAt": 1777461063367,
     "accessCount": 0,
     "hash": "f3539e4a984e6fdd",
     "factType": "world"
   },
   {
-    "id": "c638699c-0b6f-4e64-b7a8-ca1a0f639c7f",
+    "id": "1b60b59f-5529-4d3c-97f0-f8cd35ab4fe6",
     "content": "Python excels at data science and machine learning",
     "layer": "core",
     "tags": [
@@ -23,14 +23,14 @@
     ],
     "entities": [],
     "weight": 1,
-    "createdAt": 1777393239348,
-    "accessedAt": 1777393239348,
+    "createdAt": 1777461063367,
+    "accessedAt": 1777461063367,
     "accessCount": 0,
     "hash": "3eb5ecaf90e85a02",
     "factType": "observation"
   },
   {
-    "id": "75f8a050-3717-4f2e-b45a-953e8634e51e",
+    "id": "83fe6d02-202d-49a8-b9c8-07f8df8af66d",
     "content": "Rust provides memory safety without garbage collection",
     "layer": "core",
     "tags": [
@@ -38,8 +38,8 @@
     ],
     "entities": [],
     "weight": 1,
-    "createdAt": 1777393239349,
-    "accessedAt": 1777393239349,
+    "createdAt": 1777461063368,
+    "accessedAt": 1777461063368,
     "accessCount": 0,
     "hash": "34c41dd79ccdd4bd",
     "factType": "observation"

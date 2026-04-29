@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-25T13:00:09.946Z",
+  "updatedAt": "2026-04-28T21:00:08.198Z",
   "entries": {
     "memory:memory/2026-04-12.md:71:96": {
       "key": "memory:memory/2026-04-12.md:71:96",
@@ -155,6 +155,37 @@
         "multi-language",
         "self-referential",
         "gpt-4"
+      ]
+    },
+    "memory:memory/2026-04-16.md:1:26": {
+      "key": "memory:memory/2026-04-16.md:1:26",
+      "path": "memory/2026-04-16.md",
+      "startLine": 1,
+      "endLine": 26,
+      "source": "memory",
+      "snippet": "## Autoresearch Evening Session (19:00-19:15) ### Experiment Cycles Completed: 3/3 **1. prompt-router — explain() routing explainability** ✅ KEEP - Added `Agent.score(detail=True)` returning match reasons - Added `PromptRouter.explain()` for structured routing breakdown - Tests: 8→12, all passing **2. agent-context-store — batch operations** ✅ KEEP - Added `count(tag?)`, `keys(tag?)`, `put_many(items)` - Single-disk-write batch insert optimization - Tests: 8→12, all passing **3. prompt-router — confidence threshold routing** ✅ KEEP - Added `route_with_confidence(prompt, threshold)` returning status - Status: confident/low_confidence/no_match - Tests: 12→15, all passing ### Results - Bo",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1,
+      "maxScore": 1,
+      "firstRecalledAt": "2026-04-28T21:00:08.198Z",
+      "lastRecalledAt": "2026-04-28T21:00:08.198Z",
+      "queryHashes": [
+        "251319d34e1b"
+      ],
+      "recallDays": [
+        "2026-04-29"
+      ],
+      "conceptTags": [
+        "router",
+        "00-19",
+        "3/3",
+        "prompt-router",
+        "agent.score",
+        "promptrouter.explain",
+        "agent-context-store",
+        "put-many"
       ]
     }
   }

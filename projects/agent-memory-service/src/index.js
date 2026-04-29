@@ -902,6 +902,9 @@ export class MemoryService {
       hash: contentHash(opts.content),
       factType: opts.factType || classifyFact(opts.content),
       ...(opts.expiresAt ? { expiresAt: opts.expiresAt } : {}),
+      ...(opts._topic != null ? { _topic: opts._topic } : {}),
+      ...(opts._confidence != null ? { _confidence: opts._confidence } : {}),
+      ...(opts._confidenceHistory != null ? { _confidenceHistory: opts._confidenceHistory } : {}),
     };
     this.#store.put(memory);
     this.#bm25.add(id, memory.content);
@@ -4415,6 +4418,79 @@ export class MemoryService {
    * @param {object} opts - Options passed to each memoryMerge call
    * @returns {Promise<{results: Array, errors: Array<{pair: [string,string], error: string}>}>}
    */
+  // ─── Opinion Network (Hindsight Phase 4) ──────────────────
+
+  /**
+   * Add an opinion memory with topic, confidence, and optional evidence.
+   * @param {string} topic - Topic/subject of the opinion
+   * @param {string} content - Opinion content
+   * @param {{ confidence?: number, tags?: string[], entities?: string[], source?: string, layer?: string }} [opts]
+   * @returns {Promise<Memory>}
+   */
+  async addOpinion(topic, content, opts = {}) {
+    const confidence = Math.max(0, Math.min(1, opts.confidence ?? 0.5));
+    return this.add({
+      content,
+      factType: 'opinion',
+      layer: opts.layer || 'long',
+      tags: opts.tags || [],
+      entities: opts.entities || [],
+      source: opts.source,
+      _topic: topic,
+      _confidence: confidence,
+      _confidenceHistory: [],
+    });
+  }
+
+  /**
+   * Search opinions by topic, sorted by confidence descending.
+   * @param {string} topic
+   * @param {{ minConfidence?: number, limit?: number }} [opts]
+   * @returns {Promise<Memory[]>}
+   */
+  async searchOpinions(topic, opts = {}) {
+    await this.#ensureLoaded();
+    let matches = this.#store.all().filter(m =>
+      m.factType === 'opinion' && m._topic === topic
+    );
+    if (opts.minConfidence != null) {
+      matches = matches.filter(m => (m._confidence ?? 0) >= opts.minConfidence);
+    }
+    matches.sort((a, b) => (b._confidence ?? 0) - (a._confidence ?? 0));
+    if (opts.limit) matches = matches.slice(0, opts.limit);
+    return matches;
+  }
+
+  /**
+   * Evolve an opinion's confidence based on new evidence.
+   * @param {string} id - Opinion memory id
+   * @param {number} delta - Confidence change (-1 to +1)
+   * @param {{ evidence?: string }} [opts]
+   * @returns {Promise<Memory>}
+   */
+  async evolveConfidence(id, delta, opts = {}) {
+    await this.#ensureLoaded();
+    const mem = this.#store.get(id);
+    if (!mem) throw new Error(`Memory '${id}' not found`);
+    if (mem.factType !== 'opinion') throw new Error(`Memory '${id}' is not an opinion`);
+    const oldConf = mem._confidence ?? 0.5;
+    mem._confidence = Math.max(0, Math.min(1, oldConf + delta));
+    if (!mem._confidenceHistory) mem._confidenceHistory = [];
+    mem._confidenceHistory.push({
+      delta,
+      from: oldConf,
+      to: mem._confidence,
+      evidence: opts.evidence || null,
+      timestamp: now(),
+    });
+    mem.accessedAt = now();
+    mem.accessCount++;
+    this.#changelog.record('update', id, mem.layer);
+    await this.#store.save();
+    await this.#changelog.save();
+    return mem;
+  }
+
   async bulkMerge(pairs, opts = {}) {
     await this.#ensureLoaded();
     const results = [];

@@ -15,16 +15,16 @@
 
 ---
 
-## Current Focus (2026-04-28)
+## Current Focus (2026-04-29)
 
 ### Active Theme
-Autoresearch 方法论实践 - **连续22天零回滚率**。AMS 达 **499 tests**。04-27: Hindsight Phase 1 完成(481 tests)。04-28: searchByContent(regex/substring) + contentBranch(记忆分叉) → 499 tests。
+Autoresearch 方法论实践 - **连续23天零回滚率**。AMS 达 **540 tests**。04-28: searchGraph+searchTemporal → 519。04-29凌晨: memoryMerge(冲突合并) → 529 → searchByBranch(分支遍历)+bulkMerge(批量合并) → 540。
 
 ### Next Actions
 - [ ] **AMS 升级: Hindsight 风格四网络 + 图遍历检索** — 基于 [研究笔记](catalyst-research/exploration-notes/2026-04-26-hindsight-multi-strategy-memory.md)
   - Phase 1: ~~classifyFact + searchByFactType + statsByFactType + reclassifyFact + bulkReclassify~~ ✅ 完成
-  - Phase 2: searchGraph() 基于 entity_index 多跳遍历，融入 RRF
-  - Phase 3: searchTemporal() 时间衰减 + 范围过滤
+  - Phase 2: ~~searchGraph() 基于 entity_index 多跳遍历~~ ✅ 完成 (04-28)
+  - Phase 3: ~~searchTemporal() 时间衰减 + 范围过滤~~ ✅ 完成 (04-28)
   - Phase 4: Opinion 网络带 confidence，新证据驱动置信度演化
 - [ ] **实现 Hindsight Mini 原型** — `lab/hindsight-mini/` 验证四网络 + 四路检索(代码已在研究笔记中验证通过)
 - [ ] **OpenClaw MCP Server MVP** — TypeScript SDK v2 + Streamable HTTP，3 tools (memory-search/memory-get/workspace-read)，[研究笔记](catalyst-research/exploration-notes/2026-04-28-mcp-server-typescript-v2.md) ✅ 代码已验证(echo+add tools 通过 curl 测试)
@@ -52,7 +52,7 @@ Autoresearch 方法论实践 - **连续22天零回滚率**。AMS 达 **499 tests
 7. **agent-log** - OpenClaw 日志搜索/汇总 CLI (✅ 单文件 Bash,零依赖)
 8. **ctxgen** - AI 上下文文件生成器 (✅ v1.0, 纯Node.js零依赖, 支持4种目标格式)
 9. **tiny-agent-workshop** - 单文件 Agent 模式教学集 (✅ 7个模式: ReAct/ToolCall/Memory/Router/Guardrail/Chain/EdgeAgent)
-10. **Agent Memory Service** - Mem0风格Agent记忆管理 (✅ v1.0-dev, 499/499 tests, 三层存储+LLM提取+语义检索+Consolidation+变更追踪+自监控+搜索三阶段(BM25+Embedding+Unified RRF)+suggestTags()+healthScore()+autoMaintain()+searchSimilar()+findDuplicatePairs()+exportJSON/importJSON()+pruneLowWeight()+inspect()+clusterByTopic()+summarizeCluster()+compareMemories()+tagHierarchy()+rebalance()+autoTag()+mergeClusters()+clusterHealth()+searchByEntity()+topEntities()+tagSearch()+memoryDiff()+clusterAutoMerge()+contentHistory()+contentVersionDiff()+searchByTimeRange()+contentRollback()+classifyFact()+searchByFactType()+statsByFactType()+reclassifyFact()+bulkReclassify()+searchByContent()+contentBranch())
+10. **Agent Memory Service** - Mem0风格Agent记忆管理 (✅ v1.0-dev, 540/540 tests, 三层存储+LLM提取+语义检索+Consolidation+变更追踪+自监控+搜索三阶段(BM25+Embedding+Unified RRF)+suggestTags()+healthScore()+autoMaintain()+searchSimilar()+findDuplicatePairs()+exportJSON/importJSON()+pruneLowWeight()+inspect()+clusterByTopic()+summarizeCluster()+compareMemories()+tagHierarchy()+rebalance()+autoTag()+mergeClusters()+clusterHealth()+searchByEntity()+topEntities()+tagSearch()+memoryDiff()+clusterAutoMerge()+contentHistory()+contentVersionDiff()+searchByTimeRange()+contentRollback()+classifyFact()+searchByFactType()+statsByFactType()+reclassifyFact()+bulkReclassify()+searchByContent()+contentBranch()+searchGraph()+searchTemporal()+memoryMerge()+searchByBranch()+bulkMerge())
 11. **A2A Protocol Lab** - Agent-to-Agent通信协议实验 (✅ 零依赖Python实现, Server+Client+Federation Demo)
 
 ---
@@ -179,11 +179,21 @@ curl -X POST "https://api.tavily.com/search" \
 
 ## Recent Achievements
 
+### 2026-04-29
+- ✅ **Agent Memory Service v1.0-dev 续升** - 499→540 tests (+41)
+  - **memoryMerge(id1, id2, opts)**: 冲突合并，4种content策略+tag策略+entity union+link rewiring，10 tests
+  - **searchByBranch(id, opts)**: BFS分支遍历，支持depth限制+includeSelf，6 tests
+  - **bulkMerge(pairs, opts)**: 批量合并，顺序执行+错误处理，5 tests
+  - API全景: 10路检索+内容版本化+冲突合并+批量操作
+  - 零回滚率持续保持(连续23天)
+- ✅ **agent-task-cli StreamManager tests** - 344→359 tests (+15)
+
 ### 2026-04-28
-- ✅ **Agent Memory Service v1.0-dev 续升** - 481→499 tests (+18)
-  - **searchByContent(pattern, opts)**: regex/substring内容模式搜索，支持layer/tag过滤、大小写、分页、无效regex容错，10 tests
-  - **contentBranch(id, opts)**: 记忆分叉，创建独立副本+双向derived_from链接，支持链式分支，8 tests
-  - 搜索API全景: BM25(search)+向量(embedding)+融合(unified)+实体(entity)+时间(temporal)+事实类型(factType)+标签(tagSearch)+内容模式(content) — 8路检索
+- ✅ **Agent Memory Service v1.0-dev 续升** - 481→519 tests (+38)
+  - **searchGraph(startEntity, opts)**: entity_index多跳BFS图遍历，10 tests
+  - **searchTemporal(opts)**: 时间衰减搜索，7 tests
+  - 搜索API全景: 9路检索
+  - **agent-task-cli StreamManager**: 15 tests (344→359)
   - 零回滚率持续保持(连续22天)
 - ✅ **Agent Pipeline 代码实验室 x4 cycles** — 7→67 tests (+60)
   - **cycle1**: retry + continue_on_error + validate() + to_dict/from_dict 序列化 (+49)
@@ -434,5 +444,5 @@ curl -X POST "https://api.tavily.com/search" \
 
 ---
 
-*Last updated: 2026-04-28 02:00*
-*Next review: 2026-04-29*
+*Last updated: 2026-04-29 02:00*
+*Next review: 2026-04-30*
