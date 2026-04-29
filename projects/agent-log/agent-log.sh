@@ -18,9 +18,21 @@ die() { echo -e "${RED}Error:${RESET} $*" >&2; exit 1; }
 # ── Commands ──
 
 cmd_search() {
-  local query="$1"
-  local files=()
+  local use_regex=0
+  local query=""
 
+  # Parse arguments
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -r|--regex) use_regex=1 ;;
+      *) query="$1" ;;
+    esac
+    shift
+  done
+
+  [[ -z "$query" ]] && die "Usage: agent-log search [-r|--regex] <query>"
+
+  local files=()
   # Gather searchable files
   while IFS= read -r -d '' f; do files+=("$f"); done < <(
     find "$MEMORY_DIR" -name '*.md' -print0 2>/dev/null
@@ -32,14 +44,20 @@ cmd_search() {
     die "No log files found. Check WORKSPACE=$WORKSPACE"
   fi
 
-  echo -e "${CYAN}Searching for:${RESET} $query"
+  local search_type="text"
+  [[ $use_regex -eq 1 ]] && search_type="regex"
+
+  echo -e "${CYAN}Searching for ($search_type):${RESET} $query"
   echo -e "${GRAY}(${#files[@]} files)${RESET}"
   echo
 
-  grep -rl --include='*.md' -i "$query" "${files[@]}" 2>/dev/null | while read -r f; do
+  local grep_opts=(--include='*.md' -i)
+  [[ $use_regex -eq 1 ]] && grep_opts+=(-E)
+
+  grep -rl "${grep_opts[@]}" "$query" "${files[@]}" 2>/dev/null | while read -r f; do
     local rel="${f#$HOME/}"
     echo -e "${BLUE}$rel${RESET}"
-    grep --color=always -i -n -C 1 "$query" "$f" 2>/dev/null | head -20 | sed 's/^/  /'
+    grep --color=always "${grep_opts[@]}" -n -C 1 "$query" "$f" 2>/dev/null | head -20 | sed 's/^/  /'
     echo
   done
 }
@@ -158,7 +176,7 @@ usage() {
 }
 
 case "${1:-help}" in
-  search)  [[ -z "${2:-}" ]] && die "Usage: agent-log search <query>"; cmd_search "$2" ;;
+  search)  shift; cmd_search "$@" ;;
   today)   cmd_today ;;
   date)    [[ -z "${2:-}" ]] && die "Usage: agent-log date YYYY-MM-DD"; cmd_date "$2" ;;
   summary) cmd_summary "${2:-7}" ;;
