@@ -4428,7 +4428,7 @@ export class MemoryService {
    * @returns {Promise<Memory>}
    */
   async addOpinion(topic, content, opts = {}) {
-    const confidence = Math.max(0, Math.min(1, opts.confidence ?? 0.5));
+    const confidence = Math.round(Math.max(0, Math.min(1, opts.confidence ?? 0.5)) * 1000) / 1000;
     return this.add({
       content,
       factType: 'opinion',
@@ -4474,7 +4474,7 @@ export class MemoryService {
     if (!mem) throw new Error(`Memory '${id}' not found`);
     if (mem.factType !== 'opinion') throw new Error(`Memory '${id}' is not an opinion`);
     const oldConf = mem._confidence ?? 0.5;
-    mem._confidence = Math.max(0, Math.min(1, oldConf + delta));
+    mem._confidence = Math.round(Math.max(0, Math.min(1, oldConf + delta)) * 1000) / 1000;
     if (!mem._confidenceHistory) mem._confidenceHistory = [];
     mem._confidenceHistory.push({
       delta,
@@ -4525,6 +4525,26 @@ export class MemoryService {
       current: mem._confidence ?? 0.5,
       history: mem._confidenceHistory || [],
     };
+  }
+
+  /**
+   * Evolve all opinions on a topic based on new evidence.
+   * @param {string} topic
+   * @param {string} evidence - Evidence description
+   * @param {number} delta - Confidence adjustment
+   * @returns {Promise<{topic: string, evidence: string, evolved: number, opinions: Memory[]}>}
+   */
+  async opinionEvolveFromEvidence(topic, evidence, delta) {
+    await this.#ensureLoaded();
+    const opinions = await this.searchOpinions(topic);
+    const evolved = [];
+    for (const o of opinions) {
+      try {
+        const updated = await this.evolveConfidence(o.id, delta, { evidence });
+        evolved.push(updated);
+      } catch { /* skip if opinion was deleted mid-batch */ }
+    }
+    return { topic, evidence, evolved: evolved.length, opinions: evolved };
   }
 
   async bulkMerge(pairs, opts = {}) {
