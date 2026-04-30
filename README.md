@@ -3,7 +3,7 @@
 <div align="center">
   <img src="https://img.shields.io/badge/Type-AI%20Agent%20Workspace-blue" alt="Workspace">
   <img src="https://img.shields.io/badge/Projects-7%20Tools-green" alt="Projects">
-  <img src="https://img.shields.io/badge/Skills-4%2B%20OpenClaw%20Skills-purple" alt="Skills">
+  <img src="https://img.shields.io/badge/Skills-17%20OpenClaw%20Skills-purple" alt="Skills">
   <img src="https://img.shields.io/badge/License-MIT-yellow" alt="License">
 </div>
 
@@ -516,5 +516,5 @@ MIT License - 详见各项目的 LICENSE 文件
 
 ---
 
-*最后更新: 2026-04-17*
+*最后更新: 2026-05-01*
 *维护者: OpenClaw Workspace Team*
