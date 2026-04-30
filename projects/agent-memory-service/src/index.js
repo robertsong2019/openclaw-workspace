@@ -4185,6 +4185,54 @@ export class MemoryService {
   }
 
   /**
+   * Compact content versions — keep only the most recent N versions per memory.
+   * @param {{maxVersions?: number, olderThan?: number, dryRun?: boolean}} opts
+   * @returns {Promise<{compacted: number, totalVersions: number, remainingVersions: number, details: Array}>}
+   */
+  async contentVersionCompact(opts = {}) {
+    await this.#ensureLoaded();
+    const maxVersions = opts.maxVersions ?? 10;
+    const olderThan = opts.olderThan ?? null; // timestamp ms, remove versions older than this
+    const dryRun = opts.dryRun ?? false;
+
+    let totalVersions = 0;
+    let compacted = 0;
+    let remainingVersions = 0;
+    const details = [];
+
+    for (const [id, snapshots] of this.#contentVersions) {
+      totalVersions += snapshots.length;
+      if (snapshots.length <= maxVersions && !olderThan) continue;
+
+      let toRemove = [];
+      if (olderThan) {
+        toRemove = snapshots.filter(s => s.ts < olderThan);
+      }
+      // Also trim to maxVersions (keep the newest)
+      if (snapshots.length - toRemove.length > maxVersions) {
+        const kept = snapshots.filter(s => !toRemove.includes(s));
+        const excess = kept.length - maxVersions;
+        if (excess > 0) {
+          toRemove.push(...kept.slice(0, excess)); // oldest first
+        }
+      }
+
+      if (toRemove.length > 0) {
+        compacted += toRemove.length;
+        details.push({ id, removed: toRemove.length, had: snapshots.length });
+        if (!dryRun) {
+          const keep = snapshots.filter(s => !toRemove.includes(s));
+          this.#contentVersions.set(id, keep);
+          this.#contentVersionsDirty = true;
+        }
+      }
+    }
+
+    remainingVersions = totalVersions - (dryRun ? 0 : compacted);
+    return { compacted, totalVersions, remainingVersions, details, dryRun };
+  }
+
+  /**
    * Search memories within a time range (by createdAt or updatedAt)
    * @param {{start?: number, end?: number, field?: 'createdAt'|'updatedAt', layer?: string, tags?: string[], limit?: number, offset?: number, sort?: 'asc'|'desc'}} opts
    * @returns {Promise<{total: number, results: object[]}>}
