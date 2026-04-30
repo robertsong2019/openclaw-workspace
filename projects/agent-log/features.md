@@ -15,7 +15,7 @@
 ### Search Enhancements
 - [ ] **F1**: `search` with regex support — allow `-r` flag for regex patterns
 - [ ] **F2**: `search` with file filtering — filter by date range or file type
-- [ ] **F3**: `search` with export — save results to file (`-o results.txt`)
+- [x] **F3**: `search` with export — save results to file (`-o results.txt`) ✅ 2026-04-30
 
 ### Timeline & Summary
 - [ ] **F4**: `summary` with keyword filtering — show only entries matching a pattern
@@ -28,7 +28,7 @@
 - [ ] **F9**: `find` command — find sessions by agent/model/date
 
 ### Output Formats
-- [ ] **F10**: JSON output mode — `-j` flag for structured output
+- [x] **F10**: JSON output mode — `-j` flag for structured output ✅ 2026-04-30
 - [ ] **F11**: CSV export — export stats/summary as CSV
 - [ ] **F12**: Markdown export — format output as Markdown
 

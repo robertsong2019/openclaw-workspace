@@ -4,6 +4,7 @@
 
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { readFile, writeFile, mkdir, readdir, stat, unlink, rmdir, rename, cp, glob } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { dirname, resolve, join } from "node:path";
 import { exec as execCb } from "node:child_process";
 import { promisify } from "node:util";
@@ -246,11 +247,12 @@ export const OPENCLAW_TOOLS: Tool[] = [
   },
   {
     name: "file_info",
-    description: "Get detailed metadata for a file or directory: size, type, timestamps, permissions.",
+    description: "Get detailed metadata for a file or directory: size, type, timestamps, permissions. Optionally compute SHA-256 hash.",
     inputSchema: {
       type: "object",
       properties: {
         path: { type: "string", description: "Path to the file or directory" },
+        computeHash: { type: "boolean", description: "Compute SHA-256 hash of file contents (files only, slower for large files)", default: false },
       },
       required: ["path"],
     },
@@ -584,7 +586,7 @@ async function executeCreateDirectory(args: any): Promise<any> {
 }
 
 async function executeFileInfo(args: any): Promise<any> {
-  const { path } = args;
+  const { path, computeHash = false } = args;
   const resolved = safePath(path);
   let s;
   try {
@@ -592,7 +594,7 @@ async function executeFileInfo(args: any): Promise<any> {
   } catch {
     return { tool: "file_info", path, success: false, error: "File not found" };
   }
-  return {
+  const result: any = {
     tool: "file_info",
     path,
     success: true,
@@ -604,6 +606,11 @@ async function executeFileInfo(args: any): Promise<any> {
     accessed: s.atime.toISOString(),
     permissions: s.mode.toString(8).slice(-3),
   };
+  if (computeHash && s.isFile()) {
+    const content = await readFile(resolved);
+    result.sha256 = createHash("sha256").update(content).digest("hex");
+  }
+  return result;
 }
 
 async function executeFindFiles(args: any): Promise<any> {

@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import { mkdir, writeFile, stat } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { setWorkspaceRoot } from "../dist/tools.js";
 
 const TEST_DIR = "/tmp/mcp-file-info-test";
@@ -49,6 +50,35 @@ describe("file_info", () => {
     const result = await toolHandlers.file_info({ path: "big.txt" });
     assert.equal(result.size, 2048);
     assert.match(result.sizeHuman, /KB/);
+  });
+
+  it("should compute SHA-256 hash when computeHash is true", async () => {
+    const { toolHandlers } = await import("../dist/tools.js");
+    const content = "hash me please";
+    await writeFile(join(TEST_DIR, "hashme.txt"), content);
+    const expected = createHash("sha256").update(content).digest("hex");
+
+    const result = await toolHandlers.file_info({ path: "hashme.txt", computeHash: true });
+    assert.equal(result.success, true);
+    assert.equal(result.sha256, expected);
+    assert.equal(result.sha256.length, 64);
+  });
+
+  it("should not compute hash by default", async () => {
+    const { toolHandlers } = await import("../dist/tools.js");
+    await writeFile(join(TEST_DIR, "nohash.txt"), "content");
+    const result = await toolHandlers.file_info({ path: "nohash.txt" });
+    assert.equal(result.success, true);
+    assert.equal(result.sha256, undefined);
+  });
+
+  it("should not compute hash for directories even if requested", async () => {
+    const { toolHandlers } = await import("../dist/tools.js");
+    await mkdir(join(TEST_DIR, "hashdir"), { recursive: true });
+    const result = await toolHandlers.file_info({ path: "hashdir", computeHash: true });
+    assert.equal(result.success, true);
+    assert.equal(result.type, "directory");
+    assert.equal(result.sha256, undefined);
   });
 
   it("should reject path traversal", async () => {
