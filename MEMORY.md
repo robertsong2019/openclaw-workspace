@@ -18,33 +18,33 @@
 ## Current Focus (2026-04-29)
 
 ### Active Theme
-Autoresearch 方法论实践 - **连续24天零回滚率**。AMS 达 **583 tests**。04-29晚: Opinion Network → 569。04-30凌晨: contentVersions持久化(574)+mergeSuggestions多信号去重(583)。
+Autoresearch 方法论实践 - **连续25天零回滚率**。AMS 达 **594 tests**。04-29晚: Opinion Network → 569。04-30凌晨: contentVersions持久化(574)+mergeSuggestions多信号去重(583)。04-30晚: autoMerge端到端去重(589)+contentVersionCompact(594)。
 
 ### Next Actions
-- [ ] **AMS 升级: Hindsight 风格四网络 + 图遍历检索** — 基于 [研究笔记](catalyst-research/exploration-notes/2026-04-26-hindsight-multi-strategy-memory.md)
+- [ ] **AMS 升级: Hindsight 风格四网络 + 图遍历检索** - 基于 [研究笔记](catalyst-research/exploration-notes/2026-04-26-hindsight-multi-strategy-memory.md)
   - Phase 1: ~~classifyFact + searchByFactType + statsByFactType + reclassifyFact + bulkReclassify~~ ✅ 完成
   - Phase 2: ~~searchGraph() 基于 entity_index 多跳遍历~~ ✅ 完成 (04-28)
   - Phase 3: ~~searchTemporal() 时间衰减 + 范围过滤~~ ✅ 完成 (04-28)
-  - Phase 4: ~~Opinion 网络带 confidence，新证据驱动置信度演化~~ ✅ 完成 (04-29晚: 6 APIs, 29 new tests)
+  - Phase 4: ~~Opinion 网络带 confidence,新证据驱动置信度演化~~ ✅ 完成 (04-29晚: 6 APIs, 29 new tests)
   - Phase 5: contentVersions 持久化 + mergeSuggestions 智能去重 ✅ 完成 (04-30: +14 tests)
   - Phase 6 待定: autoMerge 端到端去重 / contentVersionCompact / embedding相似度信号
-- [ ] **实现 Hindsight Mini 原型** — `lab/hindsight-mini/` 验证四网络 + 四路检索(代码已在研究笔记中验证通过)
-- [ ] **OpenClaw MCP Server MVP** — TypeScript SDK v2 + Streamable HTTP，3 tools (exec/memory_search/memory_get)
+- [ ] **实现 Hindsight Mini 原型** - `lab/hindsight-mini/` 验证四网络 + 四路检索(代码已在研究笔记中验证通过)
+- [ ] **OpenClaw MCP Server MVP** - TypeScript SDK v2 + Streamable HTTP,3 tools (exec/memory_search/memory_get)
   - [研究笔记 v3](catalyst-research/exploration-notes/2026-04-29-mcp-server-typescript-streamable-http.md) ✅ 完整代码(3-tool server+client+Inspector调试)
-  - [研究笔记 v2](catalyst-research/exploration-notes/2026-04-29-mcp-server-streamable-http.md) ✅ 完整代码+curl测试（2026-04-29）
+  - [研究笔记 v2](catalyst-research/exploration-notes/2026-04-29-mcp-server-streamable-http.md) ✅ 完整代码+curl测试(2026-04-29)
   - [研究笔记 v1](catalyst-research/exploration-notes/2026-04-28-mcp-server-typescript-v2.md) ✅ 代码已验证(echo+add tools)
   - **关键洞察**: Streamable HTTP 单端点(/mcp) 替代旧 SSE; McpServer.tool() + Zod 自动生成 schema; 会话管理需 Express 层维护 sessionId→transport 映射; MCP Inspector 是调试利器
   - **实施路径**: Phase1 MVP(3 tools) → Phase2 Resources+Prompts → Phase3 Bearer auth+Docker → Phase4 sampling/elicitation
   - **下一步**: 创建 lab/openclaw-mcp-server/ → 用 McpServer 高层 API 实现 → MCP Inspector 验证
 - [ ] **A2A Trust Extension 实现模块** - `lab/a2a-trust-extension/` Python 模块,集成 a2a_minimal + 信任扩展([研究笔记](catalyst-research/exploration-notes/2026-04-25-a2a-agent-trust-integration.md))
 - [ ] **桥接 TypeScript TrustNetwork → Python TrustEngine** - 跨语言信任数据一致
-- [ ] 初始化 openclaw-mcp-server 项目 — 合并到上方 MCP Server MVP 任务
-- [x] **LangGraph Supervisor 研究** — [研究笔记](catalyst-research/exploration-notes/2026-04-27-langgraph-supervisor-openclaw.md) ✅ 代码已验证通过（Supervisor pattern + conditional routing）
-- [ ] 实现 `openclaw-langgraph-bridge` 模块 — **已转向 LangGraph.js (TypeScript)** 避免引入 Python 依赖
-  - **关键发现**: LangGraph.js v1.2.9 in-process > Python out-of-process，零额外运行时
-  - Step 1: `createOpenClawNode()` 工厂函数，包装 sessions_spawn 为 LangGraph.js async node
-  - Step 2: Supervisor router（纯函数优先，需要时升级 LLM 路由）
-  - Step 3: 核心难题 = 子代理结果解析（推荐 JSON mode 输出）
+- [ ] 初始化 openclaw-mcp-server 项目 - 合并到上方 MCP Server MVP 任务
+- [x] **LangGraph Supervisor 研究** - [研究笔记](catalyst-research/exploration-notes/2026-04-27-langgraph-supervisor-openclaw.md) ✅ 代码已验证通过(Supervisor pattern + conditional routing)
+- [ ] 实现 `openclaw-langgraph-bridge` 模块 - **已转向 LangGraph.js (TypeScript)** 避免引入 Python 依赖
+  - **关键发现**: LangGraph.js v1.2.9 in-process > Python out-of-process,零额外运行时
+  - Step 1: `createOpenClawNode()` 工厂函数,包装 sessions_spawn 为 LangGraph.js async node
+  - Step 2: Supervisor router(纯函数优先,需要时升级 LLM 路由)
+  - Step 3: 核心难题 = 子代理结果解析(推荐 JSON mode 输出)
   - [JS 研究笔记](catalyst-research/exploration-notes/2026-04-28-langgraphjs-supervisor-openclaw-bridge.md) ✅ 代码已验证
   - [Python 研究笔记](catalyst-research/exploration-notes/2026-04-27-langgraph-supervisor-openclaw.md) (参考)
 - [x] ~~AMS: searchByTimeRange(opts), contentRollback(id, versionIndex)~~ ✅ 完成 (04-27)
@@ -60,7 +60,7 @@ Autoresearch 方法论实践 - **连续24天零回滚率**。AMS 达 **583 tests
 7. **agent-log** - OpenClaw 日志搜索/汇总 CLI (✅ 单文件 Bash,零依赖)
 8. **ctxgen** - AI 上下文文件生成器 (✅ v1.0, 纯Node.js零依赖, 支持4种目标格式)
 9. **tiny-agent-workshop** - 单文件 Agent 模式教学集 (✅ 7个模式: ReAct/ToolCall/Memory/Router/Guardrail/Chain/EdgeAgent)
-10. **Agent Memory Service** - Mem0风格Agent记忆管理 (✅ v1.0-dev, 583/583 tests, 三层存储+LLM提取+语义检索+Consolidation+变更追踪+自监控+搜索三阶段(BM25+Embedding+Unified RRF)+suggestTags()+healthScore()+autoMaintain()+searchSimilar()+findDuplicatePairs()+exportJSON/importJSON()+pruneLowWeight()+inspect()+clusterByTopic()+summarizeCluster()+compareMemories()+tagHierarchy()+rebalance()+autoTag()+mergeClusters()+clusterHealth()+searchByEntity()+topEntities()+tagSearch()+memoryDiff()+clusterAutoMerge()+contentHistory()+contentVersionDiff()+searchByTimeRange()+contentRollback()+classifyFact()+searchByFactType()+statsByFactType()+reclassifyFact()+bulkReclassify()+searchByContent()+contentBranch()+searchGraph()+searchTemporal()+memoryMerge()+searchByBranch()+bulkMerge()+addOpinion()+searchOpinions()+evolveConfidence()+opinionConsensus()+opinionDrift()+opinionEvolveFromEvidence()+contentVersions持久化+mergeSuggestions())
+10. **Agent Memory Service** - Mem0风格Agent记忆管理 (✅ v1.0-dev, 594/594 tests, 三层存储+LLM提取+语义检索+Consolidation+变更追踪+自监控+搜索三阶段(BM25+Embedding+Unified RRF)+suggestTags()+healthScore()+autoMaintain()+searchSimilar()+findDuplicatePairs()+exportJSON/importJSON()+pruneLowWeight()+inspect()+clusterByTopic()+summarizeCluster()+compareMemories()+tagHierarchy()+rebalance()+autoTag()+mergeClusters()+clusterHealth()+searchByEntity()+topEntities()+tagSearch()+memoryDiff()+clusterAutoMerge()+contentHistory()+contentVersionDiff()+searchByTimeRange()+contentRollback()+classifyFact()+searchByFactType()+statsByFactType()+reclassifyFact()+bulkReclassify()+searchByContent()+contentBranch()+searchGraph()+searchTemporal()+memoryMerge()+searchByBranch()+bulkMerge()+addOpinion()+searchOpinions()+evolveConfidence()+opinionConsensus()+opinionDrift()+opinionEvolveFromEvidence()+contentVersions持久化+mergeSuggestions())
 11. **A2A Protocol Lab** - Agent-to-Agent通信协议实验 (✅ 零依赖Python实现, Server+Client+Federation Demo)
 
 ---
@@ -82,7 +82,7 @@ Autoresearch 方法论实践 - **连续24天零回滚率**。AMS 达 **583 tests
   - [研究笔记 04-26](catalyst-research/exploration-notes/2026-04-26-langgraph-supervisor-bridge-openclaw.md) ✅
   - [研究笔记 04-27](catalyst-research/exploration-notes/2026-04-27-langgraph-supervisor-openclaw.md) ✅ 代码已验证通过
   - **核心洞察**: LangGraph=编排层(状态图+路由), OpenClaw=执行层(sessions_spawn+channel集成)
-  - **新发现**: Deep Agents (deepagents) — 开箱即用 Agent Harness, MCP 集成, trust-the-LLM
+  - **新发现**: Deep Agents (deepagents) - 开箱即用 Agent Harness, MCP 集成, trust-the-LLM
   - 下一步: 实现 `lab/openclaw-langgraph-bridge/` 模块
 
 ### Medium Priority (本月完成)
@@ -188,18 +188,18 @@ curl -X POST "https://api.tavily.com/search" \
 ## Recent Achievements
 
 ### 2026-04-30
-- ✅ **Agent Memory Service v1.0-dev 续升** - 569→583 tests (+14)
-  - **contentVersions持久化**: JSON sidecar文件,重启后版本历史保留,dirty flag减少I/O, 5 tests
-  - **mergeSuggestions(opts)**: 多信号去重候选发现(content ngram 50%+entity 30%+tags 20%),explainability reasons,建议合并策略, 9 tests
-  - 去重管道完整: mergeSuggestions(发现) → bulkMerge(执行)
-  - 零回滚率持续保持(连续24天)
+- ✅ **Agent Memory Service v1.0-dev 续升** — 583→594 tests (+11)
+  - **autoMerge(opts)**: 端到端自动去重(mergeSuggestions→ID dedup→bulkMerge), minScore/maxMerges/dryRun/layer, 6 tests
+  - **contentVersionCompact(opts)**: 压缩旧内容版本(maxVersions+olderThan+dryRun), 5 tests
+  - 去重管道完整: mergeSuggestions(发现) → autoMerge(执行) → contentVersionCompact(清理)
+  - 零回滚率持续保持(连续25天)
 
 ### 2026-04-29
 - ✅ **Agent Memory Service v1.0-dev 续升** - 499→569 tests (+70)
-  - **memoryMerge(id1, id2, opts)**: 冲突合并，4种content策略+tag策略+entity union+link rewiring，10 tests
-  - **searchByBranch(id, opts)**: BFS分支遍历，支持depth限制+includeSelf，6 tests
-  - **bulkMerge(pairs, opts)**: 批量合并，顺序执行+错误处理，5 tests
-  - **Hindsight Phase 4 — Opinion Network** (04-29晚, 29 new tests):
+  - **memoryMerge(id1, id2, opts)**: 冲突合并,4种content策略+tag策略+entity union+link rewiring,10 tests
+  - **searchByBranch(id, opts)**: BFS分支遍历,支持depth限制+includeSelf,6 tests
+  - **bulkMerge(pairs, opts)**: 批量合并,顺序执行+错误处理,5 tests
+  - **Hindsight Phase 4 - Opinion Network** (04-29晚, 29 new tests):
     - **addOpinion(topic, content, opts)**: 带confidence和topic的opinion记忆, 4 tests
     - **searchOpinions(topic, opts)**: topic过滤+confidence排序+minConfidence/limit, 5 tests
     - **evolveConfidence(id, delta, opts)**: 证据驱动的confidence演化+历史追踪, 7 tests
@@ -212,22 +212,22 @@ curl -X POST "https://api.tavily.com/search" \
 
 ### 2026-04-28
 - ✅ **Agent Memory Service v1.0-dev 续升** - 481→519 tests (+38)
-  - **searchGraph(startEntity, opts)**: entity_index多跳BFS图遍历，10 tests
-  - **searchTemporal(opts)**: 时间衰减搜索，7 tests
+  - **searchGraph(startEntity, opts)**: entity_index多跳BFS图遍历,10 tests
+  - **searchTemporal(opts)**: 时间衰减搜索,7 tests
   - 搜索API全景: 9路检索
   - **agent-task-cli StreamManager**: 15 tests (344→359)
   - 零回滚率持续保持(连续22天)
-- ✅ **Agent Pipeline 代码实验室 x4 cycles** — 7→67 tests (+60)
+- ✅ **Agent Pipeline 代码实验室 x4 cycles** - 7→67 tests (+60)
   - **cycle1**: retry + continue_on_error + validate() + to_dict/from_dict 序列化 (+49)
   - **cycle2**: run_batch 批量执行 + insert_step/remove_step 步骤管理 (+5)
-  - **cycle3**: conditional step execution — lambda条件跳过步骤 (+3)
+  - **cycle3**: conditional step execution - lambda条件跳过步骤 (+3)
   - **cycle4**: pipeline merge 组合 + step_count 属性 (+3)
   - 1286→1394 lines, 零回滚, 4/4 cycles keep
 
 ### 2026-04-27
 - ✅ **Agent Memory Service v1.0-dev 续升** - 445→481 tests (+36)
-  - **searchByTimeRange(opts)**: 时间范围查询，支持任意数值字段、layer/tag过滤、排序、分页，11 tests
-  - **contentRollback(id, versionIndex)**: 内容版本回滚，复用 update() 的自动快照机制，7 tests
+  - **searchByTimeRange(opts)**: 时间范围查询,支持任意数值字段、layer/tag过滤、排序、分页,11 tests
+  - **contentRollback(id, versionIndex)**: 内容版本回滚,复用 update() 的自动快照机制,7 tests
   - 内容版本化三部曲完成: view(contentHistory) → compare(contentVersionDiff) → restore(contentRollback)
   - **Hindsight Phase 1**: classifyFact + searchByFactType + statsByFactType + reclassifyFact + bulkReclassify → +18 tests
   - **agent-task-cli**: Cache resetStats + entries → 331→335 tests (+4)
@@ -236,10 +236,10 @@ curl -X POST "https://api.tavily.com/search" \
 ### 2026-04-26
 - ✅ **Hindsight 多策略记忆架构深度研究** - SOTA Agent Memory (LongMemEval 91.4%)([笔记](catalyst-research/exploration-notes/2026-04-26-hindsight-multi-strategy-memory.md))
   - **核心发现**: 四网络(world/experience/opinion/observation)事实观点分离 + 四路检索(semantic/BM25/graph/temporal) + RRF融合 + 行为配置(skepticism/empathy)
-  - **可运行代码**: HindsightMini 零依赖原型，四网络 + 四路并行检索 + 观点演化，`/tmp` 验证通过
-  - **关键洞察**: 事实/观点分离是 Agent 记忆缺失拼图；四路检索比三路强；行为参数让 Agent 有性格
+  - **可运行代码**: HindsightMini 零依赖原型,四网络 + 四路并行检索 + 观点演化,`/tmp` 验证通过
+  - **关键洞察**: 事实/观点分离是 Agent 记忆缺失拼图;四路检索比三路强;行为参数让 Agent 有性格
   - **项目关联**: AMS 可直接升级四网络分类 + searchGraph() + searchTemporal()
-- ✅ **Autoresearch 实验循环 x4** — 连续19天零回滚率
+- ✅ **Autoresearch 实验循环 x4** - 连续19天零回滚率
   - **prompt-weaver**: validate() + dry_run() + merge() + weave_chain() → 118 tests (+18)
     - validate(): 管道完整性检查(errors/warnings/unreachable)
     - dry_run(): 无副作用的执行路径追踪
