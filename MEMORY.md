@@ -18,7 +18,7 @@
 ## Current Focus (2026-04-29)
 
 ### Active Theme
-Autoresearch 方法论实践 - **连续23天零回滚率**。AMS 达 **569 tests**。04-28: searchGraph+searchTemporal → 519。04-29凌晨: memoryMerge+searchByBranch+bulkMerge → 540。04-29晚: Hindsight Phase 4 — addOpinion+searchOpinions+evolveConfidence+opinionConsensus+opinionDrift+opinionEvolveFromEvidence → 569 (+29 tests, 3 cycles)。
+Autoresearch 方法论实践 - **连续24天零回滚率**。AMS 达 **583 tests**。04-29晚: Opinion Network → 569。04-30凌晨: contentVersions持久化(574)+mergeSuggestions多信号去重(583)。
 
 ### Next Actions
 - [ ] **AMS 升级: Hindsight 风格四网络 + 图遍历检索** — 基于 [研究笔记](catalyst-research/exploration-notes/2026-04-26-hindsight-multi-strategy-memory.md)
@@ -26,6 +26,8 @@ Autoresearch 方法论实践 - **连续23天零回滚率**。AMS 达 **569 tests
   - Phase 2: ~~searchGraph() 基于 entity_index 多跳遍历~~ ✅ 完成 (04-28)
   - Phase 3: ~~searchTemporal() 时间衰减 + 范围过滤~~ ✅ 完成 (04-28)
   - Phase 4: ~~Opinion 网络带 confidence，新证据驱动置信度演化~~ ✅ 完成 (04-29晚: 6 APIs, 29 new tests)
+  - Phase 5: contentVersions 持久化 + mergeSuggestions 智能去重 ✅ 完成 (04-30: +14 tests)
+  - Phase 6 待定: autoMerge 端到端去重 / contentVersionCompact / embedding相似度信号
 - [ ] **实现 Hindsight Mini 原型** — `lab/hindsight-mini/` 验证四网络 + 四路检索(代码已在研究笔记中验证通过)
 - [ ] **OpenClaw MCP Server MVP** — TypeScript SDK v2 + Streamable HTTP，3 tools (exec/memory_search/memory_get)
   - [研究笔记 v3](catalyst-research/exploration-notes/2026-04-29-mcp-server-typescript-streamable-http.md) ✅ 完整代码(3-tool server+client+Inspector调试)
@@ -58,7 +60,7 @@ Autoresearch 方法论实践 - **连续23天零回滚率**。AMS 达 **569 tests
 7. **agent-log** - OpenClaw 日志搜索/汇总 CLI (✅ 单文件 Bash,零依赖)
 8. **ctxgen** - AI 上下文文件生成器 (✅ v1.0, 纯Node.js零依赖, 支持4种目标格式)
 9. **tiny-agent-workshop** - 单文件 Agent 模式教学集 (✅ 7个模式: ReAct/ToolCall/Memory/Router/Guardrail/Chain/EdgeAgent)
-10. **Agent Memory Service** - Mem0风格Agent记忆管理 (✅ v1.0-dev, 569/569 tests, 三层存储+LLM提取+语义检索+Consolidation+变更追踪+自监控+搜索三阶段(BM25+Embedding+Unified RRF)+suggestTags()+healthScore()+autoMaintain()+searchSimilar()+findDuplicatePairs()+exportJSON/importJSON()+pruneLowWeight()+inspect()+clusterByTopic()+summarizeCluster()+compareMemories()+tagHierarchy()+rebalance()+autoTag()+mergeClusters()+clusterHealth()+searchByEntity()+topEntities()+tagSearch()+memoryDiff()+clusterAutoMerge()+contentHistory()+contentVersionDiff()+searchByTimeRange()+contentRollback()+classifyFact()+searchByFactType()+statsByFactType()+reclassifyFact()+bulkReclassify()+searchByContent()+contentBranch()+searchGraph()+searchTemporal()+memoryMerge()+searchByBranch()+bulkMerge()+addOpinion()+searchOpinions()+evolveConfidence()+opinionConsensus()+opinionDrift()+opinionEvolveFromEvidence())
+10. **Agent Memory Service** - Mem0风格Agent记忆管理 (✅ v1.0-dev, 583/583 tests, 三层存储+LLM提取+语义检索+Consolidation+变更追踪+自监控+搜索三阶段(BM25+Embedding+Unified RRF)+suggestTags()+healthScore()+autoMaintain()+searchSimilar()+findDuplicatePairs()+exportJSON/importJSON()+pruneLowWeight()+inspect()+clusterByTopic()+summarizeCluster()+compareMemories()+tagHierarchy()+rebalance()+autoTag()+mergeClusters()+clusterHealth()+searchByEntity()+topEntities()+tagSearch()+memoryDiff()+clusterAutoMerge()+contentHistory()+contentVersionDiff()+searchByTimeRange()+contentRollback()+classifyFact()+searchByFactType()+statsByFactType()+reclassifyFact()+bulkReclassify()+searchByContent()+contentBranch()+searchGraph()+searchTemporal()+memoryMerge()+searchByBranch()+bulkMerge()+addOpinion()+searchOpinions()+evolveConfidence()+opinionConsensus()+opinionDrift()+opinionEvolveFromEvidence()+contentVersions持久化+mergeSuggestions())
 11. **A2A Protocol Lab** - Agent-to-Agent通信协议实验 (✅ 零依赖Python实现, Server+Client+Federation Demo)
 
 ---
@@ -184,6 +186,13 @@ curl -X POST "https://api.tavily.com/search" \
 ---
 
 ## Recent Achievements
+
+### 2026-04-30
+- ✅ **Agent Memory Service v1.0-dev 续升** - 569→583 tests (+14)
+  - **contentVersions持久化**: JSON sidecar文件,重启后版本历史保留,dirty flag减少I/O, 5 tests
+  - **mergeSuggestions(opts)**: 多信号去重候选发现(content ngram 50%+entity 30%+tags 20%),explainability reasons,建议合并策略, 9 tests
+  - 去重管道完整: mergeSuggestions(发现) → bulkMerge(执行)
+  - 零回滚率持续保持(连续24天)
 
 ### 2026-04-29
 - ✅ **Agent Memory Service v1.0-dev 续升** - 499→569 tests (+70)
@@ -457,5 +466,5 @@ curl -X POST "https://api.tavily.com/search" \
 
 ---
 
-*Last updated: 2026-04-29 19:30*
-*Next review: 2026-04-30*
+*Last updated: 2026-04-30 02:00*
+*Next review: 2026-05-01*

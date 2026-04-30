@@ -4635,6 +4635,56 @@ export class MemoryService {
     return { topic, evidence, evolved: evolved.length, opinions: evolved };
   }
 
+  async autoMerge(opts = {}) {
+    await this.#ensureLoaded();
+    const minScore = opts.minScore ?? 0.5;
+    const maxMerges = opts.maxMerges ?? 10;
+    const dryRun = opts.dryRun ?? false;
+
+    const suggestions = await this.mergeSuggestions({
+      minScore,
+      limit: maxMerges * 2, // get extras in case some fail
+      layer: opts.layer,
+    });
+
+    if (suggestions.length === 0) {
+      return { merged: 0, failed: 0, skipped: 0, suggestions: [], dryRun };
+    }
+
+    // Deduplicate: each id should only appear once
+    const used = new Set();
+    const pairs = [];
+    for (const s of suggestions) {
+      if (used.has(s.id1) || used.has(s.id2)) continue;
+      used.add(s.id1);
+      used.add(s.id2);
+      pairs.push({ pair: [s.id1, s.id2], score: s.score, reasons: s.reasons, strategy: s.suggestedStrategy });
+      if (pairs.length >= maxMerges) break;
+    }
+
+    if (dryRun) {
+      return { merged: 0, failed: 0, skipped: suggestions.length - pairs.length, pairs, dryRun: true };
+    }
+
+    const mergeOpts = {};
+    if (pairs.length > 0 && pairs[0].strategy) {
+      mergeOpts.contentStrategy = pairs[0].strategy.content;
+      mergeOpts.tagStrategy = pairs[0].strategy.tags;
+    }
+
+    const result = await this.bulkMerge(
+      pairs.map(p => p.pair),
+      mergeOpts
+    );
+
+    return {
+      ...result,
+      skipped: suggestions.length - pairs.length,
+      pairs,
+      dryRun: false,
+    };
+  }
+
   async bulkMerge(pairs, opts = {}) {
     await this.#ensureLoaded();
     const results = [];
