@@ -4409,6 +4409,50 @@ export class MemoryService {
   }
 
   /**
+   * Compare a branch memory back to its source — content diff, tag/entity deltas, similarity.
+   * @param {string} id - Branch memory ID
+   * @returns {Promise<object|null>} { branch, source, content: { similarity, branchLength, sourceLength, diff }, tags: { added, removed, common }, entities: { added, removed, common } } or null
+   */
+  async branchDiff(id) {
+    await this.#ensureLoaded();
+    const branch = this.#store.get(id);
+    if (!branch) return null;
+    // Find source via derived_from link (branch→source direction)
+    const links = await this.getLinks(id);
+    const derivedLink = links.find(l => l.type === 'derived_from' && l.source === id);
+    if (!derivedLink) return null;
+    const sourceId = derivedLink.target;
+    const source = this.#store.get(sourceId);
+    if (!source) return null;
+
+    const branchTags = new Set(branch.tags);
+    const sourceTags = new Set(source.tags);
+    const branchEnts = new Set(branch.entities);
+    const sourceEnts = new Set(source.entities);
+
+    return {
+      branch: { id, content: branch.content, tags: branch.tags, entities: branch.entities },
+      source: { id: sourceId, content: source.content, tags: source.tags, entities: source.entities },
+      content: {
+        similarity: ngramSimilarity(branch.content, source.content),
+        branchLength: branch.content.length,
+        sourceLength: source.content.length,
+        diff: branch.content === source.content ? 'identical' : 'modified',
+      },
+      tags: {
+        added: [...branchTags].filter(t => !sourceTags.has(t)),
+        removed: [...sourceTags].filter(t => !branchTags.has(t)),
+        common: [...branchTags].filter(t => sourceTags.has(t)),
+      },
+      entities: {
+        added: [...branchEnts].filter(e => !sourceEnts.has(e)),
+        removed: [...sourceEnts].filter(e => !branchEnts.has(e)),
+        common: [...branchEnts].filter(e => sourceEnts.has(e)),
+      },
+    };
+  }
+
+  /**
    * Merge two memories into one with conflict resolution.
    * @param {string} id1 - Primary memory (kept)
    * @param {string} id2 - Secondary memory (deleted after merge)
