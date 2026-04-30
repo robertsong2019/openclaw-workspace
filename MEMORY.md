@@ -35,7 +35,12 @@ Autoresearch 方法论实践 - **连续25天零回滚率**。AMS 达 **594 tests
   - [研究笔记 v1](catalyst-research/exploration-notes/2026-04-28-mcp-server-typescript-v2.md) ✅ 代码已验证(echo+add tools)
   - **关键洞察**: Streamable HTTP 单端点(/mcp) 替代旧 SSE; McpServer.tool() + Zod 自动生成 schema; 会话管理需 Express 层维护 sessionId→transport 映射; MCP Inspector 是调试利器
   - **实施路径**: Phase1 MVP(3 tools) → Phase2 Resources+Prompts → Phase3 Bearer auth+Docker → Phase4 sampling/elicitation
+  - [研究笔记 v4](catalyst-research/exploration-notes/2026-04-30-mcp-server-streamable-http.md) ✅ 完整 MVP 代码(3 tools+1 resource+1 prompt, SDK v2 monorepo 包结构)
   - **下一步**: 创建 lab/openclaw-mcp-server/ → 用 McpServer 高层 API 实现 → MCP Inspector 验证
+  - **v4 新发现**: SDK v2 拆分为 @mcp/server + @mcp/node + @mcp/express; registerTool() 取代旧 tool() API; 有状态/无状态模式选择影响部署架构; 2026路线图有 Triggers/Tasks/Skills 原语
+  - [研究笔记 v5](catalyst-research/exploration-notes/2026-04-30-mcp-server-typescript.md) ✅ **代码已验证通过** (4个API测试全部PASS)
+    - Stateful vs Stateless 模式对比; DNS rebinding 防护; Streamable HTTP Accept header 要求
+    - **关键修正**: curl 测试必须带 `Accept: application/json, text/event-stream` header
 - [ ] **A2A Trust Extension 实现模块** - `lab/a2a-trust-extension/` Python 模块,集成 a2a_minimal + 信任扩展([研究笔记](catalyst-research/exploration-notes/2026-04-25-a2a-agent-trust-integration.md))
 - [ ] **桥接 TypeScript TrustNetwork → Python TrustEngine** - 跨语言信任数据一致
 - [ ] 初始化 openclaw-mcp-server 项目 - 合并到上方 MCP Server MVP 任务

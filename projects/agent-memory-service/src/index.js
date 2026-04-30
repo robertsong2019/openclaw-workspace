@@ -4683,6 +4683,157 @@ export class MemoryService {
     return { topic, evidence, evolved: evolved.length, opinions: evolved };
   }
 
+  /**
+   * Preview what merging two memories would produce without executing.
+   * @param {string} id1 - Primary memory ID (keeper)
+   * @param {string} id2 - Secondary memory ID (absorbed)
+   * @param {{contentStrategy?: string, tagStrategy?: string}} opts
+   * @returns {Promise<{primary: Memory, secondary: Memory, preview: {content: string, tags: string[], entities: string[], layer: string, weight: number}, conflicts: {uniqueEntities1: string[], uniqueEntities2: string[], uniqueTags1: string[], uniqueTags2: string[], contentOverlap: number}, risk: number}|null>}
+   */
+  async mergePreview(id1, id2, opts = {}) {
+    await this.#ensureLoaded();
+    const primary = this.#store.get(id1);
+    const secondary = this.#store.get(id2);
+    if (!primary || !secondary) return null;
+    if (id1 === id2) return null;
+
+    const contentStrategy = opts.contentStrategy || 'concat';
+    const tagStrategy = opts.tagStrategy || 'union';
+
+    // Resolve content preview
+    let content;
+    switch (contentStrategy) {
+      case 'keep-longer':
+        content = primary.content.length >= secondary.content.length ? primary.content : secondary.content;
+        break;
+      case 'keep-newer':
+        content = primary.updatedAt >= secondary.updatedAt ? primary.content : secondary.content;
+        break;
+      default:
+        content = primary.content + '\n' + secondary.content;
+    }
+
+    // Resolve tags preview
+    let tags;
+    switch (tagStrategy) {
+      case 'primary': tags = [...primary.tags]; break;
+      case 'secondary': tags = [...secondary.tags]; break;
+      default: tags = [...new Set([...primary.tags, ...secondary.tags])];
+    }
+
+    // Entities always union
+    const entities = [...new Set([...primary.entities, ...secondary.entities])];
+
+    // Detect conflicts: unique items in each side
+    const primaryEntitySet = new Set(primary.entities);
+    const secondaryEntitySet = new Set(secondary.entities);
+    const primaryTagSet = new Set(primary.tags);
+    const secondaryTagSet = new Set(secondary.tags);
+
+    const uniqueEntities1 = primary.entities.filter(e => !secondaryEntitySet.has(e));
+    const uniqueEntities2 = secondary.entities.filter(e => !primaryEntitySet.has(e));
+    const uniqueTags1 = primary.tags.filter(t => !secondaryTagSet.has(t));
+    const uniqueTags2 = secondary.tags.filter(t => !primaryTagSet.has(t));
+
+    // Content overlap: simple word-level Jaccard
+    const words1 = new Set(primary.content.toLowerCase().split(/\s+/));
+    const words2 = new Set(secondary.content.toLowerCase().split(/\s+/));
+    const intersection = [...words1].filter(w => words2.has(w)).length;
+    const union = new Set([...words1, ...words2]).size;
+    const contentOverlap = union > 0 ? intersection / union : 0;
+
+    // Risk score: 0 (safe) to 1 (risky)
+    // Factors: low overlap = different content = riskier merge
+    //          more unique items = more information could be lost context
+    const uniqueRatio = (uniqueEntities1.length + uniqueEntities2.length + uniqueTags1.length + uniqueTags2.length)
+      / Math.max(1, entities.length + tags.length);
+    const risk = Math.min(1, (1 - contentOverlap) * 0.6 + uniqueRatio * 0.4);
+
+    return {
+      primary: { id: primary.id, content: primary.content, tags: primary.tags, entities: primary.entities, weight: primary.weight, layer: primary.layer },
+      secondary: { id: secondary.id, content: secondary.content, tags: secondary.tags, entities: secondary.entities, weight: secondary.weight, layer: secondary.layer },
+      preview: { content, tags, entities, layer: primary.layer, weight: Math.max(primary.weight, secondary.weight) },
+      conflicts: { uniqueEntities1, uniqueEntities2, uniqueTags1, uniqueTags2, contentOverlap: Math.round(contentOverlap * 1000) / 1000 },
+      risk: Math.round(risk * 1000) / 1000,
+    };
+  }
+
+  /**
+   * Summarize conflicts across multiple merge candidates.
+   * @param {Array<{id1: string, id2: string}>} pairs
+   * @returns {Promise<{summaries: Array, safeCount: number, riskyCount: number, avgRisk: number}>}
+   */
+  /**
+   * Auto-merge only safe pairs (risk < threshold). Uses mergePreview to assess risk.
+   * @param {{minScore?: number, maxRisk?: number, maxMerges?: number, layer?: string}} opts
+   * @returns {Promise<{merged: number, skipped: number, risky: number, details: Array}>}
+   */
+  async safeMerge(opts = {}) {
+    const maxRisk = opts.maxRisk ?? 0.5;
+    const maxMerges = opts.maxMerges ?? 10;
+
+    const suggestions = await this.mergeSuggestions({
+      minScore: opts.minScore ?? 0.5,
+      limit: maxMerges * 3,
+      layer: opts.layer,
+    });
+
+    if (suggestions.length === 0) return { merged: 0, skipped: 0, risky: 0, details: [] };
+
+    const safe = [];
+    const risky = [];
+    const used = new Set();
+
+    for (const s of suggestions) {
+      if (used.has(s.id1) || used.has(s.id2)) continue;
+      const preview = await this.mergePreview(s.id1, s.id2);
+      if (!preview) continue;
+      if (preview.risk < maxRisk && safe.length < maxMerges) {
+        safe.push({ pair: [s.id1, s.id2], risk: preview.risk, score: s.score });
+        used.add(s.id1);
+        used.add(s.id2);
+      } else {
+        risky.push({ id1: s.id1, id2: s.id2, risk: preview.risk });
+      }
+    }
+
+    if (safe.length === 0) return { merged: 0, skipped: suggestions.length, risky: risky.length, details: [] };
+
+    const result = await this.bulkMerge(safe.map(s => s.pair));
+    return {
+      ...result,
+      risky: risky.length,
+      details: safe.map(s => ({ pair: s.pair, risk: s.risk, score: s.score })),
+    };
+  }
+
+  async mergeConflictSummary(pairs) {
+    await this.#ensureLoaded();
+    if (!pairs || pairs.length === 0) return { summaries: [], safeCount: 0, riskyCount: 0, avgRisk: 0 };
+
+    const summaries = [];
+    for (const { id1, id2 } of pairs) {
+      const preview = await this.mergePreview(id1, id2);
+      if (!preview) continue;
+      summaries.push({
+        id1,
+        id2,
+        risk: preview.risk,
+        uniqueEntities: preview.conflicts.uniqueEntities1.length + preview.conflicts.uniqueEntities2.length,
+        uniqueTags: preview.conflicts.uniqueTags1.length + preview.conflicts.uniqueTags2.length,
+        contentOverlap: preview.conflicts.contentOverlap,
+      });
+    }
+
+    const safeCount = summaries.filter(s => s.risk < 0.4).length;
+    const riskyCount = summaries.filter(s => s.risk >= 0.7).length;
+    const avgRisk = summaries.length > 0
+      ? Math.round(summaries.reduce((acc, s) => acc + s.risk, 0) / summaries.length * 1000) / 1000
+      : 0;
+
+    return { summaries, safeCount, riskyCount, avgRisk };
+  }
+
   async autoMerge(opts = {}) {
     await this.#ensureLoaded();
     const minScore = opts.minScore ?? 0.5;
