@@ -1,2 +1,2 @@
 timestamp	commit	metric	value	status	description
-2026-05-01T23:00	pending	test_pass_rate	4/4	baseline	Initial openclaw-langgraph-bridge package: createOpenClawNode, OpenClawClient, sequentialRouter, conditionalRouter
+2026-05-01T23:00	e598ab9	test_pass_rate	4/4	keep	Initial openclaw-langgraph-bridge package: createOpenClawNode, OpenClawClient, sequentialRouter, conditionalRouter
