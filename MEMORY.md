@@ -18,7 +18,7 @@
 ## Current Focus (2026-05-01)
 
 ### Active Theme
-Autoresearch 方法论实践 - **连续27天零回滚率**。AMS 达 **620 tests**。04-30晚: mergePreview+safeMerge+mergeConflictSummary(612)。05-01凌晨: branchDiff分支对比(620)。去重管道完整: mergeSuggestions→autoMerge→contentVersionCompact。分支管道完整: contentBranch→branchDiff→(待)branchMerge。
+Autoresearch 方法论实践 - **连续29天零回滚率**。05-01晚: MCP Server TypeScript SDK v2 + Streamable HTTP 深度研究 v6,确认 v1 SDK 仍推荐生产使用,v2 包拆分架构(@mcp/server+client+core+middleware)。下一步: 创建 lab/openclaw-mcp-server/ 项目。AMS 达 620 tests。
 
 ### Next Actions
 - [ ] **AMS 升级: Hindsight 风格四网络 + 图遍历检索** - 基于 [研究笔记](catalyst-research/exploration-notes/2026-04-26-hindsight-multi-strategy-memory.md)
@@ -48,6 +48,10 @@ Autoresearch 方法论实践 - **连续27天零回滚率**。AMS 达 **620 tests
 - [x] **LangGraph Supervisor 研究** - [研究笔记](catalyst-research/exploration-notes/2026-04-27-langgraph-supervisor-openclaw.md) ✅ 代码已验证通过(Supervisor pattern + conditional routing)
 - [ ] 实现 `openclaw-langgraph-bridge` 模块 - **已转向 LangGraph.js (TypeScript)** 避免引入 Python 依赖
   - **关键发现**: LangGraph.js v1.2.9 in-process > Python out-of-process,零额外运行时
+  - **05-01 重大更新**: 新 API `StateSchema` + `ReducedValue` 替代旧 `Annotation.Root()`，Zod v4 原生集成
+  - [研究笔记 createOpenClawNode](catalyst-research/exploration-notes/2026-05-01-langgraphjs-create-openclaw-node.md) ✅ 3测试全通过（invoke+stream+动态复用）
+  - **下一步**: 创建 lab/openclaw-langgraph-bridge/ → Gateway HTTP 客户端 → task() 包装器
+  - **核心设计**: executor 参数抽象 sessions_spawn，工厂函数零修改切换 mock→real
   - Step 1: `createOpenClawNode()` 工厂函数,包装 sessions_spawn 为 LangGraph.js async node
   - Step 2: Supervisor router(纯函数优先,需要时升级 LLM 路由)
   - Step 3: 核心难题 = 子代理结果解析(推荐 JSON mode 输出)

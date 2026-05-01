@@ -174,6 +174,24 @@ class BM25Index {
     scores.sort((a, b) => b.score - a.score);
     return scores.slice(0, topK);
   }
+
+  toJSON() {
+    const docs = {};
+    for (const [id, { tf, dl }] of this.#docs) {
+      docs[id] = { tf: Object.fromEntries(tf), dl };
+    }
+    return { docs, df: Object.fromEntries(this.#df), totalLen: this.#totalLen };
+  }
+
+  static fromJSON(json) {
+    const idx = new BM25Index();
+    idx.#totalLen = json.totalLen || 0;
+    idx.#df = new Map(Object.entries(json.df || {}));
+    for (const [id, { tf, dl }] of Object.entries(json.docs || {})) {
+      idx.#docs.set(id, { tf: new Map(Object.entries(tf)), dl });
+    }
+    return idx;
+  }
 }
 
 /**
@@ -872,8 +890,12 @@ export class MemoryService {
       await this.#skills.load();
       // Load content versions from sidecar
       await this.#loadContentVersions();
-      // Rebuild BM25 index from loaded memories
-      for (const m of this.#store.all()) this.#bm25.add(m.id, m.content);
+      // Load BM25 index from sidecar (fallback to rebuild if missing/stale)
+      await this.#loadBM25Index();
+      if (this.#bm25.N === 0) {
+        for (const m of this.#store.all()) this.#bm25.add(m.id, m.content);
+        await this.#saveBM25Index();
+      }
       this.#loaded = true;
     }
   }
@@ -897,6 +919,22 @@ export class MemoryService {
     await mkdir(this.#dirPath, { recursive: true });
     await writeFile(await this.#contentVersionsPath(), JSON.stringify(obj, null, 2));
     this.#contentVersionsDirty = false;
+  }
+
+  #bm25Dirty = false;
+
+  async #loadBM25Index() {
+    try {
+      const raw = await readFile(join(this.#dirPath, 'bm25-index.json'), 'utf-8');
+      this.#bm25 = BM25Index.fromJSON(JSON.parse(raw));
+    } catch { /* will be rebuilt from store */ }
+  }
+
+  async #saveBM25Index() {
+    if (!this.#bm25Dirty) return;
+    await mkdir(this.#dirPath, { recursive: true });
+    await writeFile(join(this.#dirPath, 'bm25-index.json'), JSON.stringify(this.#bm25.toJSON()));
+    this.#bm25Dirty = false;
   }
 
   async #ensureLoaded() {
@@ -933,8 +971,10 @@ export class MemoryService {
     };
     this.#store.put(memory);
     this.#bm25.add(id, memory.content);
+    this.#bm25Dirty = true;
     this.#changelog.record('add', id, memory.layer);
     await this.#store.save();
+    await this.#saveBM25Index();
     await this.#changelog.save();
     return memory;
   }
@@ -1751,6 +1791,8 @@ export class MemoryService {
       this.#store.put(m);
       this.#bm25.add(m.id, m.content);
     }
+    this.#bm25Dirty = true;
+    await this.#saveBM25Index();
     // Import links
     if (Array.isArray(data.links)) {
       for (const l of data.links) this.#links.put(l);
@@ -2107,6 +2149,8 @@ export class MemoryService {
 
     this.#store.put(m); // re-index
     this.#bm25.add(id, m.content); // re-index BM25
+    this.#bm25Dirty = true;
+    await this.#saveBM25Index();
     this.#changelog.record('update', id, m.layer);
     await this.#store.save();
     await this.#changelog.save();
