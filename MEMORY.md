@@ -28,7 +28,7 @@ Autoresearch 方法论实践 - **连续27天零回滚率**。AMS 达 **620 tests
   - Phase 4: ~~Opinion 网络带 confidence,新证据驱动置信度演化~~ ✅ 完成 (04-29晚: 6 APIs, 29 new tests)
   - Phase 5: contentVersions 持久化 + mergeSuggestions 智能去重 ✅ 完成 (04-30: +14 tests)
   - Phase 6: ~~autoMerge端到端去重~~ ✅ + ~~contentVersionCompact~~ ✅ + mergePreview+safeMerge ✅ + branchDiff ✅
-  - Phase 7 待定: branchMerge回源 / timeline v2分支可视化 / embedding相似度信号
+  - Phase 7: branchMerge回源 ✅ 完成 / timeline v2分支可视化 / embedding相似度信号
 - [ ] **实现 Hindsight Mini 原型** - `lab/hindsight-mini/` 验证四网络 + 四路检索(代码已在研究笔记中验证通过)
 - [ ] **OpenClaw MCP Server MVP** - TypeScript SDK v2 + Streamable HTTP,3 tools (exec/memory_search/memory_get)
   - [研究笔记 v3](catalyst-research/exploration-notes/2026-04-29-mcp-server-typescript-streamable-http.md) ✅ 完整代码(3-tool server+client+Inspector调试)
@@ -202,10 +202,15 @@ curl -X POST "https://api.tavily.com/search" \
   - 零回滚率持续保持(连续26天)
 
 ### 2026-05-01
-- ✅ **Agent Memory Service v1.0-dev 续升** — 612→620 tests (+8)
-  - **branchDiff(id)**: 分支与源记忆对比(content similarity + tag/entity deltas + chained branches)
-  - 分支管道: contentBranch(创建) → branchDiff(检查) → [待] branchMerge(合并)
+- ✅ **Agent Memory Service v1.0-dev 续升** — 612→630 tests (+18)
+  - **branchDiff(id)**: 分支与源记忆对比(content similarity + tag/entity deltas + chained branches), 8 tests
+  - **branchMerge(branchId, opts)**: 分支合并回源记忆(基于memoryMerge), contentStrategy/tagStrategy/linkStrategy, 10 tests
+  - 分支管道完整: contentBranch(创建) → branchDiff(检查) → branchMerge(合并)
   - 零回滚率持续保持(连续27天)
+- ✅ **agent-task-cli 续升** — 375→380 tests (+5)
+  - **TaskChain.progress**: getter返回{total,completed,failed,pending,skipped,percent}
+  - **TaskChain.retryAll(opts)**: 批量重试失败步骤, 可选resetPending
+  - 5 new tests, 零回滚
 
 ### 2026-04-29
 - ✅ **Agent Memory Service v1.0-dev 续升** - 499→569 tests (+70)
