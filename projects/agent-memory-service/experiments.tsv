@@ -69,3 +69,4 @@ timestamp	commit	metric	value	status	description
 2026-04-30T19:15	512db03	test_count	589/589	keep	autoMerge(opts) — end-to-end auto-dedup. mergeSuggestions→ID dedup→bulkMerge pipeline. minScore/maxMerges/dryRun/layer filter. 6 new tests (583→589). Phase 6 step 1.
 2026-04-30T19:30	bacad24	test_count	594/594	keep	contentVersionCompact(opts) — compact old content versions. maxVersions+olderThan+dryRun. 5 new tests (589→594). Phase 6 step 2.
 2026-04-30T21:20	7f1a3cf	test_count	612/612	keep	mergePreview+mergeConflictSummary+safeMerge — risk-aware merge workflow. 18 new tests (594→612). Phase 6 step 3.
+2026-05-01T19:30	d42a8c9	test_count	630/630	keep	branchMerge(branchId, opts) — merge branch back to source via memoryMerge. contentStrategy/tagStrategy/linkStrategy. 10 new tests (620→630). Phase 7 step 1. Branch pipeline complete: contentBranch→branchDiff→branchMerge.
