@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-28T21:00:08.198Z",
+  "updatedAt": "2026-05-01T03:14:59.241Z",
   "entries": {
     "memory:memory/2026-04-12.md:71:96": {
       "key": "memory:memory/2026-04-12.md:71:96",
@@ -186,6 +186,37 @@
         "promptrouter.explain",
         "agent-context-store",
         "put-many"
+      ]
+    },
+    "memory:memory/2026-03-25.md:1:55": {
+      "key": "memory:memory/2026-03-25.md:1:55",
+      "path": "memory/2026-03-25.md",
+      "startLine": 1,
+      "endLine": 55,
+      "source": "memory",
+      "snippet": "# Memory - March 25, 2026 ## Key Development Task 3 (1:00 AM) ### Focus: AI Embedded Applications & AI Rapid Prototyping ### ✅ Completed Tasks 1. **Committed agent-task-cli Changes** - 14 files changed, 3540 lines added - New features: orchestrator-v2.js, cache.js, concurrency-manager.js, retry-handler.js - Tests: 109 tests passing, 80%+ coverage - Documentation: TUTORIAL.md (1051 lines) 2. **Created OpenClaw Plugin for Local Embedding Memory** - Location: `~/.openclaw/extensions/local-embedding-memory/` - Skill: semantic-memory (semantic search for MEMORY.md) - Features: - Local embeddings (no API calls) - Incremental indexing - Compare mode (semanti",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1,
+      "maxScore": 1,
+      "firstRecalledAt": "2026-05-01T03:14:59.241Z",
+      "lastRecalledAt": "2026-05-01T03:14:59.241Z",
+      "queryHashes": [
+        "0b3c506aa361"
+      ],
+      "recallDays": [
+        "2026-05-01"
+      ],
+      "conceptTags": [
+        "embedding",
+        "embeddings",
+        "agent-task-cli",
+        "orchestrator-v2.js",
+        "cache.js",
+        "concurrency-manager.js",
+        "retry-handler.js",
+        "tutorial.md"
       ]
     }
   }

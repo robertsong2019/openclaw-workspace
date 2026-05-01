@@ -4453,6 +4453,30 @@ export class MemoryService {
   }
 
   /**
+   * Merge a branch back into its source memory. Uses memoryMerge internally.
+   * @param {string} branchId - Branch memory ID to merge back
+   * @param {object} opts - Merge options (contentStrategy, tagStrategy, linkStrategy, content, layer)
+   * @param {boolean} opts.keepBranch - If true, don't delete the branch after merge (default: false)
+   * @returns {Promise<object|null>} { diff, merge } or null if not a branch
+   */
+  async branchMerge(branchId, opts = {}) {
+    await this.#ensureLoaded();
+    const diff = await this.branchDiff(branchId);
+    if (!diff) return null;
+
+    const mergeResult = await this.memoryMerge(diff.source.id, branchId, {
+      contentStrategy: opts.contentStrategy || 'concat',
+      tagStrategy: opts.tagStrategy || 'union',
+      linkStrategy: opts.linkStrategy || 'rewire',
+      content: opts.content,
+      layer: opts.layer,
+    });
+    if (!mergeResult) return null;
+
+    return { diff, merge: mergeResult };
+  }
+
+  /**
    * Merge two memories into one with conflict resolution.
    * @param {string} id1 - Primary memory (kept)
    * @param {string} id2 - Secondary memory (deleted after merge)

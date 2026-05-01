@@ -15,10 +15,10 @@
 
 ---
 
-## Current Focus (2026-04-29)
+## Current Focus (2026-05-01)
 
 ### Active Theme
-Autoresearch 方法论实践 - **连续25天零回滚率**。AMS 达 **594 tests**。04-29晚: Opinion Network → 569。04-30凌晨: contentVersions持久化(574)+mergeSuggestions多信号去重(583)。04-30晚: autoMerge端到端去重(589)+contentVersionCompact(594)。
+Autoresearch 方法论实践 - **连续27天零回滚率**。AMS 达 **620 tests**。04-30晚: mergePreview+safeMerge+mergeConflictSummary(612)。05-01凌晨: branchDiff分支对比(620)。去重管道完整: mergeSuggestions→autoMerge→contentVersionCompact。分支管道完整: contentBranch→branchDiff→(待)branchMerge。
 
 ### Next Actions
 - [ ] **AMS 升级: Hindsight 风格四网络 + 图遍历检索** - 基于 [研究笔记](catalyst-research/exploration-notes/2026-04-26-hindsight-multi-strategy-memory.md)
@@ -27,7 +27,8 @@ Autoresearch 方法论实践 - **连续25天零回滚率**。AMS 达 **594 tests
   - Phase 3: ~~searchTemporal() 时间衰减 + 范围过滤~~ ✅ 完成 (04-28)
   - Phase 4: ~~Opinion 网络带 confidence,新证据驱动置信度演化~~ ✅ 完成 (04-29晚: 6 APIs, 29 new tests)
   - Phase 5: contentVersions 持久化 + mergeSuggestions 智能去重 ✅ 完成 (04-30: +14 tests)
-  - Phase 6 待定: autoMerge 端到端去重 / contentVersionCompact / embedding相似度信号
+  - Phase 6: ~~autoMerge端到端去重~~ ✅ + ~~contentVersionCompact~~ ✅ + mergePreview+safeMerge ✅ + branchDiff ✅
+  - Phase 7 待定: branchMerge回源 / timeline v2分支可视化 / embedding相似度信号
 - [ ] **实现 Hindsight Mini 原型** - `lab/hindsight-mini/` 验证四网络 + 四路检索(代码已在研究笔记中验证通过)
 - [ ] **OpenClaw MCP Server MVP** - TypeScript SDK v2 + Streamable HTTP,3 tools (exec/memory_search/memory_get)
   - [研究笔记 v3](catalyst-research/exploration-notes/2026-04-29-mcp-server-typescript-streamable-http.md) ✅ 完整代码(3-tool server+client+Inspector调试)
@@ -193,11 +194,18 @@ curl -X POST "https://api.tavily.com/search" \
 ## Recent Achievements
 
 ### 2026-04-30
-- ✅ **Agent Memory Service v1.0-dev 续升** — 583→594 tests (+11)
+- ✅ **Agent Memory Service v1.0-dev 续升** — 583→612 tests (+29)
   - **autoMerge(opts)**: 端到端自动去重(mergeSuggestions→ID dedup→bulkMerge), minScore/maxMerges/dryRun/layer, 6 tests
   - **contentVersionCompact(opts)**: 压缩旧内容版本(maxVersions+olderThan+dryRun), 5 tests
+  - **mergePreview+safeMerge+mergeConflictSummary**: 风险感知合并工作流(18 tests, 594→612)
   - 去重管道完整: mergeSuggestions(发现) → autoMerge(执行) → contentVersionCompact(清理)
-  - 零回滚率持续保持(连续25天)
+  - 零回滚率持续保持(连续26天)
+
+### 2026-05-01
+- ✅ **Agent Memory Service v1.0-dev 续升** — 612→620 tests (+8)
+  - **branchDiff(id)**: 分支与源记忆对比(content similarity + tag/entity deltas + chained branches)
+  - 分支管道: contentBranch(创建) → branchDiff(检查) → [待] branchMerge(合并)
+  - 零回滚率持续保持(连续27天)
 
 ### 2026-04-29
 - ✅ **Agent Memory Service v1.0-dev 续升** - 499→569 tests (+70)
@@ -471,5 +479,5 @@ curl -X POST "https://api.tavily.com/search" \
 
 ---
 
-*Last updated: 2026-04-30 02:00*
-*Next review: 2026-05-01*
+*Last updated: 2026-05-01 02:00*
+*Next review: 2026-05-02*
