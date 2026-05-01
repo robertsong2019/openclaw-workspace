@@ -70,3 +70,4 @@ timestamp	commit	metric	value	status	description
 2026-04-30T19:30	bacad24	test_count	594/594	keep	contentVersionCompact(opts) — compact old content versions. maxVersions+olderThan+dryRun. 5 new tests (589→594). Phase 6 step 2.
 2026-04-30T21:20	7f1a3cf	test_count	612/612	keep	mergePreview+mergeConflictSummary+safeMerge — risk-aware merge workflow. 18 new tests (594→612). Phase 6 step 3.
 2026-05-01T19:30	d42a8c9	test_count	630/630	keep	branchMerge(branchId, opts) — merge branch back to source via memoryMerge. contentStrategy/tagStrategy/linkStrategy. 10 new tests (620→630). Phase 7 step 1. Branch pipeline complete: contentBranch→branchDiff→branchMerge.
+2026-05-01T24:00	2fd1bd1	test_count	635/635	keep	BM25 index persistence to JSON sidecar. toJSON/fromJSON on BM25Index class. Load on init (fallback rebuild), save on add/update/import with dirty flag. 5 new tests (630→635). Builds on k-d-2 contentVersions pattern.

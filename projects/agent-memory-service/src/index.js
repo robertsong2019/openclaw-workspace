@@ -121,6 +121,8 @@ class BM25Index {
 
   get N() { return this.#docs.size; }
   get avgdl() { return this.#docs.size ? this.#totalLen / this.#docs.size : 0; }
+  /** Get all indexed document IDs */
+  docIds() { return [...this.#docs.keys()]; }
 
   add(id, text) {
     // Remove old if exists
@@ -2069,11 +2071,14 @@ export class MemoryService {
       this.#links.cleanForMemory(id);
       this.#changelog.record('delete', id, m.layer);
       this.#store.delete(id);
+      this.#bm25.remove(id);
       deleted++;
     }
+    this.#bm25Dirty = true;
     await this.#store.save();
     await this.#links.save();
     await this.#changelog.save();
+    await this.#saveBM25Index();
     return { deleted, notFound };
   }
 
@@ -2263,9 +2268,11 @@ export class MemoryService {
     this.#changelog.record('delete', id, m.layer);
     this.#store.delete(id);
     this.#bm25.remove(id);
+    this.#bm25Dirty = true;
     await this.#store.save();
     await this.#links.save();
     await this.#changelog.save();
+    await this.#saveBM25Index();
     return true;
   }
 
@@ -4167,6 +4174,30 @@ export class MemoryService {
     result.layers = { m1: m1.layer, m2: m2.layer, same: m1.layer === m2.layer };
     result.weights = { m1: m1.weight || 0, m2: m2.weight || 0, diff: Math.abs((m1.weight || 0) - (m2.weight || 0)) };
     return result;
+  }
+
+  /**
+   * Compact BM25 index by removing entries for memories that no longer exist in the store.
+   * Useful after manual file deletions or corruption scenarios where BM25 sidecar got out of sync.
+   * @param {{dryRun?: boolean}} opts
+   * @returns {Promise<{removed: number, remaining: number}>}
+   */
+  async compactBM25Index(opts = {}) {
+    await this.#ensureLoaded();
+    const liveIds = new Set(this.#store.all().map(m => m.id));
+    const indexedIds = this.#bm25.docIds();
+    let removed = 0;
+    for (const id of indexedIds) {
+      if (!liveIds.has(id)) {
+        if (!opts.dryRun) this.#bm25.remove(id);
+        removed++;
+      }
+    }
+    if (removed > 0 && !opts.dryRun) {
+      this.#bm25Dirty = true;
+      await this.#saveBM25Index();
+    }
+    return { removed, remaining: this.#bm25.N };
   }
 
   /**

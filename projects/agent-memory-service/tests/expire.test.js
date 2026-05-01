@@ -6,7 +6,7 @@ describe('expiresAt + purgeExpired', () => {
   let svc;
 
   beforeEach(async () => {
-    svc = new MemoryService({ dir: `/tmp/mem-expire-${Date.now()}` });
+    svc = new MemoryService({ dbPath: `/tmp/mem-expire-${Date.now()}` });
     await svc.init();
   });
 
