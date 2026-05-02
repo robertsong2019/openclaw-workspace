@@ -1,2 +1,2 @@
 timestamp	commit	metric	value	status	description
-2026-05-02T23:00	INITIAL	test_pass_rate	5/5	baseline	OpenClaw MCP Server MVP: 3 tools (query_memory, web_search, get_status) + Streamable HTTP transport + 5 integration tests
+2026-05-02T23:00	367a188	test_pass_rate	5/5	keep	OpenClaw MCP Server MVP: 3 tools + Streamable HTTP transport + 5 integration tests
