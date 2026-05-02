@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-01T03:14:59.241Z",
+  "updatedAt": "2026-05-02T12:09:22.207Z",
   "entries": {
     "memory:memory/2026-04-12.md:71:96": {
       "key": "memory:memory/2026-04-12.md:71:96",
@@ -195,18 +195,20 @@
       "endLine": 55,
       "source": "memory",
       "snippet": "# Memory - March 25, 2026 ## Key Development Task 3 (1:00 AM) ### Focus: AI Embedded Applications & AI Rapid Prototyping ### ✅ Completed Tasks 1. **Committed agent-task-cli Changes** - 14 files changed, 3540 lines added - New features: orchestrator-v2.js, cache.js, concurrency-manager.js, retry-handler.js - Tests: 109 tests passing, 80%+ coverage - Documentation: TUTORIAL.md (1051 lines) 2. **Created OpenClaw Plugin for Local Embedding Memory** - Location: `~/.openclaw/extensions/local-embedding-memory/` - Skill: semantic-memory (semantic search for MEMORY.md) - Features: - Local embeddings (no API calls) - Incremental indexing - Compare mode (semanti",
-      "recallCount": 1,
+      "recallCount": 2,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 1,
+      "totalScore": 2,
       "maxScore": 1,
       "firstRecalledAt": "2026-05-01T03:14:59.241Z",
-      "lastRecalledAt": "2026-05-01T03:14:59.241Z",
+      "lastRecalledAt": "2026-05-02T12:09:15.739Z",
       "queryHashes": [
-        "0b3c506aa361"
+        "0b3c506aa361",
+        "a329b2b0974c"
       ],
       "recallDays": [
-        "2026-05-01"
+        "2026-05-01",
+        "2026-05-02"
       ],
       "conceptTags": [
         "embedding",
@@ -217,6 +219,99 @@
         "concurrency-manager.js",
         "retry-handler.js",
         "tutorial.md"
+      ]
+    },
+    "memory:memory/2026-03-25.md:44:99": {
+      "key": "memory:memory/2026-03-25.md:44:99",
+      "path": "memory/2026-03-25.md",
+      "startLine": 44,
+      "endLine": 99,
+      "source": "memory",
+      "snippet": "- ✅ agent-task-cli now has comprehensive utilities - ✅ Unified toolkit foundations in place - Next: Build unified CLI wrapper ### 💡 Next Steps 1. **High Priority:** - Test the local-embedding-memory plugin with OpenClaw - Create integration tests for agent-task-cli - Add Web UI to agent-trust-network 2. **Medium Priority:** - Build unified \"ai-toolkit\" CLI - Edge AI deployment experiments - Model quantization toolkit 3. **Exploratory:** - Prompt-to-prototype generator - Embedded AI on Raspberry Pi --- ## Knowledge Organization Session (2:00 AM) ### 📊 探索成果总结 #### 1. 代码里程碑 (2026-03-25) **agent-task-cli 重大提交:** - ✅ 14 个文件提交 - ✅ 3540 行代码新增 - ✅ 109 个测试通过 (80%+ 覆盖",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1,
+      "maxScore": 1,
+      "firstRecalledAt": "2026-05-02T12:09:15.739Z",
+      "lastRecalledAt": "2026-05-02T12:09:15.739Z",
+      "queryHashes": [
+        "a329b2b0974c"
+      ],
+      "recallDays": [
+        "2026-05-02"
+      ],
+      "conceptTags": [
+        "embedding",
+        "network",
+        "agent-task-cli",
+        "local-embedding-memory",
+        "agent-trust-network",
+        "ai-toolkit",
+        "prompt-to-prototype",
+        "task"
+      ]
+    },
+    "memory:memory/2026-04-22.md:108:153": {
+      "key": "memory:memory/2026-04-22.md:108:153",
+      "path": "memory/2026-04-22.md",
+      "startLine": 108,
+      "endLine": 153,
+      "source": "memory",
+      "snippet": "3. **Adaptive thresholds** — Different thresholds for different environments (dev vs prod) 4. **Preview before execution** — Use dryRun to log what would be done 5. **Selective maintenance** — Task whitelist for targeted cleanup **Time savings:** - Manual maintenance decision-making → automated health-based triggering - No need to remember which tasks to run → autoMaintain figures it out - Preview capabilities → avoid unexpected operations **Integration example:** ```typescript // Agent startup const health = await mem.svc.autoMaintain({ threshold: 75 }); if (health.triggered) { console.log('Maintenance executed:', health.actions); } // Heartbeat / cron setInterval(async () => { const",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1,
+      "maxScore": 1,
+      "firstRecalledAt": "2026-05-02T12:09:22.207Z",
+      "lastRecalledAt": "2026-05-02T12:09:22.207Z",
+      "queryHashes": [
+        "3ed6bd9d2355"
+      ],
+      "recallDays": [
+        "2026-05-02"
+      ],
+      "conceptTags": [
+        "decision-making",
+        "health-based",
+        "mem.svc.automaintain",
+        "health.triggered",
+        "console.log",
+        "health.actions",
+        "adaptive",
+        "thresholds"
+      ]
+    },
+    "memory:memory/2026-04-25.md:1:13": {
+      "key": "memory:memory/2026-04-25.md:1:13",
+      "path": "memory/2026-04-25.md",
+      "startLine": 1,
+      "endLine": 13,
+      "source": "memory",
+      "snippet": "## 20:00 — 深度技术研究: MCP Server v2 实现指南 - **研究主题**: OpenClaw MCP Server MVP 实现（TypeScript SDK v2 + Streamable HTTP） - **产出**: `catalyst-research/exploration-notes/2026-04-25-mcp-server-v2-implementation.md` - **核心发现**: - SDK v2 使用 `registerTool()` + Zod v4 schema，比 v1 更简洁 - `createMcpExpressApp(transport)` 一行集成 Express + Streamable HTTP - 无状态模式（`sessionIdGenerator: undefined`）是 MVP 最佳起点 - 新特性 `structuredContent` + `outputSchema` 契合 OpenClaw 结构化工具返回值 - **可运行代码**: 完整 3-tools MVP（read_file, run_command, search_memory）+ package.json + curl 测试 - **关联**: 本周 HEARTBEAT 高优先级，Next Actions 已对齐",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1,
+      "maxScore": 1,
+      "firstRecalledAt": "2026-05-02T12:09:22.207Z",
+      "lastRecalledAt": "2026-05-02T12:09:22.207Z",
+      "queryHashes": [
+        "3ed6bd9d2355"
+      ],
+      "recallDays": [
+        "2026-05-02"
+      ],
+      "conceptTags": [
+        "3-tools",
+        "read-file",
+        "run-command",
+        "search-memory",
+        "package.json",
+        "深度",
+        "技术",
+        "研究"
       ]
     }
   }

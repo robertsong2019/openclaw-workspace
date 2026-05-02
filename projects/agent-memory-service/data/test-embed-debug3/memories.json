@@ -1,0 +1,15 @@
+[
+  {
+    "id": "1f827f9a-528a-46ef-86a8-2cb818cb0d7e",
+    "content": "hello world unique string alpha",
+    "layer": "core",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777739146974,
+    "accessedAt": 1777739146974,
+    "accessCount": 0,
+    "hash": "3df8ef376df48e7a",
+    "factType": "observation"
+  }
+]

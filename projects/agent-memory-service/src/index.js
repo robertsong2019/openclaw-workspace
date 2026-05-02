@@ -2070,6 +2070,7 @@ export class MemoryService {
       if (!m) { notFound++; continue; }
       this.#links.cleanForMemory(id);
       this.#changelog.record('delete', id, m.layer);
+      if (m.content) this.#embeddings.removeByContent(m.content);
       this.#store.delete(id);
       this.#bm25.remove(id);
       deleted++;
@@ -2079,6 +2080,7 @@ export class MemoryService {
     await this.#links.save();
     await this.#changelog.save();
     await this.#saveBM25Index();
+    await this.#embeddings.saveCache();
     return { deleted, notFound };
   }
 
@@ -2266,6 +2268,7 @@ export class MemoryService {
     if (!m) return false;
     this.#links.cleanForMemory(id);
     this.#changelog.record('delete', id, m.layer);
+    if (m.content) this.#embeddings.removeByContent(m.content);
     this.#store.delete(id);
     this.#bm25.remove(id);
     this.#bm25Dirty = true;
@@ -2273,6 +2276,7 @@ export class MemoryService {
     await this.#links.save();
     await this.#changelog.save();
     await this.#saveBM25Index();
+    await this.#embeddings.saveCache();
     return true;
   }
 
@@ -4201,6 +4205,33 @@ export class MemoryService {
   }
 
   /**
+   * Compact the embedding cache by removing entries whose content hash
+   * no longer matches any live memory content.
+   * @param {{dryRun?: boolean}} opts
+   * @returns {Promise<{removed: number, remaining: number}>}
+   */
+  async compactEmbedCache(opts = {}) {
+    await this.#ensureLoaded();
+    const liveHashes = new Set(
+      this.#store.all()
+        .filter(m => m.content)
+        .map(m => contentHash(m.content))
+    );
+    const cachedKeys = this.#embeddings.cacheKeys();
+    let removed = 0;
+    for (const key of cachedKeys) {
+      if (!liveHashes.has(key)) {
+        if (!opts.dryRun) this.#embeddings.removeByKey(key);
+        removed++;
+      }
+    }
+    if (removed > 0 && !opts.dryRun) {
+      await this.#embeddings.saveCache();
+    }
+    return { removed, remaining: this.#embeddings.cacheSize };
+  }
+
+  /**
    * Get content version history for a specific memory.
    * Returns all prior content snapshots + current content, oldest first.
    * @param {string} id - Memory ID
@@ -5160,6 +5191,28 @@ class EmbeddingProvider {
     const [vecA, vecB] = await Promise.all([this.embed(a), this.embed(b)]);
     if (!vecA || !vecB) return null;
     return cosineSimilarity(vecA, vecB);
+  }
+
+  /** Remove cached embedding for given content text */
+  removeByContent(text) {
+    const key = contentHash(text);
+    if (this.#cache.has(key)) {
+      this.#cache.delete(key);
+      this.#dirty = true;
+    }
+  }
+
+  /** Remove cached embedding by hash key */
+  removeByKey(key) {
+    if (this.#cache.has(key)) {
+      this.#cache.delete(key);
+      this.#dirty = true;
+    }
+  }
+
+  /** Get all cache keys (content hashes) */
+  cacheKeys() {
+    return [...this.#cache.keys()];
   }
 
   /** Clear the cache */

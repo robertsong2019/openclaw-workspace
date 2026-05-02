@@ -18,7 +18,7 @@
 ## Current Focus (2026-05-01)
 
 ### Active Theme
-Autoresearch 方法论实践 - **连续29天零回滚率**。05-01晚: MCP Server TypeScript SDK v2 + Streamable HTTP 深度研究 v6,确认 v1 SDK 仍推荐生产使用,v2 包拆分架构(@mcp/server+client+core+middleware)。下一步: 创建 lab/openclaw-mcp-server/ 项目。AMS 达 620 tests。
+Autoresearch 方法论实践 - **连续32天零回滚率**。05-02 晚: A2A v1.0 Signed Agent Cards + Trust Extension 深度研究 — **JWS 签名是 A2A 从实验室到生产的分水岭**。[研究笔记](catalyst-research/exploration-notes/2026-05-02-a2a-v1-signed-cards-trust.md)。关键发现: v1.0 JWS(RFC 7515)+JCS(RFC 8785) 密码学签名解决 Agent Card 伪造问题; Trust Gap 是架构性分层(A2A=通信,信任层=独立); Extension `required` 字段是信任策略执行点; EigenTrust(行为)+JWS(身份)=双层信任模型。**代码已验证通过**: 6个断言全部PASS(签名/验证/篡改检测/信任路由)。下一步: 创建 lab/a2a-trust-extension/ 整合 JWS+TrustEngine 为可安装模块。
 
 ### Next Actions
 - [ ] **AMS 升级: Hindsight 风格四网络 + 图遍历检索** - 基于 [研究笔记](catalyst-research/exploration-notes/2026-04-26-hindsight-multi-strategy-memory.md)
@@ -42,7 +42,11 @@ Autoresearch 方法论实践 - **连续29天零回滚率**。05-01晚: MCP Serve
   - [研究笔记 v5](catalyst-research/exploration-notes/2026-04-30-mcp-server-typescript.md) ✅ **代码已验证通过** (4个API测试全部PASS)
     - Stateful vs Stateless 模式对比; DNS rebinding 防护; Streamable HTTP Accept header 要求
     - **关键修正**: curl 测试必须带 `Accept: application/json, text/event-stream` header
-- [ ] **A2A Trust Extension 实现模块** - `lab/a2a-trust-extension/` Python 模块,集成 a2a_minimal + 信任扩展([研究笔记](catalyst-research/exploration-notes/2026-04-25-a2a-agent-trust-integration.md))
+- [ ] **A2A Trust Extension 实现模块** - `lab/a2a-trust-extension/` Python 模块,集成 a2a_minimal + 信任扩展
+  - [研究笔记 v1](catalyst-research/exploration-notes/2026-04-25-a2a-agent-trust-integration.md) ✅ EigenTrust+Trust-Extended Card
+  - [研究笔记 v2](catalyst-research/exploration-notes/2026-05-02-a2a-v1-signed-cards-trust.md) ✅ **代码已验证通过**(JWS签名/验证+篡改检测+信任路由,6个assertion全PASS)
+  - **新发现**: v1.0 JWS签名+JCS规范化=生产级Agent Card防伪造; Extension required字段=信任策略执行点; 双层信任(JWS身份+EigenTrust行为)
+  - **下一步**: 创建 lab/a2a-trust-extension/ → 整合 sign_agent_card+TrustEngine+verify → pip installable
 - [ ] **桥接 TypeScript TrustNetwork → Python TrustEngine** - 跨语言信任数据一致
 - [ ] 初始化 openclaw-mcp-server 项目 - 合并到上方 MCP Server MVP 任务
 - [x] **LangGraph Supervisor 研究** - [研究笔记](catalyst-research/exploration-notes/2026-04-27-langgraph-supervisor-openclaw.md) ✅ 代码已验证通过(Supervisor pattern + conditional routing)
@@ -205,16 +209,36 @@ curl -X POST "https://api.tavily.com/search" \
   - 去重管道完整: mergeSuggestions(发现) → autoMerge(执行) → contentVersionCompact(清理)
   - 零回滚率持续保持(连续26天)
 
+### 2026-05-02
+- ✅ **prompt-router 三轮实验循环** — 34→48 tests (+14)
+  - **route_ensemble(k, weights)**: 多Agent权重分配委托, 5 tests
+  - **merge_routers(*routers)**: 路由器合并+名字去重, 4 tests
+  - **route_adaptive(correct_agent)**: 反馈驱动优先级调整+准确率追踪, 5 tests
+  - 修复: PromptRouter([]) 现在正确创建空路由器
+  - 零回滚率持续保持(连续31天)
+  - GitHub仓库创建并推送: https://github.com/robertsong2019/prompt-router
+- ✅ **agent-task-cli 续升** — TaskChain.step_count + insert_step/remove_step, chain tests 15→26
+  - step_count: getter返回步骤数
+  - insert_step(index, name, config): 位置插入
+  - remove_step(name): 删除+依赖引用清理
+  - 总测试: 416/416 (100%)
+
 ### 2026-05-01
-- ✅ **Agent Memory Service v1.0-dev 续升** — 612→630 tests (+18)
+- ✅ **Agent Memory Service v1.0-dev 续升** — 612→640 tests (+28)
   - **branchDiff(id)**: 分支与源记忆对比(content similarity + tag/entity deltas + chained branches), 8 tests
   - **branchMerge(branchId, opts)**: 分支合并回源记忆(基于memoryMerge), contentStrategy/tagStrategy/linkStrategy, 10 tests
+  - **BM25 index persistence**: JSON sidecar持久化(toJSON/fromJSON + dirty flag), 5 tests (630→635)
+  - **BM25 sync fixes + compactBM25Index()**: delete/batchDelete同步修复 + 孤立条目清理, 5 tests (635→640)
   - 分支管道完整: contentBranch(创建) → branchDiff(检查) → branchMerge(合并)
-  - 零回滚率持续保持(连续27天)
+  - BM25持久化管道完整: sidecar持久化 → 同步修复 → 孤立清理
+  - 零回滚率持续保持(连续30天)
 - ✅ **agent-task-cli 续升** — 375→380 tests (+5)
   - **TaskChain.progress**: getter返回{total,completed,failed,pending,skipped,percent}
   - **TaskChain.retryAll(opts)**: 批量重试失败步骤, 可选resetPending
   - 5 new tests, 零回滚
+- ✅ **prompt-router 续升** — 22→34 tests (+12)
+  - add_agent/remove_agent/list_agents, save_config/load_config, route_top_k
+  - 连续30天零回滚率
 
 ### 2026-04-29
 - ✅ **Agent Memory Service v1.0-dev 续升** - 499→569 tests (+70)

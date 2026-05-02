@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>个人10亿Token分配框架</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #1a1a2e; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="900" height="720"></canvas>
+<script>
+const ctx = document.getElementById('c').getContext('2d');
+
+// Background
+ctx.fillStyle = '#1a1a2e';
+ctx.fillRect(0, 0, 900, 720);
+
+// Title
+ctx.fillStyle = '#e0e0e0';
+ctx.font = 'bold 22px sans-serif';
+ctx.textAlign = 'center';
+ctx.fillText('个人 10 亿 Token 分配框架', 450, 40);
+ctx.font = '13px sans-serif';
+ctx.fillStyle = '#777';
+ctx.fillText('Personal 1B Token Allocation Framework', 450, 60);
+
+// Pyramid layers
+const layers = [
+  { pct:'30%', tok:'3亿', label:'知识蒸馏层', sub:'经验 / 方法论 / 判断框架 → 可复用知识资产', color:'#6C5CE7', y:485, h:105, w:820 },
+  { pct:'25%', tok:'2.5亿', label:'研究探索层', sub:'深度调研 / 技术选型 / 竞品分析 → 沉淀文档', color:'#0984E3', y:375, h:92, w:680 },
+  { pct:'25%', tok:'2.5亿', label:'日常执行层', sub:'代码生成 / 文档写作 / 数据分析 → 生产力输出', color:'#00B894', y:278, h:78, w:540 },
+  { pct:'15%', tok:'1.5亿', label:'个人助手层', sub:'日程 / 投资监控 / 新闻聚合 / 学习计划', color:'#FDCB6E', y:200, h:62, w:400 },
+  { pct:'5%', tok:'0.5亿', label:'战略思考层', sub:'深度对话 / 思维推演 / 假设验证', color:'#E17055', y:138, h:48, w:260 },
+];
+
+layers.forEach(l => {
+  const x = (900 - l.w) / 2;
+  ctx.fillStyle = l.color;
+  ctx.globalAlpha = 0.85;
+  ctx.beginPath();
+  ctx.roundRect(x, l.y, l.w, l.h, 8);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 16px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(l.pct, x+15, l.y + l.h/2 + 2);
+
+  ctx.font = '12px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.fillText(l.tok + ' Token', x+55, l.y + l.h/2 + 2);
+
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 15px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(l.label, 450, l.y + l.h/2 - 7);
+
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  ctx.fillText(l.sub, 450, l.y + l.h/2 + 10);
+});
+
+// Left arrow
+ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+ctx.lineWidth = 2;
+ctx.beginPath(); ctx.moveTo(32, 565); ctx.lineTo(32, 150); ctx.stroke();
+ctx.beginPath(); ctx.moveTo(27,158); ctx.lineTo(32,142); ctx.lineTo(37,158); ctx.stroke();
+ctx.fillStyle = '#666'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+ctx.save(); ctx.translate(20, 360); ctx.rotate(-Math.PI/2); ctx.fillText('价值密度递增', 0, 0); ctx.restore();
+
+// Right arrow
+ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+ctx.beginPath(); ctx.moveTo(868, 150); ctx.lineTo(868, 565); ctx.stroke();
+ctx.beginPath(); ctx.moveTo(863,557); ctx.lineTo(868,573); ctx.lineTo(873,557); ctx.stroke();
+ctx.save(); ctx.translate(880, 360); ctx.rotate(Math.PI/2); ctx.fillText('Token 消耗量递增', 0, 0); ctx.restore();
+
+// Core principles
+ctx.fillStyle = 'rgba(255,255,255,0.06)';
+ctx.beginPath(); ctx.roundRect(50, 610, 800, 90, 8); ctx.fill();
+
+ctx.fillStyle = '#e0e0e0';
+ctx.font = 'bold 14px sans-serif';
+ctx.textAlign = 'center';
+ctx.fillText('核心原则', 450, 632);
+
+ctx.font = '12px sans-serif';
+ctx.fillStyle = '#aaa';
+[
+  '输出 > 输入 — 每次消耗都应产生可保存的产出（文档/代码/决策记录）',
+  '复用 > 消耗 — 蒸馏成 Skill / Memory 只花一次，后续无限复用',
+  '深度 > 广度 — 一个完整的深度研究 > 一百次浅层问答',
+].forEach((p, i) => ctx.fillText('• ' + p, 450, 654 + i * 18));
+</script>
+</body>
+</html>
