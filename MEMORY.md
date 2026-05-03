@@ -15,12 +15,17 @@
 
 ---
 
-## Current Focus (2026-05-01)
+## Current Focus (2026-05-03)
 
 ### Active Theme
-Autoresearch 方法论实践 - **连续32天零回滚率**。05-02 晚: A2A v1.0 Signed Agent Cards + Trust Extension 深度研究 — **JWS 签名是 A2A 从实验室到生产的分水岭**。[研究笔记](catalyst-research/exploration-notes/2026-05-02-a2a-v1-signed-cards-trust.md)。关键发现: v1.0 JWS(RFC 7515)+JCS(RFC 8785) 密码学签名解决 Agent Card 伪造问题; Trust Gap 是架构性分层(A2A=通信,信任层=独立); Extension `required` 字段是信任策略执行点; EigenTrust(行为)+JWS(身份)=双层信任模型。**代码已验证通过**: 6个断言全部PASS(签名/验证/篡改检测/信任路由)。下一步: 创建 lab/a2a-trust-extension/ 整合 JWS+TrustEngine 为可安装模块。
+Autoresearch 方法论实践 - **连续35天零回滚率**。05-03 晚: A2A Agent Trust 集成原型深度研究 — **三层信任模型(Transport/Card Integrity/Metadata Trust)是 A2A 生产化的关键架构**。[研究笔记](catalyst-research/exploration-notes/2026-05-03-a2a-agent-trust.md)。关键发现: A2A Extension 机制是嵌入信任元数据的正确通道(不需要新协议); Task Replay 是被低估的安全风险; Agent Trust Network 可复用 A2A 发现机制; 与现有 openclaw-mcp-server 和 Trust Network Web UI 项目直接关联。**代码已验证通过**: ECDSA P-256 签名+验证+篡改检测全PASS。下一步: lab/a2a-trust-prototype/ → 签名中间件 + Trust Score 计算器。
 
 ### Next Actions
+- [ ] **A2A x-agent-trust 中间件原型** — Node.js ES256 签名/验证，可作 OpenClaw gateway plugin
+  - [研究笔记 v1](catalyst-research/exploration-notes/2026-05-03-a2a-agent-trust.md) ✅ 代码验证通过(签名+验证+篡改检测)
+  - [研究笔记 v2](catalyst-research/exploration-notes/2026-05-03-a2a-agent-trust.md) ✅ **今晚深度研究**: 5核心概念+三层信任模型+Trust Extension设计+可运行TypeScript代码
+  - **新发现**: A2A v1.0 Signed Cards + Extension机制 = 信任嵌入的正确通道; Task Replay是低估风险; 与openclaw-mcp-server可组合
+  - **下一步**: lab/a2a-trust-prototype/ → OpenClaw gateway plugin 中间件
 - [ ] **AMS 升级: Hindsight 风格四网络 + 图遍历检索** - 基于 [研究笔记](catalyst-research/exploration-notes/2026-04-26-hindsight-multi-strategy-memory.md)
   - Phase 1: ~~classifyFact + searchByFactType + statsByFactType + reclassifyFact + bulkReclassify~~ ✅ 完成
   - Phase 2: ~~searchGraph() 基于 entity_index 多跳遍历~~ ✅ 完成 (04-28)
@@ -209,6 +214,25 @@ curl -X POST "https://api.tavily.com/search" \
   - 去重管道完整: mergeSuggestions(发现) → autoMerge(执行) → contentVersionCompact(清理)
   - 零回滚率持续保持(连续26天)
 
+### 2026-05-03
+- ✅ **AMS Embed Cache Sync + compactEmbedCache()** — 640→645 tests (+5)
+  - EmbeddingProvider: removeByContent/removeByKey/cacheKeys
+  - delete/batchDelete 现在同步清理 embedding cache
+  - compactEmbedCache(opts) 孤立条目清理+dryRun
+  - 与 BM25 compactBM25Index() 形成对称模式
+- ✅ **Better Ralph PRD 测试覆盖** — 103→117 tests (+14)
+  - auto_adjust_priorities: 依赖深度优先级排序(5 tests)
+  - split_large_story: 大故事拆分(5 tests)
+  - _calculate_dependency_depth: 循环依赖保护(4 tests)
+  - 修复: agent_registry + version_control 缺失 stubs
+  - 零回滚率持续保持(连续34天)
+- ✅ **prompt-router 实验循环 x2** — 72→94 tests (+22)
+  - route_round_robin(): 加权轮询负载均衡+共享状态, 6 tests
+  - route_least_loaded(): 最少加载路由+阈值过滤, 6 tests
+  - route_by_capability(any/all/best): 能力匹配路由, 6 tests
+  - agent_stats(): Agent 统计摘要, 4 tests
+  - 零回滚率持续保持(连续34天)
+
 ### 2026-05-02
 - ✅ **prompt-router 三轮实验循环** — 34→48 tests (+14)
   - **route_ensemble(k, weights)**: 多Agent权重分配委托, 5 tests
@@ -222,6 +246,10 @@ curl -X POST "https://api.tavily.com/search" \
   - insert_step(index, name, config): 位置插入
   - remove_step(name): 删除+依赖引用清理
   - 总测试: 416/416 (100%)
+- ✅ **AMS BM25 Sync + compactBM25Index()** — 635→640 tests (+5)
+  - delete/batchDelete BM25 sidecar 同步修复
+  - compactBM25Index() 孤立条目清理
+  - 修复 expire.test.js dbPath bug
 
 ### 2026-05-01
 - ✅ **Agent Memory Service v1.0-dev 续升** — 612→640 tests (+28)
@@ -512,5 +540,5 @@ curl -X POST "https://api.tavily.com/search" \
 
 ---
 
-*Last updated: 2026-05-01 02:00*
-*Next review: 2026-05-02*
+*Last updated: 2026-05-03 02:00*
+*Next review: 2026-05-04*

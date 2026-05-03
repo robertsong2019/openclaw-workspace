@@ -134,6 +134,61 @@ describe("createOpenClawNode", () => {
   });
 });
 
+describe("createOpenClawNode with retry", () => {
+  it("retries on executor failure and succeeds", async () => {
+    let calls = 0;
+    const flakyExecutor = async () => {
+      calls++;
+      if (calls < 3) throw new Error(`fail ${calls}`);
+      return "recovered";
+    };
+
+    const stateSchema = makeStateSchema(["resilient"]);
+    const node = createOpenClawNode({
+      name: "resilient",
+      systemPrompt: "Do: {input}",
+      executor: flakyExecutor,
+      retry: { maxRetries: 3, baseDelayMs: 10 },
+    });
+
+    const graph = new StateGraph(stateSchema)
+      .addNode("resilient", node)
+      .addEdge(START, "resilient")
+      .addEdge("resilient", END)
+      .compile();
+
+    const result = await graph.invoke(
+      { task: "test" },
+      { configurable: { thread_id: uuid() } }
+    );
+    assert.equal(result.resilientResult, "recovered");
+    assert.equal(calls, 3);
+  });
+
+  it("throws after exhausting retries", async () => {
+    const alwaysFail = async () => { throw new Error("permanent"); };
+
+    const stateSchema = makeStateSchema(["failnode"]);
+    const node = createOpenClawNode({
+      name: "failnode",
+      systemPrompt: "Do: {input}",
+      executor: alwaysFail,
+      retry: { maxRetries: 2, baseDelayMs: 5 },
+    });
+
+    const graph = new StateGraph(stateSchema)
+      .addNode("failnode", node)
+      .addEdge(START, "failnode")
+      .addEdge("failnode", END)
+      .compile();
+
+    await assert.rejects(
+      () => graph.invoke({ task: "test" }, { configurable: { thread_id: uuid() } }),
+      { message: "permanent" }
+    );
+  });
+});
+
 describe("sequentialRouter", () => {
   it("routes to first uncompleted step", () => {
     const router = sequentialRouter(["a", "b", "c"]);
