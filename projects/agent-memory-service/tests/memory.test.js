@@ -3309,6 +3309,37 @@ describe('MemoryService — autoMaintain', () => {
       assert.ok(true, 'completed without error');
     } finally { cleanup(); }
   });
+
+  it('compactBM25 task skipped when BM25 health is healthy', async () => {
+    const { svc, cleanup } = await createService();
+    try {
+      await svc.add({ content: 'test', layer: 'short' });
+      // Force trigger with high threshold
+      const res = await svc.autoMaintain({ threshold: 100, tasks: ['compactBM25'] });
+      // On clean data, bm25 score = 100, so task should be skipped
+      assert.equal(res.actions.compactBM25, undefined, 'should skip when healthy');
+    } finally { cleanup(); }
+  });
+
+  it('compactEmbedCache task skipped when embed cache is healthy', async () => {
+    const { svc, cleanup } = await createService();
+    try {
+      await svc.add({ content: 'test', layer: 'short' });
+      const res = await svc.autoMaintain({ threshold: 100, tasks: ['compactEmbedCache'] });
+      assert.equal(res.actions.compactEmbedCache, undefined, 'should skip when healthy');
+    } finally { cleanup(); }
+  });
+
+  it('healthScore includes bm25 and embedCache details', async () => {
+    const { svc, cleanup } = await createService();
+    try {
+      const health = await svc.healthScore();
+      assert.ok('bm25' in health.details, 'should have bm25 detail');
+      assert.ok('embedCache' in health.details, 'should have embedCache detail');
+      assert.ok(health.details.bm25 >= 0 && health.details.bm25 <= 100);
+      assert.ok(health.details.embedCache >= 0 && health.details.embedCache <= 100);
+    } finally { cleanup(); }
+  });
 });
 
 // ─── searchSimilar() ──────────────────────────────

@@ -1,13 +1,13 @@
 [
   {
-    "id": "0b363704-ab9d-4524-9e56-b3f9570a02c8",
+    "id": "f927afe7-c8ce-46b9-a4e7-6284c812aff9",
     "content": "manual cleanup delta another unique string here",
     "layer": "core",
     "tags": [],
     "entities": [],
     "weight": 1,
-    "createdAt": 1777739649764,
-    "accessedAt": 1777739649766,
+    "createdAt": 1777826002052,
+    "accessedAt": 1777826002054,
     "accessCount": 1,
     "hash": "ae115d352745a2bb",
     "factType": "observation"

@@ -1608,6 +1608,18 @@ export class MemoryService {
     const changelogCount = this.#changelog.all().length;
     const changelogScore = Math.max(0, 100 - Math.min(100, (changelogCount / 2000) * 100));
 
+    // 5. BM25 index bloat (orphan entries > 10% of live count)
+    const bm25OrphanCount = this.#bm25.docIds().filter(id => !all.some(m => m.id === id)).length;
+    const bm25Total = this.#bm25.N;
+    const bm25Score = bm25Total === 0 ? 100 : Math.max(0, 100 - (bm25OrphanCount / bm25Total) * 100);
+
+    // 6. Embedding cache bloat (orphan entries > 10% of cache size)
+    const cacheKeys = this.#embeddings.cacheKeys();
+    const liveHashes = new Set(all.filter(m => m.content).map(m => contentHash(m.content)));
+    const embedOrphanCount = cacheKeys.filter(k => !liveHashes.has(k)).length;
+    const embedTotal = cacheKeys.length;
+    const embedScore = embedTotal === 0 ? 100 : Math.max(0, 100 - (embedOrphanCount / embedTotal) * 100);
+
     const score = Math.round(
       expiryScore * weights.expiry +
       accessScore * weights.access +
@@ -1622,6 +1634,9 @@ export class MemoryService {
     if (lowWeightCount > all.length * 0.3) recommendations.push(`Many low-weight memories may decay soon (check weight distribution)`);
     if (changelogCount > 1000) recommendations.push(`Compact changelog (${changelogCount} entries > 1000, call compactChangelog())`);
 
+    if (bm25OrphanCount > 0) recommendations.push(`BM25 index has ${bm25OrphanCount} orphan entries (call compactBM25Index())`);
+    if (embedOrphanCount > 0) recommendations.push(`Embedding cache has ${embedOrphanCount} orphan entries (call compactEmbedCache())`);
+
     return {
       score,
       details: {
@@ -1629,6 +1644,8 @@ export class MemoryService {
         access: Math.round(accessScore),
         weight: Math.round(weightScore),
         changelog: Math.round(changelogScore),
+        bm25: Math.round(bm25Score),
+        embedCache: Math.round(embedScore),
       },
       recommendations,
     };
@@ -1653,12 +1670,18 @@ export class MemoryService {
       return result;
     }
 
-    const tasks = opts.tasks || ['purge', 'compactChangelog', 'decay', 'reindex'];
+    const tasks = opts.tasks || ['purge', 'compactChangelog', 'compactBM25', 'compactEmbedCache', 'decay', 'reindex'];
     if (tasks.includes('purge') && health.details.expiry < 90) {
       result.actions.purge = await this.purgeExpired();
     }
     if (tasks.includes('compactChangelog') && health.details.changelog < 90) {
       result.actions.compactChangelog = await this.compactChangelog();
+    }
+    if (tasks.includes('compactBM25') && health.details.bm25 < 90) {
+      result.actions.compactBM25 = await this.compactBM25Index();
+    }
+    if (tasks.includes('compactEmbedCache') && health.details.embedCache < 90) {
+      result.actions.compactEmbedCache = await this.compactEmbedCache();
     }
     if (tasks.includes('decay')) {
       result.actions.decay = await this.decay();
