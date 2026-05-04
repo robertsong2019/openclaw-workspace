@@ -55282,7 +55282,7 @@
   },
   {
     "id": "26054a0b-9a4e-4cab-8c74-b3e698809945",
-    "content": "Same same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same",
+    "content": "Same same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same\nSame same",
     "layer": "short",
     "tags": [
       "t"
@@ -55294,7 +55294,7 @@
     "createdAt": 1777554563699,
     "accessedAt": 1777554563699,
     "accessCount": 0,
-    "hash": "135d7f0d5a941753",
+    "hash": "6e30f0176d69628c",
     "factType": "observation"
   },
   {
@@ -83128,40 +83128,6 @@
     "factType": "observation"
   },
   {
-    "id": "c258deec-6f9e-4cbd-a0f9-fdf3b0a7d7c5",
-    "content": "Same same",
-    "layer": "short",
-    "tags": [
-      "t"
-    ],
-    "entities": [
-      "e"
-    ],
-    "weight": 1,
-    "createdAt": 1777651731251,
-    "accessedAt": 1777651731251,
-    "accessCount": 0,
-    "hash": "6e232d9de1e1cccf",
-    "factType": "observation"
-  },
-  {
-    "id": "a068a93f-c22e-418d-b69d-103f4c6edb0a",
-    "content": "Same same",
-    "layer": "short",
-    "tags": [
-      "t"
-    ],
-    "entities": [
-      "e"
-    ],
-    "weight": 1,
-    "createdAt": 1777651731283,
-    "accessedAt": 1777651731283,
-    "accessCount": 0,
-    "hash": "6e232d9de1e1cccf",
-    "factType": "observation"
-  },
-  {
     "id": "1160179e-15cd-4d69-8c6c-46719492bcb3",
     "content": "Completely different alpha",
     "layer": "short",
@@ -84542,40 +84508,6 @@
     "factType": "observation"
   },
   {
-    "id": "abe68690-0f01-4f91-a8f9-4d25d5c0196b",
-    "content": "Same same",
-    "layer": "short",
-    "tags": [
-      "t"
-    ],
-    "entities": [
-      "e"
-    ],
-    "weight": 1,
-    "createdAt": 1777651874935,
-    "accessedAt": 1777651874935,
-    "accessCount": 0,
-    "hash": "6e232d9de1e1cccf",
-    "factType": "observation"
-  },
-  {
-    "id": "dc7b7e11-82da-43de-9f0c-fc317789848a",
-    "content": "Same same",
-    "layer": "short",
-    "tags": [
-      "t"
-    ],
-    "entities": [
-      "e"
-    ],
-    "weight": 1,
-    "createdAt": 1777651874971,
-    "accessedAt": 1777651874971,
-    "accessCount": 0,
-    "hash": "6e232d9de1e1cccf",
-    "factType": "observation"
-  },
-  {
     "id": "942a28ee-3869-4302-9493-8ed853d5457a",
     "content": "Completely different alpha",
     "layer": "short",
@@ -85953,23 +85885,6 @@
     "accessedAt": 1777652009894,
     "accessCount": 0,
     "hash": "64ec88ca00b268e5",
-    "factType": "observation"
-  },
-  {
-    "id": "fa503baf-a7e1-4cc3-a90d-95f4de3e09b0",
-    "content": "Same same",
-    "layer": "short",
-    "tags": [
-      "t"
-    ],
-    "entities": [
-      "e"
-    ],
-    "weight": 1,
-    "createdAt": 1777652009960,
-    "accessedAt": 1777652009960,
-    "accessCount": 0,
-    "hash": "6e232d9de1e1cccf",
     "factType": "observation"
   },
   {
@@ -118202,6 +118117,3718 @@
     "accessedAt": 1777826137534,
     "accessCount": 0,
     "hash": "cb753d51d697d4eb",
+    "factType": "observation"
+  },
+  {
+    "id": "d00ffa77-3469-4a06-b78a-242bd7afa68f",
+    "content": "Standalone",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910533808,
+    "accessedAt": 1777910533808,
+    "accessCount": 0,
+    "hash": "c697bed3453e1b35",
+    "factType": "observation"
+  },
+  {
+    "id": "e64be563-4240-45d6-a470-87b434eb8c7d",
+    "content": "Original",
+    "layer": "short",
+    "tags": [
+      "a",
+      "b"
+    ],
+    "entities": [
+      "x"
+    ],
+    "weight": 1,
+    "createdAt": 1777910533924,
+    "accessedAt": 1777910533924,
+    "accessCount": 0,
+    "hash": "88d759ea02cef4b8",
+    "factType": "observation"
+  },
+  {
+    "id": "7ccdc2a0-6ab3-4fbb-b375-92adef70b326",
+    "content": "Original",
+    "layer": "short",
+    "tags": [
+      "a",
+      "b"
+    ],
+    "entities": [
+      "x"
+    ],
+    "weight": 1,
+    "createdAt": 1777910533970,
+    "accessedAt": 1777910533970,
+    "accessCount": 0,
+    "source": "branch:e64be563-4240-45d6-a470-87b434eb8c7d",
+    "hash": "88d759ea02cef4b8",
+    "factType": "observation"
+  },
+  {
+    "id": "e9a8d70f-1e0f-4bfc-8677-fa4b3af95fce",
+    "content": "Original content here",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910534078,
+    "accessedAt": 1777910534078,
+    "accessCount": 0,
+    "hash": "34ee7193fe8063db",
+    "factType": "observation"
+  },
+  {
+    "id": "bd0fbca4-38d3-4964-9325-3386ed11529b",
+    "content": "Modified content here",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910534107,
+    "accessedAt": 1777910534107,
+    "accessCount": 0,
+    "source": "branch:e9a8d70f-1e0f-4bfc-8677-fa4b3af95fce",
+    "hash": "fdff1559214453e5",
+    "factType": "observation"
+  },
+  {
+    "id": "39c67bb5-a2ff-47df-a9b9-aec7f22e62c8",
+    "content": "Test",
+    "layer": "short",
+    "tags": [
+      "a",
+      "b"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910534208,
+    "accessedAt": 1777910534208,
+    "accessCount": 0,
+    "hash": "532eaabd9574880d",
+    "factType": "observation"
+  },
+  {
+    "id": "5211905c-185f-443f-a46c-309703627d5d",
+    "content": "Test",
+    "layer": "short",
+    "tags": [
+      "b",
+      "c"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910534247,
+    "accessedAt": 1777910534247,
+    "accessCount": 0,
+    "source": "branch:39c67bb5-a2ff-47df-a9b9-aec7f22e62c8",
+    "hash": "532eaabd9574880d",
+    "factType": "observation"
+  },
+  {
+    "id": "3b2e817b-f37b-4e06-937d-30fdad8eff0c",
+    "content": "Test",
+    "layer": "short",
+    "tags": [],
+    "entities": [
+      "e1",
+      "e2"
+    ],
+    "weight": 1,
+    "createdAt": 1777910534352,
+    "accessedAt": 1777910534352,
+    "accessCount": 0,
+    "hash": "532eaabd9574880d",
+    "factType": "observation"
+  },
+  {
+    "id": "c284df6b-d391-488f-9179-ec64ed418ce7",
+    "content": "Test",
+    "layer": "short",
+    "tags": [],
+    "entities": [
+      "e2",
+      "e3"
+    ],
+    "weight": 1,
+    "createdAt": 1777910534379,
+    "accessedAt": 1777910534379,
+    "accessCount": 0,
+    "source": "branch:3b2e817b-f37b-4e06-937d-30fdad8eff0c",
+    "hash": "532eaabd9574880d",
+    "factType": "observation"
+  },
+  {
+    "id": "df3d8576-a6ef-44cb-adc1-aa45feeb8d13",
+    "content": "Source",
+    "layer": "short",
+    "tags": [
+      "s"
+    ],
+    "entities": [
+      "se"
+    ],
+    "weight": 1,
+    "createdAt": 1777910534477,
+    "accessedAt": 1777910534477,
+    "accessCount": 0,
+    "hash": "0e570ca6fabe24f9",
+    "factType": "observation"
+  },
+  {
+    "id": "0740ca26-7ff6-4075-a7a0-0da13e82b2fb",
+    "content": "Branch",
+    "layer": "short",
+    "tags": [
+      "b"
+    ],
+    "entities": [
+      "be"
+    ],
+    "weight": 1,
+    "createdAt": 1777910534517,
+    "accessedAt": 1777910534517,
+    "accessCount": 0,
+    "source": "branch:df3d8576-a6ef-44cb-adc1-aa45feeb8d13",
+    "hash": "52656e8104eef3fd",
+    "factType": "observation"
+  },
+  {
+    "id": "4a5b3c6e-7be4-483c-b298-a583ab8cc1b0",
+    "content": "L0",
+    "layer": "short",
+    "tags": [
+      "t0"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910534629,
+    "accessedAt": 1777910534629,
+    "accessCount": 0,
+    "hash": "929172fae51e7c4f",
+    "factType": "observation"
+  },
+  {
+    "id": "38904eab-f85f-4637-81fe-65bbdd4ac510",
+    "content": "L1",
+    "layer": "short",
+    "tags": [
+      "t1"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910534655,
+    "accessedAt": 1777910534655,
+    "accessCount": 0,
+    "source": "branch:4a5b3c6e-7be4-483c-b298-a583ab8cc1b0",
+    "hash": "dffe8596427fc50e",
+    "factType": "observation"
+  },
+  {
+    "id": "f4111171-c6e1-4158-929d-ec4851ac9463",
+    "content": "L2",
+    "layer": "short",
+    "tags": [
+      "t2"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910534691,
+    "accessedAt": 1777910534691,
+    "accessCount": 0,
+    "source": "branch:38904eab-f85f-4637-81fe-65bbdd4ac510",
+    "hash": "d76354d845789844",
+    "factType": "observation"
+  },
+  {
+    "id": "eab407c4-a372-4447-9836-4e9345be0063",
+    "content": "Standalone",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910534934,
+    "accessedAt": 1777910534934,
+    "accessCount": 0,
+    "hash": "c697bed3453e1b35",
+    "factType": "observation"
+  },
+  {
+    "id": "8690ed03-12b7-4587-9753-820b30e986ac",
+    "content": "Source text\nBranch text",
+    "layer": "short",
+    "tags": [
+      "a",
+      "b"
+    ],
+    "entities": [
+      "x",
+      "y"
+    ],
+    "weight": 1,
+    "createdAt": 1777910535044,
+    "accessedAt": 1777910535044,
+    "accessCount": 0,
+    "hash": "300711c62bd971e4",
+    "factType": "observation"
+  },
+  {
+    "id": "c9f0441f-6a12-4ef4-8388-592f2e1b2101",
+    "content": "Much longer branch content",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910535226,
+    "accessedAt": 1777910535226,
+    "accessCount": 0,
+    "hash": "fe2186871d4658c4",
+    "factType": "observation"
+  },
+  {
+    "id": "d86c093e-cc16-4689-859a-aef1647223ff",
+    "content": "New content",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910535405,
+    "accessedAt": 1777910535405,
+    "accessCount": 0,
+    "hash": "12f41b1c321df0c8",
+    "factType": "observation"
+  },
+  {
+    "id": "eec1be2e-9028-4604-b03f-b60ff524f8d4",
+    "content": "Manual override",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910535572,
+    "accessedAt": 1777910535572,
+    "accessCount": 0,
+    "hash": "723c2826018e4a1a",
+    "factType": "observation"
+  },
+  {
+    "id": "88333f11-ed58-4694-aa7f-3b05da0f8b66",
+    "content": "Source\nBranch",
+    "layer": "short",
+    "tags": [
+      "a",
+      "b"
+    ],
+    "entities": [
+      "e1",
+      "e2"
+    ],
+    "weight": 1,
+    "createdAt": 1777910535764,
+    "accessedAt": 1777910535764,
+    "accessCount": 0,
+    "hash": "678d044fb114de09",
+    "factType": "observation"
+  },
+  {
+    "id": "3827b2da-4b65-4944-91b3-a51f4e8b14ef",
+    "content": "Source\nBranch",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910535930,
+    "accessedAt": 1777910535930,
+    "accessCount": 0,
+    "hash": "678d044fb114de09",
+    "factType": "observation"
+  },
+  {
+    "id": "a0dfec3c-884b-4da1-8489-5ee9632664c7",
+    "content": "Other",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910535969,
+    "accessedAt": 1777910535969,
+    "accessCount": 0,
+    "hash": "f97e9da0e3b879f0",
+    "factType": "observation"
+  },
+  {
+    "id": "fb3b299a-196f-4f08-ba31-249d1192c9f9",
+    "content": "Source\nSource",
+    "layer": "short",
+    "tags": [
+      "a"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910536152,
+    "accessedAt": 1777910536152,
+    "accessCount": 0,
+    "hash": "da1c44dc3b14cd4d",
+    "factType": "observation"
+  },
+  {
+    "id": "4a2dfe6b-259e-4cda-84f8-97c0ce1a6e9f",
+    "content": "Source\nSource",
+    "layer": "short",
+    "tags": [
+      "b"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910536317,
+    "accessedAt": 1777910536317,
+    "accessCount": 0,
+    "hash": "da1c44dc3b14cd4d",
+    "factType": "observation"
+  },
+  {
+    "id": "830a58bc-20d9-4449-8837-1a4c1b83b08e",
+    "content": "Alpha\nBeta",
+    "layer": "short",
+    "tags": [
+      "x",
+      "y"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910536578,
+    "accessedAt": 1777910536578,
+    "accessCount": 0,
+    "hash": "c4457665fd3e62b0",
+    "factType": "observation"
+  },
+  {
+    "id": "0ed2e8fe-e431-45e6-b2cf-4c3c5cb4cf07",
+    "content": "Gamma\nDelta",
+    "layer": "short",
+    "tags": [
+      "z",
+      "w"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910536659,
+    "accessedAt": 1777910536659,
+    "accessCount": 0,
+    "hash": "9ac917457069268c",
+    "factType": "observation"
+  },
+  {
+    "id": "90876c57-f078-486c-82b5-b780486c0fdf",
+    "content": "A\nB",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910536883,
+    "accessedAt": 1777910536883,
+    "accessCount": 0,
+    "hash": "23519a43c66b4c34",
+    "factType": "observation"
+  },
+  {
+    "id": "1fa6d588-fcaa-49a4-b074-e26926d8b7e7",
+    "content": "C",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910536958,
+    "accessedAt": 1777910536958,
+    "accessCount": 0,
+    "hash": "6b23c0d5f35d1b11",
+    "factType": "observation"
+  },
+  {
+    "id": "1f6ee3a9-3533-44a5-ab8b-8cd914cba24c",
+    "content": "Much longer content here",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910537092,
+    "accessedAt": 1777910537092,
+    "accessCount": 0,
+    "hash": "f02022220b07b0c5",
+    "factType": "observation"
+  },
+  {
+    "id": "8682a81f-deea-4cff-abbb-1e3f262947d5",
+    "content": "Original content",
+    "layer": "short",
+    "tags": [
+      "a"
+    ],
+    "entities": [
+      "x"
+    ],
+    "weight": 1,
+    "createdAt": 1777910537526,
+    "accessedAt": 1777910537526,
+    "accessCount": 0,
+    "hash": "3949e2daad0ba297",
+    "factType": "observation"
+  },
+  {
+    "id": "dacf91f2-443d-4c35-aa3e-189f59c965ea",
+    "content": "Original content",
+    "layer": "short",
+    "tags": [
+      "a"
+    ],
+    "entities": [
+      "x"
+    ],
+    "weight": 1,
+    "createdAt": 1777910537579,
+    "accessedAt": 1777910537579,
+    "accessCount": 0,
+    "source": "branch:8682a81f-deea-4cff-abbb-1e3f262947d5",
+    "hash": "3949e2daad0ba297",
+    "factType": "observation"
+  },
+  {
+    "id": "7e93ca70-f1b7-43cc-ab5c-a35906f279d7",
+    "content": "Source",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910537679,
+    "accessedAt": 1777910537679,
+    "accessCount": 0,
+    "hash": "0e570ca6fabe24f9",
+    "factType": "observation"
+  },
+  {
+    "id": "babf1788-c5ef-4f41-a4f5-243855750732",
+    "content": "Source",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910537726,
+    "accessedAt": 1777910537726,
+    "accessCount": 0,
+    "source": "branch:7e93ca70-f1b7-43cc-ab5c-a35906f279d7",
+    "hash": "0e570ca6fabe24f9",
+    "factType": "observation"
+  },
+  {
+    "id": "1615bbbd-f515-4cd1-b5d7-e478e7f66467",
+    "content": "Original",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910537839,
+    "accessedAt": 1777910537839,
+    "accessCount": 0,
+    "hash": "88d759ea02cef4b8",
+    "factType": "observation"
+  },
+  {
+    "id": "a648ce06-bf86-4294-91b3-963bdeb21aad",
+    "content": "Modified branch",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910537870,
+    "accessedAt": 1777910537870,
+    "accessCount": 0,
+    "source": "branch:1615bbbd-f515-4cd1-b5d7-e478e7f66467",
+    "hash": "d4901a72d466426d",
+    "factType": "observation"
+  },
+  {
+    "id": "1eb055c5-02b3-4202-9291-9f0de2002951",
+    "content": "Original",
+    "layer": "core",
+    "tags": [
+      "root"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910537968,
+    "accessedAt": 1777910537968,
+    "accessCount": 0,
+    "hash": "88d759ea02cef4b8",
+    "factType": "observation"
+  },
+  {
+    "id": "829696ec-dd0e-4731-8259-7351b8a3c183",
+    "content": "Original",
+    "layer": "short",
+    "tags": [
+      "fork"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910538006,
+    "accessedAt": 1777910538006,
+    "accessCount": 0,
+    "source": "branch:1eb055c5-02b3-4202-9291-9f0de2002951",
+    "hash": "88d759ea02cef4b8",
+    "factType": "observation"
+  },
+  {
+    "id": "1141c7aa-f0de-4643-8299-8f8664a057c6",
+    "content": "Source",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910538113,
+    "accessedAt": 1777910538113,
+    "accessCount": 0,
+    "hash": "0e570ca6fabe24f9",
+    "factType": "observation"
+  },
+  {
+    "id": "d48cb4a4-4151-46ea-a83c-0a432dab87eb",
+    "content": "Source",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910538144,
+    "accessedAt": 1777910538144,
+    "accessCount": 0,
+    "source": "branch:1141c7aa-f0de-4643-8299-8f8664a057c6",
+    "hash": "0e570ca6fabe24f9",
+    "factType": "observation"
+  },
+  {
+    "id": "2ba857d8-9c0c-420a-b290-06f7e2b3c8c8",
+    "content": "Shared start",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910538329,
+    "accessedAt": 1777910538329,
+    "accessCount": 0,
+    "hash": "e30c10997860b73c",
+    "factType": "observation"
+  },
+  {
+    "id": "3ef5d519-5522-4ec6-828c-8e8c97bce7fd",
+    "content": "Branch diverged",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910538358,
+    "accessedAt": 1777910538358,
+    "accessCount": 0,
+    "source": "branch:2ba857d8-9c0c-420a-b290-06f7e2b3c8c8",
+    "hash": "723a15240140eb3b",
+    "factType": "observation"
+  },
+  {
+    "id": "5b4fd189-d5f5-4934-9ab7-827b23eac74c",
+    "content": "Level 0",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910538491,
+    "accessedAt": 1777910538491,
+    "accessCount": 0,
+    "hash": "3257e58bcc50c5b4",
+    "factType": "observation"
+  },
+  {
+    "id": "f7bb1351-42ea-473e-8177-a8bcfb0b6664",
+    "content": "Level 1",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910538529,
+    "accessedAt": 1777910538529,
+    "accessCount": 0,
+    "source": "branch:5b4fd189-d5f5-4934-9ab7-827b23eac74c",
+    "hash": "b75cf05d6d2aa22c",
+    "factType": "observation"
+  },
+  {
+    "id": "46beb300-679d-4de7-8940-af6fc9ab4043",
+    "content": "Level 2",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910538568,
+    "accessedAt": 1777910538568,
+    "accessCount": 0,
+    "source": "branch:f7bb1351-42ea-473e-8177-a8bcfb0b6664",
+    "hash": "29cc4eb6673b9979",
+    "factType": "observation"
+  },
+  {
+    "id": "8fc1a234-071f-45a3-aa39-a7df0e65f584",
+    "content": "Hello world",
+    "layer": "short",
+    "tags": [
+      "x"
+    ],
+    "entities": [
+      "e1"
+    ],
+    "weight": 1,
+    "createdAt": 1777910545876,
+    "accessedAt": 1777910545876,
+    "accessCount": 0,
+    "hash": "64ec88ca00b268e5",
+    "factType": "observation"
+  },
+  {
+    "id": "d77fabb9-62e4-4645-b63f-fdf7684cca24",
+    "content": "Hello world",
+    "layer": "short",
+    "tags": [
+      "x"
+    ],
+    "entities": [
+      "e1"
+    ],
+    "weight": 1,
+    "createdAt": 1777910545915,
+    "accessedAt": 1777910545915,
+    "accessCount": 0,
+    "hash": "64ec88ca00b268e5",
+    "factType": "observation"
+  },
+  {
+    "id": "47f4da1a-010e-4b10-9dde-4a556d37588a",
+    "content": "Same same",
+    "layer": "short",
+    "tags": [
+      "t"
+    ],
+    "entities": [
+      "e"
+    ],
+    "weight": 1,
+    "createdAt": 1777910546020,
+    "accessedAt": 1777910546020,
+    "accessCount": 0,
+    "hash": "6e232d9de1e1cccf",
+    "factType": "observation"
+  },
+  {
+    "id": "491a9d8f-16c8-49db-b100-0a3a4d35b6c0",
+    "content": "Same same",
+    "layer": "short",
+    "tags": [
+      "t"
+    ],
+    "entities": [
+      "e"
+    ],
+    "weight": 1,
+    "createdAt": 1777910546057,
+    "accessedAt": 1777910546057,
+    "accessCount": 0,
+    "hash": "6e232d9de1e1cccf",
+    "factType": "observation"
+  },
+  {
+    "id": "07e28e1b-907d-482e-ab9c-f1b15a86b6d6",
+    "content": "Completely different alpha",
+    "layer": "short",
+    "tags": [
+      "z1",
+      "z2"
+    ],
+    "entities": [
+      "x1",
+      "x2"
+    ],
+    "weight": 1,
+    "createdAt": 1777910546096,
+    "accessedAt": 1777910546096,
+    "accessCount": 0,
+    "hash": "13659a96d7983c80",
+    "factType": "observation"
+  },
+  {
+    "id": "7706aabe-877c-4ade-b167-294dbf0c66c3",
+    "content": "Totally unrelated beta gamma",
+    "layer": "short",
+    "tags": [
+      "y1",
+      "y2",
+      "y3"
+    ],
+    "entities": [
+      "w1"
+    ],
+    "weight": 1,
+    "createdAt": 1777910546124,
+    "accessedAt": 1777910546124,
+    "accessCount": 0,
+    "hash": "73fcf662a0a2eb34",
+    "factType": "observation"
+  },
+  {
+    "id": "6ea84cf2-9473-4135-90fa-5777a62a6cac",
+    "content": "Alpha",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910546218,
+    "accessedAt": 1777910546218,
+    "accessCount": 0,
+    "hash": "b1a96dd646bccaa2",
+    "factType": "observation"
+  },
+  {
+    "id": "5fa5b45c-1e61-4e0e-95ab-ec57b79b6b19",
+    "content": "A",
+    "layer": "short",
+    "tags": [
+      "t"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910546304,
+    "accessedAt": 1777910546304,
+    "accessCount": 0,
+    "hash": "559aead08264d579",
+    "factType": "observation"
+  },
+  {
+    "id": "14e7e103-64ae-41ad-bcd5-f470b44defdd",
+    "content": "A",
+    "layer": "short",
+    "tags": [
+      "t"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910546335,
+    "accessedAt": 1777910546335,
+    "accessCount": 0,
+    "hash": "559aead08264d579",
+    "factType": "observation"
+  },
+  {
+    "id": "4ba9cd1d-7d8e-47c6-8ec7-33d1a55f611b",
+    "content": "Alpha",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910546507,
+    "accessedAt": 1777910546507,
+    "accessCount": 0,
+    "hash": "b1a96dd646bccaa2",
+    "factType": "observation"
+  },
+  {
+    "id": "37aef21e-3e76-4f44-bbcc-6e24b69a07e3",
+    "content": "Alpha",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910546614,
+    "accessedAt": 1777910546614,
+    "accessCount": 0,
+    "hash": "b1a96dd646bccaa2",
+    "factType": "observation"
+  },
+  {
+    "id": "b2a672d5-349a-4019-9eee-f9b9d09952e2",
+    "content": "Hello",
+    "layer": "short",
+    "tags": [
+      "a"
+    ],
+    "entities": [
+      "x"
+    ],
+    "weight": 1,
+    "createdAt": 1777910546719,
+    "accessedAt": 1777910546719,
+    "accessCount": 0,
+    "hash": "185f8db32271fe25",
+    "factType": "observation"
+  },
+  {
+    "id": "fb572db1-8d3f-416c-b27b-a35727f1da38",
+    "content": "World",
+    "layer": "short",
+    "tags": [
+      "b"
+    ],
+    "entities": [
+      "y"
+    ],
+    "weight": 1,
+    "createdAt": 1777910546759,
+    "accessedAt": 1777910546759,
+    "accessCount": 0,
+    "hash": "78ae647dc5544d22",
+    "factType": "observation"
+  },
+  {
+    "id": "6a3c7a2e-4fba-47a0-ae1b-1275e669b821",
+    "content": "Hi",
+    "layer": "short",
+    "tags": [
+      "a"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910546843,
+    "accessedAt": 1777910546843,
+    "accessCount": 0,
+    "hash": "3639efcd08abb273",
+    "factType": "observation"
+  },
+  {
+    "id": "a091acbd-8cab-4a98-acc0-1cc3063ee610",
+    "content": "Hello World Longer",
+    "layer": "short",
+    "tags": [
+      "b"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910546881,
+    "accessedAt": 1777910546881,
+    "accessCount": 0,
+    "hash": "291d01cf4fa0a57f",
+    "factType": "observation"
+  },
+  {
+    "id": "c383523d-6807-4b64-a861-b3a849015ef8",
+    "content": "Old",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910546954,
+    "accessedAt": 1777910546954,
+    "accessCount": 0,
+    "hash": "bca97160f4e1211f",
+    "factType": "observation"
+  },
+  {
+    "id": "da2eeafc-9720-46a2-822d-19404df90732",
+    "content": "New",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910546993,
+    "accessedAt": 1777910546993,
+    "accessCount": 0,
+    "hash": "18fdd549b2ed367a",
+    "factType": "observation"
+  },
+  {
+    "id": "32da05ef-ccc6-434d-84fa-f0ac7595e59c",
+    "content": "Hello",
+    "layer": "short",
+    "tags": [
+      "shared",
+      "only-a"
+    ],
+    "entities": [
+      "e1",
+      "e2"
+    ],
+    "weight": 1,
+    "createdAt": 1777910547078,
+    "accessedAt": 1777910547078,
+    "accessCount": 0,
+    "hash": "185f8db32271fe25",
+    "factType": "observation"
+  },
+  {
+    "id": "bc47e6a5-ef89-4472-8715-9c6cfdfba89a",
+    "content": "Hello",
+    "layer": "short",
+    "tags": [
+      "shared",
+      "only-b"
+    ],
+    "entities": [
+      "e2",
+      "e3"
+    ],
+    "weight": 1,
+    "createdAt": 1777910547115,
+    "accessedAt": 1777910547115,
+    "accessCount": 0,
+    "hash": "185f8db32271fe25",
+    "factType": "observation"
+  },
+  {
+    "id": "1a148ecb-c7af-4fce-ae10-3a13fb6b229f",
+    "content": "Alpha beta gamma",
+    "layer": "short",
+    "tags": [
+      "x"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910547193,
+    "accessedAt": 1777910547193,
+    "accessCount": 0,
+    "hash": "a53fb55d1133524d",
+    "factType": "observation"
+  },
+  {
+    "id": "51926b12-0579-41c1-92d1-07816571aef4",
+    "content": "Alpha beta gamma",
+    "layer": "short",
+    "tags": [
+      "x"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910547229,
+    "accessedAt": 1777910547229,
+    "accessCount": 0,
+    "hash": "a53fb55d1133524d",
+    "factType": "observation"
+  },
+  {
+    "id": "fbcc87a2-7893-45fb-9317-b3559d53b678",
+    "content": "Alpha",
+    "layer": "short",
+    "tags": [
+      "a"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910547306,
+    "accessedAt": 1777910547306,
+    "accessCount": 0,
+    "hash": "b1a96dd646bccaa2",
+    "factType": "observation"
+  },
+  {
+    "id": "c6de1de7-c173-4b4b-a1cf-5a6f885a0402",
+    "content": "Beta",
+    "layer": "short",
+    "tags": [
+      "b"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910547344,
+    "accessedAt": 1777910547344,
+    "accessCount": 0,
+    "hash": "703390318bd55aef",
+    "factType": "observation"
+  },
+  {
+    "id": "fef18bf1-6683-44b9-93c5-112790817293",
+    "content": "A",
+    "layer": "short",
+    "tags": [
+      "x"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910547421,
+    "accessedAt": 1777910547421,
+    "accessCount": 0,
+    "hash": "559aead08264d579",
+    "factType": "observation"
+  },
+  {
+    "id": "9d45a8bb-7273-41e5-88db-25721a0d6e6f",
+    "content": "B",
+    "layer": "short",
+    "tags": [
+      "y"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910547457,
+    "accessedAt": 1777910547457,
+    "accessCount": 0,
+    "hash": "df7e70e5021544f4",
+    "factType": "observation"
+  },
+  {
+    "id": "d19dec9b-b62b-480a-8b9f-28fc91728990",
+    "content": "Unique alpha content",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910548026,
+    "accessedAt": 1777910548026,
+    "accessCount": 0,
+    "hash": "0eee4f7334825e7a",
+    "factType": "observation"
+  },
+  {
+    "id": "d41ad9a3-00c2-40f7-b573-b6d94ff4fe7d",
+    "content": "Machine learning is great topic number 0",
+    "layer": "short",
+    "tags": [
+      "ml",
+      "ai"
+    ],
+    "entities": [
+      "ml"
+    ],
+    "weight": 1,
+    "createdAt": 1777910609172,
+    "accessedAt": 1777910609172,
+    "accessCount": 0,
+    "hash": "c45db478e5ecd4bf",
+    "factType": "opinion"
+  },
+  {
+    "id": "f296eac6-009f-4e8a-bcf3-4005dadf6822",
+    "content": "Machine learning is great topic number 1",
+    "layer": "short",
+    "tags": [
+      "ml",
+      "ai"
+    ],
+    "entities": [
+      "ml"
+    ],
+    "weight": 1,
+    "createdAt": 1777910609221,
+    "accessedAt": 1777910609221,
+    "accessCount": 0,
+    "hash": "a4d214e21d58b040",
+    "factType": "opinion"
+  },
+  {
+    "id": "23484ca2-4422-4ebe-a1b6-e512cf0bcbdb",
+    "content": "Machine learning is great topic number 2",
+    "layer": "short",
+    "tags": [
+      "ml",
+      "ai"
+    ],
+    "entities": [
+      "ml"
+    ],
+    "weight": 1,
+    "createdAt": 1777910609249,
+    "accessedAt": 1777910609249,
+    "accessCount": 0,
+    "hash": "121f39570ccfde60",
+    "factType": "opinion"
+  },
+  {
+    "id": "e4d5af2a-0658-40a5-a9eb-1fe5559dad01",
+    "content": "Machine learning is great topic number 3",
+    "layer": "short",
+    "tags": [
+      "ml",
+      "ai"
+    ],
+    "entities": [
+      "ml"
+    ],
+    "weight": 1,
+    "createdAt": 1777910609276,
+    "accessedAt": 1777910609276,
+    "accessCount": 0,
+    "hash": "a5e5259e0dce7c3b",
+    "factType": "opinion"
+  },
+  {
+    "id": "f693bd4e-c1a2-419a-8cdc-5a0bbaebc993",
+    "content": "Cooking recipes for pasta carbonara",
+    "layer": "short",
+    "tags": [
+      "food"
+    ],
+    "entities": [
+      "pasta"
+    ],
+    "weight": 1,
+    "createdAt": 1777910609301,
+    "accessedAt": 1777910609301,
+    "accessCount": 0,
+    "hash": "7de2f45262eba884",
+    "factType": "observation"
+  },
+  {
+    "id": "c2f48629-60ef-4a21-b68a-5cd71b3b842c",
+    "content": "Quantum physics wave function collapse",
+    "layer": "short",
+    "tags": [
+      "physics"
+    ],
+    "entities": [
+      "quantum"
+    ],
+    "weight": 1,
+    "createdAt": 1777910609332,
+    "accessedAt": 1777910609332,
+    "accessCount": 0,
+    "hash": "1a32ceb6df07c337",
+    "factType": "observation"
+  },
+  {
+    "id": "a9dbd750-5046-4463-baa5-1195f1413316",
+    "content": "Alpha beta gamma delta epsilon",
+    "layer": "short",
+    "tags": [
+      "a",
+      "b"
+    ],
+    "entities": [
+      "x"
+    ],
+    "weight": 1,
+    "createdAt": 1777910674207,
+    "accessedAt": 1777910674207,
+    "accessCount": 0,
+    "hash": "701fba0b1ceed23f",
+    "factType": "observation"
+  },
+  {
+    "id": "5682230f-2472-4a1d-a5ca-c3fcf27cab2c",
+    "content": "Zulu yankee xray whiskey victor",
+    "layer": "short",
+    "tags": [
+      "z"
+    ],
+    "entities": [
+      "w"
+    ],
+    "weight": 1,
+    "createdAt": 1777910674242,
+    "accessedAt": 1777910674242,
+    "accessCount": 0,
+    "hash": "cb753d51d697d4eb",
+    "factType": "observation"
+  },
+  {
+    "id": "324d2ddc-df5f-409a-9e69-f68ede07c02b",
+    "content": "duplicate content same text 0",
+    "layer": "short",
+    "tags": [
+      "t"
+    ],
+    "entities": [
+      "e"
+    ],
+    "weight": 1,
+    "createdAt": 1777910796928,
+    "accessedAt": 1777910796928,
+    "accessCount": 0,
+    "hash": "482c0aaaf3378bdb",
+    "factType": "observation"
+  },
+  {
+    "id": "f8db0245-c39f-44ee-af17-1ba3deae56a0",
+    "content": "duplicate content same text 1",
+    "layer": "short",
+    "tags": [
+      "t"
+    ],
+    "entities": [
+      "e"
+    ],
+    "weight": 1,
+    "createdAt": 1777910796988,
+    "accessedAt": 1777910796988,
+    "accessCount": 0,
+    "hash": "49deb5a1db4aa0ec",
+    "factType": "observation"
+  },
+  {
+    "id": "014ae84b-6b56-480e-ac7a-d9d177f40175",
+    "content": "duplicate content same text 2",
+    "layer": "short",
+    "tags": [
+      "t"
+    ],
+    "entities": [
+      "e"
+    ],
+    "weight": 1,
+    "createdAt": 1777910797037,
+    "accessedAt": 1777910797037,
+    "accessCount": 0,
+    "hash": "41b4fb7464898894",
+    "factType": "observation"
+  },
+  {
+    "id": "85ce0c82-f7b9-4419-82ba-d031a6129d13",
+    "content": "duplicate content same text 3",
+    "layer": "short",
+    "tags": [
+      "t"
+    ],
+    "entities": [
+      "e"
+    ],
+    "weight": 1,
+    "createdAt": 1777910797082,
+    "accessedAt": 1777910797082,
+    "accessCount": 0,
+    "hash": "4bac51a43011926a",
+    "factType": "observation"
+  },
+  {
+    "id": "2aaba000-8f12-4fd9-a271-13673c0f7d47",
+    "content": "duplicate content same text 4",
+    "layer": "short",
+    "tags": [
+      "t"
+    ],
+    "entities": [
+      "e"
+    ],
+    "weight": 1,
+    "createdAt": 1777910797169,
+    "accessedAt": 1777910797169,
+    "accessCount": 0,
+    "hash": "7a9326d4a235d21f",
+    "factType": "observation"
+  },
+  {
+    "id": "c99bd2b5-4c21-4bb1-8f62-144c3132f6f0",
+    "content": "duplicate content same text 5",
+    "layer": "short",
+    "tags": [
+      "t"
+    ],
+    "entities": [
+      "e"
+    ],
+    "weight": 1,
+    "createdAt": 1777910797246,
+    "accessedAt": 1777910797246,
+    "accessCount": 0,
+    "hash": "672a75df9bab610a",
+    "factType": "observation"
+  },
+  {
+    "id": "3d618920-74e4-47db-9035-c2e3f0c25c45",
+    "content": "duplicate content same text 6",
+    "layer": "short",
+    "tags": [
+      "t"
+    ],
+    "entities": [
+      "e"
+    ],
+    "weight": 1,
+    "createdAt": 1777910797299,
+    "accessedAt": 1777910797299,
+    "accessCount": 0,
+    "hash": "077cf8afe98d6390",
+    "factType": "observation"
+  },
+  {
+    "id": "5fd795f9-18af-4707-8956-af2d1d4b821b",
+    "content": "duplicate content same text 7",
+    "layer": "short",
+    "tags": [
+      "t"
+    ],
+    "entities": [
+      "e"
+    ],
+    "weight": 1,
+    "createdAt": 1777910797348,
+    "accessedAt": 1777910797348,
+    "accessCount": 0,
+    "hash": "2170c99f1b7347d9",
+    "factType": "observation"
+  },
+  {
+    "id": "9f6d3633-e8ea-4e97-936f-4194eef74c03",
+    "content": "duplicate content same text 8",
+    "layer": "short",
+    "tags": [
+      "t"
+    ],
+    "entities": [
+      "e"
+    ],
+    "weight": 1,
+    "createdAt": 1777910797414,
+    "accessedAt": 1777910797414,
+    "accessCount": 0,
+    "hash": "367d69ecc45ca79b",
+    "factType": "observation"
+  },
+  {
+    "id": "17d1f397-0a55-4d27-a062-abd1df29c5b0",
+    "content": "duplicate content same text 9",
+    "layer": "short",
+    "tags": [
+      "t"
+    ],
+    "entities": [
+      "e"
+    ],
+    "weight": 1,
+    "createdAt": 1777910797459,
+    "accessedAt": 1777910797459,
+    "accessCount": 0,
+    "hash": "f2d86cbbd0eb1c7a",
+    "factType": "observation"
+  },
+  {
+    "id": "f552cd81-fd24-4e2f-b8fa-1fe26ab290ae",
+    "content": "Standalone",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910826696,
+    "accessedAt": 1777910826696,
+    "accessCount": 0,
+    "hash": "c697bed3453e1b35",
+    "factType": "observation"
+  },
+  {
+    "id": "d5539f26-ac8f-4751-8dba-59bce59d26c6",
+    "content": "Original",
+    "layer": "short",
+    "tags": [
+      "a",
+      "b"
+    ],
+    "entities": [
+      "x"
+    ],
+    "weight": 1,
+    "createdAt": 1777910826901,
+    "accessedAt": 1777910826901,
+    "accessCount": 0,
+    "hash": "88d759ea02cef4b8",
+    "factType": "observation"
+  },
+  {
+    "id": "ff7eba7e-a2d6-43f3-993d-13fd7f249f34",
+    "content": "Original",
+    "layer": "short",
+    "tags": [
+      "a",
+      "b"
+    ],
+    "entities": [
+      "x"
+    ],
+    "weight": 1,
+    "createdAt": 1777910826975,
+    "accessedAt": 1777910826975,
+    "accessCount": 0,
+    "source": "branch:d5539f26-ac8f-4751-8dba-59bce59d26c6",
+    "hash": "88d759ea02cef4b8",
+    "factType": "observation"
+  },
+  {
+    "id": "57868bc0-9d30-4cf7-87f7-01365109fe38",
+    "content": "Original content here",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910827162,
+    "accessedAt": 1777910827162,
+    "accessCount": 0,
+    "hash": "34ee7193fe8063db",
+    "factType": "observation"
+  },
+  {
+    "id": "1ceba402-1d31-4535-8d9f-e3b3f39c582a",
+    "content": "Modified content here",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910827212,
+    "accessedAt": 1777910827212,
+    "accessCount": 0,
+    "source": "branch:57868bc0-9d30-4cf7-87f7-01365109fe38",
+    "hash": "fdff1559214453e5",
+    "factType": "observation"
+  },
+  {
+    "id": "92474b9c-c878-4063-9bed-e685e4c3e128",
+    "content": "Test",
+    "layer": "short",
+    "tags": [
+      "a",
+      "b"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910827367,
+    "accessedAt": 1777910827367,
+    "accessCount": 0,
+    "hash": "532eaabd9574880d",
+    "factType": "observation"
+  },
+  {
+    "id": "1053113d-643d-437d-84fe-224e6ea162f3",
+    "content": "Test",
+    "layer": "short",
+    "tags": [
+      "b",
+      "c"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910827421,
+    "accessedAt": 1777910827421,
+    "accessCount": 0,
+    "source": "branch:92474b9c-c878-4063-9bed-e685e4c3e128",
+    "hash": "532eaabd9574880d",
+    "factType": "observation"
+  },
+  {
+    "id": "e96c4fd5-5158-4177-a2de-f9d86145a5a9",
+    "content": "Test",
+    "layer": "short",
+    "tags": [],
+    "entities": [
+      "e1",
+      "e2"
+    ],
+    "weight": 1,
+    "createdAt": 1777910827581,
+    "accessedAt": 1777910827581,
+    "accessCount": 0,
+    "hash": "532eaabd9574880d",
+    "factType": "observation"
+  },
+  {
+    "id": "7b8e5f89-2235-4e55-81ac-3d03329d230c",
+    "content": "Test",
+    "layer": "short",
+    "tags": [],
+    "entities": [
+      "e2",
+      "e3"
+    ],
+    "weight": 1,
+    "createdAt": 1777910827650,
+    "accessedAt": 1777910827650,
+    "accessCount": 0,
+    "source": "branch:e96c4fd5-5158-4177-a2de-f9d86145a5a9",
+    "hash": "532eaabd9574880d",
+    "factType": "observation"
+  },
+  {
+    "id": "444b4e02-c8f4-4cbe-b40a-c454ad5b9f55",
+    "content": "Source",
+    "layer": "short",
+    "tags": [
+      "s"
+    ],
+    "entities": [
+      "se"
+    ],
+    "weight": 1,
+    "createdAt": 1777910827787,
+    "accessedAt": 1777910827787,
+    "accessCount": 0,
+    "hash": "0e570ca6fabe24f9",
+    "factType": "observation"
+  },
+  {
+    "id": "224ebb04-bc46-4f65-a4b9-8d729291e49f",
+    "content": "Branch",
+    "layer": "short",
+    "tags": [
+      "b"
+    ],
+    "entities": [
+      "be"
+    ],
+    "weight": 1,
+    "createdAt": 1777910827856,
+    "accessedAt": 1777910827856,
+    "accessCount": 0,
+    "source": "branch:444b4e02-c8f4-4cbe-b40a-c454ad5b9f55",
+    "hash": "52656e8104eef3fd",
+    "factType": "observation"
+  },
+  {
+    "id": "bb6af667-703a-4e6b-8c15-65415b953fef",
+    "content": "L0",
+    "layer": "short",
+    "tags": [
+      "t0"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910828035,
+    "accessedAt": 1777910828035,
+    "accessCount": 0,
+    "hash": "929172fae51e7c4f",
+    "factType": "observation"
+  },
+  {
+    "id": "d69489f9-1c94-4b28-aec2-a33ea4d95319",
+    "content": "L1",
+    "layer": "short",
+    "tags": [
+      "t1"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910828077,
+    "accessedAt": 1777910828077,
+    "accessCount": 0,
+    "source": "branch:bb6af667-703a-4e6b-8c15-65415b953fef",
+    "hash": "dffe8596427fc50e",
+    "factType": "observation"
+  },
+  {
+    "id": "2fd09ebb-0e84-4dd3-bbb9-8079e0f9e236",
+    "content": "L2",
+    "layer": "short",
+    "tags": [
+      "t2"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910828170,
+    "accessedAt": 1777910828170,
+    "accessCount": 0,
+    "source": "branch:d69489f9-1c94-4b28-aec2-a33ea4d95319",
+    "hash": "d76354d845789844",
+    "factType": "observation"
+  },
+  {
+    "id": "71cdfd4d-d621-41fe-83a1-71ed4638787d",
+    "content": "Standalone",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910828547,
+    "accessedAt": 1777910828547,
+    "accessCount": 0,
+    "hash": "c697bed3453e1b35",
+    "factType": "observation"
+  },
+  {
+    "id": "0c0480fc-e1b8-44f1-8a28-b6701d5dea6c",
+    "content": "Source text\nBranch text",
+    "layer": "short",
+    "tags": [
+      "a",
+      "b"
+    ],
+    "entities": [
+      "x",
+      "y"
+    ],
+    "weight": 1,
+    "createdAt": 1777910828728,
+    "accessedAt": 1777910828728,
+    "accessCount": 0,
+    "hash": "300711c62bd971e4",
+    "factType": "observation"
+  },
+  {
+    "id": "0021c47a-0480-4941-923f-190e4f60dceb",
+    "content": "Much longer branch content",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910829019,
+    "accessedAt": 1777910829019,
+    "accessCount": 0,
+    "hash": "fe2186871d4658c4",
+    "factType": "observation"
+  },
+  {
+    "id": "f449d5e6-68b4-4a5a-86ad-27791f984401",
+    "content": "New content",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910829342,
+    "accessedAt": 1777910829342,
+    "accessCount": 0,
+    "hash": "12f41b1c321df0c8",
+    "factType": "observation"
+  },
+  {
+    "id": "fe5b80fb-2eba-4d22-a7c4-689e02691e48",
+    "content": "Manual override",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910829639,
+    "accessedAt": 1777910829639,
+    "accessCount": 0,
+    "hash": "723c2826018e4a1a",
+    "factType": "observation"
+  },
+  {
+    "id": "795f39fb-5696-4654-9eea-425cf1080c43",
+    "content": "Source\nBranch",
+    "layer": "short",
+    "tags": [
+      "a",
+      "b"
+    ],
+    "entities": [
+      "e1",
+      "e2"
+    ],
+    "weight": 1,
+    "createdAt": 1777910829956,
+    "accessedAt": 1777910829956,
+    "accessCount": 0,
+    "hash": "678d044fb114de09",
+    "factType": "observation"
+  },
+  {
+    "id": "1374d8e2-d001-4613-9117-f0b3633eb61e",
+    "content": "Source\nBranch",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910830234,
+    "accessedAt": 1777910830234,
+    "accessCount": 0,
+    "hash": "678d044fb114de09",
+    "factType": "observation"
+  },
+  {
+    "id": "c0434683-4c9e-40dd-b2fb-8fabcebba8b6",
+    "content": "Other",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910830292,
+    "accessedAt": 1777910830292,
+    "accessCount": 0,
+    "hash": "f97e9da0e3b879f0",
+    "factType": "observation"
+  },
+  {
+    "id": "25c5e5cd-2971-4dc7-86f8-c60ab774d02e",
+    "content": "Source\nSource",
+    "layer": "short",
+    "tags": [
+      "a"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910830574,
+    "accessedAt": 1777910830574,
+    "accessCount": 0,
+    "hash": "da1c44dc3b14cd4d",
+    "factType": "observation"
+  },
+  {
+    "id": "46555429-b0f4-44bc-a11a-8b30805d5c02",
+    "content": "Source\nSource",
+    "layer": "short",
+    "tags": [
+      "b"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910830847,
+    "accessedAt": 1777910830847,
+    "accessCount": 0,
+    "hash": "da1c44dc3b14cd4d",
+    "factType": "observation"
+  },
+  {
+    "id": "0e6c9b27-d6bc-4ec7-911c-4afdb11f7019",
+    "content": "Alpha\nBeta",
+    "layer": "short",
+    "tags": [
+      "x",
+      "y"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910831236,
+    "accessedAt": 1777910831236,
+    "accessCount": 0,
+    "hash": "c4457665fd3e62b0",
+    "factType": "observation"
+  },
+  {
+    "id": "50660148-790f-474c-a55b-27dd2c7212db",
+    "content": "Gamma\nDelta",
+    "layer": "short",
+    "tags": [
+      "z",
+      "w"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910831370,
+    "accessedAt": 1777910831370,
+    "accessCount": 0,
+    "hash": "9ac917457069268c",
+    "factType": "observation"
+  },
+  {
+    "id": "3ddd7b81-c0e2-463a-99b7-4283c5633a79",
+    "content": "A\nB",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910831727,
+    "accessedAt": 1777910831727,
+    "accessCount": 0,
+    "hash": "23519a43c66b4c34",
+    "factType": "observation"
+  },
+  {
+    "id": "b3fa7e36-5a37-4129-9658-d21a204624fc",
+    "content": "C",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910831843,
+    "accessedAt": 1777910831843,
+    "accessCount": 0,
+    "hash": "6b23c0d5f35d1b11",
+    "factType": "observation"
+  },
+  {
+    "id": "2e2c22e1-2690-4682-8c93-db1148e43858",
+    "content": "Much longer content here",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910832087,
+    "accessedAt": 1777910832087,
+    "accessCount": 0,
+    "hash": "f02022220b07b0c5",
+    "factType": "observation"
+  },
+  {
+    "id": "8b523a22-3c17-411c-845c-c039c341578f",
+    "content": "Original content",
+    "layer": "short",
+    "tags": [
+      "a"
+    ],
+    "entities": [
+      "x"
+    ],
+    "weight": 1,
+    "createdAt": 1777910832809,
+    "accessedAt": 1777910832809,
+    "accessCount": 0,
+    "hash": "3949e2daad0ba297",
+    "factType": "observation"
+  },
+  {
+    "id": "6658f5a7-8b9b-4412-8e3a-7a42bc7c2ac1",
+    "content": "Original content",
+    "layer": "short",
+    "tags": [
+      "a"
+    ],
+    "entities": [
+      "x"
+    ],
+    "weight": 1,
+    "createdAt": 1777910832868,
+    "accessedAt": 1777910832868,
+    "accessCount": 0,
+    "source": "branch:8b523a22-3c17-411c-845c-c039c341578f",
+    "hash": "3949e2daad0ba297",
+    "factType": "observation"
+  },
+  {
+    "id": "0dfe387b-cafd-4b9a-86fb-7ec7f6633883",
+    "content": "Source",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910833045,
+    "accessedAt": 1777910833045,
+    "accessCount": 0,
+    "hash": "0e570ca6fabe24f9",
+    "factType": "observation"
+  },
+  {
+    "id": "2a796a7b-b69b-4735-949f-9571ac4119ad",
+    "content": "Source",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910833109,
+    "accessedAt": 1777910833109,
+    "accessCount": 0,
+    "source": "branch:0dfe387b-cafd-4b9a-86fb-7ec7f6633883",
+    "hash": "0e570ca6fabe24f9",
+    "factType": "observation"
+  },
+  {
+    "id": "45802e41-5138-45b5-acf0-3d3807c26331",
+    "content": "Original",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910833300,
+    "accessedAt": 1777910833300,
+    "accessCount": 0,
+    "hash": "88d759ea02cef4b8",
+    "factType": "observation"
+  },
+  {
+    "id": "db0dfde6-3681-45da-9881-5b06bcb8c197",
+    "content": "Modified branch",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910833352,
+    "accessedAt": 1777910833352,
+    "accessCount": 0,
+    "source": "branch:45802e41-5138-45b5-acf0-3d3807c26331",
+    "hash": "d4901a72d466426d",
+    "factType": "observation"
+  },
+  {
+    "id": "73623a06-5e52-4551-bef6-af24046a5e3b",
+    "content": "Original",
+    "layer": "core",
+    "tags": [
+      "root"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910833513,
+    "accessedAt": 1777910833513,
+    "accessCount": 0,
+    "hash": "88d759ea02cef4b8",
+    "factType": "observation"
+  },
+  {
+    "id": "ce650ab3-12bc-4da6-86e8-b239b22eae30",
+    "content": "Original",
+    "layer": "short",
+    "tags": [
+      "fork"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910833598,
+    "accessedAt": 1777910833598,
+    "accessCount": 0,
+    "source": "branch:73623a06-5e52-4551-bef6-af24046a5e3b",
+    "hash": "88d759ea02cef4b8",
+    "factType": "observation"
+  },
+  {
+    "id": "345b76a6-be6f-43fa-ba7d-b56621a885bc",
+    "content": "Source",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910833757,
+    "accessedAt": 1777910833757,
+    "accessCount": 0,
+    "hash": "0e570ca6fabe24f9",
+    "factType": "observation"
+  },
+  {
+    "id": "befe876b-bf65-422f-950f-cbee3d07aab0",
+    "content": "Source",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910833799,
+    "accessedAt": 1777910833799,
+    "accessCount": 0,
+    "source": "branch:345b76a6-be6f-43fa-ba7d-b56621a885bc",
+    "hash": "0e570ca6fabe24f9",
+    "factType": "observation"
+  },
+  {
+    "id": "4ed42620-eeeb-4ff2-94e8-1993e35b564d",
+    "content": "Shared start",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910834062,
+    "accessedAt": 1777910834062,
+    "accessCount": 0,
+    "hash": "e30c10997860b73c",
+    "factType": "observation"
+  },
+  {
+    "id": "9c546f8a-fd8f-4268-89d9-647e7403b6d9",
+    "content": "Branch diverged",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910834128,
+    "accessedAt": 1777910834128,
+    "accessCount": 0,
+    "source": "branch:4ed42620-eeeb-4ff2-94e8-1993e35b564d",
+    "hash": "723a15240140eb3b",
+    "factType": "observation"
+  },
+  {
+    "id": "2c74b2bd-cc1c-4996-b62c-47cabdaf7df8",
+    "content": "Level 0",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910834351,
+    "accessedAt": 1777910834351,
+    "accessCount": 0,
+    "hash": "3257e58bcc50c5b4",
+    "factType": "observation"
+  },
+  {
+    "id": "2c155d6c-bdc2-42d1-8b62-16e6673a51ce",
+    "content": "Level 1",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910834395,
+    "accessedAt": 1777910834395,
+    "accessCount": 0,
+    "source": "branch:2c74b2bd-cc1c-4996-b62c-47cabdaf7df8",
+    "hash": "b75cf05d6d2aa22c",
+    "factType": "observation"
+  },
+  {
+    "id": "c709d1a4-60fa-4dfb-b629-0b60fd5be372",
+    "content": "Level 2",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910834456,
+    "accessedAt": 1777910834456,
+    "accessCount": 0,
+    "source": "branch:2c155d6c-bdc2-42d1-8b62-16e6673a51ce",
+    "hash": "29cc4eb6673b9979",
+    "factType": "observation"
+  },
+  {
+    "id": "47c14e5a-94cf-4c86-b9f4-bf91293dea9d",
+    "content": "Hello world",
+    "layer": "short",
+    "tags": [
+      "x"
+    ],
+    "entities": [
+      "e1"
+    ],
+    "weight": 1,
+    "createdAt": 1777910844702,
+    "accessedAt": 1777910844702,
+    "accessCount": 0,
+    "hash": "64ec88ca00b268e5",
+    "factType": "observation"
+  },
+  {
+    "id": "0b1a2641-4f5e-4dc8-b7e9-d0dfe6011d57",
+    "content": "Hello world",
+    "layer": "short",
+    "tags": [
+      "x"
+    ],
+    "entities": [
+      "e1"
+    ],
+    "weight": 1,
+    "createdAt": 1777910844785,
+    "accessedAt": 1777910844785,
+    "accessCount": 0,
+    "hash": "64ec88ca00b268e5",
+    "factType": "observation"
+  },
+  {
+    "id": "da49ae20-fd91-4fae-9d2a-19f3aa3586c3",
+    "content": "Same same",
+    "layer": "short",
+    "tags": [
+      "t"
+    ],
+    "entities": [
+      "e"
+    ],
+    "weight": 1,
+    "createdAt": 1777910844951,
+    "accessedAt": 1777910844951,
+    "accessCount": 0,
+    "hash": "6e232d9de1e1cccf",
+    "factType": "observation"
+  },
+  {
+    "id": "2a325ddd-410d-41fa-b8c9-a7a687ddcf31",
+    "content": "Same same",
+    "layer": "short",
+    "tags": [
+      "t"
+    ],
+    "entities": [
+      "e"
+    ],
+    "weight": 1,
+    "createdAt": 1777910845028,
+    "accessedAt": 1777910845028,
+    "accessCount": 0,
+    "hash": "6e232d9de1e1cccf",
+    "factType": "observation"
+  },
+  {
+    "id": "bc8b6762-aa9f-47da-bdd2-8398eeb06646",
+    "content": "Completely different alpha",
+    "layer": "short",
+    "tags": [
+      "z1",
+      "z2"
+    ],
+    "entities": [
+      "x1",
+      "x2"
+    ],
+    "weight": 1,
+    "createdAt": 1777910845084,
+    "accessedAt": 1777910845084,
+    "accessCount": 0,
+    "hash": "13659a96d7983c80",
+    "factType": "observation"
+  },
+  {
+    "id": "9bc3e1e5-e94c-4ef4-8431-ee566cb081bb",
+    "content": "Totally unrelated beta gamma",
+    "layer": "short",
+    "tags": [
+      "y1",
+      "y2",
+      "y3"
+    ],
+    "entities": [
+      "w1"
+    ],
+    "weight": 1,
+    "createdAt": 1777910845128,
+    "accessedAt": 1777910845128,
+    "accessCount": 0,
+    "hash": "73fcf662a0a2eb34",
+    "factType": "observation"
+  },
+  {
+    "id": "24fe39b3-a5d5-409f-9f60-2758feaef5c5",
+    "content": "Alpha",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910845298,
+    "accessedAt": 1777910845298,
+    "accessCount": 0,
+    "hash": "b1a96dd646bccaa2",
+    "factType": "observation"
+  },
+  {
+    "id": "bb2f98d6-ea42-4c23-8bf7-56de24baf3bb",
+    "content": "A",
+    "layer": "short",
+    "tags": [
+      "t"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910845446,
+    "accessedAt": 1777910845446,
+    "accessCount": 0,
+    "hash": "559aead08264d579",
+    "factType": "observation"
+  },
+  {
+    "id": "0fe8c355-c2ca-4c00-b969-0795be05e883",
+    "content": "A",
+    "layer": "short",
+    "tags": [
+      "t"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910845495,
+    "accessedAt": 1777910845495,
+    "accessCount": 0,
+    "hash": "559aead08264d579",
+    "factType": "observation"
+  },
+  {
+    "id": "14016e0c-06a5-4330-a891-d2463772a701",
+    "content": "Alpha",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910845755,
+    "accessedAt": 1777910845755,
+    "accessCount": 0,
+    "hash": "b1a96dd646bccaa2",
+    "factType": "observation"
+  },
+  {
+    "id": "e1bf8285-ee86-4120-ab63-e87d8609f74e",
+    "content": "Alpha",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910845938,
+    "accessedAt": 1777910845938,
+    "accessCount": 0,
+    "hash": "b1a96dd646bccaa2",
+    "factType": "observation"
+  },
+  {
+    "id": "47788cf4-87dd-4a56-9e63-feb9e0c1a289",
+    "content": "Hello",
+    "layer": "short",
+    "tags": [
+      "a"
+    ],
+    "entities": [
+      "x"
+    ],
+    "weight": 1,
+    "createdAt": 1777910846124,
+    "accessedAt": 1777910846124,
+    "accessCount": 0,
+    "hash": "185f8db32271fe25",
+    "factType": "observation"
+  },
+  {
+    "id": "bfcc2eb8-e82e-4d16-8220-997456886ca3",
+    "content": "World",
+    "layer": "short",
+    "tags": [
+      "b"
+    ],
+    "entities": [
+      "y"
+    ],
+    "weight": 1,
+    "createdAt": 1777910846194,
+    "accessedAt": 1777910846194,
+    "accessCount": 0,
+    "hash": "78ae647dc5544d22",
+    "factType": "observation"
+  },
+  {
+    "id": "5ab621d2-d449-4b1a-b9ed-a13abd690e7f",
+    "content": "Hi",
+    "layer": "short",
+    "tags": [
+      "a"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910846334,
+    "accessedAt": 1777910846334,
+    "accessCount": 0,
+    "hash": "3639efcd08abb273",
+    "factType": "observation"
+  },
+  {
+    "id": "e7ce5dd7-effe-4f86-b76c-87894226a469",
+    "content": "Hello World Longer",
+    "layer": "short",
+    "tags": [
+      "b"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910846392,
+    "accessedAt": 1777910846392,
+    "accessCount": 0,
+    "hash": "291d01cf4fa0a57f",
+    "factType": "observation"
+  },
+  {
+    "id": "5e9cd974-ea3c-40bd-8148-7ec088bfa750",
+    "content": "Old",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910846513,
+    "accessedAt": 1777910846513,
+    "accessCount": 0,
+    "hash": "bca97160f4e1211f",
+    "factType": "observation"
+  },
+  {
+    "id": "98dd0cb0-bb9b-4558-870d-d3754c26a5cf",
+    "content": "New",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910846569,
+    "accessedAt": 1777910846569,
+    "accessCount": 0,
+    "hash": "18fdd549b2ed367a",
+    "factType": "observation"
+  },
+  {
+    "id": "e5c52e3f-ab99-4d43-b568-993dfced64b9",
+    "content": "Hello",
+    "layer": "short",
+    "tags": [
+      "shared",
+      "only-a"
+    ],
+    "entities": [
+      "e1",
+      "e2"
+    ],
+    "weight": 1,
+    "createdAt": 1777910846706,
+    "accessedAt": 1777910846706,
+    "accessCount": 0,
+    "hash": "185f8db32271fe25",
+    "factType": "observation"
+  },
+  {
+    "id": "582ef794-4ace-448e-b861-6f2a38bdb7c2",
+    "content": "Hello",
+    "layer": "short",
+    "tags": [
+      "shared",
+      "only-b"
+    ],
+    "entities": [
+      "e2",
+      "e3"
+    ],
+    "weight": 1,
+    "createdAt": 1777910846768,
+    "accessedAt": 1777910846768,
+    "accessCount": 0,
+    "hash": "185f8db32271fe25",
+    "factType": "observation"
+  },
+  {
+    "id": "c3fc4452-4b09-4a4a-a0da-20a630a08ec8",
+    "content": "Alpha beta gamma",
+    "layer": "short",
+    "tags": [
+      "x"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910846887,
+    "accessedAt": 1777910846887,
+    "accessCount": 0,
+    "hash": "a53fb55d1133524d",
+    "factType": "observation"
+  },
+  {
+    "id": "1209ce34-c368-4f7d-b2d8-3ff321831ae7",
+    "content": "Alpha beta gamma",
+    "layer": "short",
+    "tags": [
+      "x"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910846940,
+    "accessedAt": 1777910846940,
+    "accessCount": 0,
+    "hash": "a53fb55d1133524d",
+    "factType": "observation"
+  },
+  {
+    "id": "496deac8-01bf-4b87-91b6-b5648956cb53",
+    "content": "Alpha",
+    "layer": "short",
+    "tags": [
+      "a"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910847063,
+    "accessedAt": 1777910847063,
+    "accessCount": 0,
+    "hash": "b1a96dd646bccaa2",
+    "factType": "observation"
+  },
+  {
+    "id": "852fcfe2-909c-409e-bf79-b87e5484937f",
+    "content": "Beta",
+    "layer": "short",
+    "tags": [
+      "b"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910847139,
+    "accessedAt": 1777910847139,
+    "accessCount": 0,
+    "hash": "703390318bd55aef",
+    "factType": "observation"
+  },
+  {
+    "id": "08bcbc68-9939-4cfa-b251-c183f8479778",
+    "content": "A",
+    "layer": "short",
+    "tags": [
+      "x"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910847267,
+    "accessedAt": 1777910847267,
+    "accessCount": 0,
+    "hash": "559aead08264d579",
+    "factType": "observation"
+  },
+  {
+    "id": "69432728-e776-4b90-92a8-253cdc877608",
+    "content": "B",
+    "layer": "short",
+    "tags": [
+      "y"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910847324,
+    "accessedAt": 1777910847324,
+    "accessCount": 0,
+    "hash": "df7e70e5021544f4",
+    "factType": "observation"
+  },
+  {
+    "id": "cd41c957-886b-420d-9d6f-81bdfd449ea0",
+    "content": "Unique alpha content",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910848204,
+    "accessedAt": 1777910848204,
+    "accessCount": 0,
+    "hash": "0eee4f7334825e7a",
+    "factType": "observation"
+  },
+  {
+    "id": "38e4e52d-9ced-4671-9b04-26e322a33e4c",
+    "content": "Machine learning is great topic number 0",
+    "layer": "short",
+    "tags": [
+      "ml",
+      "ai"
+    ],
+    "entities": [
+      "ml"
+    ],
+    "weight": 1,
+    "createdAt": 1777910940248,
+    "accessedAt": 1777910940248,
+    "accessCount": 0,
+    "hash": "c45db478e5ecd4bf",
+    "factType": "opinion"
+  },
+  {
+    "id": "076c0829-8912-4079-b85c-8e087a907e25",
+    "content": "Machine learning is great topic number 1",
+    "layer": "short",
+    "tags": [
+      "ml",
+      "ai"
+    ],
+    "entities": [
+      "ml"
+    ],
+    "weight": 1,
+    "createdAt": 1777910940286,
+    "accessedAt": 1777910940286,
+    "accessCount": 0,
+    "hash": "a4d214e21d58b040",
+    "factType": "opinion"
+  },
+  {
+    "id": "646b3743-17f2-437b-a527-51e5c3d8b2b7",
+    "content": "Machine learning is great topic number 2",
+    "layer": "short",
+    "tags": [
+      "ml",
+      "ai"
+    ],
+    "entities": [
+      "ml"
+    ],
+    "weight": 1,
+    "createdAt": 1777910940316,
+    "accessedAt": 1777910940316,
+    "accessCount": 0,
+    "hash": "121f39570ccfde60",
+    "factType": "opinion"
+  },
+  {
+    "id": "47a470d9-245b-48df-995b-4f2568879899",
+    "content": "Machine learning is great topic number 3",
+    "layer": "short",
+    "tags": [
+      "ml",
+      "ai"
+    ],
+    "entities": [
+      "ml"
+    ],
+    "weight": 1,
+    "createdAt": 1777910940349,
+    "accessedAt": 1777910940349,
+    "accessCount": 0,
+    "hash": "a5e5259e0dce7c3b",
+    "factType": "opinion"
+  },
+  {
+    "id": "62942b31-9863-4d6d-99c7-07bea701cdcb",
+    "content": "Cooking recipes for pasta carbonara",
+    "layer": "short",
+    "tags": [
+      "food"
+    ],
+    "entities": [
+      "pasta"
+    ],
+    "weight": 1,
+    "createdAt": 1777910940383,
+    "accessedAt": 1777910940383,
+    "accessCount": 0,
+    "hash": "7de2f45262eba884",
+    "factType": "observation"
+  },
+  {
+    "id": "51584084-6ea1-4a16-89e7-139464be518f",
+    "content": "Quantum physics wave function collapse",
+    "layer": "short",
+    "tags": [
+      "physics"
+    ],
+    "entities": [
+      "quantum"
+    ],
+    "weight": 1,
+    "createdAt": 1777910940411,
+    "accessedAt": 1777910940411,
+    "accessCount": 0,
+    "hash": "1a32ceb6df07c337",
+    "factType": "observation"
+  },
+  {
+    "id": "7f0a2283-19ef-444c-8e39-f28d661eecc9",
+    "content": "Standalone",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910969834,
+    "accessedAt": 1777910969834,
+    "accessCount": 0,
+    "hash": "c697bed3453e1b35",
+    "factType": "observation"
+  },
+  {
+    "id": "435c4d53-829e-4746-bb8e-cb073c3ae941",
+    "content": "Original",
+    "layer": "short",
+    "tags": [
+      "a",
+      "b"
+    ],
+    "entities": [
+      "x"
+    ],
+    "weight": 1,
+    "createdAt": 1777910969950,
+    "accessedAt": 1777910969950,
+    "accessCount": 0,
+    "hash": "88d759ea02cef4b8",
+    "factType": "observation"
+  },
+  {
+    "id": "4a184212-9b1c-4568-9d3d-1b3646121525",
+    "content": "Original",
+    "layer": "short",
+    "tags": [
+      "a",
+      "b"
+    ],
+    "entities": [
+      "x"
+    ],
+    "weight": 1,
+    "createdAt": 1777910969999,
+    "accessedAt": 1777910969999,
+    "accessCount": 0,
+    "source": "branch:435c4d53-829e-4746-bb8e-cb073c3ae941",
+    "hash": "88d759ea02cef4b8",
+    "factType": "observation"
+  },
+  {
+    "id": "19a70abf-e048-4b9c-ac15-9cf618a6d634",
+    "content": "Original content here",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910970107,
+    "accessedAt": 1777910970107,
+    "accessCount": 0,
+    "hash": "34ee7193fe8063db",
+    "factType": "observation"
+  },
+  {
+    "id": "677a2c64-2582-4eea-b2ef-dec3950067ed",
+    "content": "Modified content here",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910970143,
+    "accessedAt": 1777910970143,
+    "accessCount": 0,
+    "source": "branch:19a70abf-e048-4b9c-ac15-9cf618a6d634",
+    "hash": "fdff1559214453e5",
+    "factType": "observation"
+  },
+  {
+    "id": "30225d93-cc01-4b41-a90f-2cdb56cf194f",
+    "content": "Test",
+    "layer": "short",
+    "tags": [
+      "a",
+      "b"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910970256,
+    "accessedAt": 1777910970256,
+    "accessCount": 0,
+    "hash": "532eaabd9574880d",
+    "factType": "observation"
+  },
+  {
+    "id": "211d3877-7b0e-4955-b5ff-e2f046b0e56c",
+    "content": "Test",
+    "layer": "short",
+    "tags": [
+      "b",
+      "c"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910970297,
+    "accessedAt": 1777910970297,
+    "accessCount": 0,
+    "source": "branch:30225d93-cc01-4b41-a90f-2cdb56cf194f",
+    "hash": "532eaabd9574880d",
+    "factType": "observation"
+  },
+  {
+    "id": "614e829a-e064-4b56-9d46-0a8838c24e35",
+    "content": "Test",
+    "layer": "short",
+    "tags": [],
+    "entities": [
+      "e1",
+      "e2"
+    ],
+    "weight": 1,
+    "createdAt": 1777910970407,
+    "accessedAt": 1777910970407,
+    "accessCount": 0,
+    "hash": "532eaabd9574880d",
+    "factType": "observation"
+  },
+  {
+    "id": "4af08a9b-ab65-4de3-933b-7572f77dfa70",
+    "content": "Test",
+    "layer": "short",
+    "tags": [],
+    "entities": [
+      "e2",
+      "e3"
+    ],
+    "weight": 1,
+    "createdAt": 1777910970434,
+    "accessedAt": 1777910970434,
+    "accessCount": 0,
+    "source": "branch:614e829a-e064-4b56-9d46-0a8838c24e35",
+    "hash": "532eaabd9574880d",
+    "factType": "observation"
+  },
+  {
+    "id": "74a00af3-fc50-46fb-a378-5c2010059cd2",
+    "content": "Source",
+    "layer": "short",
+    "tags": [
+      "s"
+    ],
+    "entities": [
+      "se"
+    ],
+    "weight": 1,
+    "createdAt": 1777910970532,
+    "accessedAt": 1777910970532,
+    "accessCount": 0,
+    "hash": "0e570ca6fabe24f9",
+    "factType": "observation"
+  },
+  {
+    "id": "189d7451-ccd2-46ab-9cf3-f43bbfc438ce",
+    "content": "Branch",
+    "layer": "short",
+    "tags": [
+      "b"
+    ],
+    "entities": [
+      "be"
+    ],
+    "weight": 1,
+    "createdAt": 1777910970574,
+    "accessedAt": 1777910970574,
+    "accessCount": 0,
+    "source": "branch:74a00af3-fc50-46fb-a378-5c2010059cd2",
+    "hash": "52656e8104eef3fd",
+    "factType": "observation"
+  },
+  {
+    "id": "e83134ba-ef85-401b-9116-1d79024c206f",
+    "content": "L0",
+    "layer": "short",
+    "tags": [
+      "t0"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910970688,
+    "accessedAt": 1777910970688,
+    "accessCount": 0,
+    "hash": "929172fae51e7c4f",
+    "factType": "observation"
+  },
+  {
+    "id": "792dc79c-b7d6-44f8-baa3-d43226626bd0",
+    "content": "L1",
+    "layer": "short",
+    "tags": [
+      "t1"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910970716,
+    "accessedAt": 1777910970716,
+    "accessCount": 0,
+    "source": "branch:e83134ba-ef85-401b-9116-1d79024c206f",
+    "hash": "dffe8596427fc50e",
+    "factType": "observation"
+  },
+  {
+    "id": "5ff234de-065c-4c63-80fd-e0ab155907cb",
+    "content": "L2",
+    "layer": "short",
+    "tags": [
+      "t2"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910970761,
+    "accessedAt": 1777910970761,
+    "accessCount": 0,
+    "source": "branch:792dc79c-b7d6-44f8-baa3-d43226626bd0",
+    "hash": "d76354d845789844",
+    "factType": "observation"
+  },
+  {
+    "id": "68edfdb5-ab80-4690-a438-d41403aeb6a7",
+    "content": "Standalone",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910971017,
+    "accessedAt": 1777910971017,
+    "accessCount": 0,
+    "hash": "c697bed3453e1b35",
+    "factType": "observation"
+  },
+  {
+    "id": "360351f2-4c8f-454d-a03e-d65041054163",
+    "content": "Source text\nBranch text",
+    "layer": "short",
+    "tags": [
+      "a",
+      "b"
+    ],
+    "entities": [
+      "x",
+      "y"
+    ],
+    "weight": 1,
+    "createdAt": 1777910971133,
+    "accessedAt": 1777910971133,
+    "accessCount": 0,
+    "hash": "300711c62bd971e4",
+    "factType": "observation"
+  },
+  {
+    "id": "d1e67af9-fdbc-450d-a053-9411436caaef",
+    "content": "Much longer branch content",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910971318,
+    "accessedAt": 1777910971318,
+    "accessCount": 0,
+    "hash": "fe2186871d4658c4",
+    "factType": "observation"
+  },
+  {
+    "id": "5b684aa9-3808-42cd-8922-9a3d7522562a",
+    "content": "New content",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910971515,
+    "accessedAt": 1777910971515,
+    "accessCount": 0,
+    "hash": "12f41b1c321df0c8",
+    "factType": "observation"
+  },
+  {
+    "id": "2e120f1c-eb0b-4a53-8a65-b9eb2b77c17a",
+    "content": "Manual override",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910971685,
+    "accessedAt": 1777910971685,
+    "accessCount": 0,
+    "hash": "723c2826018e4a1a",
+    "factType": "observation"
+  },
+  {
+    "id": "ef332245-d2f7-40ac-8e2e-d8a58e598849",
+    "content": "Source\nBranch",
+    "layer": "short",
+    "tags": [
+      "a",
+      "b"
+    ],
+    "entities": [
+      "e1",
+      "e2"
+    ],
+    "weight": 1,
+    "createdAt": 1777910971866,
+    "accessedAt": 1777910971866,
+    "accessCount": 0,
+    "hash": "678d044fb114de09",
+    "factType": "observation"
+  },
+  {
+    "id": "65d2a312-14a8-4044-b3cf-c3392f95cc55",
+    "content": "Source\nBranch",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910972029,
+    "accessedAt": 1777910972029,
+    "accessCount": 0,
+    "hash": "678d044fb114de09",
+    "factType": "observation"
+  },
+  {
+    "id": "8f8386db-9901-4518-9792-cf3951a9df0b",
+    "content": "Other",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910972067,
+    "accessedAt": 1777910972067,
+    "accessCount": 0,
+    "hash": "f97e9da0e3b879f0",
+    "factType": "observation"
+  },
+  {
+    "id": "46024b3d-3a3b-4788-b50e-f2b7009b9aaf",
+    "content": "Source\nSource",
+    "layer": "short",
+    "tags": [
+      "a"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910972249,
+    "accessedAt": 1777910972249,
+    "accessCount": 0,
+    "hash": "da1c44dc3b14cd4d",
+    "factType": "observation"
+  },
+  {
+    "id": "6b651f8b-04fa-4dc2-aa30-dc3d9a7836d1",
+    "content": "Source\nSource",
+    "layer": "short",
+    "tags": [
+      "b"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910972425,
+    "accessedAt": 1777910972425,
+    "accessCount": 0,
+    "hash": "da1c44dc3b14cd4d",
+    "factType": "observation"
+  },
+  {
+    "id": "1f0565e7-ffe4-4c24-83c4-e34e58b801d6",
+    "content": "Alpha\nBeta",
+    "layer": "short",
+    "tags": [
+      "x",
+      "y"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910972670,
+    "accessedAt": 1777910972670,
+    "accessCount": 0,
+    "hash": "c4457665fd3e62b0",
+    "factType": "observation"
+  },
+  {
+    "id": "9006aea8-9fab-45e8-970d-356968177a33",
+    "content": "Gamma\nDelta",
+    "layer": "short",
+    "tags": [
+      "z",
+      "w"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910972753,
+    "accessedAt": 1777910972753,
+    "accessCount": 0,
+    "hash": "9ac917457069268c",
+    "factType": "observation"
+  },
+  {
+    "id": "3360541c-783c-4622-a938-b742c79674be",
+    "content": "A\nB",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910972980,
+    "accessedAt": 1777910972980,
+    "accessCount": 0,
+    "hash": "23519a43c66b4c34",
+    "factType": "observation"
+  },
+  {
+    "id": "b47728d0-c3a8-4e6a-bb1d-cbe4869a7b53",
+    "content": "C",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910973062,
+    "accessedAt": 1777910973062,
+    "accessCount": 0,
+    "hash": "6b23c0d5f35d1b11",
+    "factType": "observation"
+  },
+  {
+    "id": "9b5c327a-1263-4106-ac8a-496328203f90",
+    "content": "Much longer content here",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910973212,
+    "accessedAt": 1777910973212,
+    "accessCount": 0,
+    "hash": "f02022220b07b0c5",
+    "factType": "observation"
+  },
+  {
+    "id": "7f984de5-bd34-46b7-8edf-4fcf3d76e6c9",
+    "content": "Original content",
+    "layer": "short",
+    "tags": [
+      "a"
+    ],
+    "entities": [
+      "x"
+    ],
+    "weight": 1,
+    "createdAt": 1777910973676,
+    "accessedAt": 1777910973676,
+    "accessCount": 0,
+    "hash": "3949e2daad0ba297",
+    "factType": "observation"
+  },
+  {
+    "id": "6e2f6bee-232b-4855-bb94-7e13e59a29c5",
+    "content": "Original content",
+    "layer": "short",
+    "tags": [
+      "a"
+    ],
+    "entities": [
+      "x"
+    ],
+    "weight": 1,
+    "createdAt": 1777910973730,
+    "accessedAt": 1777910973730,
+    "accessCount": 0,
+    "source": "branch:7f984de5-bd34-46b7-8edf-4fcf3d76e6c9",
+    "hash": "3949e2daad0ba297",
+    "factType": "observation"
+  },
+  {
+    "id": "047d3b48-f07c-4486-b42a-bd6fbb8c3e17",
+    "content": "Source",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910973834,
+    "accessedAt": 1777910973834,
+    "accessCount": 0,
+    "hash": "0e570ca6fabe24f9",
+    "factType": "observation"
+  },
+  {
+    "id": "7288df91-d479-4a3d-8267-8e06a24fd237",
+    "content": "Source",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910973882,
+    "accessedAt": 1777910973882,
+    "accessCount": 0,
+    "source": "branch:047d3b48-f07c-4486-b42a-bd6fbb8c3e17",
+    "hash": "0e570ca6fabe24f9",
+    "factType": "observation"
+  },
+  {
+    "id": "83a796b0-fa07-4b6d-abdf-b41c8284e525",
+    "content": "Original",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910973998,
+    "accessedAt": 1777910973998,
+    "accessCount": 0,
+    "hash": "88d759ea02cef4b8",
+    "factType": "observation"
+  },
+  {
+    "id": "8e81f580-5881-4ca7-a09c-898cd2ae6421",
+    "content": "Modified branch",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910974031,
+    "accessedAt": 1777910974031,
+    "accessCount": 0,
+    "source": "branch:83a796b0-fa07-4b6d-abdf-b41c8284e525",
+    "hash": "d4901a72d466426d",
+    "factType": "observation"
+  },
+  {
+    "id": "69154baf-8fa6-4555-bcee-141a418200e0",
+    "content": "Original",
+    "layer": "core",
+    "tags": [
+      "root"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910974140,
+    "accessedAt": 1777910974140,
+    "accessCount": 0,
+    "hash": "88d759ea02cef4b8",
+    "factType": "observation"
+  },
+  {
+    "id": "9cba04c2-a0d3-4296-b7ce-b8c0347c02a1",
+    "content": "Original",
+    "layer": "short",
+    "tags": [
+      "fork"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910974184,
+    "accessedAt": 1777910974184,
+    "accessCount": 0,
+    "source": "branch:69154baf-8fa6-4555-bcee-141a418200e0",
+    "hash": "88d759ea02cef4b8",
+    "factType": "observation"
+  },
+  {
+    "id": "6e55d3a3-6463-4e90-8c10-839bedee1635",
+    "content": "Source",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910974293,
+    "accessedAt": 1777910974293,
+    "accessCount": 0,
+    "hash": "0e570ca6fabe24f9",
+    "factType": "observation"
+  },
+  {
+    "id": "4a602e01-2027-4fcd-bc4a-f3bf63cf0884",
+    "content": "Source",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910974324,
+    "accessedAt": 1777910974324,
+    "accessCount": 0,
+    "source": "branch:6e55d3a3-6463-4e90-8c10-839bedee1635",
+    "hash": "0e570ca6fabe24f9",
+    "factType": "observation"
+  },
+  {
+    "id": "9068767b-b695-46ac-aee8-0e8855a48b38",
+    "content": "Shared start",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910974499,
+    "accessedAt": 1777910974499,
+    "accessCount": 0,
+    "hash": "e30c10997860b73c",
+    "factType": "observation"
+  },
+  {
+    "id": "84a078f6-e918-4ea9-b0a2-e7afd39ca975",
+    "content": "Branch diverged",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910974529,
+    "accessedAt": 1777910974529,
+    "accessCount": 0,
+    "source": "branch:9068767b-b695-46ac-aee8-0e8855a48b38",
+    "hash": "723a15240140eb3b",
+    "factType": "observation"
+  },
+  {
+    "id": "9b2c394a-24aa-4a41-a198-8f6c17b17fda",
+    "content": "Level 0",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910974664,
+    "accessedAt": 1777910974664,
+    "accessCount": 0,
+    "hash": "3257e58bcc50c5b4",
+    "factType": "observation"
+  },
+  {
+    "id": "ee409765-dd9e-472c-89a0-ce04d94a0b9a",
+    "content": "Level 1",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910974701,
+    "accessedAt": 1777910974701,
+    "accessCount": 0,
+    "source": "branch:9b2c394a-24aa-4a41-a198-8f6c17b17fda",
+    "hash": "b75cf05d6d2aa22c",
+    "factType": "observation"
+  },
+  {
+    "id": "1cc23837-42b3-450d-b66d-9ac95cc236a2",
+    "content": "Level 2",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910974741,
+    "accessedAt": 1777910974741,
+    "accessCount": 0,
+    "source": "branch:ee409765-dd9e-472c-89a0-ce04d94a0b9a",
+    "hash": "29cc4eb6673b9979",
+    "factType": "observation"
+  },
+  {
+    "id": "b7e58b3d-dd9e-4e95-8ed4-c7f180835a40",
+    "content": "Hello world",
+    "layer": "short",
+    "tags": [
+      "x"
+    ],
+    "entities": [
+      "e1"
+    ],
+    "weight": 1,
+    "createdAt": 1777910981976,
+    "accessedAt": 1777910981976,
+    "accessCount": 0,
+    "hash": "64ec88ca00b268e5",
+    "factType": "observation"
+  },
+  {
+    "id": "5ac84d54-2605-401f-8978-fb9faf54e0bc",
+    "content": "Hello world",
+    "layer": "short",
+    "tags": [
+      "x"
+    ],
+    "entities": [
+      "e1"
+    ],
+    "weight": 1,
+    "createdAt": 1777910982028,
+    "accessedAt": 1777910982028,
+    "accessCount": 0,
+    "hash": "64ec88ca00b268e5",
+    "factType": "observation"
+  },
+  {
+    "id": "ac940d5b-7d28-4fce-a3e0-c18980064b78",
+    "content": "Same same",
+    "layer": "short",
+    "tags": [
+      "t"
+    ],
+    "entities": [
+      "e"
+    ],
+    "weight": 1,
+    "createdAt": 1777910982127,
+    "accessedAt": 1777910982127,
+    "accessCount": 0,
+    "hash": "6e232d9de1e1cccf",
+    "factType": "observation"
+  },
+  {
+    "id": "332f90fc-6543-4a5a-9138-1372e3bd6000",
+    "content": "Same same",
+    "layer": "short",
+    "tags": [
+      "t"
+    ],
+    "entities": [
+      "e"
+    ],
+    "weight": 1,
+    "createdAt": 1777910982183,
+    "accessedAt": 1777910982183,
+    "accessCount": 0,
+    "hash": "6e232d9de1e1cccf",
+    "factType": "observation"
+  },
+  {
+    "id": "9ff78420-1c7d-48bb-b4a9-9a8758dc64b8",
+    "content": "Completely different alpha",
+    "layer": "short",
+    "tags": [
+      "z1",
+      "z2"
+    ],
+    "entities": [
+      "x1",
+      "x2"
+    ],
+    "weight": 1,
+    "createdAt": 1777910982214,
+    "accessedAt": 1777910982214,
+    "accessCount": 0,
+    "hash": "13659a96d7983c80",
+    "factType": "observation"
+  },
+  {
+    "id": "a215506a-acc5-4508-9a2c-97fe9ff44d6f",
+    "content": "Totally unrelated beta gamma",
+    "layer": "short",
+    "tags": [
+      "y1",
+      "y2",
+      "y3"
+    ],
+    "entities": [
+      "w1"
+    ],
+    "weight": 1,
+    "createdAt": 1777910982243,
+    "accessedAt": 1777910982243,
+    "accessCount": 0,
+    "hash": "73fcf662a0a2eb34",
+    "factType": "observation"
+  },
+  {
+    "id": "059acd8c-e9c4-4243-8249-c198ab8b7b78",
+    "content": "Alpha",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910982348,
+    "accessedAt": 1777910982348,
+    "accessCount": 0,
+    "hash": "b1a96dd646bccaa2",
+    "factType": "observation"
+  },
+  {
+    "id": "7bdc4ce3-b0a8-44a6-9021-08521476214c",
+    "content": "A",
+    "layer": "short",
+    "tags": [
+      "t"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910982434,
+    "accessedAt": 1777910982434,
+    "accessCount": 0,
+    "hash": "559aead08264d579",
+    "factType": "observation"
+  },
+  {
+    "id": "3ecf8bb6-5be7-472a-ba56-dd29dda434e4",
+    "content": "A",
+    "layer": "short",
+    "tags": [
+      "t"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910982474,
+    "accessedAt": 1777910982474,
+    "accessCount": 0,
+    "hash": "559aead08264d579",
+    "factType": "observation"
+  },
+  {
+    "id": "322cf69e-9a9e-474e-b1f6-9cbcb1ba74b8",
+    "content": "Alpha",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910982639,
+    "accessedAt": 1777910982639,
+    "accessCount": 0,
+    "hash": "b1a96dd646bccaa2",
+    "factType": "observation"
+  },
+  {
+    "id": "cece949a-207d-4fd7-9e7e-cad224818a64",
+    "content": "Alpha",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910982750,
+    "accessedAt": 1777910982750,
+    "accessCount": 0,
+    "hash": "b1a96dd646bccaa2",
+    "factType": "observation"
+  },
+  {
+    "id": "3a9c7db0-2d3e-4ab0-a2f6-98a72e1b6c90",
+    "content": "Hello",
+    "layer": "short",
+    "tags": [
+      "a"
+    ],
+    "entities": [
+      "x"
+    ],
+    "weight": 1,
+    "createdAt": 1777910982856,
+    "accessedAt": 1777910982856,
+    "accessCount": 0,
+    "hash": "185f8db32271fe25",
+    "factType": "observation"
+  },
+  {
+    "id": "af0faf9e-096f-4155-989d-68ea768fd8a4",
+    "content": "World",
+    "layer": "short",
+    "tags": [
+      "b"
+    ],
+    "entities": [
+      "y"
+    ],
+    "weight": 1,
+    "createdAt": 1777910982899,
+    "accessedAt": 1777910982899,
+    "accessCount": 0,
+    "hash": "78ae647dc5544d22",
+    "factType": "observation"
+  },
+  {
+    "id": "121e7007-ccb7-44cf-b4e4-41ff8f173ea5",
+    "content": "Hi",
+    "layer": "short",
+    "tags": [
+      "a"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910982993,
+    "accessedAt": 1777910982993,
+    "accessCount": 0,
+    "hash": "3639efcd08abb273",
+    "factType": "observation"
+  },
+  {
+    "id": "b8610696-304c-497c-aedb-ec3224dfff05",
+    "content": "Hello World Longer",
+    "layer": "short",
+    "tags": [
+      "b"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910983023,
+    "accessedAt": 1777910983023,
+    "accessCount": 0,
+    "hash": "291d01cf4fa0a57f",
+    "factType": "observation"
+  },
+  {
+    "id": "ce1f6d1e-d65a-4d05-bde9-4895b43b693a",
+    "content": "Old",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910983110,
+    "accessedAt": 1777910983110,
+    "accessCount": 0,
+    "hash": "bca97160f4e1211f",
+    "factType": "observation"
+  },
+  {
+    "id": "67815808-ca91-4f40-b23c-160d69c94772",
+    "content": "New",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910983151,
+    "accessedAt": 1777910983151,
+    "accessCount": 0,
+    "hash": "18fdd549b2ed367a",
+    "factType": "observation"
+  },
+  {
+    "id": "885b2bfb-4ff8-48ba-bcd7-58c7e265f6bd",
+    "content": "Hello",
+    "layer": "short",
+    "tags": [
+      "shared",
+      "only-a"
+    ],
+    "entities": [
+      "e1",
+      "e2"
+    ],
+    "weight": 1,
+    "createdAt": 1777910983237,
+    "accessedAt": 1777910983237,
+    "accessCount": 0,
+    "hash": "185f8db32271fe25",
+    "factType": "observation"
+  },
+  {
+    "id": "0da016a3-ac4c-45d4-9844-1c9bea06979b",
+    "content": "Hello",
+    "layer": "short",
+    "tags": [
+      "shared",
+      "only-b"
+    ],
+    "entities": [
+      "e2",
+      "e3"
+    ],
+    "weight": 1,
+    "createdAt": 1777910983282,
+    "accessedAt": 1777910983282,
+    "accessCount": 0,
+    "hash": "185f8db32271fe25",
+    "factType": "observation"
+  },
+  {
+    "id": "20d838ca-6e67-4d97-bc04-620853d9846e",
+    "content": "Alpha beta gamma",
+    "layer": "short",
+    "tags": [
+      "x"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910983366,
+    "accessedAt": 1777910983366,
+    "accessCount": 0,
+    "hash": "a53fb55d1133524d",
+    "factType": "observation"
+  },
+  {
+    "id": "54ed4733-6ed5-4dbc-b065-cd04dc8ab65b",
+    "content": "Alpha beta gamma",
+    "layer": "short",
+    "tags": [
+      "x"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910983396,
+    "accessedAt": 1777910983396,
+    "accessCount": 0,
+    "hash": "a53fb55d1133524d",
+    "factType": "observation"
+  },
+  {
+    "id": "c0cf7a4e-2493-43d8-a5bd-b19ec636c05d",
+    "content": "Alpha",
+    "layer": "short",
+    "tags": [
+      "a"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910983484,
+    "accessedAt": 1777910983484,
+    "accessCount": 0,
+    "hash": "b1a96dd646bccaa2",
+    "factType": "observation"
+  },
+  {
+    "id": "31c7aeca-0645-41d2-aef7-4542ecedeb34",
+    "content": "Beta",
+    "layer": "short",
+    "tags": [
+      "b"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910983525,
+    "accessedAt": 1777910983525,
+    "accessCount": 0,
+    "hash": "703390318bd55aef",
+    "factType": "observation"
+  },
+  {
+    "id": "dd26c4ed-2354-4a5e-85d3-a6e52c1cbe2c",
+    "content": "A",
+    "layer": "short",
+    "tags": [
+      "x"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910983602,
+    "accessedAt": 1777910983602,
+    "accessCount": 0,
+    "hash": "559aead08264d579",
+    "factType": "observation"
+  },
+  {
+    "id": "b2588a1b-7353-43a1-a47e-6cc6ba2405e0",
+    "content": "B",
+    "layer": "short",
+    "tags": [
+      "y"
+    ],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910983639,
+    "accessedAt": 1777910983639,
+    "accessCount": 0,
+    "hash": "df7e70e5021544f4",
+    "factType": "observation"
+  },
+  {
+    "id": "334d6530-4839-4774-8481-73b50f9eb512",
+    "content": "Unique alpha content",
+    "layer": "short",
+    "tags": [],
+    "entities": [],
+    "weight": 1,
+    "createdAt": 1777910984206,
+    "accessedAt": 1777910984206,
+    "accessCount": 0,
+    "hash": "0eee4f7334825e7a",
+    "factType": "observation"
+  },
+  {
+    "id": "57a76b1a-6621-4d8d-92bb-a0a2ed96d7ad",
+    "content": "Machine learning is great topic number 0",
+    "layer": "short",
+    "tags": [
+      "ml",
+      "ai"
+    ],
+    "entities": [
+      "ml"
+    ],
+    "weight": 1,
+    "createdAt": 1777911048664,
+    "accessedAt": 1777911048664,
+    "accessCount": 0,
+    "hash": "c45db478e5ecd4bf",
+    "factType": "opinion"
+  },
+  {
+    "id": "b693438f-11f9-4da5-873d-f48c939fe169",
+    "content": "Machine learning is great topic number 1",
+    "layer": "short",
+    "tags": [
+      "ml",
+      "ai"
+    ],
+    "entities": [
+      "ml"
+    ],
+    "weight": 1,
+    "createdAt": 1777911048702,
+    "accessedAt": 1777911048702,
+    "accessCount": 0,
+    "hash": "a4d214e21d58b040",
+    "factType": "opinion"
+  },
+  {
+    "id": "cab06527-d5db-4d8c-b8e4-5ce636252557",
+    "content": "Machine learning is great topic number 2",
+    "layer": "short",
+    "tags": [
+      "ml",
+      "ai"
+    ],
+    "entities": [
+      "ml"
+    ],
+    "weight": 1,
+    "createdAt": 1777911048731,
+    "accessedAt": 1777911048731,
+    "accessCount": 0,
+    "hash": "121f39570ccfde60",
+    "factType": "opinion"
+  },
+  {
+    "id": "c4768841-4dc4-4218-89ff-b301de3e7106",
+    "content": "Machine learning is great topic number 3",
+    "layer": "short",
+    "tags": [
+      "ml",
+      "ai"
+    ],
+    "entities": [
+      "ml"
+    ],
+    "weight": 1,
+    "createdAt": 1777911048768,
+    "accessedAt": 1777911048768,
+    "accessCount": 0,
+    "hash": "a5e5259e0dce7c3b",
+    "factType": "opinion"
+  },
+  {
+    "id": "6b21b310-58ea-424e-a64a-abbb5e2d837d",
+    "content": "Cooking recipes for pasta carbonara",
+    "layer": "short",
+    "tags": [
+      "food"
+    ],
+    "entities": [
+      "pasta"
+    ],
+    "weight": 1,
+    "createdAt": 1777911048803,
+    "accessedAt": 1777911048803,
+    "accessCount": 0,
+    "hash": "7de2f45262eba884",
+    "factType": "observation"
+  },
+  {
+    "id": "28e14ab5-45f5-4535-9be0-9f685163f96d",
+    "content": "Quantum physics wave function collapse",
+    "layer": "short",
+    "tags": [
+      "physics"
+    ],
+    "entities": [
+      "quantum"
+    ],
+    "weight": 1,
+    "createdAt": 1777911048833,
+    "accessedAt": 1777911048833,
+    "accessCount": 0,
+    "hash": "1a32ceb6df07c337",
     "factType": "observation"
   }
 ]

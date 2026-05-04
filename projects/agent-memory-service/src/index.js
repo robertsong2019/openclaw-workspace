@@ -874,7 +874,7 @@ export class MemoryService {
     this.#links = new LinkStore(this.#dirPath);
     this.#changelog = new ChangelogStore(this.#dirPath);
     this.#extractor = new MemoryExtractor();
-    this.#embeddings = new EmbeddingProvider(this.#dirPath, options.embedFn || null);
+    this.#embeddings = new EmbeddingProvider(this.#dirPath, options.embedFn || null, { maxCacheSize: options.maxCacheSize || 0 });
     this.#skills = new SkillStore(this.#dirPath);
   }
 
@@ -5144,14 +5144,17 @@ class EmbeddingProvider {
   #cache = new Map();
   #cachePath;
   #dirty = false;
+  #maxCacheSize; // 0 = unlimited
 
   /**
    * @param {string} dirPath - Directory to persist cache
    * @param {EmbedFn|null} embedFn - Async function that returns a vector for text. null = disabled.
+   * @param {{maxCacheSize?: number}} opts - maxCacheSize: max cached vectors (0 = unlimited, default)
    */
-  constructor(dirPath, embedFn = null) {
+  constructor(dirPath, embedFn = null, opts = {}) {
     this.#cachePath = join(dirPath, 'embed-cache.json');
     this.#embedFn = embedFn;
+    this.#maxCacheSize = opts.maxCacheSize || 0;
   }
 
   /** Set or replace the embedding function at runtime */
@@ -5196,6 +5199,7 @@ class EmbeddingProvider {
       if (vec && Array.isArray(vec) && vec.length > 0) {
         this.#cache.set(key, vec);
         this.#dirty = true;
+        this.#evictIfNeeded();
         return vec;
       }
     } catch {
@@ -5247,6 +5251,30 @@ class EmbeddingProvider {
   /** Get cache size */
   get cacheSize() {
     return this.#cache.size;
+  }
+
+  /** Get max cache size (0 = unlimited) */
+  get maxCacheSize() {
+    return this.#maxCacheSize;
+  }
+
+  /** Set max cache size at runtime */
+  setMaxCacheSize(n) {
+    this.#maxCacheSize = n;
+  }
+
+  /** Evict oldest entries when cache exceeds maxCacheSize */
+  #evictIfNeeded() {
+    if (this.#maxCacheSize <= 0) return 0;
+    let evicted = 0;
+    while (this.#cache.size > this.#maxCacheSize) {
+      // Map iteration order = insertion order, so first key is oldest
+      const firstKey = this.#cache.keys().next().value;
+      this.#cache.delete(firstKey);
+      evicted++;
+    }
+    if (evicted > 0) this.#dirty = true;
+    return evicted;
   }
 
   /**
