@@ -1,0 +1,5 @@
+timestamp	commit	metric	value	status	description
+2026-05-03T19:00	init	test_count	103	keep	baseline: PRD manager tests
+2026-05-03T19:30	HEAD	test_count	117	keep	auto_adjust_priorities + split_large_story + dependency_depth, +14 tests
+2026-05-04T01:00	HEAD	test_count	121	keep	PRD lifecycle integration tests, +4 tests
+2026-05-04T19:15	f52da63	test_count	136	keep	orchestrator session lifecycle (start_session + summary edges + is_complete), +11 tests
