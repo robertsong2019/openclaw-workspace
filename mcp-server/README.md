@@ -10,44 +10,62 @@ The OpenClaw MCP Server acts as a bridge between AI agents and OpenClaw's powerf
 
 ```
 ┌─────────────────┐      ┌──────────────────┐      ┌─────────────────┐
-│   AI Agent      │ ←──→ │  OpenClaw MCP    │ ←──→ │  OpenClaw Core  │
-│  (MCP Client)   │      │     Server       │      |     Tools       │
+│   AI Agent      │ ←──→ │  OpenClaw MCP    │ ←──→ │  File System    │
+│  (MCP Client)   │ MCP  │     Server       │ I/O  │  + Memory + Web │
 └─────────────────┘      └──────────────────┘      └─────────────────┘
                                │
-                               ├── stdio (default)
-                               └── HTTP (planned)
+                               ├── stdio (current)
+                               └── Streamable HTTP (planned)
 ```
 
 ### Core Components
 
 1. **MCP Server** (`src/index.ts`)
-   - Implements MCP protocol using `@modelcontextprotocol/sdk`
-   - Exposes OpenClaw tools as MCP tools
-   - Handles tool listing and execution requests
-   - Transforms MCP requests to OpenClaw API calls
+   - MCP protocol via `@modelcontextprotocol/sdk`
+   - Streamable HTTP transport
+   - Tool routing and request handling
 
-2. **Tool Mapping Layer**
-   - Maps OpenClaw tools to MCP tool definitions
-   - Converts between MCP and OpenClaw schemas
-   - Handles parameter validation and transformation
+2. **Tools Module** (`src/tools.ts`)
+   - 16 tool definitions with JSON Schema input validation
+   - Path sandboxing (`safePath()` — prevents traversal)
+   - Command validation (`validateExecCommand()` — blocks dangerous patterns)
+   - Workspace-rooted file operations
+   - Memory search across MEMORY.md + memory/*.md
 
-3. **OpenClaw Integration** (placeholder)
-   - Connects to OpenClaw's internal API
-   - Executes real tool operations
-   - Returns formatted results to MCP clients
+3. **Security Layer**
+   - Path sandboxing: all paths resolved relative to `OPENCLAW_WORKSPACE`
+   - Command blocklist: dangerous shell patterns rejected
+   - Directory deletion: only empty dirs can be removed
 
 ## Supported Tools
 
-Currently supports these core OpenClaw tools:
+16 tools spanning file operations, search, execution, and system introspection:
 
-| Tool | Description | Status |
-|------|-------------|--------|
-| `web_search` | Search the web using Brave Search API | ✅ Mocked |
-| `read` | Read file contents (text and images) | ✅ Mocked |
-| `write` | Write content to files | ✅ Mocked |
-| `exec` | Execute shell commands | ✅ Mocked |
+### File Operations
 
-*Note: Tools are currently mocked. Integration with OpenClaw's real API is planned.*
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `read` | Read file contents with optional line range | `path`, `offset`, `limit` |
+| `write` | Write/create files (overwrites) | `path`, `content` |
+| `append` | Append content to files | `path`, `content`, `newline` |
+| `edit` | Find & replace exact text in a file | `path`, `oldText`, `newText` |
+| `delete` | Delete a file or empty directory | `path` |
+| `move` | Move/rename files or directories | `source`, `destination` |
+| `copy` | Copy files or directories (recursive) | `source`, `destination` |
+| `create_directory` | Create directory with parents | `path` |
+| `list_files` | List directory contents (optional recursive) | `path`, `recursive`, `maxDepth` |
+| `find_files` | Find files by glob pattern | `pattern`, `path`, `maxResults` |
+| `file_info` | File metadata (size, timestamps, SHA-256) | `path`, `computeHash` |
+| `search_files` | Regex search across files | `pattern`, `path`, `include`, `maxResults` |
+
+### System & Search
+
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `exec` | Execute shell commands (with safety checks) | `command`, `workdir`, `timeout` |
+| `web_search` | Web search via Brave Search API | `query`, `count`, `freshness` |
+| `memory_search` | Search MEMORY.md and memory/*.md | `query` |
+| `system_status` | Platform, Node version, memory, uptime | *(none)* |
 
 ## Installation
 
@@ -90,84 +108,45 @@ Add to your Claude Desktop config file (`claude_desktop_config.json`):
 npx @modelcontextprotocol/inspector node dist/index.js
 ```
 
+## Security
+
+### Path Sandboxing
+
+All file operations are sandboxed to the workspace root (`OPENCLAW_WORKSPACE` env or `cwd`). Path traversal attempts (e.g. `../../etc/passwd`) are rejected.
+
+### Command Validation
+
+`exec` blocks dangerous shell patterns including:
+- `rm -rf /`, `dd if=`, `mkfs`, `format`
+- `wget | sh`, `curl | sh` (remote execution)
+- `chmod 777 /`, command injection patterns
+
+### File Deletion
+
+- Files: deleted immediately (irreversible)
+- Directories: only deleted if empty
+
 ## Tool Schemas
 
-### web_search
+All 16 tool schemas are defined in `src/tools.ts`. Key schemas:
 
-```json
-{
-  "name": "web_search",
-  "description": "Search the web using Brave Search API",
-  "inputSchema": {
-    "type": "object",
-    "properties": {
-      "query": { "type": "string" },
-      "count": { "type": "number", "default": 5, "minimum": 1, "maximum": 10 },
-      "country": { "type": "string", "default": "US" },
-      "language": { "type": "string" },
-      "freshness": { "type": "string", "enum": ["day", "week", "month", "year"] }
-    },
-    "required": ["query"]
-  }
-}
-```
+### File Editing Triad
 
-### read
+Three complementary file modification tools:
+- **`write`** — Full file overwrite. Use for creating or replacing entire files.
+- **`append`** — Add content to end of file. Use for logs, appending data.
+- **`edit`** — Find & replace exact text. Use for surgical edits.
 
-```json
-{
-  "name": "read",
-  "description": "Read file contents",
-  "inputSchema": {
-    "type": "object",
-    "properties": {
-      "path": { "type": "string" },
-      "offset": { "type": "number" },
-      "limit": { "type": "number" }
-    },
-    "required": ["path"]
-  }
-}
-```
+### Search & Discovery
 
-### write
+- **`search_files`** — Regex content search across files (like `grep`). Supports glob include filter.
+- **`find_files`** — Glob-based file name matching (like `find -name`). Uses Node.js 22+ `fs.glob`.
+- **`memory_search`** — Keyword search in MEMORY.md and `memory/*.md` files.
 
-```json
-{
-  "name": "write",
-  "description": "Write content to a file",
-  "inputSchema": {
-    "type": "object",
-    "properties": {
-      "path": { "type": "string" },
-      "content": { "type": "string" }
-    },
-    "required": ["path", "content"]
-  }
-}
-```
+### File Metadata
 
-### exec
-
-```json
-{
-  "name": "exec",
-  "description": "Execute shell commands",
-  "inputSchema": {
-    "type": "object",
-    "properties": {
-      "command": { "type": "string" },
-      "workdir": { "type": "string" },
-      "env": { "type": "object" },
-      "yieldMs": { "type": "number" },
-      "background": { "type": "boolean" },
-      "timeout": { "type": "number" },
-      "pty": { "type": "boolean" }
-    },
-    "required": ["command"]
-  }
-}
-```
+- **`file_info`** — Returns size, type, timestamps, permissions. Optionally computes SHA-256 hash.
+- **`list_files`** — Directory listing with optional recursion and depth control.
 
 ## Development
 
@@ -198,14 +177,13 @@ npm test
 
 ## Roadmap
 
-- [ ] Integrate with real OpenClaw API
-- [ ] Add more OpenClaw tools (feishu_doc, feishu_bitable, etc.)
-- [ ] Support HTTP transport
+- [x] ~~Add more OpenClaw tools~~ — 16 tools implemented
+- [x] ~~Streamable HTTP transport~~ — MVP complete
+- [ ] Integrate web_search with real Brave API (currently mocked)
 - [ ] Add authentication/authorization
-- [ ] Implement tool capabilities (progress, streaming)
-- [ ] Add resource support (for file system, etc.)
+- [ ] Add resource support (file system browsing)
 - [ ] Add prompt templates
-- [ ] Performance optimizations
+- [ ] Streaming responses for long-running exec
 
 ## Contributing
 
