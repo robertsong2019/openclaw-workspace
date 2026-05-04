@@ -28,3 +28,7 @@ date	project	tests_before	tests_after	delta	status
 2026-05-03	ai-iot-orchestrator	115	135	+20	✅ all pass
 2026-05-03	catalyst-agent-mesh	207	207	0	✅ all pass (baseline)
 2026-05-03	better-ralph-core	117	117	0	✅ all pass (baseline)
+2026-05-04	agent-memory-service	312	312	0	312	312	0	+4 tests: unified autoMaintain with BM25+embed cache diagnostics, healthScore 6 dimensions	all pass
+2026-05-04	better-ralph-core	117	121	+4	121	121	0	PRD lifecycle integration tests (split→adjust→progress→deps)	all pass
+2026-05-04	catalyst-agent-mesh	207	207	0	✅ all pass (baseline verified)
+2026-05-04	better-ralph-core	121	125	+4	✅ all pass (+test_monitor.py: PerformanceMonitor start/end/get_metrics edge cases)

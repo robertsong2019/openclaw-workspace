@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-03T13:00:10.127Z",
+  "updatedAt": "2026-05-04T01:43:25.707Z",
   "entries": {
     "memory:memory/2026-04-12.md:71:96": {
       "key": "memory:memory/2026-04-12.md:71:96",
@@ -9,18 +9,20 @@
       "endLine": 96,
       "source": "memory",
       "snippet": "- ✅ 为\"OpenClaw MCP Server 实现\"打下了坚实基础 - ✅ 理解了 MCP 协议的实际工作原理 - ✅ 可复用的客户端代码，后续可直接集成到 OpenClaw **代码统计：** - 总计 1149 行（代码 + 文档） - 运行测试：✅ 全部通过 --- --- ## 知识整理（深夜） ### 今日总结 - MCP Client Explorer 是最有价值的实验 — 从协议理解到可复用代码 - 本周重点仍是 MCP Server 实现，现在有了坚实的基础 ### 文档更新 - MEMORY.md: 添加4/12成果 - HEARTBEAT.md: 更新为4/13版本 --- *记录者：Catalyst 🧪*",
-      "recallCount": 1,
+      "recallCount": 2,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 1,
+      "totalScore": 2,
       "maxScore": 1,
       "firstRecalledAt": "2026-04-22T09:25:04.803Z",
-      "lastRecalledAt": "2026-04-22T09:25:04.803Z",
+      "lastRecalledAt": "2026-05-04T01:43:25.707Z",
       "queryHashes": [
-        "2f17e178a654"
+        "2f17e178a654",
+        "56a1a476383d"
       ],
       "recallDays": [
-        "2026-04-22"
+        "2026-04-22",
+        "2026-05-04"
       ],
       "conceptTags": [
         "memory.md",
@@ -40,18 +42,20 @@
       "endLine": 84,
       "source": "memory",
       "snippet": "- **MCP Server** (379行) - 测试用服务器 - 3 个资源：天气、系统状态 - 3 个工具：calculate、fibonacci、reverse_string - 2 个提示模板：code_review、task_breakdown - 完整的 JSON-RPC 2.0 响应处理 - **演示程序** (143行) - 功能展示 - 资源列表与读取演示 - 工具列表与调用演示 - 提示模板列表与获取演示 - **文档** (285行) - 完整的使用指南 - MCP 协议核心概念解释 - API 文档与示例代码 - 应用场景说明 - 下一步方向 **技术亮点：** - 零依赖设计，纯 Python 3.7+ - 线程安全的请求/响应匹配 - 完整的错误处理 - 上下文管理器支持（`with` 语句） **关键发现：** 1. MCP 协议确实简单且强大 - JSON-RPC 2.0 + 标准化的资源/工具/提示定义 2. stdio transport 最适合 Agent 集成 - 简单、可靠、无网络开销 3. 工具调用与 LLM function calling 模式高度一致 4. 提示模板是统一上下文管理的有效方式 **与本周计划的关联：** - ✅ 为\"OpenClaw MCP Server 实现\"打下了坚实基础 - ✅ 理解了 MCP 协议的实际工作原理 - ✅ 可复用的客户端代码，后续可直接集成到 OpenClaw **代码统计：** - 总计 1149 行（代码 + 文档） - 运行测",
-      "recallCount": 1,
+      "recallCount": 2,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 1,
+      "totalScore": 2,
       "maxScore": 1,
       "firstRecalledAt": "2026-04-22T09:25:04.803Z",
-      "lastRecalledAt": "2026-04-22T09:25:04.803Z",
+      "lastRecalledAt": "2026-05-04T01:43:25.707Z",
       "queryHashes": [
-        "2f17e178a654"
+        "2f17e178a654",
+        "56a1a476383d"
       ],
       "recallDays": [
-        "2026-04-22"
+        "2026-04-22",
+        "2026-05-04"
       ],
       "conceptTags": [
         "网络",
@@ -314,6 +318,193 @@
         "深度",
         "技术",
         "研究"
+      ]
+    },
+    "memory:memory/2026-04-14.md:31:49": {
+      "key": "memory:memory/2026-04-14.md:31:49",
+      "path": "memory/2026-04-14.md",
+      "startLine": 31,
+      "endLine": 49,
+      "source": "memory",
+      "snippet": "- [ ] 接入 LLM 做真正的记忆提取（从对话中提取实体/关系） - [ ] 添加 embedding 支持（Local Embedding Memory 集成） - [ ] OpenClaw 插件化（替代/增强现有 MEMORY.md 系统） - [ ] Web UI 可视化记忆图谱 - [ ] 与 agent-memory-graph 的知识图谱能力合并 --- ## 📝 文档完善（4:00 AM Cron） ### 新增 README - **better-ralph-core** — 创建完整 README，覆盖架构、核心概念、Session生命周期、快速开始、测试说明 - **catalyst** — 创建 README，描述 Agent Mesh 系统及预定义工作流 ### 现有文档状态 - 所有项目均有 README ✅ - `mcp-mcu-bridge` README 质量良好（93行，含架构图、API表、路线图） - `agent-framework-integration` 最详细（447行）",
+      "recallCount": 2,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 2,
+      "maxScore": 1,
+      "firstRecalledAt": "2026-05-04T01:41:42.409Z",
+      "lastRecalledAt": "2026-05-04T01:42:01.541Z",
+      "queryHashes": [
+        "d73b0a7adb9f",
+        "7b8cc41c6905"
+      ],
+      "recallDays": [
+        "2026-05-04"
+      ],
+      "conceptTags": [
+        "embedding",
+        "从对话中提取实体/关系",
+        "替代/增强现有",
+        "memory.md",
+        "agent-memory-graph",
+        "better-ralph-core",
+        "mcp-mcu-bridge",
+        "agent-framework-integration"
+      ]
+    },
+    "memory:memory/2026-04-07.md:1:32": {
+      "key": "memory:memory/2026-04-07.md:1:32",
+      "path": "memory/2026-04-07.md",
+      "startLine": 1,
+      "endLine": 32,
+      "source": "memory",
+      "snippet": "# 2026-04-07 ## 凌晨 1:00 - 开发任务3 探索 cron 触发，主题：AI 嵌入式应用 + AI 快速原型开发 ### 做了什么 - 审视了现有三个相关项目：`edge-ai-agent`、`edge-agent-runtime`、`tinyml-agent-playground` - `edge-agent-runtime` 代码质量不错，有完整的 Agent Loop 抽象（Sensor → Reasoner → Actuator + Memory） - 为 `edge-agent-runtime` 新增了 `examples/dashboard.html` — 纯前端 Web 仪表盘，实时可视化温室 Agent 运行状态（温度/湿度/土壤湿度折线图 + 执行器状态 + 动作日志） ### 下一步想法 - 给 dashboard 接入 WebSocket，让它能真正连接 Python agent 后端 - 探索在 Raspberry Pi 上实际部署 - 考虑把 edge-agent-runtime 包装成 pip 可安装的包 - 也许可以做一个 \"5 分钟快速原型\" 教程：从零到运行一个边缘 Agent ## 09:20 - Karpathy Wiki 方法论讨论 + 知识库搭建 ### 讨论内容 - Karpathy 的 LLM+Obsidian 知识管理方法论（三层架构、三个操作） - RAG vs GraphRAG vs 结构化 Wiki 对比 - 两级缓存检索策略（index.md → 具体页面） - 知识库 vs 记忆的本质区别",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1,
+      "maxScore": 1,
+      "firstRecalledAt": "2026-05-04T01:41:42.409Z",
+      "lastRecalledAt": "2026-05-04T01:41:42.409Z",
+      "queryHashes": [
+        "d73b0a7adb9f"
+      ],
+      "recallDays": [
+        "2026-05-04"
+      ],
+      "conceptTags": [
+        "edge-ai-agent",
+        "edge-agent-runtime",
+        "tinyml-agent-playground",
+        "examples/dashboard.html",
+        "温度/湿度/土壤湿度折线图",
+        "index.md",
+        "凌晨",
+        "开发"
+      ]
+    },
+    "memory:memory/2026-04-14.md:1:38": {
+      "key": "memory:memory/2026-04-14.md:1:38",
+      "path": "memory/2026-04-14.md",
+      "startLine": 1,
+      "endLine": 38,
+      "source": "memory",
+      "snippet": "# 2026-04-14 - Daily Memory ## 📅 日期与时间 - **日期**: 2026-04-14（周二） - **时区**: Asia/Shanghai (GMT+8) --- ## 🧪 Agent Memory Service 开发 ### 新项目: agent-memory-service - **位置**: `projects/agent-memory-service/` - **状态**: ✅ v0.1.0 完成, 31/31 tests pass - **特点**: - Mem0 风格三层存储: Core(L0,永不过期) / Long(L1,30天半衰期) / Short(L2,1天半衰期) - 自动记忆提取 Pipeline: 偏好/事实/决策/实体/上下文 - 多策略检索: 关键词 + n-gram语义相似度 + 时间衰减 + 层级加权 - Ebbinghaus 遗忘曲线衰减 - 访问增强（recall即复习） - 内容哈希去重 - JSON文件持久化 - 零外部依赖 ### 设计决策 - 不用 SQLite，用 JSON 文件 — 更简单，零依赖 - n-gram 相似度替代 embedding — 不需要 API，离线可用 - 规则提取替代 LLM 提取 — 快速原型，后续可升级 ### 后续改进方向 - [x] **Memory Consolidation** — 合并相关短期记忆为更强长期记忆（v0.2.0, 54/54 tests）✅ 2026-04-15 key-dev-2 - [",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1,
+      "maxScore": 1,
+      "firstRecalledAt": "2026-05-04T01:41:42.409Z",
+      "lastRecalledAt": "2026-05-04T01:41:42.409Z",
+      "queryHashes": [
+        "d73b0a7adb9f"
+      ],
+      "recallDays": [
+        "2026-05-04"
+      ],
+      "conceptTags": [
+        "embedding",
+        "asia/shanghai",
+        "agent-memory-service",
+        "projects/agent-memory-service",
+        "v0.1.0",
+        "31/31",
+        "偏好/事实/决策/实体/上下文",
+        "n-gram语义相似度"
+      ]
+    },
+    "memory:memory/2026-03-21.md:165:195": {
+      "key": "memory:memory/2026-03-21.md:165:195",
+      "path": "memory/2026-03-21.md",
+      "startLine": 165,
+      "endLine": 195,
+      "source": "memory",
+      "snippet": "2. **完整开发流程** - 六个阶段（Ideation → Brainstorming → Planning → Building → Validation → Iteration） 3. **实战案例** - 3 个完整案例（CodeReview AI、ContentGen AI、Meeting AI） 4. **工具箱** - OpenClaw Skills、外部工具、部署平台、模板和脚手架 5. **常见陷阱与解决方案** - 范围蔓延、过度设计、缺乏测试、无用户反馈、技术债务 6. **性能优化与扩展** - MVP 到生产的过渡、成本控制 **关键洞察**: - ⚡ **小时级交付** - 从想法到可用原型只需数小时（vs 传统数周-数月） - 💡 **快速验证** - 低成本试错，快速找到正确方向 - 🎯 **MVP 思维** - 只做核心功能，验证关键假设 - 🔄 **Build-Measure-Learn** - 快速迭代循环 - 🤖 **AI 杠杆** - 让 AI Agent 承担重复性工作 **实战案例时间线**: - **CodeReview AI**: 6 小时从想法到部署 - **ContentGen AI**: 5 小时完成 MVP - **Meeting AI**: 7 小时完整功能 **核心工具**: - OpenClaw Skills (brainstorming, superpowers, ralph-mode, coding-agent) - Claude Code / Codex / Cursor - Vercel /",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1,
+      "maxScore": 1,
+      "firstRecalledAt": "2026-05-04T01:42:01.541Z",
+      "lastRecalledAt": "2026-05-04T01:42:01.541Z",
+      "queryHashes": [
+        "7b8cc41c6905"
+      ],
+      "recallDays": [
+        "2026-05-04"
+      ],
+      "conceptTags": [
+        "传统数周-数月",
+        "build-measure-learn",
+        "ralph-mode",
+        "coding-agent",
+        "完整",
+        "开发",
+        "流程",
+        "阶段"
+      ]
+    },
+    "memory:memory/2026-03-21.md:184:229": {
+      "key": "memory:memory/2026-03-21.md:184:229",
+      "path": "memory/2026-03-21.md",
+      "startLine": 184,
+      "endLine": 229,
+      "source": "memory",
+      "snippet": "- OpenClaw Skills (brainstorming, superpowers, ralph-mode, coding-agent) - Claude Code / Codex / Cursor - Vercel / Supabase / Railway **探索笔记**: catalyst-research/exploration-notes/2026-03-21-ai-rapid-prototyping.md (32,646 字节) --- ### 🎯 下一步重点 **1. 发布待发布随笔** - AI Agent 架构设计：从理论到实践的完整思考 - 需要用户确认后发布到 GitHub Pages **2. 深化 AI Agent 编程** - 继续完善 agent-role-orchestrator - 研究记忆系统集成（Memori vs MEMORY.md 模式） - 探索更多编排模式 **3. 推进 Edge AI Agent** - 完成 Phase 1（模型量化实验） - 在树莓派上部署和测试 - 探索边缘-云端混合架构 **4. 持续随笔输出** - 每周至少 1 篇深度随笔 - 聚焦 AI Agent、边缘 AI、快速原型 - 分享实践经验和学习心得 **5. 社区参与** - 持续完善项目基础设施 - 参与 GitHub Issue 讨论 - 回答技术问题，帮助其他开发者 **6. 实践快速原型流程** - 选择一个小项目 - 应用完整的六阶段流程 - 记录经验和改进点 ### 📚 学习笔记 **Memori - S",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1,
+      "maxScore": 1,
+      "firstRecalledAt": "2026-05-04T01:42:01.541Z",
+      "lastRecalledAt": "2026-05-04T01:42:01.541Z",
+      "queryHashes": [
+        "7b8cc41c6905"
+      ],
+      "recallDays": [
+        "2026-05-04"
+      ],
+      "conceptTags": [
+        "ralph-mode",
+        "coding-agent",
+        "agent-role-orchestrator",
+        "memory.md",
+        "探索边缘-云端混合架构",
+        "openclaw",
+        "skills",
+        "brainstorming"
+      ]
+    },
+    "memory:memory/2026-03-25.md:233:264": {
+      "key": "memory:memory/2026-03-25.md:233:264",
+      "path": "memory/2026-03-25.md",
+      "startLine": 233,
+      "endLine": 264,
+      "source": "memory",
+      "snippet": "### 文档体系现状 **完整性**: 90% - ✅ 工作区核心文档 100% 覆盖 - ✅ 项目核心文档（README/TUTORIAL/API）100% - ⚪ 项目辅助文档（CHANGELOG）33% **质量评分**: ⭐⭐⭐⭐☆ (4.5/5) - 可读性: 5/5 - 完整性: 4/5 - 实用性: 5/5 - 维护性: 5/5 ### 下一步 **短期（本周）**: - ⚪ local-embedding-memory CHANGELOG.md - ⚪ agent-trust-network CHANGELOG.md **中期（2周）**: - ⚪ 架构图（Mermaid） - ⚪ FAQ 文档 - ⚪ 性能基准 详细报告: `DOCUMENTATION-IMPROVEMENT-REPORT.md` --- **Generated**: 2026-03-25 04:00 AM **Context**: Documentation Improvement cron execution **Focus**: 完善项目文档，创建贡献指南，建立变更日志",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1,
+      "maxScore": 1,
+      "firstRecalledAt": "2026-05-04T01:43:25.707Z",
+      "lastRecalledAt": "2026-05-04T01:43:25.707Z",
+      "queryHashes": [
+        "56a1a476383d"
+      ],
+      "recallDays": [
+        "2026-05-04"
+      ],
+      "conceptTags": [
+        "embedding",
+        "network",
+        "readme/tutorial/api",
+        "4.5/5",
+        "5/5",
+        "4/5",
+        "local-embedding-memory",
+        "changelog.md"
       ]
     }
   }

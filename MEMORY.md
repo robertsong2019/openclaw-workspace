@@ -15,10 +15,10 @@
 
 ---
 
-## Current Focus (2026-05-03)
+## Current Focus (2026-05-04)
 
 ### Active Theme
-Autoresearch 方法论实践 - **连续35天零回滚率**。05-03 晚: A2A Agent Trust 集成原型深度研究 — **三层信任模型(Transport/Card Integrity/Metadata Trust)是 A2A 生产化的关键架构**。[研究笔记](catalyst-research/exploration-notes/2026-05-03-a2a-agent-trust.md)。关键发现: A2A Extension 机制是嵌入信任元数据的正确通道(不需要新协议); Task Replay 是被低估的安全风险; Agent Trust Network 可复用 A2A 发现机制; 与现有 openclaw-mcp-server 和 Trust Network Web UI 项目直接关联。**代码已验证通过**: ECDSA P-256 签名+验证+篡改检测全PASS。下一步: lab/a2a-trust-prototype/ → 签名中间件 + Trust Score 计算器。
+Autoresearch 方法论实践 - **连续36天零回滚率**。05-04 凌晨: AMS autoMaintain 统一 BM25+Embed Cache 诊断(6维健康检查, 312 tests); Better Ralph PRD 集成测试(121 tests)。05-03 A2A Agent Trust 三层信任模型研究完成,代码验证通过。**下一步突破**: lab/ 项目从研究转向实现 — A2A Trust Prototype + LangGraph Bridge。
 
 ### Next Actions
 - [ ] **A2A x-agent-trust 中间件原型** — Node.js ES256 签名/验证，可作 OpenClaw gateway plugin
@@ -213,6 +213,10 @@ curl -X POST "https://api.tavily.com/search" \
   - **mergePreview+safeMerge+mergeConflictSummary**: 风险感知合并工作流(18 tests, 594→612)
   - 去重管道完整: mergeSuggestions(发现) → autoMerge(执行) → contentVersionCompact(清理)
   - 零回滚率持续保持(连续26天)
+
+### 2026-05-04
+- ✅ **AMS autoMaintain 统一 BM25+Embed Cache 诊断** — 312 tests (+4). healthScore 6 维度, autoMaintain 默认任务含 compactBM25/compactEmbedCache
+- ✅ **Better Ralph PRD 集成测试** — 117→121 tests (+4). 完整生命周期: split→adjust_priorities→progress→deps
 
 ### 2026-05-03
 - ✅ **AMS Embed Cache Sync + compactEmbedCache()** — 640→645 tests (+5)
@@ -540,5 +544,5 @@ curl -X POST "https://api.tavily.com/search" \
 
 ---
 
-*Last updated: 2026-05-03 02:00*
-*Next review: 2026-05-04*
+*Last updated: 2026-05-04 02:00*
+*Next review: 2026-05-05*
