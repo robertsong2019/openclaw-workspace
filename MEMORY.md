@@ -23,9 +23,11 @@ Autoresearch 方法论实践 - **连续36天零回滚率**。05-04 凌晨: AMS a
 ### Next Actions
 - [ ] **A2A x-agent-trust 中间件原型** — Node.js ES256 签名/验证，可作 OpenClaw gateway plugin
   - [研究笔记 v1](catalyst-research/exploration-notes/2026-05-03-a2a-agent-trust.md) ✅ 代码验证通过(签名+验证+篡改检测)
-  - [研究笔记 v2](catalyst-research/exploration-notes/2026-05-03-a2a-agent-trust.md) ✅ **今晚深度研究**: 5核心概念+三层信任模型+Trust Extension设计+可运行TypeScript代码
-  - **新发现**: A2A v1.0 Signed Cards + Extension机制 = 信任嵌入的正确通道; Task Replay是低估风险; 与openclaw-mcp-server可组合
-  - **下一步**: lab/a2a-trust-prototype/ → OpenClaw gateway plugin 中间件
+  - [研究笔记 v2](catalyst-research/exploration-notes/2026-05-03-a2a-agent-trust.md) ✅ 三层信任模型+Trust Extension设计+可运行TypeScript代码
+  - [A2A Protocol 深度研究](catalyst-research/exploration-notes/2026-05-04-a2a-protocol.md) ✅ 5核心概念+可运行Server/Client(零依赖)+A2A vs MCP分析
+  - **新发现**: A2A v1.0 Signed Cards + Extension机制 = 信任嵌入的正确通道; Agent Card = robots.txt for AI; A2A/MCP互补(水平vs垂直)
+  - **下一步**: lab/a2a-trust-prototype/ → 集成A2A Agent Card securitySchemes + Trust Score写入Task metadata
+- [ ] **OpenClaw A2A Bridge 设计** — 让OpenClaw节点作为A2A Agent暴露(sessions_spawn→tasks/send映射)
 - [ ] **AMS 升级: Hindsight 风格四网络 + 图遍历检索** - 基于 [研究笔记](catalyst-research/exploration-notes/2026-04-26-hindsight-multi-strategy-memory.md)
   - Phase 1: ~~classifyFact + searchByFactType + statsByFactType + reclassifyFact + bulkReclassify~~ ✅ 完成
   - Phase 2: ~~searchGraph() 基于 entity_index 多跳遍历~~ ✅ 完成 (04-28)
@@ -35,6 +37,11 @@ Autoresearch 方法论实践 - **连续36天零回滚率**。05-04 凌晨: AMS a
   - Phase 6: ~~autoMerge端到端去重~~ ✅ + ~~contentVersionCompact~~ ✅ + mergePreview+safeMerge ✅ + branchDiff ✅
   - Phase 7: branchMerge回源 ✅ 完成 / timeline v2分支可视化 / embedding相似度信号
 - [ ] **实现 Hindsight Mini 原型** - `lab/hindsight-mini/` 验证四网络 + 四路检索(代码已在研究笔记中验证通过)
+  - [Hindsight Mini 研究](catalyst-research/exploration-notes/2026-05-04-hindsight-mini-reflection-agents.md) ✅ 5核心概念+可运行Python原型+技术路线图
+  - **核心洞察**: Hindsight=目标替换(保持轨迹); Reflexion=推理时优化; 两者可叠加; 多法官验证提升精度至97.7%
+  - **参考**: AgentHER(ICLR 2026), ECHO, Multi-Agent Reflexion, Reflexion(Shinn 2023)
+  - **Phase 1**: ExperienceStore(embedding索引) + HindsightRelabeler(多法官) + ReflexionLoop
+  - **Phase 2**: 集成OpenClaw sessions_spawn作为真实执行器
 - [ ] **OpenClaw MCP Server MVP** - TypeScript SDK v2 + Streamable HTTP,3 tools (exec/memory_search/memory_get)
   - [研究笔记 v3](catalyst-research/exploration-notes/2026-04-29-mcp-server-typescript-streamable-http.md) ✅ 完整代码(3-tool server+client+Inspector调试)
   - [研究笔记 v2](catalyst-research/exploration-notes/2026-04-29-mcp-server-streamable-http.md) ✅ 完整代码+curl测试(2026-04-29)

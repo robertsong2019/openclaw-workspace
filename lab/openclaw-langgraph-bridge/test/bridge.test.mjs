@@ -19,7 +19,7 @@ import { z } from "zod";
 import { v4 as uuid } from "uuid";
 
 import { createOpenClawNode } from "../dist/create-node.js";
-import { sequentialRouter } from "../dist/supervisor.js";
+import { sequentialRouter, conditionalRouter } from "../dist/supervisor.js";
 
 // -- helpers --
 
@@ -196,5 +196,78 @@ describe("sequentialRouter", () => {
     assert.equal(router({ completedSteps: ["a"] }), "b");
     assert.equal(router({ completedSteps: ["a", "b"] }), "c");
     assert.equal(router({ completedSteps: ["a", "b", "c"] }), END);
+  });
+});
+
+describe("conditionalRouter", () => {
+  it("routes based on state field value", () => {
+    const router = conditionalRouter("sentiment", {
+      positive: "cheer",
+      negative: "comfort",
+    });
+    assert.equal(router({ sentiment: "positive" }), "cheer");
+    assert.equal(router({ sentiment: "negative" }), "comfort");
+  });
+
+  it("falls back to END for unknown values", () => {
+    const router = conditionalRouter("action", { go: "run" });
+    assert.equal(router({ action: "go" }), "run");
+    assert.equal(router({ action: "unknown" }), END);
+    assert.equal(router({}), END);
+  });
+
+  it("supports custom fallback", () => {
+    const router = conditionalRouter("type", { a: "nodeA" }, "nodeB");
+    assert.equal(router({ type: "a" }), "nodeA");
+    assert.equal(router({ type: "other" }), "nodeB");
+  });
+
+  it("integrates with LangGraph conditional branching", async () => {
+    const roles = ["researcher", "writer"];
+    const stateSchema = makeStateSchema(roles);
+    // Add a branch field to the schema is not needed — it's dynamic
+
+    const router = conditionalRouter(
+      "messages",
+      {}, // messages is an array, not a string → always fallback
+      "researcher"
+    );
+    // Simpler: route based on a field we control
+    const branchRouter = (state) => {
+      // If researcher already ran, go to writer; else researcher
+      const completed = new Set(state.completedSteps ?? []);
+      return completed.has("researcher") ? "writer" : "researcher";
+    };
+
+    const graph = new StateGraph(stateSchema)
+      .addNode(
+        "researcher",
+        createOpenClawNode({
+          name: "researcher",
+          systemPrompt: "Research: {input}",
+          executor: async () => "research done",
+        })
+      )
+      .addNode(
+        "writer",
+        createOpenClawNode({
+          name: "writer",
+          systemPrompt: "Write: {input}",
+          executor: async () => "writer done",
+        })
+      )
+      .addConditionalEdges(START, branchRouter, [...roles, END])
+      .addEdge("researcher", "writer")
+      .addEdge("writer", END)
+      .compile();
+
+    const result = await graph.invoke(
+      { task: "test branching" },
+      { configurable: { thread_id: uuid() } }
+    );
+
+    assert.equal(result.researcherResult, "research done");
+    assert.equal(result.writerResult, "writer done");
+    assert.deepEqual(result.completedSteps, ["researcher", "writer"]);
   });
 });
