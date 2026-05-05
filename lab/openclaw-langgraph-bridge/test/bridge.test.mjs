@@ -19,7 +19,7 @@ import { z } from "zod";
 import { v4 as uuid } from "uuid";
 
 import { createOpenClawNode } from "../dist/create-node.js";
-import { sequentialRouter, conditionalRouter } from "../dist/supervisor.js";
+import { sequentialRouter, conditionalRouter, mergeResults } from "../dist/supervisor.js";
 
 // -- helpers --
 
@@ -269,5 +269,61 @@ describe("conditionalRouter", () => {
     assert.equal(result.researcherResult, "research done");
     assert.equal(result.writerResult, "writer done");
     assert.deepEqual(result.completedSteps, ["researcher", "writer"]);
+  });
+});
+
+describe("parallel fan-out with mergeResults", () => {
+  it("runs parallel nodes and merges their results", async () => {
+    const roles = ["researcher", "factChecker"];
+    const fields = {
+      messages: MessagesValue,
+      task: z.string(),
+      completedSteps: new ReducedValue(
+        z.array(z.string()).default(() => []),
+        { inputSchema: z.string(), reducer: (c, n) => [...c, n] }
+      ),
+      researcherResult: z.string().optional(),
+      factCheckerResult: z.string().optional(),
+      mergedResult: z.string().optional(),
+    };
+    const stateSchema = new StateSchema(fields);
+
+    const graph = new StateGraph(stateSchema)
+      .addNode(
+        "researcher",
+        createOpenClawNode({
+          name: "researcher",
+          systemPrompt: "Research: {input}",
+          executor: async () => "found 3 sources",
+        })
+      )
+      .addNode(
+        "factChecker",
+        createOpenClawNode({
+          name: "factChecker",
+          systemPrompt: "Fact-check: {input}",
+          executor: async () => "all claims verified",
+        })
+      )
+      .addNode("merger", async (state) =>
+        mergeResults(state, ["researcherResult", "factCheckerResult"])
+      )
+      .addEdge(START, "researcher")
+      .addEdge(START, "factChecker")
+      .addEdge("researcher", "merger")
+      .addEdge("factChecker", "merger")
+      .addEdge("merger", END)
+      .compile({ checkpointer: new MemorySaver() });
+
+    const result = await graph.invoke(
+      { task: "parallel fan-out test" },
+      { configurable: { thread_id: uuid() } }
+    );
+
+    assert.equal(result.researcherResult, "found 3 sources");
+    assert.equal(result.factCheckerResult, "all claims verified");
+    const merged = JSON.parse(result.mergedResult);
+    assert.equal(merged.researcherResult, "found 3 sources");
+    assert.equal(merged.factCheckerResult, "all claims verified");
   });
 });

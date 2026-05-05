@@ -2,3 +2,4 @@ timestamp	commit	metric	value	status	description
 2026-05-01T23:00	e598ab9	test_pass_rate	4/4	keep	Initial openclaw-langgraph-bridge package: createOpenClawNode, OpenClawClient, sequentialRouter, conditionalRouter
 2026-05-03T23:00	4c8ef4f	test_pass_rate	6/6	keep	Add retry with exponential backoff to createOpenClawNode
 2026-05-04T23:00	8ccbf6d	test_pass_rate	10/10	keep	conditionalRouter unit tests + LangGraph conditional branching integration test
+2026-05-05T23:00	04b2f86	test_pass_rate	11/11	keep	mergeResults utility + parallel fan-out integration test

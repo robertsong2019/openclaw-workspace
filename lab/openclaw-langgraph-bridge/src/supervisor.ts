@@ -10,6 +10,30 @@ export interface RouterState {
 }
 
 /**
+ * Merge results from parallel nodes into a single field.
+ *
+ * Usage: After fan-out (multiple edges from one node),
+ * route all branches into a merge node that uses this function
+ * to combine outputs into a structured summary.
+ */
+export function mergeResults(
+  state: RouterState,
+  sourceFields: string[],
+  targetField: string = "mergedResult"
+): Record<string, unknown> {
+  const merged: Record<string, string> = {};
+  for (const field of sourceFields) {
+    const value = state[field];
+    if (typeof value === "string") {
+      merged[field] = value;
+    }
+  }
+  return {
+    [targetField]: JSON.stringify(merged),
+  };
+}
+
+/**
  * Create a sequential router that visits steps in order,
  * skipping already-completed ones.
  */
