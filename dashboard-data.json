@@ -1,129 +1,28 @@
 {
-  "updatedAt": "2026-05-04T06:00:00+08:00",
-  "updatedAtUTC": "2026-05-03T22:00:00Z",
+  "updated": "2026-05-05T06:00:00+08:00",
+  "updatedHuman": "2026年5月5日 06:00 CST",
   "cronJobs": [
-    {
-      "id": "f38e0365-7bbf-46fd-bab7-14d51a5d4df0",
-      "name": "dashboard-update-morning",
-      "schedule": "0 6 * * *",
-      "nextIn": "<1m",
-      "lastRun": "1d ago",
-      "status": "running"
-    },
-    {
-      "id": "9b2a8701-ab69-49b0-bef4-d9ef6d7ecf9e",
-      "name": "github-trending-daily",
-      "schedule": "0 7 * * * Asia/Shanghai",
-      "nextIn": "60m",
-      "lastRun": "23h ago",
-      "status": "ok"
-    },
-    {
-      "id": "2c714952-04af-4192-8e0a-95758dcbb3db",
-      "name": "github-trending-deep",
-      "schedule": "0 8 * * * Asia/Shanghai",
-      "nextIn": "2h",
-      "lastRun": "22h ago",
-      "status": "ok"
-    },
-    {
-      "id": "610a8d6d-faba-40c2-945c-9ba8472c4839",
-      "name": "github-creative-evening",
-      "schedule": "0 19 * * *",
-      "nextIn": "13h",
-      "lastRun": "11h ago",
-      "status": "ok"
-    },
-    {
-      "id": "265091b6-6c5f-4afb-8485-7108945fe1f7",
-      "name": "deep-exploration-evening",
-      "schedule": "0 20 * * *",
-      "nextIn": "14h",
-      "lastRun": "10h ago",
-      "status": "ok"
-    },
-    {
-      "id": "bb46cb70-ec67-4790-b98d-bdacf280f2a1",
-      "name": "deep-exploration-evening (UTC)",
-      "schedule": "0 12 * * * UTC",
-      "nextIn": "14h",
-      "lastRun": "10h ago",
-      "status": "ok"
-    },
-    {
-      "id": "13a2f284-a1ed-4394-979a-5392fbdf50f7",
-      "name": "code-lab-evening",
-      "schedule": "0 21 * * *",
-      "nextIn": "15h",
-      "lastRun": "9h ago",
-      "status": "ok"
-    },
-    {
-      "id": "ce2fb615-132a-4c40-864f-86de27bea24c",
-      "name": "tool-development-evening",
-      "schedule": "0 22 * * *",
-      "nextIn": "16h",
-      "lastRun": "8h ago",
-      "status": "ok"
-    },
-    {
-      "id": "78eac6fc-c2d7-41d2-a5d1-9a52892f89ab",
-      "name": "key-development-1",
-      "schedule": "0 23 * * *",
-      "nextIn": "17h",
-      "lastRun": "7h ago",
-      "status": "ok"
-    },
-    {
-      "id": "88679f9e-ba09-4e1a-8dbd-a2dc12808544",
-      "name": "key-development-2",
-      "schedule": "0 0 * * *",
-      "nextIn": "18h",
-      "lastRun": "6h ago",
-      "status": "ok"
-    },
-    {
-      "id": "b0fd7e8d-f946-4228-bb85-1baaa3502c7c",
-      "name": "key-development-3",
-      "schedule": "0 1 * * *",
-      "nextIn": "19h",
-      "lastRun": "5h ago",
-      "status": "ok"
-    },
-    {
-      "id": "fd0515b0-f483-411d-b110-3a16fbc49983",
-      "name": "knowledge-organization",
-      "schedule": "0 2 * * *",
-      "nextIn": "20h",
-      "lastRun": "4h ago",
-      "status": "ok"
-    },
-    {
-      "id": "f7510f1f-9db8-46e7-8019-3c9a4858db2e",
-      "name": "project-testing-morning",
-      "schedule": "0 3 * * *",
-      "nextIn": "21h",
-      "lastRun": "3h ago",
-      "status": "ok"
-    },
-    {
-      "id": "77a5bcc6-1342-4ff4-836a-f640973006dc",
-      "name": "documentation-morning",
-      "schedule": "0 4 * * *",
-      "nextIn": "22h",
-      "lastRun": "2h ago",
-      "status": "ok"
-    },
-    {
-      "id": "686ec55c-17ca-43a9-9977-65a3c320ec3a",
-      "name": "essay-generation-morning",
-      "schedule": "0 5 * * *",
-      "nextIn": "23h",
-      "lastRun": "1h ago",
-      "status": "ok"
-    }
+    {"name": "dashboard-update-morning", "schedule": "0 6 * * *", "status": "running", "lastRun": "1m ago", "nextRun": "—"},
+    {"name": "github-trending-daily", "schedule": "0 7 * * *", "status": "ok", "lastRun": "23h ago", "nextRun": "in 60m"},
+    {"name": "github-trending-deep-exploration", "schedule": "0 8 * * *", "status": "ok", "lastRun": "22h ago", "nextRun": "in 2h"},
+    {"name": "github-creative-evening", "schedule": "0 19 * * *", "status": "ok", "lastRun": "11h ago", "nextRun": "in 13h"},
+    {"name": "deep-exploration-evening", "schedule": "0 20 * * *", "status": "ok", "lastRun": "10h ago", "nextRun": "in 14h"},
+    {"name": "deep-exploration-evening (UTC)", "schedule": "0 12 * * * UTC", "status": "ok", "lastRun": "10h ago", "nextRun": "in 14h"},
+    {"name": "code-lab-evening", "schedule": "0 21 * * *", "status": "ok", "lastRun": "9h ago", "nextRun": "in 15h"},
+    {"name": "tool-development-evening", "schedule": "0 22 * * *", "status": "ok", "lastRun": "8h ago", "nextRun": "in 16h"},
+    {"name": "key-development-1", "schedule": "0 23 * * *", "status": "ok", "lastRun": "7h ago", "nextRun": "in 17h"},
+    {"name": "key-development-2", "schedule": "0 0 * * *", "status": "ok", "lastRun": "6h ago", "nextRun": "in 18h"},
+    {"name": "key-development-3", "schedule": "0 1 * * *", "status": "ok", "lastRun": "5h ago", "nextRun": "in 19h"},
+    {"name": "knowledge-organization", "schedule": "0 2 * * *", "status": "ok", "lastRun": "4h ago", "nextRun": "in 20h"},
+    {"name": "project-testing-morning", "schedule": "0 3 * * *", "status": "ok", "lastRun": "3h ago", "nextRun": "in 21h"},
+    {"name": "documentation-morning", "schedule": "0 4 * * *", "status": "ok", "lastRun": "2h ago", "nextRun": "in 22h"},
+    {"name": "essay-generation-morning", "schedule": "0 5 * * *", "status": "ok", "lastRun": "1h ago", "nextRun": "in 23h"}
   ],
-  "totalCronJobs": 15,
-  "healthyCronJobs": 14,
-  "sessions": []
+  "sessions": {
+    "total": 43,
+    "active24h": 34,
+    "mainSession": {"age": "13m ago", "tokens": "143k/205k (70%)"},
+    "recentCronTokens": "avg ~37k/205k (18%)"
+  },
+  "summary": "15 cron jobs all healthy (1 running = this dashboard update). 43 sessions total, 34 active in last 24h. Main session at 70% context. All systems nominal."
 }

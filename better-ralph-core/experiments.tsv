@@ -3,3 +3,4 @@ timestamp	commit	metric	value	status	description
 2026-05-03T19:30	HEAD	test_count	117	keep	auto_adjust_priorities + split_large_story + dependency_depth, +14 tests
 2026-05-04T01:00	HEAD	test_count	121	keep	PRD lifecycle integration tests, +4 tests
 2026-05-04T19:15	f52da63	test_count	136	keep	orchestrator session lifecycle (start_session + summary edges + is_complete), +11 tests
+2026-05-05T01:00	e20cec6	test_count	150/150	keep	Project scanning tests: _detect_project_name (6 tests), _scan_project_patterns (4 tests), _detect_conventions (4 tests). 14 new tests (136→150). Zero-coverage MemoryManager private methods now fully covered.

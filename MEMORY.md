@@ -15,18 +15,22 @@
 
 ---
 
-## Current Focus (2026-05-04)
+## Current Focus (2026-05-05)
 
 ### Active Theme
-Autoresearch 方法论实践 - **连续36天零回滚率**。05-04 凌晨: AMS autoMaintain 统一 BM25+Embed Cache 诊断(6维健康检查, 312 tests); Better Ralph PRD 集成测试(121 tests)。05-03 A2A Agent Trust 三层信任模型研究完成,代码验证通过。**下一步突破**: lab/ 项目从研究转向实现 — A2A Trust Prototype + LangGraph Bridge。
+Autoresearch 方法论实践 - **连续38天零回滚率**。05-05 凌晨: AMS Embedding Cache LRU eviction(maxCacheSize, 41 embed tests); MemoryManager 项目扫描测试覆盖(150 tests)。05-04 晚间: prompt-weaver 4 cycles(+20, 128→148); prompt-router diversity+regex routing(+17, 94→111); better-ralph-core session lifecycle(+11, 125→136); Hindsight Mini 反思Agent研究完成。05-05 晚间: Agent Federation & Discovery 深度研究完成 (DUADP + GEACL + 双层Churn模型 + 可运行Gossip代码)。**下一步突破**: lab/ 项目从研究转向实现 — A2A Trust Prototype + LangGraph Bridge + Gossip Discovery Prototype。
 
 ### Next Actions
 - [ ] **A2A x-agent-trust 中间件原型** — Node.js ES256 签名/验证，可作 OpenClaw gateway plugin
   - [研究笔记 v1](catalyst-research/exploration-notes/2026-05-03-a2a-agent-trust.md) ✅ 代码验证通过(签名+验证+篡改检测)
   - [研究笔记 v2](catalyst-research/exploration-notes/2026-05-03-a2a-agent-trust.md) ✅ 三层信任模型+Trust Extension设计+可运行TypeScript代码
   - [A2A Protocol 深度研究](catalyst-research/exploration-notes/2026-05-04-a2a-protocol.md) ✅ 5核心概念+可运行Server/Client(零依赖)+A2A vs MCP分析
-  - **新发现**: A2A v1.0 Signed Cards + Extension机制 = 信任嵌入的正确通道; Agent Card = robots.txt for AI; A2A/MCP互补(水平vs垂直)
-  - **下一步**: lab/a2a-trust-prototype/ → 集成A2A Agent Card securitySchemes + Trust Score写入Task metadata
+  - [A2A Trust Layer 深度研究](catalyst-research/exploration-notes/2026-05-05-a2a-protocol-trust-layer.md) ✅ 零依赖ES256签名+验证+TrustScore(已运行验证); A2A v1.0 Signed Cards + 150+组织生产部署 + 三层身份架构
+  - **关键发现**: A2A v1.2 已到生产; @a2a-js/sdk v0.2.4 可直接用于原型; W3C VC 作为持久身份层是下一步; MCP+A2A互补架构已确立
+  - **下一步**: lab/a2a-trust-prototype/ → 用 @a2a-js/sdk + node:crypto 实现，包含 JWKS 端点和 Trust Score 中间件
+- [ ] **Gossip Discovery Prototype** — 基于研究笔记，加入DID验证+A2A Trust评分
+  - [研究笔记](catalyst-research/exploration-notes/2026-05-05-agent-federation-discovery.md) ✅ DUADP+GEACL+双层Churn+可运行Gossip代码
+  - **核心发现**: DUADP(DNS for AI)+Gossip是A2A的发现层补丁;双层Churn(node+agent)是Agent特有挑战
 - [ ] **OpenClaw A2A Bridge 设计** — 让OpenClaw节点作为A2A Agent暴露(sessions_spawn→tasks/send映射)
 - [ ] **AMS 升级: Hindsight 风格四网络 + 图遍历检索** - 基于 [研究笔记](catalyst-research/exploration-notes/2026-04-26-hindsight-multi-strategy-memory.md)
   - Phase 1: ~~classifyFact + searchByFactType + statsByFactType + reclassifyFact + bulkReclassify~~ ✅ 完成
@@ -42,6 +46,7 @@ Autoresearch 方法论实践 - **连续36天零回滚率**。05-04 凌晨: AMS a
   - **参考**: AgentHER(ICLR 2026), ECHO, Multi-Agent Reflexion, Reflexion(Shinn 2023)
   - **Phase 1**: ExperienceStore(embedding索引) + HindsightRelabeler(多法官) + ReflexionLoop
   - **Phase 2**: 集成OpenClaw sessions_spawn作为真实执行器
+  - **实用切入点**: 推理时HER变体(ECHO模式)，零训练成本
 - [ ] **OpenClaw MCP Server MVP** - TypeScript SDK v2 + Streamable HTTP,3 tools (exec/memory_search/memory_get)
   - [研究笔记 v3](catalyst-research/exploration-notes/2026-04-29-mcp-server-typescript-streamable-http.md) ✅ 完整代码(3-tool server+client+Inspector调试)
   - [研究笔记 v2](catalyst-research/exploration-notes/2026-04-29-mcp-server-streamable-http.md) ✅ 完整代码+curl测试(2026-04-29)
@@ -220,6 +225,15 @@ curl -X POST "https://api.tavily.com/search" \
   - **mergePreview+safeMerge+mergeConflictSummary**: 风险感知合并工作流(18 tests, 594→612)
   - 去重管道完整: mergeSuggestions(发现) → autoMerge(执行) → contentVersionCompact(清理)
   - 零回滚率持续保持(连续26天)
+
+### 2026-05-05
+- ✅ **AMS Embedding Cache LRU Eviction** — 36→41 embed tests (+5). maxCacheSize opts, Map insertion-order eviction, setMaxCacheSize(n) runtime, 关闭缓存管理循环(eviction+compaction+autoMaintain)
+- ✅ **MemoryManager Project Scanning Tests** — 136→150 tests (+14). _detect_project_name/_scan_project_patterns/_detect_conventions 零覆盖→全覆盖
+- ✅ **prompt-weaver 4 cycles** — 128→148 tests (+20). weave_filter, pipeline_diff, Context.undo, weave_reduce
+- ✅ **prompt-router diversity+regex routing** — 94→111 tests (+17). route_with_diversity, deduplicate_agents, route_by_regex
+- ✅ **better-ralph-core session lifecycle** — 125→136 tests (+11). start_session, get_session_summary, is_complete
+- ✅ **Hindsight Mini 反思Agent研究** — HER+Reflexion融合, 多法官验证97.7%精度, 可运行Python原型
+- 零回滚率: 连续37天
 
 ### 2026-05-04
 - ✅ **AMS autoMaintain 统一 BM25+Embed Cache 诊断** — 312 tests (+4). healthScore 6 维度, autoMaintain 默认任务含 compactBM25/compactEmbedCache
@@ -551,5 +565,5 @@ curl -X POST "https://api.tavily.com/search" \
 
 ---
 
-*Last updated: 2026-05-04 02:00*
-*Next review: 2026-05-05*
+*Last updated: 2026-05-05 02:00*
+*Next review: 2026-05-06*
