@@ -222,6 +222,36 @@ class TestLoadGitignore:
         assert patterns == set()
 
 
+class TestLoadCtxpackignore:
+    def test_with_ctxpackignore(self, tmp_path):
+        from ctxpack import load_ctxpackignore
+        (tmp_path / ".ctxpackignore").write_text("secrets/\n*.env\n# comment\n\nlarge-data/")
+        patterns = load_ctxpackignore(tmp_path)
+        assert "secrets/" in patterns
+        assert "*.env" in patterns
+        assert len(patterns) == 3  # comment and blank line excluded
+
+    def test_without_ctxpackignore(self, tmp_path):
+        from ctxpack import load_ctxpackignore
+        patterns = load_ctxpackignore(tmp_path)
+        assert patterns == set()
+
+    def test_ctxpackignore_filters_files(self, tmp_path):
+        from ctxpack import load_ctxpackignore, scan_tree
+        (tmp_path / ".ctxpackignore").write_text("*.env\ndata")
+        (tmp_path / "app.py").write_text("print('hi')")
+        (tmp_path / ".env").write_text("SECRET=123")
+        data = tmp_path / "data"
+        data.mkdir()
+        (data / "big.csv").write_text("data")
+
+        gitignore = load_gitignore(tmp_path) | load_ctxpackignore(tmp_path)
+        files = scan_tree(tmp_path, gitignore)
+        assert "app.py" in files
+        assert ".env" not in files
+        assert not any(f.startswith("data/") for f in files)
+
+
 class TestFindKeyFiles:
     def test_finds_readme(self):
         files = ["README.md", "src/index.ts"]

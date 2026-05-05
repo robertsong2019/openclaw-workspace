@@ -112,6 +112,18 @@ def load_gitignore(root: Path) -> set[str]:
     return patterns
 
 
+def load_ctxpackignore(root: Path) -> set[str]:
+    """Load patterns from .ctxpackignore (ctxpack-specific ignore file)."""
+    patterns = set()
+    ci = root / ".ctxpackignore"
+    if ci.exists():
+        for line in ci.read_text(errors="ignore").splitlines():
+            line = line.strip()
+            if line and not line.startswith("#"):
+                patterns.add(line)
+    return patterns
+
+
 def should_ignore(path: str, gitignore_patterns: set[str]) -> bool:
     name = os.path.basename(path)
     for d in DEFAULT_IGNORE_DIRS:
@@ -550,7 +562,7 @@ def main():
     project_name = args.name or root.name
     eprint(f"📂 Scanning {root} ...")
 
-    gitignore = load_gitignore(root)
+    gitignore = load_gitignore(root) | load_ctxpackignore(root)
     files = scan_tree(root, gitignore)
     eprint(f"   Found {len(files)} files")
 

@@ -14,4 +14,4 @@
 - [x] **Date-range listing** — filter listArchives by from/to dates ✅ 2026-04-21
 - [x] **Merge archives** — combine multiple sessions into one ✅ 2026-04-25
 - [x] **Diff** — compare two archived sessions ✅ 2026-04-25
-- [ ] **Config file** — default export format, retention policy
+- [x] **Config file** — default export format, retention policy ✅ 2026-05-05
