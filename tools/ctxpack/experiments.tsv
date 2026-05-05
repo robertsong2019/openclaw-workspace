@@ -1,0 +1,3 @@
+timestamp	commit	metric	value	status	description
+2026-05-05T22:15	cfb4294	test_pass_rate	37/37=100%	keep	session-archiver: + config file (10 tests)
+2026-05-05T22:15	cfb4294	test_pass_rate	43/43=100%	keep	ctxpack: + .ctxpackignore (3 tests)
