@@ -1,13 +1,13 @@
 [
   {
-    "id": "b5666c61-87fd-43f6-8848-287737910f80",
+    "id": "435df8a6-ce4d-4d05-a7d3-6437d5dc6ef7",
     "content": "alpha beta gamma",
     "layer": "core",
     "tags": [],
     "entities": [],
     "weight": 1,
-    "createdAt": 1777911650073,
-    "accessedAt": 1777911650073,
+    "createdAt": 1777997465830,
+    "accessedAt": 1777997465830,
     "accessCount": 0,
     "hash": "64989ccbf3efa9c8",
     "factType": "observation"

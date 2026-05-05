@@ -5142,19 +5142,25 @@ class EmbeddingProvider {
   #embedFn;
   /** @type {Map<string, number[]>} */  // content hash -> vector
   #cache = new Map();
+  /** @type {Map<string, number>} */  // content hash -> timestamp ms
+  #cacheTimestamps = new Map();
   #cachePath;
   #dirty = false;
   #maxCacheSize; // 0 = unlimited
+  #cacheTTL; // 0 = no expiry
 
   /**
    * @param {string} dirPath - Directory to persist cache
    * @param {EmbedFn|null} embedFn - Async function that returns a vector for text. null = disabled.
-   * @param {{maxCacheSize?: number}} opts - maxCacheSize: max cached vectors (0 = unlimited, default)
+   * @param {{maxCacheSize?: number, cacheTTL?: number}} opts
+   *   - maxCacheSize: max cached vectors (0 = unlimited, default)
+   *   - cacheTTL: max age in ms before eviction (0 = no expiry, default)
    */
   constructor(dirPath, embedFn = null, opts = {}) {
     this.#cachePath = join(dirPath, 'embed-cache.json');
     this.#embedFn = embedFn;
     this.#maxCacheSize = opts.maxCacheSize || 0;
+    this.#cacheTTL = opts.cacheTTL || 0;
   }
 
   /** Set or replace the embedding function at runtime */
@@ -5171,16 +5177,31 @@ class EmbeddingProvider {
     try {
       const raw = await readFile(this.#cachePath, 'utf-8');
       const obj = JSON.parse(raw);
-      this.#cache = new Map(Object.entries(obj));
+      // Support both {key: vector} and {key: {vector, ts}} formats
+      for (const [key, val] of Object.entries(obj)) {
+        if (Array.isArray(val)) {
+          this.#cache.set(key, val);
+          this.#cacheTimestamps.set(key, 0); // legacy: no timestamp
+        } else if (val && Array.isArray(val.vector)) {
+          this.#cache.set(key, val.vector);
+          this.#cacheTimestamps.set(key, val.ts || 0);
+        }
+      }
     } catch {
       this.#cache = new Map();
+      this.#cacheTimestamps = new Map();
     }
   }
 
   async saveCache() {
     if (!this.#dirty) return;
     await mkdir(dirname(this.#cachePath), { recursive: true });
-    const obj = Object.fromEntries(this.#cache);
+    // Save with timestamps for TTL support
+    const obj = {};
+    for (const [key, vec] of this.#cache) {
+      const ts = this.#cacheTimestamps.get(key) || 0;
+      obj[key] = ts ? { vector: vec, ts } : vec;
+    }
     await writeFile(this.#cachePath, JSON.stringify(obj));
     this.#dirty = false;
   }
@@ -5193,11 +5214,27 @@ class EmbeddingProvider {
   async embed(text) {
     if (!this.#embedFn) return null;
     const key = contentHash(text);
-    if (this.#cache.has(key)) return this.#cache.get(key);
+    if (this.#cache.has(key)) {
+      // Check TTL on access
+      if (this.#cacheTTL > 0) {
+        const ts = this.#cacheTimestamps.get(key);
+        if (ts && Date.now() - ts > this.#cacheTTL) {
+          this.#cache.delete(key);
+          this.#cacheTimestamps.delete(key);
+          this.#dirty = true;
+          // fall through to re-embed
+        } else {
+          return this.#cache.get(key);
+        }
+      } else {
+        return this.#cache.get(key);
+      }
+    }
     try {
       const vec = await this.#embedFn(text);
       if (vec && Array.isArray(vec) && vec.length > 0) {
         this.#cache.set(key, vec);
+        this.#cacheTimestamps.set(key, Date.now());
         this.#dirty = true;
         this.#evictIfNeeded();
         return vec;
@@ -5225,6 +5262,7 @@ class EmbeddingProvider {
     const key = contentHash(text);
     if (this.#cache.has(key)) {
       this.#cache.delete(key);
+      this.#cacheTimestamps.delete(key);
       this.#dirty = true;
     }
   }
@@ -5233,6 +5271,7 @@ class EmbeddingProvider {
   removeByKey(key) {
     if (this.#cache.has(key)) {
       this.#cache.delete(key);
+      this.#cacheTimestamps.delete(key);
       this.#dirty = true;
     }
   }
@@ -5245,6 +5284,7 @@ class EmbeddingProvider {
   /** Clear the cache */
   clearCache() {
     this.#cache.clear();
+    this.#cacheTimestamps.clear();
     this.#dirty = true;
   }
 
@@ -5256,6 +5296,32 @@ class EmbeddingProvider {
   /** Get max cache size (0 = unlimited) */
   get maxCacheSize() {
     return this.#maxCacheSize;
+  }
+
+  /** Get cache TTL in ms (0 = no expiry) */
+  get cacheTTL() {
+    return this.#cacheTTL;
+  }
+
+  /** Set cache TTL at runtime */
+  setCacheTTL(ms) {
+    this.#cacheTTL = ms;
+  }
+
+  /** Evict entries older than cacheTTL. Returns number evicted. */
+  evictExpired() {
+    if (this.#cacheTTL <= 0) return 0;
+    const now = Date.now();
+    let evicted = 0;
+    for (const [key, ts] of this.#cacheTimestamps) {
+      if (now - ts > this.#cacheTTL) {
+        this.#cache.delete(key);
+        this.#cacheTimestamps.delete(key);
+        evicted++;
+      }
+    }
+    if (evicted > 0) this.#dirty = true;
+    return evicted;
   }
 
   /** Set max cache size at runtime */
