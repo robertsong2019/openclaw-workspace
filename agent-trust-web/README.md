@@ -173,6 +173,132 @@ docker build -t agent-trust-web .
 docker run -p 8080:80 agent-trust-web
 ```
 
+## Testing
+
+The project uses [Vitest](https://vitest.dev/) for unit testing.
+
+```bash
+# Run tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:coverage
+```
+
+### Test Structure
+
+Tests are located in `tests/` and mirror the `src/` structure:
+
+```
+tests/
+└── trustNetwork.test.ts   # Core simulation logic tests (30+ cases)
+```
+
+### What's Tested
+
+| Area | Coverage |
+|------|----------|
+| Initialization | Default agents, relations, behavior distribution |
+| Agent CRUD | Add/remove agents, relation cleanup |
+| Trust Relations | Set/get weights, clamping [0,1], nonexistent agents |
+| Trust Calculation | PageRank scores in [0,1], single-agent edge case |
+| Simulation | Step counting, batch simulation |
+| Metrics | Network health, trust distribution, empty network |
+| Agent Metrics | Individual metrics, trends, reliability |
+| Import/Export | JSON round-trip, invalid JSON handling |
+| Reset | State restoration |
+
+### Writing New Tests
+
+```typescript
+import { describe, it, expect, beforeEach } from 'vitest';
+import { TrustNetworkSimulation } from '../src/trustNetwork';
+
+describe('MyFeature', () => {
+  let sim: TrustNetworkSimulation;
+  beforeEach(() => { sim = new TrustNetworkSimulation(); });
+
+  it('should work', () => {
+    // test code
+  });
+});
+```
+
+## API Reference
+
+### `TrustNetworkSimulation`
+
+Core simulation engine. All state is maintained in-memory.
+
+#### Constructor
+
+```typescript
+new TrustNetworkSimulation()
+```
+
+Creates a simulation with 5 default agents: Alice (cooperative), Bob (cooperative), Charlie (neutral), David (neutral), Eve (malicious).
+
+#### Agent Management
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `addAgent` | `(config: { id, name, behavior, initialTrust?, expertise?, reliability? }) => void` | Add agent to network |
+| `removeAgent` | `(id: string) => void` | Remove agent and its relations |
+
+#### Trust Operations
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `setTrustRelation` | `(from: string, to: string, weight: number) => void` | Set trust weight (clamped to [0,1]) |
+| `getTrustWeight` | `(from: string, to: string) => number` | Get trust weight (0 if no relation) |
+| `calculateTrustScores` | `() => void` | Run PageRank to update all trust scores |
+
+#### Simulation
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `simulateStep` | `() => void` | Run one interaction round |
+| `simulate` | `(steps: number) => void` | Run N steps |
+| `reset` | `() => void` | Reset to default state |
+
+#### Data Access
+
+| Method | Signature | Returns |
+|--------|-----------|--------|
+| `getStats` | `() => NetworkStats` | Agent count, relation count, avg trust, behavior distribution |
+| `getMetrics` | `() => NetworkMetrics` | Network health, volatility, confidence, trust distribution |
+| `getAgentMetrics` | `(id: string) => AgentMetrics \| null` | Individual agent trend, reliability, velocity |
+| `getNetworkData` | `() => NetworkData` | Full snapshot: agents, relations, stats, metrics, stepCount |
+
+#### Persistence
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `exportConfig` | `() => string` | Serialize network to JSON |
+| `importConfig` | `(json: string) => void` | Restore from JSON (invalid JSON is ignored) |
+
+#### Key Types
+
+```typescript
+type AgentBehavior = 'cooperative' | 'neutral' | 'malicious' | 'adversarial';
+
+interface Agent {
+  id: string; name: string; behavior: AgentBehavior;
+  trustScore: number; interactions: number; successRate: number;
+}
+
+interface NetworkMetrics {
+  totalAgents: number; averageTrust: number; networkHealth: number;
+  trustDistribution: { high: number; medium: number; low: number };
+  volatilityIndex: number; confidenceIndex: number;
+}
+```
+
+Full type definitions: [`src/types.ts`](src/types.ts)
+
 ## Development
 
 ### Code Style
