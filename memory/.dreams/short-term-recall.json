@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-05T16:00:18.097Z",
+  "updatedAt": "2026-05-05T17:00:17.994Z",
   "entries": {
     "memory:memory/2026-04-12.md:71:96": {
       "key": "memory:memory/2026-04-12.md:71:96",
@@ -545,15 +545,16 @@
       "endLine": 208,
       "source": "memory",
       "snippet": "3. Add maintenance scheduling with retry/backoff 4. Add telemetry/metrics for maintenance runs --- ## Summary **Experiment Result:** ✅ KEEP **Tests:** 324 → 329 (+5) **Code:** ~93 lines added (~39 src + ~54 tests) **Version:** v0.x → v0.x+1 **Feature:** Automatic health-based maintenance with threshold, task whitelist, dry-run The autoresearch methodology proved effective again: - Started from clear baseline (v0.x, 324 tests) - Built incrementally on previous work (healthScore from key-dev-3) - Defined measurable success criteria - Implemented and tested in one session - Recorded decision in experiments.tsv - Retained improvement, zero regressions --- **Generated**: 2026-04-22 12:00 AM",
-      "recallCount": 1,
+      "recallCount": 2,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 1,
+      "totalScore": 2,
       "maxScore": 1,
       "firstRecalledAt": "2026-05-05T16:00:18.097Z",
-      "lastRecalledAt": "2026-05-05T16:00:18.097Z",
+      "lastRecalledAt": "2026-05-05T17:00:17.994Z",
       "queryHashes": [
-        "4da31a664e6b"
+        "4da31a664e6b",
+        "6cedc2318e63"
       ],
       "recallDays": [
         "2026-05-06"

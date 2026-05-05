@@ -240,6 +240,8 @@ class MemoryManager:
             if self.project_context_file.exists():
                 with open(self.project_context_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
+                    if 'project_root' in data:
+                        data['project_root'] = Path(data['project_root'])
                     self.project_context = ProjectContext(**data)
             
             # Load iterations
@@ -262,8 +264,10 @@ class MemoryManager:
         """Save project context to file."""
         try:
             if self.project_context:
+                data = asdict(self.project_context)
+                data['project_root'] = str(data['project_root'])
                 with open(self.project_context_file, 'w', encoding='utf-8') as f:
-                    json.dump(asdict(self.project_context), f, indent=2, ensure_ascii=False)
+                    json.dump(data, f, indent=2, ensure_ascii=False)
         except Exception as e:
             self.logger.error(f"Error saving project context: {e}")
     
