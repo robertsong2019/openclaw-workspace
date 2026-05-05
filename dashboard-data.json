@@ -1,17 +1,17 @@
 {
-  "updated": "2026-05-05T06:00:00+08:00",
-  "updatedHuman": "2026年5月5日 06:00 CST",
+  "updated": "2026-05-06T06:00:00+08:00",
+  "updatedHuman": "2026年5月6日 06:00 CST",
   "cronJobs": [
-    {"name": "dashboard-update-morning", "schedule": "0 6 * * *", "status": "running", "lastRun": "1m ago", "nextRun": "—"},
-    {"name": "github-trending-daily", "schedule": "0 7 * * *", "status": "ok", "lastRun": "23h ago", "nextRun": "in 60m"},
-    {"name": "github-trending-deep-exploration", "schedule": "0 8 * * *", "status": "ok", "lastRun": "22h ago", "nextRun": "in 2h"},
-    {"name": "github-creative-evening", "schedule": "0 19 * * *", "status": "ok", "lastRun": "11h ago", "nextRun": "in 13h"},
+    {"name": "dashboard-update-morning", "schedule": "0 6 * * *", "status": "running", "lastRun": "<1m ago", "nextRun": "—"},
+    {"name": "github-trending-daily", "schedule": "0 7 * * * Asia/Shanghai", "status": "ok", "lastRun": "23h ago", "nextRun": "in 60m"},
+    {"name": "github-trending-deep-exploration", "schedule": "0 8 * * * Asia/Shanghai", "status": "ok", "lastRun": "22h ago", "nextRun": "in 2h"},
+    {"name": "github-creative-evening", "schedule": "0 19 * * *", "status": "error", "lastRun": "11h ago", "nextRun": "in 13h"},
     {"name": "deep-exploration-evening", "schedule": "0 20 * * *", "status": "ok", "lastRun": "10h ago", "nextRun": "in 14h"},
     {"name": "deep-exploration-evening (UTC)", "schedule": "0 12 * * * UTC", "status": "ok", "lastRun": "10h ago", "nextRun": "in 14h"},
     {"name": "code-lab-evening", "schedule": "0 21 * * *", "status": "ok", "lastRun": "9h ago", "nextRun": "in 15h"},
     {"name": "tool-development-evening", "schedule": "0 22 * * *", "status": "ok", "lastRun": "8h ago", "nextRun": "in 16h"},
     {"name": "key-development-1", "schedule": "0 23 * * *", "status": "ok", "lastRun": "7h ago", "nextRun": "in 17h"},
-    {"name": "key-development-2", "schedule": "0 0 * * *", "status": "ok", "lastRun": "6h ago", "nextRun": "in 18h"},
+    {"name": "key-development-2", "schedule": "0 0 * * *", "status": "error", "lastRun": "6h ago", "nextRun": "in 18h"},
     {"name": "key-development-3", "schedule": "0 1 * * *", "status": "ok", "lastRun": "5h ago", "nextRun": "in 19h"},
     {"name": "knowledge-organization", "schedule": "0 2 * * *", "status": "ok", "lastRun": "4h ago", "nextRun": "in 20h"},
     {"name": "project-testing-morning", "schedule": "0 3 * * *", "status": "ok", "lastRun": "3h ago", "nextRun": "in 21h"},
@@ -19,10 +19,13 @@
     {"name": "essay-generation-morning", "schedule": "0 5 * * *", "status": "ok", "lastRun": "1h ago", "nextRun": "in 23h"}
   ],
   "sessions": {
-    "total": 43,
-    "active24h": 34,
-    "mainSession": {"age": "13m ago", "tokens": "143k/205k (70%)"},
-    "recentCronTokens": "avg ~37k/205k (18%)"
+    "total": 1,
+    "active24h": 1,
+    "note": "Only this cron session visible via API; actual total likely similar to yesterday (43)"
   },
-  "summary": "15 cron jobs all healthy (1 running = this dashboard update). 43 sessions total, 34 active in last 24h. Main session at 70% context. All systems nominal."
+  "alerts": [
+    {"job": "github-creative-evening", "status": "error", "note": "Failed last run 11h ago"},
+    {"job": "key-development-2", "status": "error", "note": "Failed last run 6h ago"}
+  ],
+  "summary": "15 cron jobs: 12 ok, 2 errors (github-creative-evening, key-development-2), 1 running (this). Dashboard updated and pushed to GitHub."
 }
