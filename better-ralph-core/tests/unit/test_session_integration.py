@@ -53,7 +53,7 @@ class TestFullSessionLifecycle:
         # Verify project context
         assert manager.project_context is not None
         # _detect_project_name strips extensions from config filename
-        assert manager.project_context.project_name == "package"
+        assert manager.project_context.project_name == "my-app"
         assert manager.project_context.project_root == project_root
         assert ".ts" in manager.project_context.file_types
         assert manager.project_context.file_types[".ts"] >= 3
@@ -67,7 +67,7 @@ class TestFullSessionLifecycle:
         ctx_file = memory_dir / "project_context.json"
         assert ctx_file.exists()
         saved = json.loads(ctx_file.read_text())
-        assert saved["project_name"] == "package"
+        assert saved["project_name"] == "my-app"
 
     def test_iteration_context_reflects_session_state(self, mm):
         """get_iteration_context should include project + memory + pattern context."""
@@ -84,7 +84,7 @@ class TestFullSessionLifecycle:
         assert ctx["story"]["title"] == "Test Story"
 
         # Project context propagated
-        assert ctx["project"]["project_name"] == "pyproject"
+        assert ctx["project"]["project_name"] == "demo"
         assert ".py" in ctx["project"]["file_types"]
 
         # Memory context (empty initially)
@@ -207,3 +207,42 @@ class TestFullSessionLifecycle:
         assert ctx["memory"]["total_iterations"] == 12
         assert ctx["memory"]["recent_iterations"] == 5  # last 5
         assert len(ctx["memory"]["common_learnings"]) <= 10  # capped at 10
+
+
+class TestGetMemorySummary:
+    """Integration tests for get_memory_summary()."""
+
+    def test_empty_summary(self, tmp_path):
+        mgr = MemoryManager(memory_dir=tmp_path)
+        summary = mgr.get_memory_summary()
+        assert summary["iterations_count"] == 0
+        assert summary["iterations_summary"] == []
+        assert summary["patterns_count"] == 0
+        assert summary["memory_directory"] == str(tmp_path)
+        assert summary["project_context"]["project_name"] is None
+
+    def test_summary_with_initialized_session(self, tmp_path):
+        proj = tmp_path / "myapp"
+        proj.mkdir()
+        (proj / "package.json").write_text('{"name": "myapp"}')
+        mgr = MemoryManager(memory_dir=tmp_path)
+        mgr.initialize_session(proj)
+        summary = mgr.get_memory_summary()
+        assert summary["project_context"]["project_name"] == "myapp"
+        assert "file_types" in summary["project_context"]
+
+    def test_summary_with_iterations(self, tmp_path):
+        mgr = MemoryManager(memory_dir=tmp_path)
+        mgr.iterations = [
+            type("Iter", (), {"to_dict": lambda self: {"id": 1}})(),
+            type("Iter", (), {"to_dict": lambda self: {"id": 2}})(),
+        ]
+        summary = mgr.get_memory_summary()
+        assert summary["iterations_count"] == 2
+        assert len(summary["iterations_summary"]) == 2
+
+    def test_summary_with_patterns(self, tmp_path):
+        mgr = MemoryManager(memory_dir=tmp_path)
+        mgr.patterns = {"code_patterns": ["p1"], "common_patterns": ["p2"], "common_learnings": []}
+        summary = mgr.get_memory_summary()
+        assert summary["patterns_count"] == 3  # 3 top-level keys in patterns dict

@@ -288,14 +288,31 @@ class MemoryManager:
             self.logger.error(f"Error saving patterns: {e}")
     
     def _detect_project_name(self, project_root: Path) -> str:
-        """Detect project name from directory."""
-        # Try common project files
-        common_files = ["package.json", "pyproject.toml", "setup.py", "Cargo.toml", "go.mod"]
-        
-        for file in common_files:
-            if (project_root / file).exists():
-                return file.replace(".json", "").replace(".toml", "").replace(".py", "").replace(".mod", "")
-        
+        """Detect project name from config files, fall back to directory name."""
+        # Try package.json
+        pkg = project_root / "package.json"
+        if pkg.exists():
+            try:
+                import json
+                data = json.loads(pkg.read_text(encoding="utf-8"))
+                if data.get("name"):
+                    return data["name"]
+            except Exception:
+                pass
+
+        # Try pyproject.toml [project] name
+        pyproj = project_root / "pyproject.toml"
+        if pyproj.exists():
+            try:
+                for line in pyproj.read_text(encoding="utf-8").splitlines():
+                    stripped = line.strip()
+                    if stripped.startswith("name") and "=" in stripped:
+                        val = stripped.split("=", 1)[1].strip().strip('"').strip("'")
+                        if val:
+                            return val
+            except Exception:
+                pass
+
         # Fall back to directory name
         return project_root.name
     

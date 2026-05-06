@@ -20,36 +20,57 @@ MemoryManager = mm.MemoryManager
 
 
 class TestDetectProjectName:
-    """_detect_project_name from project root directory."""
+    """_detect_project_name from config files, fall back to directory name."""
 
-    def test_package_json(self, tmp_path):
+    def test_package_json_with_name(self, tmp_path):
+        (tmp_path / "package.json").write_text('{"name": "my-cool-app"}')
+        mgr = MemoryManager()
+        assert mgr._detect_project_name(tmp_path) == "my-cool-app"
+
+    def test_package_json_no_name_fallback(self, tmp_path):
         (tmp_path / "package.json").write_text("{}")
         mgr = MemoryManager()
-        assert mgr._detect_project_name(tmp_path) == "package"
+        assert mgr._detect_project_name(tmp_path) == tmp_path.name
 
-    def test_pyproject_toml(self, tmp_path):
-        (tmp_path / "pyproject.toml").write_text("[project]")
+    def test_package_json_invalid_json_fallback(self, tmp_path):
+        (tmp_path / "package.json").write_text("not json")
         mgr = MemoryManager()
-        assert mgr._detect_project_name(tmp_path) == "pyproject"
+        assert mgr._detect_project_name(tmp_path) == tmp_path.name
 
-    def test_setup_py(self, tmp_path):
+    def test_pyproject_toml_with_name(self, tmp_path):
+        (tmp_path / "pyproject.toml").write_text('[project]\nname = "my-py-project"\nversion = "0.1.0"')
+        mgr = MemoryManager()
+        assert mgr._detect_project_name(tmp_path) == "my-py-project"
+
+    def test_pyproject_toml_no_name_fallback(self, tmp_path):
+        (tmp_path / "pyproject.toml").write_text("[project]\nversion = \"0.1.0\"")
+        mgr = MemoryManager()
+        assert mgr._detect_project_name(tmp_path) == tmp_path.name
+
+    def test_setup_py_fallback_to_dirname(self, tmp_path):
         (tmp_path / "setup.py").write_text("")
         mgr = MemoryManager()
-        assert mgr._detect_project_name(tmp_path) == "setup"
+        assert mgr._detect_project_name(tmp_path) == tmp_path.name
 
-    def test_cargo_toml(self, tmp_path):
+    def test_cargo_toml_fallback_to_dirname(self, tmp_path):
         (tmp_path / "Cargo.toml").write_text("")
         mgr = MemoryManager()
-        assert mgr._detect_project_name(tmp_path) == "Cargo"
+        assert mgr._detect_project_name(tmp_path) == tmp_path.name
 
-    def test_go_mod(self, tmp_path):
+    def test_go_mod_fallback_to_dirname(self, tmp_path):
         (tmp_path / "go.mod").write_text("")
         mgr = MemoryManager()
-        assert mgr._detect_project_name(tmp_path) == "go"
+        assert mgr._detect_project_name(tmp_path) == tmp_path.name
 
     def test_fallback_to_dirname(self, tmp_path):
         mgr = MemoryManager()
         assert mgr._detect_project_name(tmp_path) == tmp_path.name
+
+    def test_package_json_priority_over_pyproject(self, tmp_path):
+        (tmp_path / "package.json").write_text('{"name": "from-pkg"}')
+        (tmp_path / "pyproject.toml").write_text('[project]\nname = "from-pyproj"')
+        mgr = MemoryManager()
+        assert mgr._detect_project_name(tmp_path) == "from-pkg"
 
 
 class TestScanProjectPatterns:
