@@ -408,6 +408,44 @@ class MemoryManager:
         if len(self.patterns["common_patterns"]) > max_patterns:
             self.patterns["common_patterns"] = self.patterns["common_patterns"][-max_patterns:]
     
+    def search_iterations(self, query: str = "", story_id: Optional[str] = None,
+                          has_errors: Optional[bool] = None) -> List[IterationContext]:
+        """
+        Search past iterations by keyword, story_id, or error status.
+        
+        Args:
+            query: Keyword to search in title, learnings, patterns, notes
+            story_id: Filter by specific story ID
+            has_errors: If True, only iterations with errors; if False, only without
+            
+        Returns:
+            List of matching IterationContext objects
+        """
+        results = self.iterations
+        
+        if story_id is not None:
+            results = [i for i in results if i.story_id == story_id]
+        
+        if has_errors is not None:
+            if has_errors:
+                results = [i for i in results if i.errors]
+            else:
+                results = [i for i in results if not i.errors]
+        
+        if query:
+            q = query.lower()
+            matched = []
+            for i in results:
+                searchable = " ".join([
+                    i.story_title, i.notes,
+                    *i.learnings, *i.patterns, *i.errors
+                ]).lower()
+                if q in searchable:
+                    matched.append(i)
+            results = matched
+        
+        return results
+    
     def get_memory_summary(self) -> Dict[str, Any]:
         """Get a summary of all memory data."""
         return {
