@@ -33,3 +33,4 @@ date	project	tests_before	tests_after	delta	status
 2026-05-04	catalyst-agent-mesh	207	207	0	✅ all pass (baseline verified)
 2026-05-04	better-ralph-core	121	125	+4	✅ all pass (+test_monitor.py: PerformanceMonitor start/end/get_metrics edge cases)
 2026-05-05	mcp-server	114	127	+13	127	127	0	+read.test.js (7 tests) +write.test.js (6 tests)	all pass
+2026-05-06	agent-trust-web	0	22	+22	22	22	0	+trustNetwork.test.ts: initialization, add/remove, trust relations, trust scores, simulation, metrics, export/import, reset (vitest)	all pass

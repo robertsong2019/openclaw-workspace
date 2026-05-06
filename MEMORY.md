@@ -18,7 +18,7 @@
 ## Current Focus (2026-05-05)
 
 ### Active Theme
-Autoresearch 方法论实践 - **连续38天零回滚率**。05-05 凌晨: AMS Embedding Cache LRU eviction(maxCacheSize, 41 embed tests); MemoryManager 项目扫描测试覆盖(150 tests)。05-04 晚间: prompt-weaver 4 cycles(+20, 128→148); prompt-router diversity+regex routing(+17, 94→111); better-ralph-core session lifecycle(+11, 125→136); Hindsight Mini 反思Agent研究完成。05-05 晚间: Agent Federation & Discovery 深度研究完成 (DUADP + GEACL + 双层Churn模型 + 可运行Gossip代码)。**下一步突破**: lab/ 项目从研究转向实现 — A2A Trust Prototype + LangGraph Bridge + Gossip Discovery Prototype。
+Autoresearch 方法论实践 - **连续39天零回滚率**。05-06 凌晨: AMS Embedding Cache TTL eviction(cacheTTL, 48 embed tests); MemoryManager session lifecycle integration(156 tests, 发现并修复PosixPath序列化bug)。05-05: AMS LRU eviction(41 embed tests); MemoryManager项目扫描(150 tests); A2A Trust Layer深度研究(ES256+JWS+三层身份架构); Agent Federation研究(DUADP+GEACL+Gossip)。**下一步突破**: lab/ 从研究→实现 — A2A Trust Prototype + LangGraph Bridge + Gossip Discovery。
 
 ### Next Actions
 - [ ] **A2A x-agent-trust 中间件原型** — Node.js ES256 签名/验证，可作 OpenClaw gateway plugin
@@ -226,14 +226,21 @@ curl -X POST "https://api.tavily.com/search" \
   - 去重管道完整: mergeSuggestions(发现) → autoMerge(执行) → contentVersionCompact(清理)
   - 零回滚率持续保持(连续26天)
 
+### 2026-05-06
+- ✅ **AMS Embedding Cache TTL Eviction** — 41→48 embed tests (+7). cacheTTL(ms), 自动过期重嵌, evictExpired()批量清理, 向后兼容持久化
+- ✅ **MemoryManager Session Lifecycle Integration** — 150→156 tests (+6). 完整生命周期: initialize→context→iteration→persistence. **修复PosixPath JSON序列化bug**(_save_project_context崩溃导致级联失败)
+- 零回滚率: 连续39天
+
 ### 2026-05-05
-- ✅ **AMS Embedding Cache LRU Eviction** — 36→41 embed tests (+5). maxCacheSize opts, Map insertion-order eviction, setMaxCacheSize(n) runtime, 关闭缓存管理循环(eviction+compaction+autoMaintain)
-- ✅ **MemoryManager Project Scanning Tests** — 136→150 tests (+14). _detect_project_name/_scan_project_patterns/_detect_conventions 零覆盖→全覆盖
+- ✅ **AMS Embedding Cache LRU Eviction** — 36→41 embed tests (+5). maxCacheSize opts, Map insertion-order eviction, setMaxCacheSize(n) runtime
+- ✅ **MemoryManager Project Scanning Tests** — 136→150 tests (+14)
 - ✅ **prompt-weaver 4 cycles** — 128→148 tests (+20). weave_filter, pipeline_diff, Context.undo, weave_reduce
-- ✅ **prompt-router diversity+regex routing** — 94→111 tests (+17). route_with_diversity, deduplicate_agents, route_by_regex
-- ✅ **better-ralph-core session lifecycle** — 125→136 tests (+11). start_session, get_session_summary, is_complete
-- ✅ **Hindsight Mini 反思Agent研究** — HER+Reflexion融合, 多法官验证97.7%精度, 可运行Python原型
-- 零回滚率: 连续37天
+- ✅ **prompt-router diversity+regex routing** — 94→111 tests (+17)
+- ✅ **better-ralph-core session lifecycle** — 125→136 tests (+11)
+- ✅ **Hindsight Mini 反思Agent研究** — HER+Reflexion融合, 多法官验证97.7%精度
+- ✅ **A2A Trust Layer 深度研究** — ES256+JWS签名验证, 三层身份架构, @a2a-js/sdk v0.2.4, 150+组织生产部署
+- ✅ **Agent Federation & Discovery 研究** — DUADP+GEACL+双层Churn模型+可运行Gossip代码
+- 零回滚率: 连续38天
 
 ### 2026-05-04
 - ✅ **AMS autoMaintain 统一 BM25+Embed Cache 诊断** — 312 tests (+4). healthScore 6 维度, autoMaintain 默认任务含 compactBM25/compactEmbedCache
@@ -565,5 +572,5 @@ curl -X POST "https://api.tavily.com/search" \
 
 ---
 
-*Last updated: 2026-05-05 02:00*
-*Next review: 2026-05-06*
+*Last updated: 2026-05-06 02:00*
+*Next review: 2026-05-07*

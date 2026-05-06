@@ -382,3 +382,65 @@ class PRDManager:
             max_depth = max(max_depth, depth + 1)
         
         return max_depth
+    
+    def validate_dependencies(self) -> Dict[str, Any]:
+        """
+        Validate all story dependencies: detect cycles and missing references.
+        
+        Returns:
+            Dict with 'valid' (bool), 'errors' (list), and 'warnings' (list).
+        """
+        story_ids = {s.id for s in self.stories}
+        errors = []
+        warnings = []
+        
+        # Check for missing dependency references
+        for story in self.stories:
+            for dep_id in story.dependencies:
+                if dep_id not in story_ids:
+                    errors.append(f"Story '{story.id}' depends on '{dep_id}' which does not exist")
+        
+        # Check for circular dependencies using DFS
+        def has_cycle(node: str, visited: Set[str], rec_stack: Set[str]) -> Optional[List[str]]:
+            visited.add(node)
+            rec_stack.add(node)
+            story = self.get_story_by_id(node)
+            if story:
+                for dep_id in story.dependencies:
+                    if dep_id not in story_ids:
+                        continue
+                    if dep_id not in visited:
+                        result = has_cycle(dep_id, visited, rec_stack)
+                        if result is not None:
+                            return [node] + result
+                    elif dep_id in rec_stack:
+                        return [node, dep_id]
+            rec_stack.discard(node)
+            return None
+        
+        visited: Set[str] = set()
+        for story in self.stories:
+            if story.id not in visited:
+                cycle = has_cycle(story.id, visited, set())
+                if cycle is not None:
+                    cycle_str = ' -> '.join(cycle)
+                    errors.append(f"Circular dependency detected: {cycle_str}")
+        
+        # Check for self-dependencies
+        for story in self.stories:
+            if story.id in story.dependencies:
+                errors.append(f"Story '{story.id}' has a self-dependency")
+        
+        # Warn about stories with many dependencies (maintenance risk)
+        for story in self.stories:
+            if len(story.dependencies) > 3:
+                warnings.append(
+                    f"Story '{story.id}' has {len(story.dependencies)} dependencies "
+                    f"(consider splitting)"
+                )
+        
+        return {
+            "valid": len(errors) == 0,
+            "errors": errors,
+            "warnings": warnings
+        }
