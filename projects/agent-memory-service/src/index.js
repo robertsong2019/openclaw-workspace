@@ -5257,6 +5257,84 @@ class EmbeddingProvider {
     return cosineSimilarity(vecA, vecB);
   }
 
+  /**
+   * Batch embed multiple texts. Deduplicates, only embeds uncached texts.
+   * Returns array of vectors (or null per item) in input order.
+   * @param {string[]} texts
+   * @returns {Promise<(number[]|null)[]>}
+   */
+  async embedBatch(texts) {
+    if (!Array.isArray(texts)) throw new Error('embedBatch requires an array');
+    if (texts.length === 0) return [];
+    if (!this.#embedFn) return texts.map(() => null);
+
+    // Build unique list and check cache
+    const results = new Array(texts.length);
+    const toEmbed = new Map(); // index in uniqueTexts -> text
+    const uniqueTexts = [];
+    const indexMap = new Map(); // text -> [output indices]
+
+    for (let i = 0; i < texts.length; i++) {
+      const text = texts[i];
+      if (!indexMap.has(text)) {
+        indexMap.set(text, []);
+        uniqueTexts.push(text);
+      }
+      indexMap.get(text).push(i);
+    }
+
+    // Check cache for each unique text
+    const uncached = []; // texts needing API call
+    const uncachedIdx = []; // index in uniqueTexts
+    for (let j = 0; j < uniqueTexts.length; j++) {
+      const text = uniqueTexts[j];
+      const key = contentHash(text);
+      if (this.#cache.has(key)) {
+        // Check TTL
+        if (this.#cacheTTL > 0) {
+          const ts = this.#cacheTimestamps.get(key);
+          if (ts && Date.now() - ts > this.#cacheTTL) {
+            this.#cache.delete(key);
+            this.#cacheTimestamps.delete(key);
+            this.#dirty = true;
+            uncached.push(text);
+            uncachedIdx.push(j);
+            continue;
+          }
+        }
+        // Cache hit — fill all output slots
+        const vec = this.#cache.get(key);
+        for (const idx of indexMap.get(text)) results[idx] = vec;
+      } else {
+        uncached.push(text);
+        uncachedIdx.push(j);
+      }
+    }
+
+    // Embed uncached texts individually (APIs typically don't support true batch)
+    for (let k = 0; k < uncached.length; k++) {
+      const text = uncached[k];
+      const outIndices = indexMap.get(text);
+      try {
+        const vec = await this.#embedFn(text);
+        if (vec && Array.isArray(vec) && vec.length > 0) {
+          const key = contentHash(text);
+          this.#cache.set(key, vec);
+          this.#cacheTimestamps.set(key, Date.now());
+          this.#dirty = true;
+          for (const idx of outIndices) results[idx] = vec;
+        } else {
+          for (const idx of outIndices) results[idx] = null;
+        }
+      } catch {
+        for (const idx of outIndices) results[idx] = null;
+      }
+    }
+
+    this.#evictIfNeeded();
+    return results;
+  }
+
   /** Remove cached embedding for given content text */
   removeByContent(text) {
     const key = contentHash(text);
