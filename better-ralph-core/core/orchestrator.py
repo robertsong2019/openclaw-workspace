@@ -40,7 +40,7 @@ class SessionStats:
     successful_iterations: int
     failed_iterations: int
     total_duration: float
-    average_iteration_time: float
+    average_iteration_time: float = 0.0
     stories_completed: List[str] = field(default_factory=list)
     commits_made: List[str] = field(default_factory=list)
 
@@ -276,3 +276,22 @@ class RalphOrchestrator:
     def is_complete(self) -> bool:
         """Check if all stories are complete."""
         return all(story.passes for story in self.prd_manager.get_all_stories())
+    
+    def get_status(self) -> Dict[str, Any]:
+        """
+        Get a lightweight status snapshot of the current session.
+        
+        Returns:
+            Dict with session_id, active, progress, current_story, and health.
+        """
+        progress = self.prd_manager.get_progress_summary()
+        current = self.prd_manager.get_next_story()
+        return {
+            "session_id": self.current_session_id,
+            "active": self.current_session_id is not None,
+            "total_stories": progress["total_stories"],
+            "completed_stories": progress["completed_stories"],
+            "progress_percentage": round(progress["progress_percentage"], 1),
+            "current_story": current.id if current else None,
+            "is_complete": self.is_complete(),
+        }
