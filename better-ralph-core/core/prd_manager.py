@@ -444,3 +444,144 @@ class PRDManager:
             "errors": errors,
             "warnings": warnings
         }
+
+    def merge_prd(self, other: 'PRDManager', conflict_strategy: str = 'skip') -> Dict[str, int]:
+        """
+        Merge stories from another PRD into this one.
+
+        Args:
+            other: Another PRDManager to merge from
+            conflict_strategy: How to handle duplicate IDs - 'skip', 'overwrite', or 'rename'
+
+        Returns:
+            Dict with counts: added, skipped, renamed
+        """
+        existing_ids = {s.id for s in self.stories}
+        added = skipped = renamed = 0
+
+        for story in other.stories:
+            if story.id not in existing_ids:
+                self.stories.append(story)
+                existing_ids.add(story.id)
+                added += 1
+            elif conflict_strategy == 'overwrite':
+                for i, s in enumerate(self.stories):
+                    if s.id == story.id:
+                        self.stories[i] = story
+                        break
+                skipped += 1  # overwritten count
+            elif conflict_strategy == 'rename':
+                new_id = f"{story.id}-merged"
+                counter = 1
+                while new_id in existing_ids:
+                    new_id = f"{story.id}-merged-{counter}"
+                    counter += 1
+                merged_story = UserStory(
+                    id=new_id,
+                    title=story.title,
+                    description=story.description,
+                    acceptance_criteria=story.acceptance_criteria.copy(),
+                    priority=story.priority,
+                    passes=story.passes,
+                    notes=story.notes,
+                    estimated_hours=story.estimated_hours,
+                    dependencies=story.dependencies.copy()
+                )
+                self.stories.append(merged_story)
+                existing_ids.add(new_id)
+                renamed += 1
+            else:  # skip
+                skipped += 1
+
+        self.logger.info(f"Merged PRD: {added} added, {skipped} skipped, {renamed} renamed")
+        return {"added": added, "skipped": skipped, "renamed": renamed}
+
+    def export_markdown(self) -> str:
+        """
+        Export the PRD as a Markdown document.
+
+        Returns:
+            Markdown string representation of the PRD
+        """
+        lines = []
+        project = self.prd_data.get('project', 'Untitled Project')
+        description = self.prd_data.get('description', '')
+
+        lines.append(f"# {project}")
+        lines.append('')
+        if description:
+            lines.append(description)
+            lines.append('')
+
+        summary = self.get_progress_summary()
+        total = summary['total_stories'] if isinstance(summary.get('total_stories'), int) else len(self.stories)
+        completed = summary['completed_stories'] if isinstance(summary.get('completed_stories'), int) else sum(1 for s in self.stories if s.passes)
+        pct = (completed / total * 100) if total > 0 else 0
+        lines.append(f"## Progress: {completed}/{total} ({pct:.0f}%)")
+        lines.append('')
+
+        for story in self.stories:
+            status = '✅' if story.passes else '⬜'
+            lines.append(f"### {status} {story.id}: {story.title}")
+            lines.append('')
+            lines.append(story.description)
+            lines.append('')
+            if story.acceptance_criteria:
+                lines.append('**Acceptance Criteria:**')
+                for ac in story.acceptance_criteria:
+                    lines.append(f"- {ac}")
+                lines.append('')
+            if story.dependencies:
+                lines.append(f"**Dependencies:** {', '.join(story.dependencies)}")
+                lines.append('')
+            if story.estimated_hours:
+                lines.append(f"**Estimated:** {story.estimated_hours}h")
+                lines.append('')
+            if story.notes:
+                lines.append(f"**Notes:** {story.notes}")
+                lines.append('')
+
+        return '\n'.join(lines)
+
+    def find_critical_path(self) -> List[str]:
+        """
+        Find the longest dependency chain (critical path).
+
+        Returns:
+            List of story IDs forming the critical path, or empty list if no dependencies.
+        """
+        story_ids = {s.id for s in self.stories}
+        dependents: Dict[str, List[str]] = {s.id: [] for s in self.stories}
+        has_deps = False
+
+        for story in self.stories:
+            for dep_id in story.dependencies:
+                if dep_id in dependents:
+                    dependents[dep_id].append(story.id)
+                    has_deps = True
+
+        if not has_deps:
+            return []
+
+        def dfs(node: str, visited: Set[str]) -> List[str]:
+            best_path = [node]
+            for child in dependents.get(node, []):
+                if child not in visited:
+                    child_path = dfs(child, visited | {child})
+                    if len(child_path) + 1 > len(best_path):
+                        best_path = [node] + child_path
+            return best_path
+
+        longest: List[str] = []
+        # Start from stories with no dependencies (roots)
+        roots = [s.id for s in self.stories if not s.dependencies]
+        if not roots:
+            # All stories have dependencies; pick any as root
+            roots = list(story_ids)
+
+        for root in roots:
+            path = dfs(root, {root})
+            if len(path) > len(longest):
+                longest = path
+
+        return longest

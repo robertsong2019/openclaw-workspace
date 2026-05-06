@@ -32,6 +32,9 @@ Autoresearch 方法论实践 - **连续39天零回滚率**。05-06 凌晨: AMS E
   - [研究笔记](catalyst-research/exploration-notes/2026-05-05-agent-federation-discovery.md) ✅ DUADP+GEACL+双层Churn+可运行Gossip代码
   - **核心发现**: DUADP(DNS for AI)+Gossip是A2A的发现层补丁;双层Churn(node+agent)是Agent特有挑战
 - [ ] **OpenClaw A2A Bridge 设计** — 让OpenClaw节点作为A2A Agent暴露(sessions_spawn→tasks/send映射)
+  - [Agent Mesh P2P 研究](catalyst-research/exploration-notes/2026-05-06-agent-mesh-p2p.md) ✅ js-libp2p+GossipSub可运行AgentMesh类+DarkMatter 4原语分析+协议栈对比
+  - **关键发现**: A2A+MCP+ANP三层协议栈已成共识; DarkMatter证明去中心化Agent Mesh可行(4原语极简设计); Agent Mesh≠传统P2P(传意图不传数据); js-libp2p 3.2.3生产就绪+Node.js原生优势
+  - **下一步**: 创建lab/agent-mesh-prototype/(基于js-libp2p GossipSub); 在A2A Trust加入Agent Card端点; 设计OpenClaw A2A Bridge(Client+Server双模式)
 - [ ] **AMS 升级: Hindsight 风格四网络 + 图遍历检索** - 基于 [研究笔记](catalyst-research/exploration-notes/2026-04-26-hindsight-multi-strategy-memory.md)
   - Phase 1: ~~classifyFact + searchByFactType + statsByFactType + reclassifyFact + bulkReclassify~~ ✅ 完成
   - Phase 2: ~~searchGraph() 基于 entity_index 多跳遍历~~ ✅ 完成 (04-28)

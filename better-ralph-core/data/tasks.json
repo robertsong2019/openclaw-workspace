@@ -1,0 +1,2142 @@
+{
+  "76efc7ce-ce35-4724-aef1-8f13907c8873": {
+    "id": "76efc7ce-ce35-4724-aef1-8f13907c8873",
+    "config": {
+      "name": "Memory Test Task 2",
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "mem-agent-2",
+          "role": "Memory test agent"
+        }
+      ],
+      "task": "Memory test task 2"
+    },
+    "status": "completed",
+    "agents": [],
+    "results": {
+      "pattern": "work-crew",
+      "task": "Memory test task 2",
+      "agentResults": [
+        {
+          "agent": {
+            "id": "be181415-97bb-4bb4-b2ab-c7b90a2a9a60",
+            "name": "timeout-agent",
+            "role": "Timeout agent",
+            "focus": null,
+            "skills": [],
+            "status": "completed",
+            "output": "Analysis completed for: Memory test task 3\n\nRole: Timeout agent\nFocus: General\n\nThis is a mock output for testing purposes."
+          },
+          "output": "Analysis completed for: Memory test task 2\n\nRole: Timeout agent\nFocus: General\n\nThis is a mock output for testing purposes.",
+          "success": true
+        }
+      ],
+      "converged": {
+        "summary": "Merged outputs from all agents",
+        "sections": [
+          {
+            "agent": "timeout-agent",
+            "role": "Timeout agent",
+            "output": "Analysis completed for: Memory test task 2\n\nRole: Timeout agent\nFocus: General\n\nThis is a mock output for testing purposes."
+          }
+        ]
+      },
+      "strategy": "merge",
+      "analysis": {
+        "totalAgents": 1,
+        "successfulAgents": 1,
+        "failedAgents": 0,
+        "convergenceQuality": "excellent",
+        "recommendations": []
+      },
+      "performance": {
+        "startTime": 1778072512006,
+        "endTime": 1778072512031,
+        "agentExecutionTimes": {
+          "be181415-97bb-4bb4-b2ab-c7b90a2a9a60": {
+            "startTime": 1778072512021,
+            "endTime": 1778072512030,
+            "duration": 9
+          }
+        },
+        "totalExecutionTime": 25
+      },
+      "executionTime": 24
+    },
+    "error": null,
+    "createdAt": "2026-05-06T13:01:51.997Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    },
+    "completedAt": "2026-05-06T13:01:52.031Z"
+  },
+  "36268ac2-5998-4c5c-9063-ff9e22880d87": {
+    "id": "36268ac2-5998-4c5c-9063-ff9e22880d87",
+    "config": {
+      "name": "Memory Test Task 3",
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "mem-agent-3",
+          "role": "Memory test agent"
+        }
+      ],
+      "task": "Memory test task 3"
+    },
+    "status": "completed",
+    "agents": [],
+    "results": {
+      "pattern": "work-crew",
+      "task": "Memory test task 3",
+      "agentResults": [
+        {
+          "agent": {
+            "id": "be181415-97bb-4bb4-b2ab-c7b90a2a9a60",
+            "name": "timeout-agent",
+            "role": "Timeout agent",
+            "focus": null,
+            "skills": [],
+            "status": "completed",
+            "output": "Analysis completed for: Memory test task 6\n\nRole: Timeout agent\nFocus: General\n\nThis is a mock output for testing purposes."
+          },
+          "output": "Analysis completed for: Memory test task 3\n\nRole: Timeout agent\nFocus: General\n\nThis is a mock output for testing purposes.",
+          "success": true
+        }
+      ],
+      "converged": {
+        "summary": "Merged outputs from all agents",
+        "sections": [
+          {
+            "agent": "timeout-agent",
+            "role": "Timeout agent",
+            "output": "Analysis completed for: Memory test task 3\n\nRole: Timeout agent\nFocus: General\n\nThis is a mock output for testing purposes."
+          }
+        ]
+      },
+      "strategy": "merge",
+      "analysis": {
+        "totalAgents": 1,
+        "successfulAgents": 1,
+        "failedAgents": 0,
+        "convergenceQuality": "excellent",
+        "recommendations": []
+      },
+      "performance": {
+        "startTime": 1778072512006,
+        "endTime": 1778072512032,
+        "agentExecutionTimes": {
+          "be181415-97bb-4bb4-b2ab-c7b90a2a9a60": {
+            "startTime": 1778072512022,
+            "endTime": 1778072512031,
+            "duration": 9
+          }
+        },
+        "totalExecutionTime": 26
+      },
+      "executionTime": 25
+    },
+    "error": null,
+    "createdAt": "2026-05-06T13:01:51.997Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    },
+    "completedAt": "2026-05-06T13:01:52.032Z"
+  },
+  "12f0ca6a-4a2a-4474-a726-6ef9c869094b": {
+    "id": "12f0ca6a-4a2a-4474-a726-6ef9c869094b",
+    "config": {
+      "name": "Memory Test Task 4",
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "mem-agent-4",
+          "role": "Memory test agent"
+        }
+      ],
+      "task": "Memory test task 4"
+    },
+    "status": "completed",
+    "agents": [],
+    "results": {
+      "pattern": "work-crew",
+      "task": "Memory test task 4",
+      "agentResults": [
+        {
+          "agent": {
+            "id": "be181415-97bb-4bb4-b2ab-c7b90a2a9a60",
+            "name": "timeout-agent",
+            "role": "Timeout agent",
+            "focus": null,
+            "skills": [],
+            "status": "completed",
+            "output": "Analysis completed for: Memory test task 8\n\nRole: Timeout agent\nFocus: General\n\nThis is a mock output for testing purposes."
+          },
+          "output": "Analysis completed for: Memory test task 4\n\nRole: Timeout agent\nFocus: General\n\nThis is a mock output for testing purposes.",
+          "success": true
+        }
+      ],
+      "converged": {
+        "summary": "Merged outputs from all agents",
+        "sections": [
+          {
+            "agent": "timeout-agent",
+            "role": "Timeout agent",
+            "output": "Analysis completed for: Memory test task 4\n\nRole: Timeout agent\nFocus: General\n\nThis is a mock output for testing purposes."
+          }
+        ]
+      },
+      "strategy": "merge",
+      "analysis": {
+        "totalAgents": 1,
+        "successfulAgents": 1,
+        "failedAgents": 0,
+        "convergenceQuality": "excellent",
+        "recommendations": []
+      },
+      "performance": {
+        "startTime": 1778072512007,
+        "endTime": 1778072512033,
+        "agentExecutionTimes": {
+          "be181415-97bb-4bb4-b2ab-c7b90a2a9a60": {
+            "startTime": 1778072512023,
+            "endTime": 1778072512032,
+            "duration": 9
+          }
+        },
+        "totalExecutionTime": 26
+      },
+      "executionTime": 25
+    },
+    "error": null,
+    "createdAt": "2026-05-06T13:01:51.997Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    },
+    "completedAt": "2026-05-06T13:01:52.033Z"
+  },
+  "f5d603aa-83d5-4e0c-933e-707d6c8fd43e": {
+    "id": "f5d603aa-83d5-4e0c-933e-707d6c8fd43e",
+    "config": {
+      "name": "Memory Test Task 5",
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "mem-agent-5",
+          "role": "Memory test agent"
+        }
+      ],
+      "task": "Memory test task 5"
+    },
+    "status": "pending",
+    "agents": [],
+    "results": null,
+    "error": null,
+    "createdAt": "2026-05-06T13:01:51.997Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    }
+  },
+  "fea38a6f-7018-4d32-8d5b-01f87e37b388": {
+    "id": "fea38a6f-7018-4d32-8d5b-01f87e37b388",
+    "config": {
+      "name": "Memory Test Task 6",
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "mem-agent-6",
+          "role": "Memory test agent"
+        }
+      ],
+      "task": "Memory test task 6"
+    },
+    "status": "pending",
+    "agents": [],
+    "results": null,
+    "error": null,
+    "createdAt": "2026-05-06T13:01:51.997Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    }
+  },
+  "2ab137de-ea43-473f-9863-5864320f3d75": {
+    "id": "2ab137de-ea43-473f-9863-5864320f3d75",
+    "config": {
+      "name": "Memory Test Task 7",
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "mem-agent-7",
+          "role": "Memory test agent"
+        }
+      ],
+      "task": "Memory test task 7"
+    },
+    "status": "pending",
+    "agents": [],
+    "results": null,
+    "error": null,
+    "createdAt": "2026-05-06T13:01:51.997Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    }
+  },
+  "96d9f39d-0f19-4bfe-bcd5-a712bddf10c0": {
+    "id": "96d9f39d-0f19-4bfe-bcd5-a712bddf10c0",
+    "config": {
+      "name": "Memory Test Task 8",
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "mem-agent-8",
+          "role": "Memory test agent"
+        }
+      ],
+      "task": "Memory test task 8"
+    },
+    "status": "pending",
+    "agents": [],
+    "results": null,
+    "error": null,
+    "createdAt": "2026-05-06T13:01:51.997Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    }
+  },
+  "c1122561-9a14-44a9-8cf8-3c3b81143402": {
+    "id": "c1122561-9a14-44a9-8cf8-3c3b81143402",
+    "config": {
+      "name": "Memory Test Task 9",
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "mem-agent-9",
+          "role": "Memory test agent"
+        }
+      ],
+      "task": "Memory test task 9"
+    },
+    "status": "completed",
+    "agents": [
+      {
+        "id": "be181415-97bb-4bb4-b2ab-c7b90a2a9a60",
+        "name": "timeout-agent",
+        "role": "Timeout agent",
+        "focus": null,
+        "skills": [],
+        "status": "running",
+        "output": "Analysis completed for: Slow task for timeout testing\n\nRole: Timeout agent\nFocus: General\n\nThis is a mock output for testing purposes."
+      }
+    ],
+    "results": {
+      "pattern": "work-crew",
+      "task": "Memory test task 9",
+      "agentResults": [
+        {
+          "agent": {
+            "id": "be181415-97bb-4bb4-b2ab-c7b90a2a9a60",
+            "name": "timeout-agent",
+            "role": "Timeout agent",
+            "focus": null,
+            "skills": [],
+            "status": "completed",
+            "output": "Analysis completed for: Memory test task 9\n\nRole: Timeout agent\nFocus: General\n\nThis is a mock output for testing purposes."
+          },
+          "output": "Analysis completed for: Memory test task 9\n\nRole: Timeout agent\nFocus: General\n\nThis is a mock output for testing purposes.",
+          "success": true
+        }
+      ],
+      "converged": {
+        "summary": "Merged outputs from all agents",
+        "sections": [
+          {
+            "agent": "timeout-agent",
+            "role": "Timeout agent",
+            "output": "Analysis completed for: Memory test task 9\n\nRole: Timeout agent\nFocus: General\n\nThis is a mock output for testing purposes."
+          }
+        ]
+      },
+      "strategy": "merge",
+      "analysis": {
+        "totalAgents": 1,
+        "successfulAgents": 1,
+        "failedAgents": 0,
+        "convergenceQuality": "excellent",
+        "recommendations": []
+      },
+      "performance": {
+        "startTime": 1778072512011,
+        "endTime": 1778072512042,
+        "agentExecutionTimes": {
+          "be181415-97bb-4bb4-b2ab-c7b90a2a9a60": {
+            "startTime": 1778072512027,
+            "endTime": 1778072512037,
+            "duration": 10
+          }
+        },
+        "totalExecutionTime": 31
+      },
+      "executionTime": 26
+    },
+    "error": null,
+    "createdAt": "2026-05-06T13:01:51.997Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    },
+    "completedAt": "2026-05-06T13:01:52.042Z"
+  },
+  "6e967fad-7e43-4c6c-bea8-510a5d948c8f": {
+    "id": "6e967fad-7e43-4c6c-bea8-510a5d948c8f",
+    "config": {
+      "name": "Retry Test",
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "retry-agent",
+          "role": "Retry agent"
+        }
+      ],
+      "task": "Retry test task"
+    },
+    "status": "completed",
+    "agents": [
+      {
+        "id": "719a6027-6eeb-49ae-8a4d-5068c0292639",
+        "name": "retry-agent",
+        "role": "Retry agent",
+        "focus": null,
+        "skills": [],
+        "status": "idle",
+        "output": null
+      }
+    ],
+    "results": {
+      "pattern": "work-crew",
+      "task": "Retry test task",
+      "agentResults": [
+        {
+          "agent": {
+            "id": "719a6027-6eeb-49ae-8a4d-5068c0292639",
+            "name": "retry-agent",
+            "role": "Retry agent",
+            "focus": null,
+            "skills": [],
+            "status": "idle",
+            "output": null
+          },
+          "output": "Success",
+          "success": true
+        }
+      ],
+      "converged": {
+        "summary": "Merged outputs from all agents",
+        "sections": [
+          {
+            "agent": "retry-agent",
+            "role": "Retry agent",
+            "output": "Success"
+          }
+        ]
+      },
+      "strategy": "merge",
+      "analysis": {
+        "totalAgents": 1,
+        "successfulAgents": 1,
+        "failedAgents": 0,
+        "convergenceQuality": "excellent",
+        "recommendations": []
+      },
+      "performance": {
+        "startTime": 1778072515000,
+        "endTime": 1778072515003,
+        "agentExecutionTimes": {
+          "719a6027-6eeb-49ae-8a4d-5068c0292639": {
+            "startTime": 1778072515002,
+            "endTime": 1778072515002,
+            "duration": 0
+          }
+        },
+        "totalExecutionTime": 3
+      },
+      "executionTime": 2
+    },
+    "error": null,
+    "createdAt": "2026-05-06T13:01:54.999Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    },
+    "completedAt": "2026-05-06T13:01:55.003Z"
+  },
+  "087694ab-8bc7-4341-859f-b493edec07d3": {
+    "id": "087694ab-8bc7-4341-859f-b493edec07d3",
+    "config": {
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "worker",
+          "role": "Worker",
+          "delay": 10
+        }
+      ],
+      "task": "Test task"
+    },
+    "status": "completed",
+    "agents": [
+      {
+        "id": "a6051bad-f66b-4c51-9cad-89444dd8a826",
+        "name": "undefined-agent",
+        "role": "undefined test agent",
+        "focus": null,
+        "skills": [],
+        "status": "idle",
+        "output": null
+      }
+    ],
+    "results": {
+      "pattern": "work-crew",
+      "task": "Test task",
+      "agentResults": [
+        {
+          "agent": {
+            "id": "a6051bad-f66b-4c51-9cad-89444dd8a826",
+            "name": "undefined-agent",
+            "role": "undefined test agent",
+            "focus": null,
+            "skills": [],
+            "status": "idle",
+            "output": null
+          },
+          "output": "undefined result",
+          "success": true
+        }
+      ],
+      "converged": {
+        "summary": "Merged outputs from all agents",
+        "sections": [
+          {
+            "agent": "undefined-agent",
+            "role": "undefined test agent",
+            "output": "undefined result"
+          }
+        ]
+      },
+      "strategy": "merge",
+      "analysis": {
+        "totalAgents": 1,
+        "successfulAgents": 1,
+        "failedAgents": 0,
+        "convergenceQuality": "excellent",
+        "recommendations": []
+      },
+      "performance": {
+        "startTime": 1778072515005,
+        "endTime": 1778072515008,
+        "agentExecutionTimes": {
+          "a6051bad-f66b-4c51-9cad-89444dd8a826": {
+            "startTime": 1778072515007,
+            "endTime": 1778072515007,
+            "duration": 0
+          }
+        },
+        "totalExecutionTime": 3
+      },
+      "executionTime": 2
+    },
+    "error": null,
+    "createdAt": "2026-05-06T13:01:55.005Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    },
+    "completedAt": "2026-05-06T13:01:55.008Z"
+  },
+  "0aae7819-9c4d-4829-ba02-da097e13fc25": {
+    "id": "0aae7819-9c4d-4829-ba02-da097e13fc25",
+    "config": {
+      "pattern": "supervisor",
+      "supervisor": {
+        "name": "manager",
+        "role": "Manager",
+        "delay": 10
+      },
+      "workers": [
+        {
+          "name": "worker",
+          "role": "Worker",
+          "delay": 10
+        }
+      ],
+      "task": "Test task"
+    },
+    "status": "completed",
+    "agents": [
+      {
+        "id": "fa0201bb-18d0-40ed-9301-87661d6e504c",
+        "name": "manager",
+        "role": "Manager",
+        "focus": null,
+        "skills": [],
+        "status": "idle",
+        "output": null
+      },
+      {
+        "id": "9eca029d-6be1-4407-b40f-d6a48fd43069",
+        "name": "worker",
+        "role": "Worker",
+        "focus": null,
+        "skills": [],
+        "status": "idle",
+        "output": null
+      }
+    ],
+    "results": {
+      "pattern": "supervisor",
+      "task": "Test task",
+      "strategy": "adaptive",
+      "subtasks": [
+        {
+          "description": "Research phase for: Test task",
+          "type": "research"
+        },
+        {
+          "description": "Implementation phase for: Test task",
+          "type": "implementation"
+        },
+        {
+          "description": "Testing phase for: Test task",
+          "type": "testing"
+        }
+      ],
+      "workerResults": [
+        {
+          "worker": "worker",
+          "subtask": {
+            "description": "Research phase for: Test task",
+            "type": "research"
+          },
+          "output": "Analysis completed for: Research phase for: Test task\n\nRole: Worker\nFocus: General\n\nThis is a mock output for testing purposes.",
+          "success": true
+        },
+        {
+          "worker": "worker",
+          "subtask": {
+            "description": "Implementation phase for: Test task",
+            "type": "implementation"
+          },
+          "output": "Analysis completed for: Implementation phase for: Test task\n\nRole: Worker\nFocus: General\n\nThis is a mock output for testing purposes.",
+          "success": true
+        },
+        {
+          "worker": "worker",
+          "subtask": {
+            "description": "Testing phase for: Test task",
+            "type": "testing"
+          },
+          "output": "Analysis completed for: Testing phase for: Test task\n\nRole: Worker\nFocus: General\n\nThis is a mock output for testing purposes.",
+          "success": true
+        }
+      ],
+      "review": "Analysis completed for: Review and integrate results: [\"Analysis completed for: Research phase for: Test task\\n\\nRole: Worker\\nFocus: General\\n\\nThis is a mock output for testing purposes.\",\"Analysis completed for: Implementation phase for: Test task\\n\\nRole: Worker\\nFocus: General\\n\\nThis is a mock output for testing purposes.\",\"Analysis completed for: Testing phase for: Test task\\n\\nRole: Worker\\nFocus: General\\n\\nThis is a mock output for testing purposes.\"]\n\nRole: Manager\nFocus: General\n\nThis is a mock output for testing purposes.",
+      "analysis": {
+        "totalAgents": 2,
+        "successfulAgents": 0,
+        "failedAgents": 0,
+        "convergenceQuality": "unknown",
+        "recommendations": []
+      },
+      "performance": {
+        "startTime": 1778072515010,
+        "endTime": 1778072515063,
+        "agentExecutionTimes": {
+          "fa0201bb-18d0-40ed-9301-87661d6e504c": {
+            "startTime": 1778072515012,
+            "endTime": 1778072515062,
+            "duration": 50
+          },
+          "9eca029d-6be1-4407-b40f-d6a48fd43069": {
+            "startTime": 1778072515022,
+            "endTime": 1778072515052,
+            "duration": 30
+          }
+        },
+        "totalExecutionTime": 53
+      },
+      "executionTime": 52
+    },
+    "error": null,
+    "createdAt": "2026-05-06T13:01:55.009Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    },
+    "completedAt": "2026-05-06T13:01:55.063Z"
+  },
+  "302e0117-c0de-49ec-8208-517e8a7a8f49": {
+    "id": "302e0117-c0de-49ec-8208-517e8a7a8f49",
+    "config": {
+      "name": "System Performance Task 0",
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "sys-agent-0",
+          "role": "System test agent"
+        }
+      ],
+      "task": "System performance task 0"
+    },
+    "status": "completed",
+    "agents": [],
+    "results": {
+      "pattern": "work-crew",
+      "task": "System performance task 0",
+      "agentResults": [
+        {
+          "agent": {
+            "id": "a01b3ae3-c409-4802-ab7a-d57272183680",
+            "name": "sys-agent-0",
+            "role": "System test agent",
+            "focus": null,
+            "skills": [],
+            "status": "completed",
+            "output": "Analysis completed for: System performance task 0\n\nRole: System test agent\nFocus: General\n\nThis is a mock output for testing purposes."
+          },
+          "output": "Analysis completed for: System performance task 0\n\nRole: System test agent\nFocus: General\n\nThis is a mock output for testing purposes.",
+          "success": true
+        }
+      ],
+      "converged": {
+        "summary": "Merged outputs from all agents",
+        "sections": [
+          {
+            "agent": "sys-agent-0",
+            "role": "System test agent",
+            "output": "Analysis completed for: System performance task 0\n\nRole: System test agent\nFocus: General\n\nThis is a mock output for testing purposes."
+          }
+        ]
+      },
+      "strategy": "merge",
+      "analysis": {
+        "totalAgents": 1,
+        "successfulAgents": 1,
+        "failedAgents": 0,
+        "convergenceQuality": "excellent",
+        "recommendations": []
+      },
+      "performance": {
+        "startTime": 1778072515170,
+        "endTime": null,
+        "agentExecutionTimes": {
+          "a01b3ae3-c409-4802-ab7a-d57272183680": {
+            "startTime": 1778072515197,
+            "endTime": 1778072515206,
+            "duration": 9
+          }
+        },
+        "totalExecutionTime": 0
+      },
+      "executionTime": 36
+    },
+    "error": null,
+    "createdAt": "2026-05-06T13:01:55.065Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    },
+    "completedAt": "2026-05-06T13:01:55.206Z"
+  },
+  "980b8435-c638-4bca-a4db-d42a4e454112": {
+    "id": "980b8435-c638-4bca-a4db-d42a4e454112",
+    "config": {
+      "name": "System Performance Task 1",
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "sys-agent-1",
+          "role": "System test agent"
+        }
+      ],
+      "task": "System performance task 1"
+    },
+    "status": "completed",
+    "agents": [],
+    "results": {
+      "pattern": "work-crew",
+      "task": "System performance task 1",
+      "agentResults": [
+        {
+          "agent": {
+            "id": "fca74a9d-e646-4484-889c-3660fa084f29",
+            "name": "sys-agent-1",
+            "role": "System test agent",
+            "focus": null,
+            "skills": [],
+            "status": "completed",
+            "output": "Analysis completed for: System performance task 1\n\nRole: System test agent\nFocus: General\n\nThis is a mock output for testing purposes."
+          },
+          "output": "Analysis completed for: System performance task 1\n\nRole: System test agent\nFocus: General\n\nThis is a mock output for testing purposes.",
+          "success": true
+        }
+      ],
+      "converged": {
+        "summary": "Merged outputs from all agents",
+        "sections": [
+          {
+            "agent": "sys-agent-1",
+            "role": "System test agent",
+            "output": "Analysis completed for: System performance task 1\n\nRole: System test agent\nFocus: General\n\nThis is a mock output for testing purposes."
+          }
+        ]
+      },
+      "strategy": "merge",
+      "analysis": {
+        "totalAgents": 1,
+        "successfulAgents": 1,
+        "failedAgents": 0,
+        "convergenceQuality": "excellent",
+        "recommendations": []
+      },
+      "performance": {
+        "startTime": 1778072515172,
+        "endTime": 1778072515209,
+        "agentExecutionTimes": {
+          "fca74a9d-e646-4484-889c-3660fa084f29": {
+            "startTime": 1778072515198,
+            "endTime": 1778072515207,
+            "duration": 9
+          }
+        },
+        "totalExecutionTime": 37
+      },
+      "executionTime": 35
+    },
+    "error": null,
+    "createdAt": "2026-05-06T13:01:55.065Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    },
+    "completedAt": "2026-05-06T13:01:55.209Z"
+  },
+  "a67607d1-d342-42c5-b0b3-c0ba08d829fa": {
+    "id": "a67607d1-d342-42c5-b0b3-c0ba08d829fa",
+    "config": {
+      "name": "System Performance Task 2",
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "sys-agent-2",
+          "role": "System test agent"
+        }
+      ],
+      "task": "System performance task 2"
+    },
+    "status": "completed",
+    "agents": [],
+    "results": {
+      "pattern": "work-crew",
+      "task": "System performance task 2",
+      "agentResults": [
+        {
+          "agent": {
+            "id": "dfc05d86-5bf2-4ab7-801f-275bfcabdbe6",
+            "name": "sys-agent-2",
+            "role": "System test agent",
+            "focus": null,
+            "skills": [],
+            "status": "completed",
+            "output": "Analysis completed for: System performance task 2\n\nRole: System test agent\nFocus: General\n\nThis is a mock output for testing purposes."
+          },
+          "output": "Analysis completed for: System performance task 2\n\nRole: System test agent\nFocus: General\n\nThis is a mock output for testing purposes.",
+          "success": true
+        }
+      ],
+      "converged": {
+        "summary": "Merged outputs from all agents",
+        "sections": [
+          {
+            "agent": "sys-agent-2",
+            "role": "System test agent",
+            "output": "Analysis completed for: System performance task 2\n\nRole: System test agent\nFocus: General\n\nThis is a mock output for testing purposes."
+          }
+        ]
+      },
+      "strategy": "merge",
+      "analysis": {
+        "totalAgents": 1,
+        "successfulAgents": 1,
+        "failedAgents": 0,
+        "convergenceQuality": "excellent",
+        "recommendations": []
+      },
+      "performance": {
+        "startTime": 1778072515174,
+        "endTime": null,
+        "agentExecutionTimes": {
+          "dfc05d86-5bf2-4ab7-801f-275bfcabdbe6": {
+            "startTime": 1778072515200,
+            "endTime": 1778072515210,
+            "duration": 10
+          }
+        },
+        "totalExecutionTime": 0
+      },
+      "executionTime": 36
+    },
+    "error": null,
+    "createdAt": "2026-05-06T13:01:55.065Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    },
+    "completedAt": "2026-05-06T13:01:55.210Z"
+  },
+  "5d375c0c-6184-45f2-94ab-c580fcdbb394": {
+    "id": "5d375c0c-6184-45f2-94ab-c580fcdbb394",
+    "config": {
+      "name": "System Performance Task 3",
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "sys-agent-3",
+          "role": "System test agent"
+        }
+      ],
+      "task": "System performance task 3"
+    },
+    "status": "pending",
+    "agents": [],
+    "results": null,
+    "error": null,
+    "createdAt": "2026-05-06T13:01:55.065Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    }
+  },
+  "32dfe7cb-28d6-414f-b23f-3c87f9bfe34b": {
+    "id": "32dfe7cb-28d6-414f-b23f-3c87f9bfe34b",
+    "config": {
+      "name": "System Performance Task 4",
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "sys-agent-4",
+          "role": "System test agent"
+        }
+      ],
+      "task": "System performance task 4"
+    },
+    "status": "completed",
+    "agents": [
+      {
+        "id": "20e55820-b27a-4bb9-95f5-6239cfe57b59",
+        "name": "sys-agent-4",
+        "role": "System test agent",
+        "focus": null,
+        "skills": [],
+        "status": "idle",
+        "output": null
+      }
+    ],
+    "results": {
+      "pattern": "work-crew",
+      "task": "System performance task 4",
+      "agentResults": [
+        {
+          "agent": {
+            "id": "20e55820-b27a-4bb9-95f5-6239cfe57b59",
+            "name": "sys-agent-4",
+            "role": "System test agent",
+            "focus": null,
+            "skills": [],
+            "status": "completed",
+            "output": "Analysis completed for: System performance task 4\n\nRole: System test agent\nFocus: General\n\nThis is a mock output for testing purposes."
+          },
+          "output": "Analysis completed for: System performance task 4\n\nRole: System test agent\nFocus: General\n\nThis is a mock output for testing purposes.",
+          "success": true
+        }
+      ],
+      "converged": {
+        "summary": "Merged outputs from all agents",
+        "sections": [
+          {
+            "agent": "sys-agent-4",
+            "role": "System test agent",
+            "output": "Analysis completed for: System performance task 4\n\nRole: System test agent\nFocus: General\n\nThis is a mock output for testing purposes."
+          }
+        ]
+      },
+      "strategy": "merge",
+      "analysis": {
+        "totalAgents": 1,
+        "successfulAgents": 1,
+        "failedAgents": 0,
+        "convergenceQuality": "excellent",
+        "recommendations": []
+      },
+      "performance": {
+        "startTime": 1778072515177,
+        "endTime": 1778072515215,
+        "agentExecutionTimes": {
+          "20e55820-b27a-4bb9-95f5-6239cfe57b59": {
+            "startTime": 1778072515202,
+            "endTime": 1778072515212,
+            "duration": 10
+          }
+        },
+        "totalExecutionTime": 38
+      },
+      "executionTime": 35
+    },
+    "error": null,
+    "createdAt": "2026-05-06T13:01:55.065Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    },
+    "completedAt": "2026-05-06T13:01:55.215Z"
+  },
+  "b689baa7-0923-4a2d-b89e-76b3ccdcab6c": {
+    "id": "b689baa7-0923-4a2d-b89e-76b3ccdcab6c",
+    "config": {
+      "name": "Enhanced Research Task",
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "researcher-1",
+          "role": "Technical researcher",
+          "skills": [
+            "research",
+            "analysis"
+          ]
+        },
+        {
+          "name": "researcher-2",
+          "role": "Business researcher",
+          "skills": [
+            "research",
+            "business"
+          ]
+        }
+      ],
+      "task": "Research the current state of AI Agent technology",
+      "convergence": {
+        "strategy": "consensus",
+        "threshold": 0.7
+      }
+    },
+    "status": "completed",
+    "agents": [
+      {
+        "id": "8d51a95b-1f09-492c-874f-d8a076c54457",
+        "name": "researcher-1",
+        "role": "Technical researcher",
+        "focus": null,
+        "skills": [
+          "research",
+          "analysis"
+        ],
+        "status": "idle",
+        "output": null
+      },
+      {
+        "id": "d053bc31-7828-4d0c-b4aa-a3ce67fe4c8c",
+        "name": "researcher-2",
+        "role": "Business researcher",
+        "focus": null,
+        "skills": [
+          "research",
+          "business"
+        ],
+        "status": "idle",
+        "output": null
+      }
+    ],
+    "results": {
+      "pattern": "work-crew",
+      "task": "Research the current state of AI Agent technology",
+      "agentResults": [
+        {
+          "agent": {
+            "id": "8d51a95b-1f09-492c-874f-d8a076c54457",
+            "name": "researcher-1",
+            "role": "Technical researcher",
+            "focus": null,
+            "skills": [
+              "research",
+              "analysis"
+            ],
+            "status": "completed",
+            "output": "Analysis completed for: Research the current state of AI Agent technology\n\nRole: Technical researcher\nFocus: General\n\nThis is a mock output for testing purposes."
+          },
+          "output": "Analysis completed for: Research the current state of AI Agent technology\n\nRole: Technical researcher\nFocus: General\n\nThis is a mock output for testing purposes.",
+          "success": true
+        },
+        {
+          "agent": {
+            "id": "d053bc31-7828-4d0c-b4aa-a3ce67fe4c8c",
+            "name": "researcher-2",
+            "role": "Business researcher",
+            "focus": null,
+            "skills": [
+              "research",
+              "business"
+            ],
+            "status": "completed",
+            "output": "Analysis completed for: Research the current state of AI Agent technology\n\nRole: Business researcher\nFocus: General\n\nThis is a mock output for testing purposes."
+          },
+          "output": "Analysis completed for: Research the current state of AI Agent technology\n\nRole: Business researcher\nFocus: General\n\nThis is a mock output for testing purposes.",
+          "success": true
+        }
+      ],
+      "converged": {
+        "agreed": true,
+        "agreementRate": 1,
+        "summary": "Consensus reached among agents",
+        "outputs": [
+          {
+            "agent": "researcher-1",
+            "output": "Analysis completed for: Research the current state of AI Agent technology\n\nRole: Technical researcher\nFocus: General\n\nThis is a mock output for testing purposes."
+          },
+          {
+            "agent": "researcher-2",
+            "output": "Analysis completed for: Research the current state of AI Agent technology\n\nRole: Business researcher\nFocus: General\n\nThis is a mock output for testing purposes."
+          }
+        ]
+      },
+      "strategy": "consensus",
+      "analysis": {
+        "totalAgents": 2,
+        "successfulAgents": 2,
+        "failedAgents": 0,
+        "convergenceQuality": "excellent",
+        "recommendations": []
+      },
+      "performance": {
+        "startTime": 1778072516023,
+        "endTime": 1778072516037,
+        "agentExecutionTimes": {
+          "8d51a95b-1f09-492c-874f-d8a076c54457": {
+            "startTime": 1778072516025,
+            "endTime": 1778072516036,
+            "duration": 11
+          },
+          "d053bc31-7828-4d0c-b4aa-a3ce67fe4c8c": {
+            "startTime": 1778072516025,
+            "endTime": 1778072516036,
+            "duration": 11
+          }
+        },
+        "totalExecutionTime": 14
+      },
+      "executionTime": 13
+    },
+    "error": null,
+    "createdAt": "2026-05-06T13:01:56.022Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    },
+    "completedAt": "2026-05-06T13:01:56.037Z"
+  },
+  "f310c13f-2a44-436a-89be-e77fc04bdd18": {
+    "id": "f310c13f-2a44-436a-89be-e77fc04bdd18",
+    "config": {
+      "name": "Enhanced Development Task",
+      "pattern": "supervisor",
+      "supervisor": {
+        "name": "project-manager",
+        "strategy": "adaptive"
+      },
+      "workers": [
+        {
+          "name": "developer",
+          "role": "Developer",
+          "skills": [
+            "programming",
+            "debugging"
+          ]
+        },
+        {
+          "name": "tester",
+          "role": "Tester",
+          "skills": [
+            "testing",
+            "quality"
+          ]
+        }
+      ],
+      "task": "Build a new feature for the application"
+    },
+    "status": "completed",
+    "agents": [
+      {
+        "id": "e5aebf16-7c23-495a-a164-e500cfa0eb9c",
+        "name": "project-manager",
+        "role": "Task decomposition and coordination",
+        "focus": null,
+        "skills": [],
+        "status": "idle",
+        "output": null
+      },
+      {
+        "id": "0a3a0b5b-9cc6-4135-9388-b6009cc0e634",
+        "name": "developer",
+        "role": "Developer",
+        "focus": null,
+        "skills": [
+          "programming",
+          "debugging"
+        ],
+        "status": "idle",
+        "output": null
+      },
+      {
+        "id": "7fe7b3c7-ef22-43c3-af4b-c19c08bc8fff",
+        "name": "tester",
+        "role": "Tester",
+        "focus": null,
+        "skills": [
+          "testing",
+          "quality"
+        ],
+        "status": "idle",
+        "output": null
+      }
+    ],
+    "results": {
+      "pattern": "supervisor",
+      "task": "Build a new feature for the application",
+      "strategy": "adaptive",
+      "subtasks": [
+        {
+          "description": "Research phase for: Build a new feature for the application",
+          "type": "research"
+        },
+        {
+          "description": "Implementation phase for: Build a new feature for the application",
+          "type": "implementation"
+        },
+        {
+          "description": "Testing phase for: Build a new feature for the application",
+          "type": "testing"
+        }
+      ],
+      "workerResults": [
+        {
+          "worker": "developer",
+          "subtask": {
+            "description": "Research phase for: Build a new feature for the application",
+            "type": "research"
+          },
+          "output": "Analysis completed for: Research phase for: Build a new feature for the application\n\nRole: Developer\nFocus: General\n\nThis is a mock output for testing purposes.",
+          "success": true
+        },
+        {
+          "worker": "tester",
+          "subtask": {
+            "description": "Implementation phase for: Build a new feature for the application",
+            "type": "implementation"
+          },
+          "output": "Analysis completed for: Implementation phase for: Build a new feature for the application\n\nRole: Tester\nFocus: General\n\nThis is a mock output for testing purposes.",
+          "success": true
+        },
+        {
+          "worker": "developer",
+          "subtask": {
+            "description": "Testing phase for: Build a new feature for the application",
+            "type": "testing"
+          },
+          "output": "Analysis completed for: Testing phase for: Build a new feature for the application\n\nRole: Developer\nFocus: General\n\nThis is a mock output for testing purposes.",
+          "success": true
+        }
+      ],
+      "review": "Analysis completed for: Review and integrate results: [\"Analysis completed for: Research phase for: Build a new feature for the application\\n\\nRole: Developer\\nFocus: General\\n\\nThis is a mock output for testing purposes.\",\"Analysis completed for: Implementation phase for: Build a new feature for the application\\n\\nRole: Tester\\nFocus: General\\n\\nThis is a mock output for testing purposes.\",\"Analysis completed for: Testing phase for: Build a new feature for the application\\n\\nRole: Developer\\nFocus: General\\n\\nThis is a mock output for testing purposes.\"]\n\nRole: Task decomposition and coordination\nFocus: General\n\nThis is a mock output for testing purposes.",
+      "analysis": {
+        "totalAgents": 3,
+        "successfulAgents": 0,
+        "failedAgents": 0,
+        "convergenceQuality": "unknown",
+        "recommendations": []
+      },
+      "performance": {
+        "startTime": 1778072516039,
+        "endTime": 1778072516093,
+        "agentExecutionTimes": {
+          "e5aebf16-7c23-495a-a164-e500cfa0eb9c": {
+            "startTime": 1778072516042,
+            "endTime": 1778072516092,
+            "duration": 50
+          },
+          "0a3a0b5b-9cc6-4135-9388-b6009cc0e634": {
+            "startTime": 1778072516052,
+            "endTime": 1778072516082,
+            "duration": 30
+          },
+          "7fe7b3c7-ef22-43c3-af4b-c19c08bc8fff": {
+            "startTime": 1778072516062,
+            "endTime": 1778072516072,
+            "duration": 10
+          }
+        },
+        "totalExecutionTime": 54
+      },
+      "executionTime": 53
+    },
+    "error": null,
+    "createdAt": "2026-05-06T13:01:56.039Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    },
+    "completedAt": "2026-05-06T13:01:56.093Z"
+  },
+  "64afaf61-fa20-4bcb-a1a6-43b02d34b0d2": {
+    "id": "64afaf61-fa20-4bcb-a1a6-43b02d34b0d2",
+    "config": {
+      "name": "Enhanced Routing Task",
+      "pattern": "auto-routing",
+      "agents": [
+        {
+          "name": "coder",
+          "role": "Developer",
+          "skills": [
+            "programming",
+            "debugging",
+            "refactoring"
+          ]
+        },
+        {
+          "name": "researcher",
+          "role": "Researcher",
+          "skills": [
+            "research",
+            "analysis",
+            "summarization"
+          ]
+        }
+      ],
+      "router": {
+        "confidence_threshold": 0.7
+      },
+      "task": "Write a Python script to analyze user behavior data"
+    },
+    "status": "completed",
+    "agents": [
+      {
+        "id": "ab9df59a-6d7a-4083-9dce-f9e448dabd69",
+        "name": "coder",
+        "role": "Developer",
+        "focus": null,
+        "skills": [
+          "programming",
+          "debugging",
+          "refactoring"
+        ],
+        "status": "idle",
+        "output": null
+      },
+      {
+        "id": "dcfaf71d-f7d0-4fba-9de5-a094508f68cd",
+        "name": "researcher",
+        "role": "Researcher",
+        "focus": null,
+        "skills": [
+          "research",
+          "analysis",
+          "summarization"
+        ],
+        "status": "idle",
+        "output": null
+      }
+    ],
+    "results": {
+      "pattern": "auto-routing",
+      "task": "Write a Python script to analyze user behavior data",
+      "routing": {
+        "strategy": "fallback",
+        "routes": [
+          {
+            "agent": "researcher",
+            "specialty": "analysis",
+            "confidence": 0.2
+          }
+        ]
+      },
+      "results": [
+        {
+          "agent": "researcher",
+          "specialty": "analysis",
+          "confidence": 0.2,
+          "output": "Analysis completed for: [Auto-routed] Task requiring analysis: Write a Python script to analyze user behavior data\n\nRole: Researcher\nFocus: General\n\nThis is a mock output for testing purposes.",
+          "success": true
+        }
+      ],
+      "primaryResult": {
+        "agent": "researcher",
+        "specialty": "analysis",
+        "confidence": 0.2,
+        "output": "Analysis completed for: [Auto-routed] Task requiring analysis: Write a Python script to analyze user behavior data\n\nRole: Researcher\nFocus: General\n\nThis is a mock output for testing purposes.",
+        "success": true
+      },
+      "analysis": {
+        "totalAgents": 2,
+        "successfulAgents": 0,
+        "failedAgents": 0,
+        "convergenceQuality": "unknown",
+        "recommendations": []
+      },
+      "performance": {
+        "startTime": 1778072516115,
+        "endTime": 1778072516143,
+        "agentExecutionTimes": {
+          "dcfaf71d-f7d0-4fba-9de5-a094508f68cd": {
+            "startTime": 1778072516132,
+            "endTime": 1778072516143,
+            "duration": 11
+          }
+        },
+        "totalExecutionTime": 28
+      },
+      "executionTime": 28
+    },
+    "error": null,
+    "createdAt": "2026-05-06T13:01:56.095Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    },
+    "completedAt": "2026-05-06T13:01:56.143Z"
+  },
+  "e6deb4ed-f8e8-463e-8553-3e3a268faa5e": {
+    "id": "e6deb4ed-f8e8-463e-8553-3e3a268faa5e",
+    "config": {
+      "name": "Task 1",
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "agent-1",
+          "role": "Researcher"
+        }
+      ],
+      "task": "Research something"
+    },
+    "status": "completed",
+    "agents": [
+      {
+        "id": "bbd49325-3b6a-4bda-8dd3-b8e09cf44dd0",
+        "name": "agent-1",
+        "role": "Researcher",
+        "focus": null,
+        "skills": [],
+        "status": "idle",
+        "output": null
+      }
+    ],
+    "results": {
+      "pattern": "work-crew",
+      "task": "Research something",
+      "agentResults": [
+        {
+          "agent": {
+            "id": "bbd49325-3b6a-4bda-8dd3-b8e09cf44dd0",
+            "name": "agent-1",
+            "role": "Researcher",
+            "focus": null,
+            "skills": [],
+            "status": "completed",
+            "output": "Analysis completed for: Research something\n\nRole: Researcher\nFocus: General\n\nThis is a mock output for testing purposes."
+          },
+          "output": "Analysis completed for: Research something\n\nRole: Researcher\nFocus: General\n\nThis is a mock output for testing purposes.",
+          "success": true
+        }
+      ],
+      "converged": {
+        "summary": "Merged outputs from all agents",
+        "sections": [
+          {
+            "agent": "agent-1",
+            "role": "Researcher",
+            "output": "Analysis completed for: Research something\n\nRole: Researcher\nFocus: General\n\nThis is a mock output for testing purposes."
+          }
+        ]
+      },
+      "strategy": "merge",
+      "analysis": {
+        "totalAgents": 1,
+        "successfulAgents": 1,
+        "failedAgents": 0,
+        "convergenceQuality": "excellent",
+        "recommendations": []
+      },
+      "performance": {
+        "startTime": 1778072516146,
+        "endTime": 1778072516160,
+        "agentExecutionTimes": {
+          "bbd49325-3b6a-4bda-8dd3-b8e09cf44dd0": {
+            "startTime": 1778072516149,
+            "endTime": 1778072516159,
+            "duration": 10
+          }
+        },
+        "totalExecutionTime": 14
+      },
+      "executionTime": 13
+    },
+    "error": null,
+    "createdAt": "2026-05-06T13:01:56.145Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    },
+    "completedAt": "2026-05-06T13:01:56.160Z"
+  },
+  "e594b9aa-ed58-40fb-b4d8-6e3704bedf01": {
+    "id": "e594b9aa-ed58-40fb-b4d8-6e3704bedf01",
+    "config": {
+      "name": "Task 2",
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "agent-1",
+          "role": "Enhanced researcher"
+        }
+      ],
+      "task": "Research something else"
+    },
+    "status": "completed",
+    "agents": [
+      {
+        "id": "da66af77-1046-4eda-bbe2-bc29728ba470",
+        "name": "agent-1",
+        "role": "Enhanced researcher",
+        "focus": null,
+        "skills": [],
+        "status": "idle",
+        "output": null
+      }
+    ],
+    "results": {
+      "pattern": "work-crew",
+      "task": "Research something else",
+      "agentResults": [
+        {
+          "agent": {
+            "id": "da66af77-1046-4eda-bbe2-bc29728ba470",
+            "name": "agent-1",
+            "role": "Enhanced researcher",
+            "focus": null,
+            "skills": [],
+            "status": "completed",
+            "output": "Analysis completed for: Research something else\n\nRole: Enhanced researcher\nFocus: General\n\nThis is a mock output for testing purposes."
+          },
+          "output": "Analysis completed for: Research something else\n\nRole: Enhanced researcher\nFocus: General\n\nThis is a mock output for testing purposes.",
+          "success": true
+        }
+      ],
+      "converged": {
+        "summary": "Merged outputs from all agents",
+        "sections": [
+          {
+            "agent": "agent-1",
+            "role": "Enhanced researcher",
+            "output": "Analysis completed for: Research something else\n\nRole: Enhanced researcher\nFocus: General\n\nThis is a mock output for testing purposes."
+          }
+        ]
+      },
+      "strategy": "merge",
+      "analysis": {
+        "totalAgents": 1,
+        "successfulAgents": 1,
+        "failedAgents": 0,
+        "convergenceQuality": "excellent",
+        "recommendations": []
+      },
+      "performance": {
+        "startTime": 1778072516162,
+        "endTime": 1778072516175,
+        "agentExecutionTimes": {
+          "da66af77-1046-4eda-bbe2-bc29728ba470": {
+            "startTime": 1778072516164,
+            "endTime": 1778072516174,
+            "duration": 10
+          }
+        },
+        "totalExecutionTime": 13
+      },
+      "executionTime": 12
+    },
+    "error": null,
+    "createdAt": "2026-05-06T13:01:56.161Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    },
+    "completedAt": "2026-05-06T13:01:56.175Z"
+  },
+  "56e02bad-b8a3-438f-ae8d-7bd65065df57": {
+    "id": "56e02bad-b8a3-438f-ae8d-7bd65065df57",
+    "config": {
+      "name": "Performance Test",
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "perf-agent",
+          "role": "Performance tester"
+        }
+      ],
+      "task": "Test performance tracking"
+    },
+    "status": "completed",
+    "agents": [
+      {
+        "id": "763ccce3-98e7-42cc-ad5e-c089cf3fc557",
+        "name": "perf-agent",
+        "role": "Performance tester",
+        "focus": null,
+        "skills": [],
+        "status": "idle",
+        "output": null
+      }
+    ],
+    "results": {
+      "pattern": "work-crew",
+      "task": "Test performance tracking",
+      "agentResults": [
+        {
+          "agent": {
+            "id": "763ccce3-98e7-42cc-ad5e-c089cf3fc557",
+            "name": "perf-agent",
+            "role": "Performance tester",
+            "focus": null,
+            "skills": [],
+            "status": "completed",
+            "output": "Analysis completed for: Test performance tracking\n\nRole: Performance tester\nFocus: General\n\nThis is a mock output for testing purposes."
+          },
+          "output": "Analysis completed for: Test performance tracking\n\nRole: Performance tester\nFocus: General\n\nThis is a mock output for testing purposes.",
+          "success": true
+        }
+      ],
+      "converged": {
+        "summary": "Merged outputs from all agents",
+        "sections": [
+          {
+            "agent": "perf-agent",
+            "role": "Performance tester",
+            "output": "Analysis completed for: Test performance tracking\n\nRole: Performance tester\nFocus: General\n\nThis is a mock output for testing purposes."
+          }
+        ]
+      },
+      "strategy": "merge",
+      "analysis": {
+        "totalAgents": 1,
+        "successfulAgents": 1,
+        "failedAgents": 0,
+        "convergenceQuality": "excellent",
+        "recommendations": []
+      },
+      "performance": {
+        "startTime": 1778072516179,
+        "endTime": 1778072516192,
+        "agentExecutionTimes": {
+          "763ccce3-98e7-42cc-ad5e-c089cf3fc557": {
+            "startTime": 1778072516181,
+            "endTime": 1778072516191,
+            "duration": 10
+          }
+        },
+        "totalExecutionTime": 13
+      },
+      "executionTime": 12
+    },
+    "error": null,
+    "createdAt": "2026-05-06T13:01:56.178Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    },
+    "completedAt": "2026-05-06T13:01:56.192Z"
+  },
+  "e40a9766-ce0d-4478-9036-3c0d048bb9dd": {
+    "id": "e40a9766-ce0d-4478-9036-3c0d048bb9dd",
+    "config": {
+      "name": "Failure Test",
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "failing-agent",
+          "role": "Agent that fails"
+        }
+      ],
+      "task": "This will fail"
+    },
+    "status": "completed",
+    "agents": [
+      {
+        "id": "2784ad49-bf9b-4aee-a5f2-8decf6a17dc8",
+        "name": "failing-agent",
+        "role": "Agent that fails",
+        "focus": null,
+        "skills": [],
+        "status": "idle",
+        "output": null
+      }
+    ],
+    "results": {
+      "pattern": "work-crew",
+      "task": "This will fail",
+      "agentResults": [
+        {
+          "agent": {
+            "id": "2784ad49-bf9b-4aee-a5f2-8decf6a17dc8",
+            "name": "failing-agent",
+            "role": "Agent that fails",
+            "focus": null,
+            "skills": [],
+            "status": "idle",
+            "output": null
+          },
+          "error": "Agent failed",
+          "success": false
+        }
+      ],
+      "converged": {
+        "summary": "Merged outputs from all agents",
+        "sections": []
+      },
+      "strategy": "merge",
+      "analysis": {
+        "totalAgents": 1,
+        "successfulAgents": 0,
+        "failedAgents": 1,
+        "convergenceQuality": "poor",
+        "recommendations": [
+          "Consider reducing task complexity or increasing timeout for failed agents",
+          "Consider adjusting convergence strategy or agent roles"
+        ]
+      },
+      "performance": {
+        "startTime": 1778072516196,
+        "endTime": 1778072516199,
+        "agentExecutionTimes": {
+          "2784ad49-bf9b-4aee-a5f2-8decf6a17dc8": {
+            "startTime": 1778072516198,
+            "endTime": null,
+            "duration": 0
+          }
+        },
+        "totalExecutionTime": 3
+      },
+      "executionTime": 2
+    },
+    "error": null,
+    "createdAt": "2026-05-06T13:01:56.195Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    },
+    "completedAt": "2026-05-06T13:01:56.199Z"
+  },
+  "a74b246c-e547-4f5b-a752-94d9b791b3d3": {
+    "id": "a74b246c-e547-4f5b-a752-94d9b791b3d3",
+    "config": {
+      "name": "Retry Test",
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "retry-agent",
+          "role": "Retry agent"
+        }
+      ],
+      "task": "This will be retried"
+    },
+    "status": "completed",
+    "agents": [
+      {
+        "id": "7cee2909-46fe-462a-8d82-112807c380ca",
+        "name": "retry-agent",
+        "role": "Retry agent",
+        "focus": null,
+        "skills": [],
+        "status": "idle",
+        "output": null
+      }
+    ],
+    "results": {
+      "pattern": "work-crew",
+      "task": "This will be retried",
+      "agentResults": [
+        {
+          "agent": {
+            "id": "7cee2909-46fe-462a-8d82-112807c380ca",
+            "name": "retry-agent",
+            "role": "Retry agent",
+            "focus": null,
+            "skills": [],
+            "status": "idle",
+            "output": null
+          },
+          "error": "First attempt failed",
+          "success": false
+        }
+      ],
+      "converged": {
+        "summary": "Merged outputs from all agents",
+        "sections": []
+      },
+      "strategy": "merge",
+      "analysis": {
+        "totalAgents": 1,
+        "successfulAgents": 0,
+        "failedAgents": 1,
+        "convergenceQuality": "poor",
+        "recommendations": [
+          "Consider reducing task complexity or increasing timeout for failed agents",
+          "Consider adjusting convergence strategy or agent roles"
+        ]
+      },
+      "performance": {
+        "startTime": 1778072516202,
+        "endTime": 1778072516205,
+        "agentExecutionTimes": {
+          "7cee2909-46fe-462a-8d82-112807c380ca": {
+            "startTime": 1778072516204,
+            "endTime": null,
+            "duration": 0
+          }
+        },
+        "totalExecutionTime": 3
+      },
+      "executionTime": 2
+    },
+    "error": null,
+    "createdAt": "2026-05-06T13:01:56.201Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    },
+    "completedAt": "2026-05-06T13:01:56.205Z"
+  },
+  "5ea6929c-dfb4-4e24-9e56-69c158b8a1c6": {
+    "id": "5ea6929c-dfb4-4e24-9e56-69c158b8a1c6",
+    "config": {
+      "name": "Convergence Test",
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "agent-1",
+          "role": "Good agent"
+        },
+        {
+          "name": "agent-2",
+          "role": "Good agent"
+        },
+        {
+          "name": "agent-3",
+          "role": "Failing agent"
+        }
+      ],
+      "task": "Test convergence analysis"
+    },
+    "status": "completed",
+    "agents": [
+      {
+        "id": "dd7dfabe-c822-4226-b848-760ec4d57f7d",
+        "name": "agent-1",
+        "role": "Good agent",
+        "focus": null,
+        "skills": [],
+        "status": "idle",
+        "output": null
+      },
+      {
+        "id": "6ddf36d2-5aa7-499e-bde4-0bff6fd6cb67",
+        "name": "agent-2",
+        "role": "Good agent",
+        "focus": null,
+        "skills": [],
+        "status": "idle",
+        "output": null
+      },
+      {
+        "id": "f1a4b49b-cc29-426d-8821-149405fc24e2",
+        "name": "agent-3",
+        "role": "Failing agent",
+        "focus": null,
+        "skills": [],
+        "status": "idle",
+        "output": null
+      }
+    ],
+    "results": {
+      "pattern": "work-crew",
+      "task": "Test convergence analysis",
+      "agentResults": [
+        {
+          "agent": {
+            "id": "dd7dfabe-c822-4226-b848-760ec4d57f7d",
+            "name": "agent-1",
+            "role": "Good agent",
+            "focus": null,
+            "skills": [],
+            "status": "idle",
+            "output": null
+          },
+          "output": "Good result 1",
+          "success": true
+        },
+        {
+          "agent": {
+            "id": "6ddf36d2-5aa7-499e-bde4-0bff6fd6cb67",
+            "name": "agent-2",
+            "role": "Good agent",
+            "focus": null,
+            "skills": [],
+            "status": "idle",
+            "output": null
+          },
+          "output": "Good result 2",
+          "success": true
+        },
+        {
+          "agent": {
+            "id": "f1a4b49b-cc29-426d-8821-149405fc24e2",
+            "name": "agent-3",
+            "role": "Failing agent",
+            "focus": null,
+            "skills": [],
+            "status": "idle",
+            "output": null
+          },
+          "error": "Failed",
+          "success": false
+        }
+      ],
+      "converged": {
+        "summary": "Merged outputs from all agents",
+        "sections": [
+          {
+            "agent": "agent-1",
+            "role": "Good agent",
+            "output": "Good result 1"
+          },
+          {
+            "agent": "agent-2",
+            "role": "Good agent",
+            "output": "Good result 2"
+          }
+        ]
+      },
+      "strategy": "merge",
+      "analysis": {
+        "totalAgents": 3,
+        "successfulAgents": 2,
+        "failedAgents": 1,
+        "convergenceQuality": "good",
+        "recommendations": [
+          "Consider reducing task complexity or increasing timeout for failed agents"
+        ]
+      },
+      "performance": {
+        "startTime": 1778072516208,
+        "endTime": 1778072516213,
+        "agentExecutionTimes": {
+          "dd7dfabe-c822-4226-b848-760ec4d57f7d": {
+            "startTime": 1778072516211,
+            "endTime": 1778072516211,
+            "duration": 0
+          },
+          "6ddf36d2-5aa7-499e-bde4-0bff6fd6cb67": {
+            "startTime": 1778072516211,
+            "endTime": 1778072516211,
+            "duration": 0
+          },
+          "f1a4b49b-cc29-426d-8821-149405fc24e2": {
+            "startTime": 1778072516211,
+            "endTime": null,
+            "duration": 0
+          }
+        },
+        "totalExecutionTime": 5
+      },
+      "executionTime": 3
+    },
+    "error": null,
+    "createdAt": "2026-05-06T13:01:56.207Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    },
+    "completedAt": "2026-05-06T13:01:56.213Z"
+  },
+  "99b3050a-b850-4cf3-9734-a22751e89d10": {
+    "id": "99b3050a-b850-4cf3-9734-a22751e89d10",
+    "config": {
+      "name": "Cancellation Test",
+      "pattern": "work-crew",
+      "agents": [
+        {
+          "name": "fast-agent",
+          "role": "Fast agent"
+        }
+      ],
+      "task": "This is a quick task"
+    },
+    "status": "completed",
+    "agents": [
+      {
+        "id": "92fbe308-bf3d-4ef4-8ef3-1bbf47ccfb78",
+        "name": "fast-agent",
+        "role": "Fast agent",
+        "focus": null,
+        "skills": [],
+        "status": "idle",
+        "output": null
+      }
+    ],
+    "results": {
+      "pattern": "work-crew",
+      "task": "This is a quick task",
+      "agentResults": [
+        {
+          "agent": {
+            "id": "92fbe308-bf3d-4ef4-8ef3-1bbf47ccfb78",
+            "name": "fast-agent",
+            "role": "Fast agent",
+            "focus": null,
+            "skills": [],
+            "status": "completed",
+            "output": "Analysis completed for: This is a quick task\n\nRole: Fast agent\nFocus: General\n\nThis is a mock output for testing purposes."
+          },
+          "output": "Analysis completed for: This is a quick task\n\nRole: Fast agent\nFocus: General\n\nThis is a mock output for testing purposes.",
+          "success": true
+        }
+      ],
+      "converged": {
+        "summary": "Merged outputs from all agents",
+        "sections": [
+          {
+            "agent": "fast-agent",
+            "role": "Fast agent",
+            "output": "Analysis completed for: This is a quick task\n\nRole: Fast agent\nFocus: General\n\nThis is a mock output for testing purposes."
+          }
+        ]
+      },
+      "strategy": "merge",
+      "analysis": {
+        "totalAgents": 1,
+        "successfulAgents": 1,
+        "failedAgents": 0,
+        "convergenceQuality": "excellent",
+        "recommendations": []
+      },
+      "performance": {
+        "startTime": 1778072516215,
+        "endTime": 1778072516229,
+        "agentExecutionTimes": {
+          "92fbe308-bf3d-4ef4-8ef3-1bbf47ccfb78": {
+            "startTime": 1778072516217,
+            "endTime": 1778072516228,
+            "duration": 11
+          }
+        },
+        "totalExecutionTime": 14
+      },
+      "executionTime": 13
+    },
+    "error": null,
+    "createdAt": "2026-05-06T13:01:56.214Z",
+    "progressHistory": [],
+    "performanceMetrics": {
+      "startTime": null,
+      "endTime": null,
+      "agentExecutionTimes": {},
+      "totalExecutionTime": 0
+    },
+    "completedAt": "2026-05-06T13:01:56.229Z"
+  }
+}
