@@ -327,3 +327,84 @@ describe("parallel fan-out with mergeResults", () => {
     assert.equal(merged.factCheckerResult, "all claims verified");
   });
 });
+
+// --- validateState & withValidation ---
+import { validateState, withValidation } from "../dist/index.js";
+
+describe("validateState", () => {
+it("passes with all required fields present", () => {
+    const result = validateState(
+      { name: "alice", age: 30 },
+      [{ field: "name" }, { field: "age", type: "number" }]
+    );
+    assert.equal(result.valid, true);
+    assert.equal(result.errors.length, 0);
+  });
+
+  it("reports missing fields", () => {
+    const result = validateState({}, [{ field: "name" }, { field: "age" }]);
+    assert.equal(result.valid, false);
+    assert.equal(result.errors.length, 2);
+    assert.ok(result.errors[0].includes("name"));
+  });
+
+  it("reports type mismatches", () => {
+    const result = validateState(
+      { age: "30" },
+      [{ field: "age", type: "number" }]
+    );
+    assert.equal(result.valid, false);
+    assert.ok(result.errors[0].includes("expected type \"number\""));
+  });
+
+  it("runs custom validate function", () => {
+    const result = validateState(
+      { score: -1 },
+      [{ field: "score", validate: (v) => v >= 0 }]
+    );
+    assert.equal(result.valid, false);
+    assert.ok(result.errors[0].includes("custom validation"));
+  });
+
+  it("skips type check when type not specified", () => {
+    const result = validateState(
+      { data: [1, 2, 3] },
+      [{ field: "data" }]
+    );
+    assert.equal(result.valid, true);
+  });
+});
+
+describe("withValidation", () => {
+  it("wraps node and passes valid state through", async () => {
+    const node = createOpenClawNode({
+      name: "echo",
+      systemPrompt: "Echo: {input}",
+      executor: async (t) => t.toUpperCase(),
+    });
+    const wrapped = withValidation(node, [
+      { field: "task", type: "string" },
+    ]);
+
+    const result = await wrapped({ task: "hello" });
+    assert.equal(result.echoResult, "ECHO: HELLO");
+    assert.equal(result.validationError, undefined);
+  });
+
+  it("returns validationError on invalid state", async () => {
+    const node = createOpenClawNode({
+      name: "echo",
+      systemPrompt: "Echo: {input}",
+      executor: async (t) => t,
+    });
+    const wrapped = withValidation(node, [
+      { field: "requiredField" },
+    ]);
+
+    const result = await wrapped({});
+    assert.equal(result.validationError !== undefined, true);
+    assert.ok(result.validationError.includes("requiredField"));
+    // executor should NOT have been called — no echoResult
+    assert.equal(result.echoResult, undefined);
+  });
+});

@@ -4,3 +4,5 @@ export { OpenClawClient } from "./openclaw-client.js";
 export type { OpenClawClientOptions, SpawnOptions } from "./openclaw-client.js";
 export { sequentialRouter, conditionalRouter } from "./supervisor.js";
 export type { RouterState } from "./supervisor.js";
+export { validateState, withValidation } from "./validate.js";
+export type { FieldRule, ValidationResult } from "./validate.js";

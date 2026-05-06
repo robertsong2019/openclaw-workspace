@@ -2,3 +2,4 @@ date	project	metric	before	after	delta	notes
 2026-04-29	ai-dev-tools	test_count	44	48	+4	added task.test.js for template categorization
 2026-04-29	ai-dev-tools	test_pass_rate	100%	100%	0%	all passing after ESM fix confirmed
 2026-04-29	github-creative-project	test_count	36	36	0	all passing, slow startup
+2026-05-06T22:06:24+08:00	8ba2aba	test_pass_rate	100% (11/11)	keep	F52-F54: subscriberCount, findKeys, waitForPattern
