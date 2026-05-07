@@ -1,4 +1,4 @@
-# HEARTBEAT.md - May 6, 2026 (Wednesday)
+# HEARTBEAT.md - May 7, 2026 (Thursday)
 
 ## 待办任务
 
@@ -21,16 +21,16 @@
 - [ ] Agent Mesh Network P2P通信协议
 
 ## 系统状态
-- **AMS v1.0-dev**: 645/645 tests (完整版含BM25+embed), embed cache: LRU+TTL+compact三重管理
-- **MemoryManager**: 156/156 tests (session lifecycle integration, PosixPath bug已修)
+- **AMS v1.0-dev**: 645/645 tests, embed cache: LRU+TTL+compact+embedBatch()
+- **MemoryManager**: 200/200 tests (session lifecycle, _detect_project_name修复)
 - **better-ralph-core**: 136/136 tests
 - **agent-task-cli**: 408/408 tests
 - **prompt-router**: 111/111 tests
 - **prompt-weaver**: 148/148 tests
-- **autoresearch**: 零回滚率持续保持（连续39天）🏆
+- **autoresearch**: 零回滚率持续保持（连续40天）🏆
 
 ## 近期发现
-- AMS Embed Cache 三重管理闭环: LRU(大小) + TTL(新鲜度) + compact(恢复) — 生产级缓存策略
-- MemoryManager integration tests 发现并修复 PosixPath 序列化 bug — 集成测试的价值再次验证
-- A2A Trust Layer 研究→实现路径清晰: @a2a-js/sdk + node:crypto → lab/a2a-trust-prototype/
+- AMS embedBatch() 批量嵌入: 去重+N→K调用+缓存感知+TTL安全 — 批量导入场景的性能关键
+- MemoryManager _detect_project_name 从"截取文件名"改为"解析配置文件" — bug修复验证了集成测试的价值
+- embed cache 四重管理闭环完成: LRU(大小) + TTL(新鲜度) + compact(恢复) + embedBatch(批量效率)
 - **突破点**: 研究积累充足，本周重点是 lab/ 实现（A2A Trust + LangGraph Bridge）

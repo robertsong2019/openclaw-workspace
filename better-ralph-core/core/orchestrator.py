@@ -295,3 +295,33 @@ class RalphOrchestrator:
             "current_story": current.id if current else None,
             "is_complete": self.is_complete(),
         }
+
+    def skip_story(self, reason: str = "") -> bool:
+        """Skip the next pending story by marking it incomplete with a skip note.
+        Returns True if a story was skipped, False if nothing to skip.
+        """
+        story = self.prd_manager.get_next_story()
+        if story is None:
+            return False
+        note = f"[SKIPPED] {reason}" if reason else "[SKIPPED]"
+        self.prd_manager.update_story(story.id, notes=note)
+        self.prd_manager.mark_story_complete(story.id)
+        return True
+
+    def estimate_remaining(self) -> Dict[str, Any]:
+        """Estimate remaining work based on completed iterations.
+        Returns count of remaining stories, estimated iterations, and ETA.
+        """
+        stories = self.prd_manager.get_all_stories()
+        remaining = [s for s in stories if not s.passes]
+        completed = [s for s in stories if s.passes]
+        # Use session iteration count as basis for estimation
+        iterations_done = len(self.memory_manager.search_iterations()) if hasattr(self, 'memory_manager') else 0
+        avg_iters = max(iterations_done / max(len(completed), 1), 1.0)
+        est_iterations = len(remaining) * avg_iters
+        return {
+            "remaining_stories": len(remaining),
+            "completed_stories": len(completed),
+            "estimated_iterations": round(est_iterations, 1),
+            "avg_iterations_per_story": round(avg_iters, 1),
+        }

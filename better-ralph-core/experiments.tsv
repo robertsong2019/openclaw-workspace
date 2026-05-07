@@ -9,3 +9,4 @@ timestamp	commit	metric	value	status	description
 2026-05-06T19:15	133a08b	test_count	173/173	keep	search_iterations(): keyword/story_id/error filter. +8 tests
 2026-05-06T19:20	53440e6	test_count	177/177	keep	get_status() + fix SessionStats.average_iteration_time default. +4 tests, 1 bug fix
 2026-05-06T13:08	dc07f69	test_pass_rate	192/192 100%	keep	merge_prd(5 tests)+export_markdown(5 tests)+find_critical_path(5 tests), +15 tests, 0 regressions
+2026-05-07T01:00	5ab658d	test_count	200/200	keep	Fix _detect_project_name: parse package.json/pyproject.toml name field (was stripping extensions). +8 new tests (4 detect_project_name + 4 get_memory_summary). 192→200. Zero regressions.

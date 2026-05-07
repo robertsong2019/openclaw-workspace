@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-05T17:00:17.994Z",
+  "updatedAt": "2026-05-06T20:00:18.175Z",
   "entries": {
     "memory:memory/2026-04-12.md:71:96": {
       "key": "memory:memory/2026-04-12.md:71:96",
@@ -138,19 +138,21 @@
       "endLine": 89,
       "source": "memory",
       "snippet": "3. **Flexible Output**: Supports both Markdown (human-readable) and JSON (machine-readable) 4. **Zero Dependencies**: Pure Python 3, no external packages needed 5. **CLI-Friendly**: Simple command-line interface with argparse ## Testing Successfully tested on: - The OpenClaw workspace (~25k files, multi-language) - The tool itself (self-referential test) - Example integration scripts ## Use Cases 1. **AI Assistant Onboarding**: Generate context for Claude, GPT-4, etc. 2. **Project Documentation**: Quick overviews for new team members 3. **Code Reviews**: Snapshot before diving in 4. **Portfolio Documentation**: Auto-generate project summaries ## Location ``` /root/code-lab-projects/pro",
-      "recallCount": 2,
+      "recallCount": 3,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 2,
+      "totalScore": 3,
       "maxScore": 1,
       "firstRecalledAt": "2026-04-25T13:00:09.946Z",
-      "lastRecalledAt": "2026-05-03T13:00:10.127Z",
+      "lastRecalledAt": "2026-05-06T20:00:18.175Z",
       "queryHashes": [
-        "edad6b6abe41"
+        "edad6b6abe41",
+        "c01118dd4aa9"
       ],
       "recallDays": [
         "2026-04-25",
-        "2026-05-03"
+        "2026-05-03",
+        "2026-05-07"
       ],
       "conceptTags": [
         "gpt",
@@ -568,6 +570,37 @@
         "key-dev-3",
         "experiments.tsv",
         "add"
+      ]
+    },
+    "memory:memory/2026-03-22.md:1:44": {
+      "key": "memory:memory/2026-03-22.md:1:44",
+      "path": "memory/2026-03-22.md",
+      "startLine": 1,
+      "endLine": 44,
+      "source": "memory",
+      "snippet": "# Code Lab Evening Session - 2026-03-22 21:00 ## Project: Project Context Generator **Goal**: Build a lightweight Python tool that analyzes codebases and generates AI-ready context summaries for quick onboarding of AI assistants. ## What I Built ### Core Tool: `context_gen.py` A standalone Python script that: - Scans project directories intelligently (ignoring common non-code directories) - Detects programming languages based on file extensions - Identifies dependency files (package.json, requirements.txt, Cargo.toml, etc.) - Finds likely entry points (main.py, index.js, etc.) - Extracts documentation previews - Generates statistics (file counts, lines of code) - Outputs in Markdown or J",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1,
+      "maxScore": 1,
+      "firstRecalledAt": "2026-05-06T20:00:18.175Z",
+      "lastRecalledAt": "2026-05-06T20:00:18.175Z",
+      "queryHashes": [
+        "c01118dd4aa9"
+      ],
+      "recallDays": [
+        "2026-05-07"
+      ],
+      "conceptTags": [
+        "ai-ready",
+        "context-gen.py",
+        "non-code",
+        "package.json",
+        "requirements.txt",
+        "cargo.toml",
+        "main.py",
+        "index.js"
       ]
     }
   }
