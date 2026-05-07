@@ -330,6 +330,63 @@ class PRDManager:
         
         self.logger.info(f"Split story {story_id} into {len(new_stories)} smaller stories")
         return new_stories
+
+    def reorder_story(self, story_id: str, new_index: int) -> bool:
+        """
+        Move a story to a new position in the list.
+
+        Args:
+            story_id: ID of the story to move
+            new_index: Target index (clamped to valid range)
+
+        Returns:
+            True if reordered, False if story not found
+        """
+        idx = None
+        for i, s in enumerate(self.stories):
+            if s.id == story_id:
+                idx = i
+                break
+        if idx is None:
+            self.logger.warning(f"Story {story_id} not found for reorder")
+            return False
+
+        clamped = max(0, min(new_index, len(self.stories) - 1))
+        story = self.stories.pop(idx)
+        self.stories.insert(clamped, story)
+        self.logger.info(f"Reordered story {story_id} from {idx} to {clamped}")
+        return True
+
+    def duplicate_story(self, story_id: str, new_id: str) -> Optional[UserStory]:
+        """
+        Create a deep copy of a story with a new ID.
+
+        Args:
+            story_id: ID of the story to duplicate
+            new_id: ID for the duplicate
+
+        Returns:
+            The new story, or None if source not found
+        """
+        source = self.get_story_by_id(story_id)
+        if not source:
+            self.logger.warning(f"Story {story_id} not found for duplication")
+            return None
+
+        dup = UserStory(
+            id=new_id,
+            title=source.title,
+            description=source.description,
+            acceptance_criteria=source.acceptance_criteria.copy(),
+            priority=source.priority,
+            passes=False,
+            notes=source.notes,
+            estimated_hours=source.estimated_hours,
+            dependencies=source.dependencies.copy(),
+        )
+        self.stories.append(dup)
+        self.logger.info(f"Duplicated story {story_id} as {new_id}")
+        return dup
     
     def _chunk_list(self, lst: List[str], size: int) -> List[List[str]]:
         """Split a list into chunks of specified size."""
