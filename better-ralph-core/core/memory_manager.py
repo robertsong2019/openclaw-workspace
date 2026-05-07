@@ -476,3 +476,22 @@ class MemoryManager:
             "patterns_count": len(self.patterns),
             "memory_directory": str(self.memory_dir)
         }
+
+    def clear_iterations(self) -> int:
+        """Remove all stored iterations. Returns count cleared."""
+        count = len(self.iterations)
+        self.iterations = []
+        self._save_iterations()
+        self.logger.info(f"Cleared {count} iterations")
+        return count
+
+    def get_unique_story_ids(self) -> List[str]:
+        """Return sorted list of unique story IDs across all iterations."""
+        return sorted(set(i.story_id for i in self.iterations))
+
+    def get_error_rate(self) -> float:
+        """Return fraction of iterations that had errors (0.0-1.0)."""
+        if not self.iterations:
+            return 0.0
+        with_errors = sum(1 for i in self.iterations if i.errors)
+        return with_errors / len(self.iterations)
