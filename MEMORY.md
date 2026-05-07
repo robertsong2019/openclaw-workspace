@@ -25,9 +25,14 @@ Autoresearch 方法论实践 - **连续40天零回滚率**。05-07 凌晨: AMS e
   - [研究笔记 v1](catalyst-research/exploration-notes/2026-05-03-a2a-agent-trust.md) ✅ 代码验证通过(签名+验证+篡改检测)
   - [研究笔记 v2](catalyst-research/exploration-notes/2026-05-03-a2a-agent-trust.md) ✅ 三层信任模型+Trust Extension设计+可运行TypeScript代码
   - [A2A Protocol 深度研究](catalyst-research/exploration-notes/2026-05-04-a2a-protocol.md) ✅ 5核心概念+可运行Server/Client(零依赖)+A2A vs MCP分析
-  - [A2A Trust Layer 深度研究](catalyst-research/exploration-notes/2026-05-05-a2a-protocol-trust-layer.md) ✅ 零依赖ES256签名+验证+TrustScore(已运行验证); A2A v1.0 Signed Cards + 150+组织生产部署 + 三层身份架构
-  - **关键发现**: A2A v1.2 已到生产; @a2a-js/sdk v0.2.4 可直接用于原型; W3C VC 作为持久身份层是下一步; MCP+A2A互补架构已确立
-  - **下一步**: lab/a2a-trust-prototype/ → 用 @a2a-js/sdk + node:crypto 实现，包含 JWKS 端点和 Trust Score 中间件
+  - [A2A Trust Layer 深度研究](catalyst-research/exploration-notes/2026-05-05-a2a-protocol-trust-layer.md) ✅ 零依赖ES256签名+验证+TrustScore(已运行验证)
+  - [A2A v1.2 Signed Cards 更新](catalyst-research/exploration-notes/2026-05-07-a2a-trust-protocol.md) ✅ 05-07 晚间深度研究：v1.2最新spec+RFC 8785 canonicalization+完整签名验证代码(已运行通过)+安全威胁分析(arXiv:2505.12490)+Sigstore集成路径
+  - **关键发现**: A2A v1.2(current stable); RFC 8785 JSON Canonicalization 是签名关键; arXiv:2505.12490 发现60-100%注入泄漏率; Sigstore A2A 提供生产级签名; node:crypto 内置ES256无需外部依赖
+  - **下一步**: lab/a2a-trust-prototype/ → 基于v1.2 spec，用 node:crypto 实现 RFC 8785 canonicalization + ES256签名 + Trust Score 中间件
+- [ ] **LangGraph Bridge v2 实现** — Annotation + Command + Node Caching 重写 createOpenClawNode
+  - [研究笔记](catalyst-research/exploration-notes/2026-05-07-langgraphjs-annotation-command-caching.md) ✅ Annotation API + Command动态路由 + 可运行OpenClaw Node Factory代码
+  - **关键发现**: Annotation替代channels更类型安全; Command消灭conditional_edges; Node Caching为agent去重; 工厂模式是官方推荐
+  - **下一步**: lab/openclaw-langgraph-bridge/ 用Annotation+Command重写，目标3测试通过
 - [ ] **Gossip Discovery Prototype** — 基于研究笔记，加入DID验证+A2A Trust评分
   - [研究笔记](catalyst-research/exploration-notes/2026-05-05-agent-federation-discovery.md) ✅ DUADP+GEACL+双层Churn+可运行Gossip代码
   - **核心发现**: DUADP(DNS for AI)+Gossip是A2A的发现层补丁;双层Churn(node+agent)是Agent特有挑战
