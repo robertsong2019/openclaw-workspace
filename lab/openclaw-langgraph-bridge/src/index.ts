@@ -6,3 +6,4 @@ export { sequentialRouter, conditionalRouter } from "./supervisor.js";
 export type { RouterState } from "./supervisor.js";
 export { validateState, withValidation } from "./validate.js";
 export type { FieldRule, ValidationResult } from "./validate.js";
+export { withFallback, mapState } from "./fallback.js";
