@@ -1,39 +1,25 @@
 {
-  "lastUpdated": "2026-05-06T22:00:00Z",
-  "generatedAt": "2026-05-07 06:00 CST",
-  "actionRequired": [
-    { "job": "github-creative-evening", "status": "error", "note": "Last run failed, needs investigation" }
+  "updated": "2026-05-08T06:00:00+08:00",
+  "updatedISO": "2026-05-07T22:00:00Z",
+  "cronJobs": [
+    {"id": "f38e0365", "name": "dashboard-update-morning", "schedule": "0 6 * * *", "status": "running", "lastRun": "1d ago"},
+    {"id": "9b2a8701", "name": "github-trending-daily", "schedule": "0 7 * * * Asia/Shanghai", "status": "ok", "lastRun": "23h ago"},
+    {"id": "2c714952", "name": "github-trending-deep-dive", "schedule": "0 8 * * * Asia/Shanghai", "status": "ok", "lastRun": "22h ago"},
+    {"id": "610a8d6d", "name": "github-creative-evening", "schedule": "0 19 * * *", "status": "ok", "lastRun": "11h ago"},
+    {"id": "265091b6", "name": "deep-exploration-evening", "schedule": "0 20 * * *", "status": "ok", "lastRun": "10h ago"},
+    {"id": "bb46cb70", "name": "deep-exploration-evening-utc", "schedule": "0 12 * * * UTC", "status": "ok", "lastRun": "10h ago"},
+    {"id": "13a2f284", "name": "code-lab-evening", "schedule": "0 21 * * *", "status": "ok", "lastRun": "9h ago"},
+    {"id": "ce2fb615", "name": "tool-development-evening", "schedule": "0 22 * * *", "status": "ok", "lastRun": "8h ago"},
+    {"id": "78eac6fc", "name": "key-development-1", "schedule": "0 23 * * *", "status": "ok", "lastRun": "7h ago"},
+    {"id": "88679f9e", "name": "key-development-2", "schedule": "0 0 * * *", "status": "ok", "lastRun": "6h ago"},
+    {"id": "b0fd7e8d", "name": "key-development-3", "schedule": "0 1 * * *", "status": "ok", "lastRun": "5h ago"},
+    {"id": "fd0515b0", "name": "knowledge-organization", "schedule": "0 2 * * *", "status": "ok", "lastRun": "4h ago"},
+    {"id": "f7510f1f", "name": "project-testing-morning", "schedule": "0 3 * * *", "status": "ok", "lastRun": "3h ago"},
+    {"id": "77a5bcc6", "name": "documentation-morning", "schedule": "0 4 * * *", "status": "ok", "lastRun": "2h ago"},
+    {"id": "686ec55c", "name": "essay-generation-morning", "schedule": "0 5 * * *", "status": "ok", "lastRun": "1h ago"}
   ],
-  "activeNow": [
-    { "job": "dashboard-update-morning", "status": "running" }
-  ],
-  "crons": [
-    { "name": "dashboard-update-morning", "schedule": "6:00 AM daily", "lastRun": "2026-05-06T22:00:00Z", "status": "running", "duration": null, "errors": 0 },
-    { "name": "github-trending-daily", "schedule": "7:00 AM daily", "lastRun": "2026-05-05T23:00:00Z", "status": "ok", "duration": null, "errors": 0 },
-    { "name": "github-trending-deep", "schedule": "8:00 AM daily", "lastRun": "2026-05-06T00:00:00Z", "status": "ok", "duration": null, "errors": 0 },
-    { "name": "github-creative-evening", "schedule": "7:00 PM daily", "lastRun": "2026-05-06T11:00:00Z", "status": "error", "duration": null, "errors": 1 },
-    { "name": "deep-exploration-evening", "schedule": "8:00 PM daily (×2)", "lastRun": "2026-05-06T12:00:00Z", "status": "ok", "duration": null, "errors": 0 },
-    { "name": "code-lab-evening", "schedule": "9:00 PM daily", "lastRun": "2026-05-06T13:00:00Z", "status": "ok", "duration": null, "errors": 0 },
-    { "name": "tool-development-evening", "schedule": "10:00 PM daily", "lastRun": "2026-05-06T14:00:00Z", "status": "ok", "duration": null, "errors": 0 },
-    { "name": "key-development-1", "schedule": "11:00 PM daily", "lastRun": "2026-05-06T15:00:00Z", "status": "ok", "duration": null, "errors": 0 },
-    { "name": "key-development-2", "schedule": "12:00 AM daily", "lastRun": "2026-05-06T16:00:00Z", "status": "ok", "duration": null, "errors": 0 },
-    { "name": "key-development-3", "schedule": "1:00 AM daily", "lastRun": "2026-05-06T17:00:00Z", "status": "ok", "duration": null, "errors": 0 },
-    { "name": "knowledge-organization-morning", "schedule": "2:00 AM daily", "lastRun": "2026-05-06T18:00:00Z", "status": "ok", "duration": null, "errors": 0 },
-    { "name": "project-testing-morning", "schedule": "3:00 AM daily", "lastRun": "2026-05-06T19:00:00Z", "status": "ok", "duration": null, "errors": 0 },
-    { "name": "documentation-morning", "schedule": "4:00 AM daily", "lastRun": "2026-05-06T20:00:00Z", "status": "ok", "duration": null, "errors": 0 },
-    { "name": "essay-generation-morning", "schedule": "5:00 AM daily", "lastRun": "2026-05-06T21:00:00Z", "status": "ok", "duration": null, "errors": 0 }
-  ],
-  "sessions": {
-    "totalSessions": 1,
-    "recentSessions": [
-      { "key": "agent:main:cron:f38e0365", "label": "Cron: dashboard-update-morning", "updatedAt": "2026-05-06T22:00:00Z", "totalTokens": 27756, "model": "glm-5.1", "status": "running" }
-    ]
-  },
-  "summary": {
-    "totalCrons": 15,
-    "healthy": 13,
-    "errors": 1,
-    "running": 1,
-    "last24h": "13/14 completed, 1 error (github-creative-evening)"
-  }
+  "activeSessions": 1,
+  "totalCronJobs": 15,
+  "healthyCronJobs": 14,
+  "summary": "All 15 cron jobs operational. 14 ok, 1 running (this dashboard update). No active chat sessions."
 }
