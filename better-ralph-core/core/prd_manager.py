@@ -387,6 +387,43 @@ class PRDManager:
         self.stories.append(dup)
         self.logger.info(f"Duplicated story {story_id} as {new_id}")
         return dup
+
+    def get_blocked_stories(self) -> List[UserStory]:
+        """Return incomplete stories whose dependencies are NOT all met."""
+        return [
+            s for s in self.stories
+            if not s.passes and not self._check_dependencies_met(s)
+        ]
+
+    def get_ready_stories(self) -> List[UserStory]:
+        """Return incomplete stories whose dependencies ARE all met, sorted by priority."""
+        ready = [
+            s for s in self.stories
+            if not s.passes and self._check_dependencies_met(s)
+        ]
+        ready.sort(key=lambda s: s.priority)
+        return ready
+
+    def batch_update_priority(self, updates: Dict[str, int]) -> Dict[str, bool]:
+        """
+        Update priorities for multiple stories at once.
+
+        Args:
+            updates: Mapping of story_id -> new priority
+
+        Returns:
+            Mapping of story_id -> whether it was found and updated
+        """
+        results = {}
+        for story_id, priority in updates.items():
+            story = self.get_story_by_id(story_id)
+            if story:
+                story.priority = priority
+                results[story_id] = True
+            else:
+                results[story_id] = False
+        self.logger.info(f"Batch updated priorities for {sum(results.values())} stories")
+        return results
     
     def _chunk_list(self, lst: List[str], size: int) -> List[List[str]]:
         """Split a list into chunks of specified size."""
