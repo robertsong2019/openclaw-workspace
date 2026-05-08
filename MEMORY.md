@@ -15,10 +15,10 @@
 
 ---
 
-## Current Focus (2026-05-07)
+## Current Focus (2026-05-08)
 
 ### Active Theme
-Autoresearch 方法论实践 - **连续40天零回滚率**。05-07 凌晨: AMS embedBatch()批量嵌入+去重+缓存感知(97 test suites, +9); MemoryManager _detect_project_name bug修复+get_memory_summary(200 tests, +8)。05-06: AMS TTL cache eviction(48 embed tests); MemoryManager session lifecycle(156 tests)。**下一步突破**: lab/ 从研究→实现 — A2A Trust Prototype + LangGraph Bridge。
+Autoresearch 方法论实践 - **连续41天零回滚率**。05-08 凌晨: agent-context-store exists()+search_by_tags()+mget_entry()+retag()(25→34 tests, +9)。05-07: AMS embedBatch()批量嵌入(97 suites); MemoryManager _detect_project_name修复(200 tests)。**下一步突破**: lab/ 从研究→实现 — A2A Trust Prototype + LangGraph Bridge。
 
 ### Next Actions
 - [ ] **A2A x-agent-trust 中间件原型** — Node.js ES256 签名/验证，可作 OpenClaw gateway plugin
@@ -234,9 +234,24 @@ curl -X POST "https://api.tavily.com/search" \
   - 去重管道完整: mergeSuggestions(发现) → autoMerge(执行) → contentVersionCompact(清理)
   - 零回滚率持续保持(连续26天)
 
+### 2026-05-08
+- ✅ **agent-context-store 三轮实验** — 25→34 tests (+9)
+  - exists()+search_by_tags()+mget_entry(): 纯检查+多标签搜索+批量Entry获取, 6 tests
+  - retag(key, add_tags, remove_tags): 原地标签编辑保留created_at, 大小写不敏感删除, 4 tests
+  - 零回滚率: 连续41天
+- ✅ **prompt-router 评估工具** — 160→174 tests (+14)
+  - cross_validate(test_cases): 标注数据评估路由准确率, per-agent precision/recall/f1, confusion matrix
+  - suggest_improvements(test_cases): 分析误分类并建议缺失关键词
+  - 零回滚率: 连续41天
+- ✅ **agent-context-store diff+compact+validate** — 34→37 tests (+3)
+  - diff(key1, key2): entry对比(内容/tags/age差异)
+  - compact(): 清理过期条目
+  - validate(): 存储完整性检查
+
 ### 2026-05-07
 - ✅ **AMS embedBatch() 批量嵌入** — 96→97 test suites (+9). 去重+缓存感知+TTL安全, N texts→K unique embeds, 失败隔离
 - ✅ **MemoryManager _detect_project_name 修复 + get_memory_summary** — 192→200 tests (+8). 解析package.json/pyproject.toml的name字段(之前只是截文件名), +4 get_memory_summary tests
+- ✅ **better-ralph-core merge_prd/export_markdown/find_critical_path** — 192→200 tests (+8)
 - 零回滚率: 连续40天
 
 ### 2026-05-06
@@ -585,5 +600,5 @@ curl -X POST "https://api.tavily.com/search" \
 
 ---
 
-*Last updated: 2026-05-06 02:00*
-*Next review: 2026-05-07*
+*Last updated: 2026-05-08 02:00*
+*Next review: 2026-05-09*

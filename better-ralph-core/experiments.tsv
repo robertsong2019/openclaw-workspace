@@ -14,3 +14,4 @@ timestamp	commit	metric	value	status	description
 2026-05-07T13:06	65f4829	test_count	218/218	keep	PerformanceMonitor reset/get_summary/get_active +10 tests
 2026-05-07T13:08	59d5e42	test_count	229/229	keep	reorder_story+duplicate_story +11 tests
 2026-05-07T13:10	9ecc4b1	test_count	237/237	keep	clear_iterations+get_unique_story_ids+get_error_rate +8 tests
+2026-05-07T13:12	524d3aa	test_count	249/249	keep	get_blocked_stories+get_ready_stories+batch_update_priority +12 tests

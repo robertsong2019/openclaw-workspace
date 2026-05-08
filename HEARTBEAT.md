@@ -1,4 +1,4 @@
-# HEARTBEAT.md - May 7, 2026 (Thursday)
+# HEARTBEAT.md - May 8, 2026 (Friday)
 
 ## 待办任务
 
@@ -23,14 +23,14 @@
 ## 系统状态
 - **AMS v1.0-dev**: 645/645 tests, embed cache: LRU+TTL+compact+embedBatch()
 - **MemoryManager**: 200/200 tests (session lifecycle, _detect_project_name修复)
-- **better-ralph-core**: 136/136 tests
+- **better-ralph-core**: 200/200 tests
 - **agent-task-cli**: 408/408 tests
+- **agent-context-store**: 34/34 tests (exists+search_by_tags+mget_entry+retag)
 - **prompt-router**: 111/111 tests
 - **prompt-weaver**: 148/148 tests
-- **autoresearch**: 零回滚率持续保持（连续40天）🏆
+- **autoresearch**: 零回滚率持续保持（连续41天）🏆
 
 ## 近期发现
-- AMS embedBatch() 批量嵌入: 去重+N→K调用+缓存感知+TTL安全 — 批量导入场景的性能关键
-- MemoryManager _detect_project_name 从"截取文件名"改为"解析配置文件" — bug修复验证了集成测试的价值
-- embed cache 四重管理闭环完成: LRU(大小) + TTL(新鲜度) + compact(恢复) + embedBatch(批量效率)
+- agent-context-store API 矩阵补全: exists(纯检查) + search_by_tags(多标签AND/OR) + mget_entry(批量) + retag(原地编辑)
+- embed cache 四重管理闭环: LRU(大小) + TTL(新鲜度) + compact(恢复) + embedBatch(批量效率)
 - **突破点**: 研究积累充足，本周重点是 lab/ 实现（A2A Trust + LangGraph Bridge）
