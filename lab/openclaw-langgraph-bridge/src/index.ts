@@ -7,3 +7,5 @@ export type { RouterState } from "./supervisor.js";
 export { validateState, withValidation } from "./validate.js";
 export type { FieldRule, ValidationResult } from "./validate.js";
 export { withFallback, mapState } from "./fallback.js";
+export { withTimeout } from "./timeout.js";
+export type { TimeoutConfig } from "./timeout.js";

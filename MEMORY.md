@@ -29,10 +29,12 @@ Autoresearch 方法论实践 - **连续41天零回滚率**。05-08 凌晨: agent
   - [A2A v1.2 Signed Cards 更新](catalyst-research/exploration-notes/2026-05-07-a2a-trust-protocol.md) ✅ 05-07 晚间深度研究：v1.2最新spec+RFC 8785 canonicalization+完整签名验证代码(已运行通过)+安全威胁分析(arXiv:2505.12490)+Sigstore集成路径
   - **关键发现**: A2A v1.2(current stable); RFC 8785 JSON Canonicalization 是签名关键; arXiv:2505.12490 发现60-100%注入泄漏率; Sigstore A2A 提供生产级签名; node:crypto 内置ES256无需外部依赖
   - **下一步**: lab/a2a-trust-prototype/ → 基于v1.2 spec，用 node:crypto 实现 RFC 8785 canonicalization + ES256签名 + Trust Score 中间件
-- [ ] **LangGraph Bridge v2 实现** — Annotation + Command + Node Caching 重写 createOpenClawNode
-  - [研究笔记](catalyst-research/exploration-notes/2026-05-07-langgraphjs-annotation-command-caching.md) ✅ Annotation API + Command动态路由 + 可运行OpenClaw Node Factory代码
-  - **关键发现**: Annotation替代channels更类型安全; Command消灭conditional_edges; Node Caching为agent去重; 工厂模式是官方推荐
-  - **下一步**: lab/openclaw-langgraph-bridge/ 用Annotation+Command重写，目标3测试通过
+- [ ] **LangGraph Bridge 实现** — Executor 接口 + createTask + StateSchema 重写 createOpenClawNode
+  - [研究笔记 v1](catalyst-research/exploration-notes/2026-05-07-langgraphjs-annotation-command-caching.md) ✅ Annotation API + Command动态路由 + 可运行OpenClaw Node Factory代码
+  - [研究笔记 v2](catalyst-research/exploration-notes/2026-05-08-langgraphjs-gateway-http-client.md) ✅ GatewayClient + createTask + ReducedValue taskResults
+  - [研究笔记 v3 实战验证](catalyst-research/exploration-notes/2026-05-08-langgraph-bridge-executor-task.md) ✅ **18/18 tests passing** — Executor双模式 + 幂等createTask + checkpoint序列化 + 端到端Bridge Graph
+  - **关键发现**: Executor接口是核心抽象(非GatewayClient); 确定性TaskID = sha256(name:input); OpenClaw真实API端点 /v1/agent/run; StateSchema替代Annotation更类型安全
+  - **下一步**: lab/openclaw-langgraph-bridge/ — executor.ts + create-task.ts + state.ts + create-bridge-graph.ts, 目标5+ tests
 - [ ] **Gossip Discovery Prototype** — 基于研究笔记，加入DID验证+A2A Trust评分
   - [研究笔记](catalyst-research/exploration-notes/2026-05-05-agent-federation-discovery.md) ✅ DUADP+GEACL+双层Churn+可运行Gossip代码
   - **核心发现**: DUADP(DNS for AI)+Gossip是A2A的发现层补丁;双层Churn(node+agent)是Agent特有挑战
@@ -79,7 +81,9 @@ Autoresearch 方法论实践 - **连续41天零回滚率**。05-08 凌晨: agent
   - **关键发现**: LangGraph.js v1.2.9 in-process > Python out-of-process,零额外运行时
   - **05-01 重大更新**: 新 API `StateSchema` + `ReducedValue` 替代旧 `Annotation.Root()`，Zod v4 原生集成
   - [研究笔记 createOpenClawNode](catalyst-research/exploration-notes/2026-05-01-langgraphjs-create-openclaw-node.md) ✅ 3测试全通过（invoke+stream+动态复用）
-  - **下一步**: 创建 lab/openclaw-langgraph-bridge/ → Gateway HTTP 客户端 → task() 包装器
+  - [研究笔记 Gateway Client + task()](catalyst-research/exploration-notes/2026-05-08-langgraphjs-gateway-http-client.md) ✅ 设计完成(GatewayClient + createTask + ReducedValue taskResults)
+  - **05-08 新发现**: task() 幂等性 = 确定性任务ID + 检查点恢复; Node-level Caching 与 Gateway 调用互补; Subgraph 模式适合多 Agent 编排
+  - **下一步**: 创建 lab/openclaw-langgraph-bridge/ → 实现 GatewayClient → createTask → executor 双模式
   - **核心设计**: executor 参数抽象 sessions_spawn，工厂函数零修改切换 mock→real
   - Step 1: `createOpenClawNode()` 工厂函数,包装 sessions_spawn 为 LangGraph.js async node
   - Step 2: Supervisor router(纯函数优先,需要时升级 LLM 路由)
@@ -247,6 +251,9 @@ curl -X POST "https://api.tavily.com/search" \
   - diff(key1, key2): entry对比(内容/tags/age差异)
   - compact(): 清理过期条目
   - validate(): 存储完整性检查
+- ✅ **LangGraph Bridge 实战研究** — Executor双模式 + createTask幂等 + BridgeState ReducedValue
+  - [研究笔记](catalyst-research/exploration-notes/2026-05-08-langgraph-bridge-executor-task.md) ✅ 18/18 tests
+  - 核心发现: Executor接口 > GatewayClient类; 确定性TaskID; OpenClaw API端点 /v1/agent/run; StateSchema替代Annotation
 
 ### 2026-05-07
 - ✅ **AMS embedBatch() 批量嵌入** — 96→97 test suites (+9). 去重+缓存感知+TTL安全, N texts→K unique embeds, 失败隔离
