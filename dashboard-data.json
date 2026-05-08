@@ -1,10 +1,10 @@
 {
-  "updated": "2026-05-08T06:00:00+08:00",
-  "updatedISO": "2026-05-07T22:00:00Z",
+  "updatedAt": "2026-05-09T06:00:00+08:00",
+  "updatedAtUTC": "2026-05-08T22:00:00Z",
   "cronJobs": [
     {"id": "f38e0365", "name": "dashboard-update-morning", "schedule": "0 6 * * *", "status": "running", "lastRun": "1d ago"},
-    {"id": "9b2a8701", "name": "github-trending-daily", "schedule": "0 7 * * * Asia/Shanghai", "status": "ok", "lastRun": "23h ago"},
-    {"id": "2c714952", "name": "github-trending-deep-dive", "schedule": "0 8 * * * Asia/Shanghai", "status": "ok", "lastRun": "22h ago"},
+    {"id": "9b2a8701", "name": "github-trending-daily", "schedule": "0 7 * * *", "status": "ok", "lastRun": "23h ago"},
+    {"id": "2c714952", "name": "github-trending-deep", "schedule": "0 8 * * *", "status": "ok", "lastRun": "22h ago"},
     {"id": "610a8d6d", "name": "github-creative-evening", "schedule": "0 19 * * *", "status": "ok", "lastRun": "11h ago"},
     {"id": "265091b6", "name": "deep-exploration-evening", "schedule": "0 20 * * *", "status": "ok", "lastRun": "10h ago"},
     {"id": "bb46cb70", "name": "deep-exploration-evening-utc", "schedule": "0 12 * * * UTC", "status": "ok", "lastRun": "10h ago"},
@@ -18,8 +18,19 @@
     {"id": "77a5bcc6", "name": "documentation-morning", "schedule": "0 4 * * *", "status": "ok", "lastRun": "2h ago"},
     {"id": "686ec55c", "name": "essay-generation-morning", "schedule": "0 5 * * *", "status": "ok", "lastRun": "1h ago"}
   ],
-  "activeSessions": 1,
-  "totalCronJobs": 15,
-  "healthyCronJobs": 14,
-  "summary": "All 15 cron jobs operational. 14 ok, 1 running (this dashboard update). No active chat sessions."
+  "activeSessions": [
+    {"type": "direct", "model": "glm-5.1", "usage": "80k/205k (39%)", "lastActive": "11h ago"},
+    {"type": "direct", "model": "glm-5.1", "usage": "35k/205k (17%)", "lastActive": "22h ago"},
+    {"type": "direct", "model": "glm-5.1", "usage": "25k/205k (12%)", "lastActive": "23h ago"},
+    {"type": "direct", "model": "glm-5.1", "usage": "26k/205k (13%)", "lastActive": "24h ago"},
+    {"type": "direct:wecom", "model": "glm-5.1", "usage": "19k/205k (9%)", "lastActive": "39d ago"},
+    {"type": "group:wecom", "model": "glm-5.1", "usage": "13k/200k (7%)", "lastActive": "54d ago"}
+  ],
+  "summary": {
+    "totalCronJobs": 15,
+    "cronJobsOk": 14,
+    "cronJobsRunning": 1,
+    "activeSessionsCount": 6,
+    "model": "glm-5.1"
+  }
 }
