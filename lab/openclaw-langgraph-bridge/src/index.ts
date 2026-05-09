@@ -9,3 +9,5 @@ export type { FieldRule, ValidationResult } from "./validate.js";
 export { withFallback, mapState } from "./fallback.js";
 export { withTimeout } from "./timeout.js";
 export type { TimeoutConfig } from "./timeout.js";
+export { withRetry } from "./retry.js";
+export type { RetryConfig } from "./retry.js";
