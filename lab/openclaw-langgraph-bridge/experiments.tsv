@@ -6,3 +6,4 @@ timestamp	commit	metric	value	status	description
 2026-05-06T23:00	d1a831f	test_pass_rate	18/18	keep	validateState + withValidation: field/type/custom validation + node wrapper guard
 2026-05-07T23:00	d42e423	test_pass_rate	26/26	keep	withFallback + mapState: error recovery wrapper + state field mapping utility
 2026-05-08T23:00	b6cdef9	test_pass_rate	31/31	keep	withTimeout: node timeout guard with fallback state
+2026-05-09T23:00	2060985	test_pass_rate	38/38	keep	withRetry: node retry wrapper with exponential backoff + onRetry callback

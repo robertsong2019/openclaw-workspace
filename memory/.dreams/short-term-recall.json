@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-06T20:00:18.175Z",
+  "updatedAt": "2026-05-09T13:01:07.703Z",
   "entries": {
     "memory:memory/2026-04-12.md:71:96": {
       "key": "memory:memory/2026-04-12.md:71:96",
@@ -138,21 +138,23 @@
       "endLine": 89,
       "source": "memory",
       "snippet": "3. **Flexible Output**: Supports both Markdown (human-readable) and JSON (machine-readable) 4. **Zero Dependencies**: Pure Python 3, no external packages needed 5. **CLI-Friendly**: Simple command-line interface with argparse ## Testing Successfully tested on: - The OpenClaw workspace (~25k files, multi-language) - The tool itself (self-referential test) - Example integration scripts ## Use Cases 1. **AI Assistant Onboarding**: Generate context for Claude, GPT-4, etc. 2. **Project Documentation**: Quick overviews for new team members 3. **Code Reviews**: Snapshot before diving in 4. **Portfolio Documentation**: Auto-generate project summaries ## Location ``` /root/code-lab-projects/pro",
-      "recallCount": 3,
+      "recallCount": 4,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 3,
+      "totalScore": 4,
       "maxScore": 1,
       "firstRecalledAt": "2026-04-25T13:00:09.946Z",
-      "lastRecalledAt": "2026-05-06T20:00:18.175Z",
+      "lastRecalledAt": "2026-05-09T13:01:07.703Z",
       "queryHashes": [
         "edad6b6abe41",
-        "c01118dd4aa9"
+        "c01118dd4aa9",
+        "ce39a2e814fa"
       ],
       "recallDays": [
         "2026-04-25",
         "2026-05-03",
-        "2026-05-07"
+        "2026-05-07",
+        "2026-05-09"
       ],
       "conceptTags": [
         "gpt",
@@ -547,19 +549,21 @@
       "endLine": 208,
       "source": "memory",
       "snippet": "3. Add maintenance scheduling with retry/backoff 4. Add telemetry/metrics for maintenance runs --- ## Summary **Experiment Result:** ✅ KEEP **Tests:** 324 → 329 (+5) **Code:** ~93 lines added (~39 src + ~54 tests) **Version:** v0.x → v0.x+1 **Feature:** Automatic health-based maintenance with threshold, task whitelist, dry-run The autoresearch methodology proved effective again: - Started from clear baseline (v0.x, 324 tests) - Built incrementally on previous work (healthScore from key-dev-3) - Defined measurable success criteria - Implemented and tested in one session - Recorded decision in experiments.tsv - Retained improvement, zero regressions --- **Generated**: 2026-04-22 12:00 AM",
-      "recallCount": 2,
+      "recallCount": 3,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 2,
+      "totalScore": 3,
       "maxScore": 1,
       "firstRecalledAt": "2026-05-05T16:00:18.097Z",
-      "lastRecalledAt": "2026-05-05T17:00:17.994Z",
+      "lastRecalledAt": "2026-05-08T17:00:17.572Z",
       "queryHashes": [
         "4da31a664e6b",
-        "6cedc2318e63"
+        "6cedc2318e63",
+        "756dc1b461e8"
       ],
       "recallDays": [
-        "2026-05-06"
+        "2026-05-06",
+        "2026-05-09"
       ],
       "conceptTags": [
         "retry/backoff",
@@ -601,6 +605,37 @@
         "cargo.toml",
         "main.py",
         "index.js"
+      ]
+    },
+    "memory:memory/2026-03-22.md:70:102": {
+      "key": "memory:memory/2026-03-22.md:70:102",
+      "path": "memory/2026-03-22.md",
+      "startLine": 70,
+      "endLine": 102,
+      "source": "memory",
+      "snippet": "- Watch mode for continuous updates ## How to Use ```bash # Basic usage python3 context_gen.py /path/to/project # JSON output python3 context_gen.py /path/to/project -f json # Save to file python3 context_gen.py /path/to/project -o CONTEXT.md # Compact context for AI python3 examples.py /path/to/project ``` ## Impact This tool solves a real problem: **AI assistants need context to be helpful**. Instead of manually explaining a project every time, this tool generates structured, AI-ready context in seconds. It's especially useful for: - Starting new chat sessions with AI assistants - Code review workflows - Project handoffs - Documentation automation --- **Session Duration**: ~30 min",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1,
+      "maxScore": 1,
+      "firstRecalledAt": "2026-05-09T13:01:07.703Z",
+      "lastRecalledAt": "2026-05-09T13:01:07.703Z",
+      "queryHashes": [
+        "ce39a2e814fa"
+      ],
+      "recallDays": [
+        "2026-05-09"
+      ],
+      "conceptTags": [
+        "context-gen.py",
+        "path/to/project",
+        "context.md",
+        "examples.py",
+        "ai-ready",
+        "watch",
+        "mode",
+        "continuous"
       ]
     }
   }

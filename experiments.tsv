@@ -35,3 +35,5 @@ date	project	tests_before	tests_after	delta	status
 2026-05-05	mcp-server	114	127	+13	127	127	0	+read.test.js (7 tests) +write.test.js (6 tests)	all pass
 2026-05-06	agent-trust-web	0	22	+22	22	22	0	+trustNetwork.test.ts: initialization, add/remove, trust relations, trust scores, simulation, metrics, export/import, reset (vitest)	all pass
 2026-05-08	agent-memory-service	312	315	+3	315	315	0	+autoTag.test.js: tags untagged memories, dryRun respect, skip tagged	all pass
+2026-05-09	agent-context-analyzer	17	27	+10	27	27	0	+tokenizer.test.ts: count (4 tests), countMany (3 tests), getModelLimit (2 tests), dispose (1 test)	all pass
+2026-05-09	skill-doctor	0	0	0	19	19	0	+19 tests (from 0), added --json flag + diagnoseJSON export + module.exports for testability	all pass

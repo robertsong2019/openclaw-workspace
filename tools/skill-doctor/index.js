@@ -169,25 +169,63 @@ function diagnose(dir) {
   return fails > 0 ? 2 : warns > 0 ? 1 : 0;
 }
 
+// ── JSON output ───────────────────────────────────────────────
+
+function diagnoseJSON(dir) {
+  const resolved = path.resolve(dir);
+  const results = checks.map(({ name, fn }) => {
+    try {
+      const r = fn(resolved);
+      return { name, ...r };
+    } catch (e) {
+      return { name, status: "fail", msg: `check error: ${e.message}` };
+    }
+  });
+  const summary = {
+    pass: results.filter((r) => r.status === "pass").length,
+    warn: results.filter((r) => r.status === "warn").length,
+    fail: results.filter((r) => r.status === "fail").length,
+    skip: results.filter((r) => r.status === "skip").length,
+  };
+  return { directory: resolved, results, summary, exitCode: summary.fail > 0 ? 2 : summary.warn > 0 ? 1 : 0 };
+}
+
 // ── CLI ───────────────────────────────────────────────────────
-const args = process.argv.slice(2);
-if (args.length === 0 || args.includes("--help") || args.includes("-h")) {
-  console.log(`${c.bold}skill-doctor${c.reset} — Diagnose OpenClaw Agent Skills
+
+// Export for testing
+module.exports = { checks, diagnose, diagnoseJSON };
+
+if (require.main === module) {
+  const args = process.argv.slice(2);
+  const jsonMode = args.includes("--json");
+  const dirs = args.filter((a) => a !== "--json");
+
+  if (dirs.length === 0 || args.includes("--help") || args.includes("-h")) {
+    console.log(`${c.bold}skill-doctor${c.reset} — Diagnose OpenClaw Agent Skills
 
 ${c.bold}Usage:${c.reset}
   skill-doctor <skill-dir> [skill-dir ...]
+  skill-doctor --json <skill-dir>   machine-readable output
   skill-doctor --help
 
 ${c.bold}Exit codes:${c.reset}
   0  all checks pass
   1  warnings (no failures)
   2  failures detected`);
-  process.exit(0);
-}
+    process.exit(0);
+  }
 
-let exitCode = 0;
-for (const arg of args) {
-  const code = diagnose(arg);
-  if (code > exitCode) exitCode = code;
+  if (jsonMode) {
+    const reports = dirs.map((d) => diagnoseJSON(d));
+    console.log(JSON.stringify(reports, null, 2));
+    const worst = Math.max(...reports.map((r) => r.exitCode));
+    process.exit(worst);
+  }
+
+  let exitCode = 0;
+  for (const arg of dirs) {
+    const code = diagnose(arg);
+    if (code > exitCode) exitCode = code;
+  }
+  process.exit(exitCode);
 }
-process.exit(exitCode);

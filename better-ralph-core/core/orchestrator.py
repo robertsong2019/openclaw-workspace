@@ -308,6 +308,51 @@ class RalphOrchestrator:
         self.prd_manager.mark_story_complete(story.id)
         return True
 
+    def retry_last_failed(self) -> Optional[IterationResult]:
+        """Re-attempt the most recently failed story by marking it incomplete,
+        then executing an iteration.
+        
+        Returns:
+            IterationResult if a failed story was found and retried, None otherwise.
+        """
+        # Find the last story that was attempted but not completed
+        completed = set(self.session_stats.stories_completed)
+        # Walk PRD stories backwards to find most recent non-completed
+        stories = self.prd_manager.get_all_stories()
+        for story in reversed(stories):
+            if story.passes and story.id not in completed:
+                # This story was marked complete before but not in this session
+                continue
+            if not story.passes:
+                # Mark it back to incomplete so get_next_story picks it up
+                # (it may already be incomplete, but ensure)
+                self.prd_manager.mark_story_incomplete(story.id)
+                return self.execute_iteration()
+        # Check if any completed story was actually failed (not in stories_completed)
+        # This shouldn't happen normally, but handle edge case
+        return None
+
+    def get_retry_stats(self) -> Dict[str, Any]:
+        """Get retry-related statistics.
+        
+        Returns:
+            Dict with total_failed, total_completed, failure_rate, and retry_eligible count.
+        """
+        total = self.session_stats.total_iterations
+        failed = self.session_stats.failed_iterations
+        completed = self.session_stats.successful_iterations
+        
+        # Stories that are incomplete and haven't been completed in this session
+        incomplete = [s for s in self.prd_manager.get_all_stories() if not s.passes]
+        
+        return {
+            "total_iterations": total,
+            "total_failed": failed,
+            "total_completed": completed,
+            "failure_rate": round(failed / max(total, 1), 3),
+            "retry_eligible": len(incomplete),
+        }
+
     def estimate_remaining(self) -> Dict[str, Any]:
         """Estimate remaining work based on completed iterations.
         Returns count of remaining stories, estimated iterations, and ETA.

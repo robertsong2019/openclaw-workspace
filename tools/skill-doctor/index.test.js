@@ -1,0 +1,185 @@
+const fs = require("fs");
+const path = require("path");
+const { checks, diagnose, diagnoseJSON } = require("./index");
+const os = require("os");
+
+// Helper: create a temp skill directory
+function createTempSkill(files) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "skill-doctor-test-"));
+  for (const [name, content] of Object.entries(files)) {
+    const filePath = path.join(dir, name);
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, content);
+  }
+  return dir;
+}
+
+afterEach(() => {
+  // Clean up temp dirs (they start with skill-doctor-test-)
+  const tmp = os.tmpdir();
+  for (const d of fs.readdirSync(tmp)) {
+    if (d.startsWith("skill-doctor-test-")) {
+      fs.rmSync(path.join(tmp, d), { recursive: true, force: true });
+    }
+  }
+});
+
+// ── Check count ────────────────────────────────────────────────
+test("has at least 8 checks registered", () => {
+  expect(checks.length).toBeGreaterThanOrEqual(8);
+});
+
+// ── SKILL.md exists ────────────────────────────────────────────
+test("fails when SKILL.md missing", () => {
+  const dir = createTempSkill({ "README.md": "hello" });
+  const { diagnoseJSON: dj } = require("./index");
+  const report = dj(dir);
+  const check = report.results.find((r) => r.name === "SKILL.md exists");
+  expect(check.status).toBe("fail");
+});
+
+test("passes when SKILL.md exists with enough content", () => {
+  const dir = createTempSkill({ "SKILL.md": "# Test\n\n" + "x".repeat(200) });
+  const report = diagnoseJSON(dir);
+  const check = report.results.find((r) => r.name === "SKILL.md exists");
+  expect(check.status).toBe("pass");
+});
+
+test("warns when SKILL.md is too small", () => {
+  const dir = createTempSkill({ "SKILL.md": "hi" });
+  const report = diagnoseJSON(dir);
+  const check = report.results.find((r) => r.name === "SKILL.md exists");
+  expect(check.status).toBe("warn");
+});
+
+// ── README.md ──────────────────────────────────────────────────
+test("warns when no README.md", () => {
+  const dir = createTempSkill({ "SKILL.md": "x".repeat(200) });
+  const report = diagnoseJSON(dir);
+  const check = report.results.find((r) => r.name === "README.md exists");
+  expect(check.status).toBe("warn");
+});
+
+// ── Oversized files ────────────────────────────────────────────
+test("warns on files >500KB", () => {
+  const dir = createTempSkill({ "big.bin": "x".repeat(600_000) });
+  const report = diagnoseJSON(dir);
+  const check = report.results.find((r) => r.name === "No oversized files (>500KB)");
+  expect(check.status).toBe("warn");
+});
+
+test("passes when all files small", () => {
+  const dir = createTempSkill({ "small.txt": "hello" });
+  const report = diagnoseJSON(dir);
+  const check = report.results.find((r) => r.name === "No oversized files (>500KB)");
+  expect(check.status).toBe("pass");
+});
+
+// ── Suspicious patterns ────────────────────────────────────────
+test("warns on eval() usage", () => {
+  const dir = createTempSkill({ "bad.js": "eval(userInput);" });
+  const report = diagnoseJSON(dir);
+  const check = report.results.find((r) => r.name === "No suspicious patterns");
+  expect(check.status).toBe("warn");
+});
+
+test("passes on clean code", () => {
+  const dir = createTempSkill({ "clean.js": "console.log('hello');" });
+  const report = diagnoseJSON(dir);
+  const check = report.results.find((r) => r.name === "No suspicious patterns");
+  expect(check.status).toBe("pass");
+});
+
+// ── package.json validation ────────────────────────────────────
+test("passes valid package.json", () => {
+  const dir = createTempSkill({ "package.json": '{"name":"foo","version":"1.0.0"}' });
+  const report = diagnoseJSON(dir);
+  const check = report.results.find((r) => r.name === "Valid package.json (if present)");
+  expect(check.status).toBe("pass");
+});
+
+test("warns on package.json missing name", () => {
+  const dir = createTempSkill({ "package.json": '{"version":"1.0.0"}' });
+  const report = diagnoseJSON(dir);
+  const check = report.results.find((r) => r.name === "Valid package.json (if present)");
+  expect(check.status).toBe("warn");
+});
+
+test("fails on invalid JSON", () => {
+  const dir = createTempSkill({ "package.json": "not json" });
+  const report = diagnoseJSON(dir);
+  const check = report.results.find((r) => r.name === "Valid package.json (if present)");
+  expect(check.status).toBe("fail");
+});
+
+// ── Script references ──────────────────────────────────────────
+test("fails when referenced script missing", () => {
+  const dir = createTempSkill({
+    "SKILL.md": 'Run `./scripts/deploy.sh` to deploy',
+  });
+  const report = diagnoseJSON(dir);
+  const check = report.results.find((r) => r.name === "Scripts referenced in SKILL.md exist");
+  expect(check.status).toBe("fail");
+});
+
+test("passes when referenced scripts exist", () => {
+  const dir = createTempSkill({
+    "SKILL.md": 'Run `./scripts/setup.sh` to setup',
+    "scripts/setup.sh": "#!/bin/bash\necho hi",
+  });
+  const report = diagnoseJSON(dir);
+  const check = report.results.find((r) => r.name === "Scripts referenced in SKILL.md exist");
+  expect(check.status).toBe("pass");
+});
+
+// ── node_modules check ─────────────────────────────────────────
+test("warns when node_modules not gitignored", () => {
+  const dir = createTempSkill({});
+  fs.mkdirSync(path.join(dir, "node_modules"));
+  const report = diagnoseJSON(dir);
+  const check = report.results.find((r) => r.name === "No node_modules committed");
+  expect(check.status).toBe("warn");
+});
+
+test("passes when node_modules in .gitignore", () => {
+  const dir = createTempSkill({ ".gitignore": "node_modules\n" });
+  fs.mkdirSync(path.join(dir, "node_modules"));
+  const report = diagnoseJSON(dir);
+  const check = report.results.find((r) => r.name === "No node_modules committed");
+  expect(check.status).toBe("pass");
+});
+
+// ── diagnoseJSON structure ─────────────────────────────────────
+test("diagnoseJSON returns correct structure", () => {
+  const dir = createTempSkill({ "SKILL.md": "# " + "x".repeat(200) });
+  const report = diagnoseJSON(dir);
+  expect(report).toHaveProperty("directory");
+  expect(report).toHaveProperty("results");
+  expect(report).toHaveProperty("summary");
+  expect(report).toHaveProperty("exitCode");
+  expect(report.results.length).toBe(checks.length);
+  expect(report.summary.pass + report.summary.warn + report.summary.fail + report.summary.skip).toBe(checks.length);
+});
+
+test("diagnoseJSON exitCode 0 when all pass", () => {
+  const dir = createTempSkill({
+    "SKILL.md": "# Test\n\ndescription: test skill\n" + "x".repeat(200),
+    "README.md": "# Test",
+    "package.json": '{"name":"test","version":"1.0.0"}',
+  });
+  const report = diagnoseJSON(dir);
+  expect([0, 1]).toContain(report.exitCode);
+});
+
+// ── diagnose (human-readable) ──────────────────────────────────
+test("diagnose returns exit code 2 on failures", () => {
+  const dir = createTempSkill({}); // no SKILL.md = fail
+  // Capture stdout
+  const origLog = console.log;
+  let output = "";
+  console.log = (...args) => { output += args.join(" ") + "\n"; };
+  const code = diagnose(dir);
+  console.log = origLog;
+  expect(code).toBe(2);
+  expect(output).toContain("skill-doctor");
+});

@@ -2,7 +2,23 @@
   "name": "skill-doctor",
   "version": "1.0.0",
   "description": "Diagnose and health-check OpenClaw Agent Skills",
-  "bin": { "skill-doctor": "./index.js" },
-  "keywords": ["openclaw", "agent", "skill", "lint", "diagnostic"],
-  "license": "MIT"
+  "bin": {
+    "skill-doctor": "index.js"
+  },
+  "keywords": [
+    "openclaw",
+    "agent",
+    "skill",
+    "lint",
+    "diagnostic"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "",
+  "devDependencies": {
+    "jest": "^30.4.2"
+  }
 }

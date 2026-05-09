@@ -15,10 +15,10 @@
 
 ---
 
-## Current Focus (2026-05-08)
+## Current Focus (2026-05-09)
 
 ### Active Theme
-Autoresearch 方法论实践 - **连续41天零回滚率**。05-08 凌晨: agent-context-store exists()+search_by_tags()+mget_entry()+retag()(25→34 tests, +9)。05-07: AMS embedBatch()批量嵌入(97 suites); MemoryManager _detect_project_name修复(200 tests)。**下一步突破**: lab/ 从研究→实现 — A2A Trust Prototype + LangGraph Bridge。
+Autoresearch 方法论实践 - **连续43天零回滚率**。05-09 evening deep-exploration: Hindsight Mini v2 深度研究(AgentHER+ECHO+ExpeL+ERL+EvolveR, 7篇论文/项目, TypeScript原型验证通过)。05-09 evening: agent-context-store search_by_prefix+snapshot/restore+multi_search (48→58 tests, +10 across 2 cycles)。**下一步突破**: lab/ 实现优先级 — Hindsight Mini(已有完整TS原型) > A2A Trust > LangGraph Bridge。
 
 ### Next Actions
 - [ ] **A2A x-agent-trust 中间件原型** — Node.js ES256 签名/验证，可作 OpenClaw gateway plugin
@@ -28,7 +28,9 @@ Autoresearch 方法论实践 - **连续41天零回滚率**。05-08 凌晨: agent
   - [A2A Trust Layer 深度研究](catalyst-research/exploration-notes/2026-05-05-a2a-protocol-trust-layer.md) ✅ 零依赖ES256签名+验证+TrustScore(已运行验证)
   - [A2A v1.2 Signed Cards 更新](catalyst-research/exploration-notes/2026-05-07-a2a-trust-protocol.md) ✅ 05-07 晚间深度研究：v1.2最新spec+RFC 8785 canonicalization+完整签名验证代码(已运行通过)+安全威胁分析(arXiv:2505.12490)+Sigstore集成路径
   - **关键发现**: A2A v1.2(current stable); RFC 8785 JSON Canonicalization 是签名关键; arXiv:2505.12490 发现60-100%注入泄漏率; Sigstore A2A 提供生产级签名; node:crypto 内置ES256无需外部依赖
-  - **下一步**: lab/a2a-trust-prototype/ → 基于v1.2 spec，用 node:crypto 实现 RFC 8785 canonicalization + ES256签名 + Trust Score 中间件
+  - [A2A v1.0 + Trust 集成](catalyst-research/exploration-notes/2026-05-09-a2a-protocol-trust.md) ✅ @a2a-js/sdk + Express + ES256(jose) 完整可运行中间件 + TrustEngine + 双向信任洞察 + per-skill trust 概念
+  - **关键新发现**: A2A JS SDK `UserBuilder` 是认证扩展点(无需改协议); Trust Score 应双向(客户端+服务端独立计分); per-skill trust 比全局 trust 更精确; A2A v1.0.0 已发布(Linux Foundation)
+  - **下一步**: lab/a2a-trust-prototype/ → 用 @a2a-js/sdk UserBuilder 扩展点替换手动中间件 + per-skill trust 实现
 - [ ] **LangGraph Bridge 实现** — Executor 接口 + createTask + StateSchema 重写 createOpenClawNode
   - [研究笔记 v1](catalyst-research/exploration-notes/2026-05-07-langgraphjs-annotation-command-caching.md) ✅ Annotation API + Command动态路由 + 可运行OpenClaw Node Factory代码
   - [研究笔记 v2](catalyst-research/exploration-notes/2026-05-08-langgraphjs-gateway-http-client.md) ✅ GatewayClient + createTask + ReducedValue taskResults
@@ -50,12 +52,14 @@ Autoresearch 方法论实践 - **连续41天零回滚率**。05-08 凌晨: agent
   - Phase 5: contentVersions 持久化 + mergeSuggestions 智能去重 ✅ 完成 (04-30: +14 tests)
   - Phase 6: ~~autoMerge端到端去重~~ ✅ + ~~contentVersionCompact~~ ✅ + mergePreview+safeMerge ✅ + branchDiff ✅
   - Phase 7: branchMerge回源 ✅ 完成 / timeline v2分支可视化 / embedding相似度信号
-- [ ] **实现 Hindsight Mini 原型** - `lab/hindsight-mini/` 验证四网络 + 四路检索(代码已在研究笔记中验证通过)
-  - [Hindsight Mini 研究](catalyst-research/exploration-notes/2026-05-04-hindsight-mini-reflection-agents.md) ✅ 5核心概念+可运行Python原型+技术路线图
-  - **核心洞察**: Hindsight=目标替换(保持轨迹); Reflexion=推理时优化; 两者可叠加; 多法官验证提升精度至97.7%
-  - **参考**: AgentHER(ICLR 2026), ECHO, Multi-Agent Reflexion, Reflexion(Shinn 2023)
-  - **Phase 1**: ExperienceStore(embedding索引) + HindsightRelabeler(多法官) + ReflexionLoop
-  - **Phase 2**: 集成OpenClaw sessions_spawn作为真实执行器
+- [ ] **实现 Hindsight Mini 原型** - `lab/hindsight-mini/` Retain-Recall-Reflect 三操作引擎
+  - [Hindsight Mini v1 研究](catalyst-research/exploration-notes/2026-05-04-hindsight-mini-reflection-agents.md) ✅ Python原型
+  - [Hindsight Mini v2 深度研究](catalyst-research/exploration-notes/2026-05-09-hindsight-mini-agent-reflection.md) ✅ TypeScript完整原型+7篇论文/项目分析+代码已验证
+  - **核心洞察**: Retain→Recall→Reflect是最小可行架构(vectorize-io/hindsight); 失败轨迹是最大数据源(AgentHER +7~11pp); Insight提取+经验检索必须协同(ExpeL ablation); 无需参数更新(agent-context-store即experience store)
+  - **参考**: AgentHER(2026), ECHO(2025), ExpeL(AAAI 2024), ERL(ICLR 2026), EvolveR(ICLR 2026), Hindsight(vectorize-io), HER(NeurIPS 2017)
+  - **Phase 1**: TypeScript HindsightMini类(Retain+Recall+Reflect+augmentPrompt) ✅ 代码验证通过
+  - **Phase 2**: 接入agent-context-store(真实embedding+search替换mock) + LLM-based hindsight relabeling
+  - **Phase 3**: 与Catalaut实际工作流集成(error-patterns→auto-retain, memory文件→auto-reflect)
   - **实用切入点**: 推理时HER变体(ECHO模式)，零训练成本
 - [ ] **OpenClaw MCP Server MVP** - TypeScript SDK v2 + Streamable HTTP,3 tools (exec/memory_search/memory_get)
   - [研究笔记 v3](catalyst-research/exploration-notes/2026-04-29-mcp-server-typescript-streamable-http.md) ✅ 完整代码(3-tool server+client+Inspector调试)
@@ -238,10 +242,24 @@ curl -X POST "https://api.tavily.com/search" \
   - 去重管道完整: mergeSuggestions(发现) → autoMerge(执行) → contentVersionCompact(清理)
   - 零回滚率持续保持(连续26天)
 
+### 2026-05-09
+- ✅ **agent-context-store search_regex** — 34→39 tests (+5)
+  - search_regex(pattern, search_fields): 正则搜索+字段定位(content/key/tags), 无效模式返回空
+- ✅ **agent-context-store append+expire_in+age** — 39→48 tests (+9)
+  - append(key, text, separator): 追加内容保留created_at
+  - expire_in(key, ttl_hours): 独立TTL管理, 可复活过期条目
+  - age(key): 条目年龄查询(秒)
+- ✅ **agent-context-store evening session** — 48→58 tests (+10)
+- ✅ **prompt-router 实验循环** — 194→216 tests (+22, 6 new APIs, 零回滚, 连续44天)
+  - search_by_prefix(prefix): 命名空间key前缀过滤
+  - snapshot()/restore(): 时间点快照+恢复(merge模式)
+  - multi_search(queries): 批量多查询单次遍历
+  - 零回滚率: 连续43天
+
 ### 2026-05-08
-- ✅ **agent-context-store 三轮实验** — 25→34 tests (+9)
-  - exists()+search_by_tags()+mget_entry(): 纯检查+多标签搜索+批量Entry获取, 6 tests
-  - retag(key, add_tags, remove_tags): 原地标签编辑保留created_at, 大小写不敏感删除, 4 tests
+- ✅ **agent-context-store exists+search_by_tags+mget_entry+retag** — 25→34 tests (+9)
+  - exists(): 纯检查无副作用; search_by_tags(tags, match_all): 多标签AND/OR; mget_entry(keys): 批量Entry
+  - retag(key, add_tags, remove_tags): 原地标签编辑保留created_at
   - 零回滚率: 连续41天
 - ✅ **prompt-router 评估工具** — 160→174 tests (+14)
   - cross_validate(test_cases): 标注数据评估路由准确率, per-agent precision/recall/f1, confusion matrix
@@ -607,5 +625,5 @@ curl -X POST "https://api.tavily.com/search" \
 
 ---
 
-*Last updated: 2026-05-08 02:00*
-*Next review: 2026-05-09*
+*Last updated: 2026-05-09 02:00*
+*Next review: 2026-05-10*
