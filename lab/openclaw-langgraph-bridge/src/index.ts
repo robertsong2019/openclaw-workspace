@@ -11,3 +11,5 @@ export { withTimeout } from "./timeout.js";
 export type { TimeoutConfig } from "./timeout.js";
 export { withRetry } from "./retry.js";
 export type { RetryConfig } from "./retry.js";
+export { pipeline } from "./pipeline.js";
+export type { PipelineConfig, PipelineResult } from "./pipeline.js";
