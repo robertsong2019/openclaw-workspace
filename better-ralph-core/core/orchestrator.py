@@ -353,6 +353,68 @@ class RalphOrchestrator:
             "retry_eligible": len(incomplete),
         }
 
+    def run_batch(self, max_iterations: int = 10, max_consecutive_failures: int = 3) -> List[IterationResult]:
+        """Execute up to max_iterations in sequence, stopping early on
+        consecutive failures.
+
+        Args:
+            max_iterations: Upper bound on iterations to run.
+            max_consecutive_failures: Stop early if this many failures in a row.
+
+        Returns:
+            List of IterationResult for each iteration executed.
+        """
+        if not self.current_session_id:
+            raise ValueError("No active session")
+
+        results: List[IterationResult] = []
+        consecutive_failures = 0
+
+        for _ in range(max_iterations):
+            if self.is_complete():
+                break
+            result = self.execute_iteration()
+            results.append(result)
+            if result.success:
+                consecutive_failures = 0
+            else:
+                consecutive_failures += 1
+                if consecutive_failures >= max_consecutive_failures:
+                    break
+
+        return results
+
+    def get_story_timeline(self) -> List[Dict[str, Any]]:
+        """Return chronological list of story attempts with outcomes.
+
+        Each entry contains story_id, title, attempt, success, and timestamp.
+        Useful for post-session analysis and progress visualization.
+
+        Returns:
+            List of dicts ordered by iteration sequence.
+        """
+        if not hasattr(self.memory_manager, 'search_iterations'):
+            return []
+
+        iterations = self.memory_manager.search_iterations()
+        completed_set = set(self.session_stats.stories_completed)
+
+        timeline = []
+        attempt_counts: Dict[str, int] = {}
+
+        for it in iterations:
+            sid = it.get("story_id", "unknown")
+            attempt_counts[sid] = attempt_counts.get(sid, 0) + 1
+            timeline.append({
+                "story_id": sid,
+                "title": it.get("story_title", ""),
+                "attempt": attempt_counts[sid],
+                "success": it.get("success", False),
+                "timestamp": it.get("timestamp"),
+            })
+
+        return timeline
+
     def estimate_remaining(self) -> Dict[str, Any]:
         """Estimate remaining work based on completed iterations.
         Returns count of remaining stories, estimated iterations, and ETA.
