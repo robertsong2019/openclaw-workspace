@@ -1,4 +1,4 @@
-# HEARTBEAT.md - May 9, 2026 (Saturday)
+# HEARTBEAT.md - May 10, 2026 (Sunday)
 
 ## 待办任务
 
@@ -12,29 +12,18 @@
 - [ ] **AMS 生产化** — EmbeddingProvider真实接入(ONNX/远程API), Docker化
 
 ### 中优先级（本月）
-- [ ] Hindsight Mini 原型 — lab/hindsight-mini/
+- [ ] Hindsight Mini 原型 — lab/hindsight-mini/ (TS原型已有，需接入agent-context-store)
 - [ ] Agent Trust Network Web UI
 - [ ] Edge Agent Runtime Dashboard
 
-### 探索性（下季度）
-- [ ] Edge Agent Runtime 增强
-- [ ] Agent Mesh Network P2P通信协议
-
 ## 系统状态
 - **AMS v1.0-dev**: 645/645 tests
-- **MemoryManager**: 200/200 tests
-- **better-ralph-core**: 200/200 tests
-- **agent-task-cli**: 408/408 tests
-- **agent-context-store**: 48/48 tests (search_regex + append + expire_in + age)
-- **prompt-router**: 111/111 tests
+- **better-ralph-core**: 257/257 tests
+- **agent-context-store**: 61/61 tests
+- **prompt-router**: 216/216 tests
 - **prompt-weaver**: 148/148 tests
-- **autoresearch**: 零回滚率持续保持（连续42天）🏆
+- **autoresearch**: 零回滚率持续保持（连续45天）🏆
 
 ## 近期发现
-- agent-context-store 48 tests: 2天内从25→48 (+23), API矩阵大幅补全
-  - 检查类: exists(纯检查)
-  - 搜索类: search_regex(正则+字段定位), search_by_tags(多标签AND/OR)
-  - 批量类: mget_entry(批量Entry)
-  - 编辑类: retag(原地标签), append(追加内容)
-  - 生命周期: expire_in(TTL管理+复活), age(年龄查询)
-- **突破点**: 研究积累充足，本周重点是 lab/ 实现（A2A Trust + LangGraph Bridge）
+- **突破点**: 研究积累已饱和，本周重点是 lab/ 实现（Hindsight Mini > A2A Trust > LangGraph Bridge）
+- prompt-router 状态序列化(export/import_state)完成，可用于跨会话持久化

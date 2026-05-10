@@ -29,6 +29,7 @@ class Agent:
         self.memory = memory or Memory()
         self.max_iterations = max_iterations
         self.verbose = verbose
+        self.on_step: Optional[Callable[[Dict[str, Any]], None]] = None
         self._conversation_history: List[Dict[str, str]] = []
 
     def run(self, user_input: str, context: Optional[str] = None) -> str:
@@ -76,7 +77,12 @@ class Agent:
                     self._log(f"🔧 工具 {call['name']}: {tool_result[:150]}{'...' if len(tool_result) > 150 else ''}")
             else:
                 # 没有工具调用，结束
+                if self.on_step:
+                    self.on_step({"iteration": iteration + 1, "response": response.get("content", ""), "tool_calls": []})
                 break
+
+            if self.on_step:
+                self.on_step({"iteration": iteration + 1, "response": response.get("content", ""), "tool_calls": [c["name"] for c in tool_calls]})
 
         # 保存到记忆
         final_response = response.get("content", "处理完成")

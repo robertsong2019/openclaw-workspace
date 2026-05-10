@@ -15,12 +15,16 @@
 
 ---
 
-## Current Focus (2026-05-09)
+## Current Focus (2026-05-10)
 
 ### Active Theme
-Autoresearch 方法论实践 - **连续43天零回滚率**。05-09 evening deep-exploration: Hindsight Mini v2 深度研究(AgentHER+ECHO+ExpeL+ERL+EvolveR, 7篇论文/项目, TypeScript原型验证通过)。05-09 evening: agent-context-store search_by_prefix+snapshot/restore+multi_search (48→58 tests, +10 across 2 cycles)。**下一步突破**: lab/ 实现优先级 — Hindsight Mini(已有完整TS原型) > A2A Trust > LangGraph Bridge。
+Autoresearch 方法论实践 - **连续45天零回滚率** 🏆。05-10 凌晨: agent-context-store search_by_age (61 tests), better-ralph-core retry_last_failed+get_retry_stats (257 tests), prompt-router 6新API (216 tests)。**研究积累已饱和，进入 lab/ 实现阶段**: Hindsight Mini(已有完整TS原型) > A2A Trust > LangGraph Bridge。
 
 ### Next Actions
+- [ ] **Structured Output Toolkit** — lab/structured-output-toolkit/ (TypeScript, Zod+Ollama JSON mode)
+  - [研究笔记](catalyst-research/exploration-notes/2026-05-10-constrained-decoding-structured-output.md) ✅ FSM constrained decoding 深度研究 + 可运行 TypeScript 代码 (5/5 tests pass)
+  - **关键发现**: Ollama JSON mode 是 Level 3 约束(不需要额外库); XGrammar <40µs/token 接近零开销; SLM(Qwen3.5-0.8B, Phi-4-mini)已原生支持 function calling; constrained decoding 可能比无约束更快
+  - **下一步**: 创建 lab/structured-output-toolkit/ — StructuredLLMClient + SchemaCache + 内置 agent schema
 - [ ] **A2A x-agent-trust 中间件原型** — Node.js ES256 签名/验证，可作 OpenClaw gateway plugin
   - [研究笔记 v1](catalyst-research/exploration-notes/2026-05-03-a2a-agent-trust.md) ✅ 代码验证通过(签名+验证+篡改检测)
   - [研究笔记 v2](catalyst-research/exploration-notes/2026-05-03-a2a-agent-trust.md) ✅ 三层信任模型+Trust Extension设计+可运行TypeScript代码
@@ -141,6 +145,11 @@ Autoresearch 方法论实践 - **连续43天零回滚率**。05-09 evening deep-
 - [ ] **技术债务处理** - 测试覆盖率提升、文档更新、性能优化、安全检查
 
 ### Exploratory (下季度)
+- [ ] **Agent Observability & Evaluation 框架** — `lab/agent-observability/` Tracer + PolicyEngine + TraceEvaluator
+  - [研究笔记](catalyst-research/exploration-notes/2026-05-10-agent-observability-evaluation.md) ✅ 5核心概念+可运行TypeScript代码(Tracer/PolicyEngine/Evaluator/traceToEvalCase)+5关键洞察
+  - **核心发现**: Agent trace捕获决策过程(非仅函数调用); 3.4GB小模型tool calling 95%(训练>参数量); Policy-as-Code是最被低估的guardrail; trace→eval→CI闭环是2026标准
+  - **项目关联**: agent-context-store(trace持久化), prompt-router(eval循环), better-ralph(experiments.tsv升级), Edge Agent(模型选择)
+  - **下一步**: lab/agent-observability/ → tracer.ts + policy.ts + evaluator.ts + reporter.ts, 目标10+ tests
 - [ ] **Edge Agent Runtime 增强** - MLReasoner(ONNX)、真实硬件驱动、Async支持、MicroPython适配
 - [ ] **Agent Mesh Network 原型** - 去中心化协作、P2P通信协议、共识算法
 - [ ] **Agent状态与会话管理结合** - 探索LangGraph的checkpointer与OpenClaw session的集成
@@ -255,6 +264,22 @@ curl -X POST "https://api.tavily.com/search" \
   - snapshot()/restore(): 时间点快照+恢复(merge模式)
   - multi_search(queries): 批量多查询单次遍历
   - 零回滚率: 连续43天
+
+### 2026-05-10
+- ✅ **agent-context-store search_by_age** — 58→61 tests (+3)
+  - search_by_age(max_age_seconds, field): 时间查询——找N秒内的条目
+  - field参数区分created_at/updated_at
+- ✅ **better-ralph-core retry+stats** — 249→257 tests (+8)
+  - retry_last_failed(): 重试最近失败故事+自动execute_iteration
+  - get_retry_stats(): 失败率/可重试数/迭代明细
+- ✅ **prompt-router 6新API** — 194→216 (+22)
+  - detect_language()+route_by_language()+route_by_complexity()+agent_graph()+export_state()/import_state()
+  - 连续45天零回滚率
+- ✅ **Autoresearch 晚间实验循环** — 3 cycles, 3 keep
+  - **prompt-router** 216→230 tests (+14): route_by_length()+prune_agents()+optimize_weights()
+  - **agent-context-store** 31→37 tests (+6): keys_by_tag()+search_fuzzy(trigram overlap)
+  - GitHub仓库创建: agent-context-store
+  - 连续45天零回滚率持续保持
 
 ### 2026-05-08
 - ✅ **agent-context-store exists+search_by_tags+mget_entry+retag** — 25→34 tests (+9)
@@ -625,5 +650,5 @@ curl -X POST "https://api.tavily.com/search" \
 
 ---
 
-*Last updated: 2026-05-09 02:00*
-*Next review: 2026-05-10*
+*Last updated: 2026-05-10 20:15*
+*Next review: 2026-05-11*

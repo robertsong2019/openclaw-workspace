@@ -15,13 +15,17 @@ class MemoryEntry:
     content: str
     timestamp: datetime = field(default_factory=datetime.now)
     metadata: Dict[str, Any] = field(default_factory=dict)
+    tags: List[str] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        d = {
             "content": self.content,
             "timestamp": self.timestamp.isoformat(),
             "metadata": self.metadata
         }
+        if self.tags:
+            d["tags"] = self.tags
+        return d
 
     def __eq__(self, other):
         if not isinstance(other, MemoryEntry):
@@ -38,9 +42,9 @@ class Memory:
         self._entries: List[MemoryEntry] = []
         self._load()
 
-    def add(self, content: str, metadata: Optional[Dict[str, Any]] = None) -> None:
+    def add(self, content: str, metadata: Optional[Dict[str, Any]] = None, tags: Optional[List[str]] = None) -> None:
         """添加记忆"""
-        entry = MemoryEntry(content=content, metadata=metadata or {})
+        entry = MemoryEntry(content=content, metadata=metadata or {}, tags=tags or [])
         self._entries.append(entry)
 
         # 限制条目数量
@@ -49,11 +53,15 @@ class Memory:
 
         self._save()
 
-    def search(self, query: str, limit: int = 5) -> List[MemoryEntry]:
-        """搜索记忆（简单的关键词匹配）"""
+    def search(self, query: str, limit: int = 5, tags: Optional[List[str]] = None) -> List[MemoryEntry]:
+        """搜索记忆（关键词匹配 + 可选标签过滤）"""
         query_lower = query.lower()
+        matched = self._entries
+        if tags:
+            tag_set = set(tags)
+            matched = [e for e in matched if tag_set & set(e.tags)]
         matched = [
-            entry for entry in self._entries
+            entry for entry in matched
             if query_lower in entry.content.lower()
         ]
         if limit <= 0:
@@ -120,7 +128,8 @@ class Memory:
                 entry = MemoryEntry(
                     content=item["content"],
                     timestamp=datetime.fromisoformat(item["timestamp"]),
-                    metadata=item.get("metadata", {})
+                    metadata=item.get("metadata", {}),
+                    tags=item.get("tags", [])
                 )
                 self._entries.append(entry)
 

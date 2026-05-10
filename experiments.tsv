@@ -37,3 +37,4 @@ date	project	tests_before	tests_after	delta	status
 2026-05-08	agent-memory-service	312	315	+3	315	315	0	+autoTag.test.js: tags untagged memories, dryRun respect, skip tagged	all pass
 2026-05-09	agent-context-analyzer	17	27	+10	27	27	0	+tokenizer.test.ts: count (4 tests), countMany (3 tests), getModelLimit (2 tests), dispose (1 test)	all pass
 2026-05-09	skill-doctor	0	0	0	19	19	0	+19 tests (from 0), added --json flag + diagnoseJSON export + module.exports for testability	all pass
+2026-05-10	catalyst-agent-mesh	207	224	+17	224	224	0	+test_mesh_selection.py: select_agents_for_task (7 tests), get_available_agents (3), execute_task edge cases (3), find_agents (4)	all pass
