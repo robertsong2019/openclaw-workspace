@@ -415,6 +415,71 @@ class RalphOrchestrator:
 
         return timeline
 
+    def save_checkpoint(self) -> Dict[str, Any]:
+        """Capture current session state as a resumable checkpoint.
+
+        Returns a JSON-serializable dict with all state needed to resume.
+        """
+        return {
+            "session_id": self.current_session_id,
+            "iteration_count": self.iteration_count,
+            "stories_completed": list(self.session_stats.stories_completed),
+            "commits_made": list(self.session_stats.commits_made),
+            "successful_iterations": self.session_stats.successful_iterations,
+            "failed_iterations": self.session_stats.failed_iterations,
+            "total_iterations": self.session_stats.total_iterations,
+            "total_duration": self.session_stats.total_duration,
+            "timestamp": datetime.now().isoformat(),
+        }
+
+    def load_checkpoint(self, checkpoint: Dict[str, Any]):
+        """Restore session state from a previously saved checkpoint.
+
+        Args:
+            checkpoint: Dict returned by save_checkpoint().
+        """
+        self.current_session_id = checkpoint.get("session_id")
+        self.iteration_count = checkpoint.get("iteration_count", 0)
+        self.session_stats.stories_completed = list(checkpoint.get("stories_completed", []))
+        self.session_stats.commits_made = list(checkpoint.get("commits_made", []))
+        self.session_stats.successful_iterations = checkpoint.get("successful_iterations", 0)
+        self.session_stats.failed_iterations = checkpoint.get("failed_iterations", 0)
+        self.session_stats.total_iterations = checkpoint.get("total_iterations", 0)
+        self.session_stats.total_duration = checkpoint.get("total_duration", 0.0)
+
+    def resume_batch(
+        self,
+        checkpoint: Dict[str, Any],
+        max_iterations: int = 10,
+        max_consecutive_failures: int = 3,
+    ) -> List[IterationResult]:
+        """Resume a batch execution from a saved checkpoint.
+
+        Restores session state from checkpoint, then runs additional iterations
+        up to max_iterations (counting from the checkpoint's iteration count).
+
+        Args:
+            checkpoint: Previously saved checkpoint dict.
+            max_iterations: Total iteration budget (including already-done).
+            max_consecutive_failures: Stop early if this many failures in a row.
+
+        Returns:
+            List of IterationResult for new iterations only.
+        """
+        self.load_checkpoint(checkpoint)
+        if not self.current_session_id:
+            raise ValueError("Checkpoint has no active session")
+
+        already_done = self.session_stats.total_iterations
+        remaining_budget = max(0, max_iterations - already_done)
+        if remaining_budget == 0:
+            return []
+
+        return self.run_batch(
+            max_iterations=remaining_budget,
+            max_consecutive_failures=max_consecutive_failures,
+        )
+
     def estimate_remaining(self) -> Dict[str, Any]:
         """Estimate remaining work based on completed iterations.
         Returns count of remaining stories, estimated iterations, and ETA.
