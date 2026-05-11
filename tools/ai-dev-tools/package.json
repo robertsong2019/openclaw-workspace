@@ -8,7 +8,7 @@
     "aid": "./bin/aid.js"
   },
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest",
     "lint": "eslint lib commands",
     "dev": "node bin/aid.js"
   },

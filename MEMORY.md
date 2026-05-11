@@ -15,10 +15,10 @@
 
 ---
 
-## Current Focus (2026-05-10)
+## Current Focus (2026-05-11)
 
 ### Active Theme
-Autoresearch 方法论实践 - **连续45天零回滚率** 🏆。05-10 凌晨: agent-context-store search_by_age (61 tests), better-ralph-core retry_last_failed+get_retry_stats (257 tests), prompt-router 6新API (216 tests)。**研究积累已饱和，进入 lab/ 实现阶段**: Hindsight Mini(已有完整TS原型) > A2A Trust > LangGraph Bridge。
+Autoresearch 方法论实践 - **连续46天零回滚率** 🏆。05-11 凌晨: agent-context-store search_dups+move (97 tests), better-ralph-core run_batch+get_story_timeline (264 tests)。05-10 晚间: Agent Observability 深度研究 + Constrained Decoding 结构化输出研究。**研究积累已饱和，进入 lab/ 实现阶段**: Hindsight Mini(已有完整TS原型) > A2A Trust > LangGraph Bridge。
 
 ### Next Actions
 - [ ] **Structured Output Toolkit** — lab/structured-output-toolkit/ (TypeScript, Zod+Ollama JSON mode)
@@ -100,6 +100,15 @@ Autoresearch 方法论实践 - **连续45天零回滚率** 🏆。05-10 凌晨: 
   - [Python 研究笔记](catalyst-research/exploration-notes/2026-04-27-langgraph-supervisor-openclaw.md) (参考)
 - [x] ~~AMS: searchByTimeRange(opts), contentRollback(id, versionIndex)~~ ✅ 完成 (04-27)
 - [ ] AMS 生产化:EmbeddingProvider真实接入(ONNX/远程API), Docker化
+- [ ] **Edge Agent WASM Runtime** — lab/edge-agent-wasm/ Rust+WasmEdge+WASI-NN
+  - [研究笔记](catalyst-research/exploration-notes/2026-05-11-edge-agent-runtime.md) ✅ TypeScript原型(已运行验证)+5核心概念+5关键洞察
+  - **核心发现**: WASM是Agent最佳沙箱(3.4MB+10ms冷启动); MoE模型让边缘推理可行(35B只激活3B); Agent=Tool-Use Loop非LLM包装; Google AI Edge FC SDK已支持on-device function calling; 现有框架全为云端设计
+  - **下一步**: Rust EdgeAgent trait → WASM编译 → WasmEdge WASI-NN推理 → tool-use循环
+- [ ] **SLM Tool-Use Benchmark** — lab/slm-tool-use-benchmark/
+  - [研究笔记](catalyst-research/exploration-notes/2026-05-11-slm-agent-tool-use.md) ✅ 5核心概念+可运行TypeScript代码(SLMAgent+ToolRegistry+Ollama API)+5关键洞察
+  - **核心发现**: NVIDIA "SLM是Agent的未来"; Code Agency模式(代码编排>LLM编排); SLM失败模式与LLM完全不同(格式vs事实); Qwen3-30B-A3B MoE是边缘最优解(30B质量+3B成本); 强调词(CRITICAL/NEVER)对SLM有可衡量影响
+  - **项目关联**: Edge Agent(Code Agency架构), Structured Output(SLM prompt templates), Agent Observability(SLM专用PolicyEngine规则)
+  - **下一步**: lab/slm-tool-use-benchmark/ → 5个标准task + 自动评分 → 确定默认模型推荐
 
 ### Core Projects
 1. **Agent Task CLI** - 多 Agent 任务编排 (109 tests, 80%+ coverage, ✅ 已完成)
@@ -250,6 +259,18 @@ curl -X POST "https://api.tavily.com/search" \
   - **mergePreview+safeMerge+mergeConflictSummary**: 风险感知合并工作流(18 tests, 594→612)
   - 去重管道完整: mergeSuggestions(发现) → autoMerge(执行) → contentVersionCompact(清理)
   - 零回滚率持续保持(连续26天)
+
+### 2026-05-11
+- ✅ **agent-context-store search_dups+move** — 92→97 tests (+5)
+- ✅ **better-ralph-core run_batch+timeline** — 257→264 tests (+7)
+- ✅ **Edge Agent WASM Runtime 研究** — TypeScript原型+5核心概念+5关键洞察
+- ✅ **SLM Agent Tool-Use 深度研究** — NVIDIA论文+arXiv工程挑战+Ollama tool calling+可运行SLMAgent代码
+- 连续47天零回滚率
+
+### 2026-05-10
+- ✅ **Agent Observability 深度研究** — Tracer/PolicyEngine/Evaluator 可运行 TypeScript 代码
+- ✅ **Constrained Decoding 结构化输出研究** — 5/5 tests, FSM constrained decoding + Zod schema cache
+- ✅ **prompt-router 晚间循环** — 216→230 tests (+14): route_by_length+prune_agents+optimize_weights
 
 ### 2026-05-09
 - ✅ **agent-context-store search_regex** — 34→39 tests (+5)
@@ -650,5 +671,5 @@ curl -X POST "https://api.tavily.com/search" \
 
 ---
 
-*Last updated: 2026-05-10 20:15*
-*Next review: 2026-05-11*
+*Last updated: 2026-05-11 02:00*
+*Next review: 2026-05-12*

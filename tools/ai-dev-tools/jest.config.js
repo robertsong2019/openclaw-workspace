@@ -2,7 +2,7 @@ export default {
   testEnvironment: 'node',
   transform: {},
   moduleFileExtensions: ['js', 'mjs'],
-  testMatch: ['**/__tests__/**/*.test.js'],
+  testMatch: ['<rootDir>/__tests__/**/*.test.js'],
   globals: {
     'jest': {
       'isolatedModules': true
