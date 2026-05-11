@@ -679,3 +679,16 @@ class PRDManager:
                 longest = path
 
         return longest
+
+    def story_count_by_status(self) -> Dict[str, int]:
+        """Count stories grouped by passes/pending status."""
+        counts: Dict[str, int] = {}
+        for s in self.stories:
+            key = "completed" if s.passes else "pending"
+            counts[key] = counts.get(key, 0) + 1
+        return counts
+
+    def search_stories(self, keyword: str) -> List[UserStory]:
+        """Search stories by keyword in title or description (case-insensitive)."""
+        kw = keyword.lower()
+        return [s for s in self.stories if kw in s.title.lower() or kw in s.description.lower()]
