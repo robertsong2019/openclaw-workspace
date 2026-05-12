@@ -17,3 +17,5 @@ export { batch } from "./batch.js";
 export type { BatchConfig } from "./batch.js";
 export { switchRoute } from "./switch-route.js";
 export type { SwitchCase, SwitchRouteConfig } from "./switch-route.js";
+export { pick, omit, rename, defaults, compose } from "./transform.js";
+export type { TransformFn } from "./transform.js";
