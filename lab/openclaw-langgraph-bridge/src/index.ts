@@ -13,3 +13,5 @@ export { withRetry } from "./retry.js";
 export type { RetryConfig } from "./retry.js";
 export { pipeline } from "./pipeline.js";
 export type { PipelineConfig, PipelineResult } from "./pipeline.js";
+export { batch } from "./batch.js";
+export type { BatchConfig } from "./batch.js";

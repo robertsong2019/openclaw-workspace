@@ -27,7 +27,8 @@ Autoresearch 方法论实践 - **连续48天零回滚率** 🏆。05-12 凌晨: 
 - [ ] **Structured Output Toolkit** — lab/structured-output-toolkit/ (TypeScript, Zod+Ollama JSON mode)
   - [研究笔记](catalyst-research/exploration-notes/2026-05-10-constrained-decoding-structured-output.md) ✅ FSM constrained decoding 深度研究 + 可运行 TypeScript 代码 (5/5 tests pass)
   - **关键发现**: Ollama JSON mode 是 Level 3 约束(不需要额外库); XGrammar <40µs/token 接近零开销; SLM(Qwen3.5-0.8B, Phi-4-mini)已原生支持 function calling; constrained decoding 可能比无约束更快
-  - **下一步**: 创建 lab/structured-output-toolkit/ — StructuredLLMClient + SchemaCache + 内置 agent schema
+  - **[05-12 更新]** Constrained Decoding 深度研究 → [笔记](catalyst-research/exploration-notes/2026-05-12-constrained-decoding.md) ✅ XGrammar-2(JIT+10ms编译)、GAD/ASAp(分布扭曲问题)、搜索空间修剪(>99.9%)
+  - **下一步**: 创建 lab/structured-output-toolkit/ — 评估 XGrammar Python binding 集成 + StructuredLLMClient + SchemaCache
 - [ ] **A2A x-agent-trust 中间件原型** — Node.js ES256 签名/验证，可作 OpenClaw gateway plugin
   - [研究笔记 v1](catalyst-research/exploration-notes/2026-05-03-a2a-agent-trust.md) ✅ 代码验证通过(签名+验证+篡改检测)
   - [研究笔记 v2](catalyst-research/exploration-notes/2026-05-03-a2a-agent-trust.md) ✅ 三层信任模型+Trust Extension设计+可运行TypeScript代码
@@ -44,6 +45,10 @@ Autoresearch 方法论实践 - **连续48天零回滚率** 🏆。05-12 凌晨: 
   - [研究笔记 v3 实战验证](catalyst-research/exploration-notes/2026-05-08-langgraph-bridge-executor-task.md) ✅ **18/18 tests passing** — Executor双模式 + 幂等createTask + checkpoint序列化 + 端到端Bridge Graph
   - **关键发现**: Executor接口是核心抽象(非GatewayClient); 确定性TaskID = sha256(name:input); OpenClaw真实API端点 /v1/agent/run; StateSchema替代Annotation更类型安全
   - **下一步**: lab/openclaw-langgraph-bridge/ — executor.ts + create-task.ts + state.ts + create-bridge-graph.ts, 目标5+ tests
+- [ ] **Agent Observability (OTel + AOS)** — lab/agent-observability/ Tracer + PolicyEngine + Evaluator
+  - [研究笔记](catalyst-research/exploration-notes/2026-05-12-agent-observability-opentelemetry.md) ✅ 5核心概念+可运行TypeScript Tracer+OWASP AOS分析+工具选型
+  - **关键发现**: OTel GenAI semantic conventions 已成事实标准(注意 gen_ai.tool. 路径陷阱); OWASP AOS Guardian Agent 模式 = inline policy enforcement; Agent可观测性≠LLM可观测性(需要跨步骤因果链+收敛性追踪); 推荐组合: OpenLLMetry(埋点) + Arize Phoenix(本地调试)
+  - **下一步**: lab/agent-observability/ → AgentTracer(startRun/traceLLMCall/traceToolCall/traceMemory) + Guardian policy check + tail sampling
 - [ ] **Gossip Discovery Prototype** — 基于研究笔记，加入DID验证+A2A Trust评分
   - [研究笔记](catalyst-research/exploration-notes/2026-05-05-agent-federation-discovery.md) ✅ DUADP+GEACL+双层Churn+可运行Gossip代码
   - **核心发现**: DUADP(DNS for AI)+Gossip是A2A的发现层补丁;双层Churn(node+agent)是Agent特有挑战
