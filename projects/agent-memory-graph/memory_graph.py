@@ -63,7 +63,8 @@ class MemoryGraph:
                 data TEXT DEFAULT '{}',
                 created REAL,
                 accessed REAL,
-                weight REAL DEFAULT 1.0
+                weight REAL DEFAULT 1.0,
+                tags TEXT DEFAULT '[]'
             );
             CREATE TABLE IF NOT EXISTS edges (
                 source TEXT,
@@ -74,7 +75,7 @@ class MemoryGraph:
             );
         """)
 
-    def add(self, label: str, kind: str = "fact", data: dict = None) -> Node:
+    def add(self, label: str, kind: str = "fact", data: dict = None, tags: list[str] = None) -> Node:
         """添加一个记忆节点。"""
         node = Node(
             id=uuid.uuid4().hex[:12],
@@ -83,12 +84,37 @@ class MemoryGraph:
             created=time.time(), accessed=time.time(), weight=1.0
         )
         self.conn.execute(
-            "INSERT INTO nodes VALUES (?,?,?,?,?,?,?)",
+            "INSERT INTO nodes VALUES (?,?,?,?,?,?,?,?)",
             (node.id, node.label, node.kind, json.dumps(node.data),
-             node.created, node.accessed, node.weight)
+             node.created, node.accessed, node.weight, json.dumps(tags or []))
         )
         self.conn.commit()
         return node
+
+    def tag_nodes(self, tag: str, node_ids: list[str]):
+        """Add a tag to multiple nodes."""
+        for nid in node_ids:
+            row = self.conn.execute("SELECT tags FROM nodes WHERE id=?", (nid,)).fetchone()
+            if not row:
+                continue
+            tags = json.loads(row["tags"])
+            if tag not in tags:
+                tags.append(tag)
+                self.conn.execute("UPDATE nodes SET tags=? WHERE id=?", (json.dumps(tags), nid))
+        self.conn.commit()
+
+    def search_by_tag(self, tag: str) -> list[Node]:
+        """Return all nodes with a given tag."""
+        rows = self.conn.execute("SELECT * FROM nodes").fetchall()
+        results = []
+        for r in rows:
+            tags_list = json.loads(r["tags"])
+            if tag in tags_list:
+                results.append(Node(
+                    r["id"], r["label"], r["kind"],
+                    json.loads(r["data"]), r["created"], r["accessed"], r["weight"]
+                ))
+        return results
 
     def link(self, source_id: str, target_id: str, relation: str, weight: float = 1.0):
         """连接两个节点。"""

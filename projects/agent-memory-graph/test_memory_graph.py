@@ -209,3 +209,28 @@ class TestShortestPath:
     def test_same_node(self, mg):
         a = mg.add("A")
         assert mg.shortest_path(a.id, a.id) == [a.id]
+
+
+class TestTags:
+    def test_add_with_tags(self, mg):
+        n = mg.add("tagged", tags=["important", "work"])
+        found = mg.search_by_tag("important")
+        assert len(found) == 1
+        assert found[0].id == n.id
+
+    def test_tag_nodes_after_creation(self, mg):
+        a = mg.add("A")
+        b = mg.add("B")
+        mg.tag_nodes("shared", [a.id, b.id])
+        found = mg.search_by_tag("shared")
+        assert len(found) == 2
+
+    def test_tag_no_duplicate(self, mg):
+        n = mg.add("X")
+        mg.tag_nodes("t", [n.id])
+        mg.tag_nodes("t", [n.id])
+        assert len(mg.search_by_tag("t")) == 1
+
+    def test_search_by_tag_empty(self, mg):
+        mg.add("no tags")
+        assert mg.search_by_tag("none") == []
