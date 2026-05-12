@@ -98,6 +98,14 @@ class MemoryGraph:
         )
         self.conn.commit()
 
+    def unlink(self, source_id: str, target_id: str, relation: str):
+        """Remove an edge between two nodes."""
+        self.conn.execute(
+            "DELETE FROM edges WHERE source=? AND target=? AND relation=?",
+            (source_id, target_id, relation)
+        )
+        self.conn.commit()
+
     def recall(self, query: str, limit: int = 5) -> list[Node]:
         """按关键词召回记忆，访问过的记忆强度增加。"""
         now = time.time()

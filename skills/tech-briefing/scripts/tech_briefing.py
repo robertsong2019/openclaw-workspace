@@ -1,47 +1,83 @@
 #!/usr/bin/env python3
-"""Tech Briefing Generator — aggregates GitHub Trending + HN into a daily digest."""
+"""Tech Briefing Generator — aggregates GitHub Trending + HN + CN sources into a daily digest."""
 
 import json
 import urllib.request
 import urllib.error
+import urllib.parse
+import re
 import sys
 import argparse
 from datetime import datetime, timezone
 
-def fetch_json(url, timeout=15):
-    req = urllib.request.Request(url, headers={"User-Agent": "OpenClaw/1.0"})
+def fetch_json(url, timeout=15, headers=None):
+    hdrs = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"}
+    if headers:
+        hdrs.update(headers)
+    req = urllib.request.Request(url, headers=hdrs)
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.loads(r.read().decode())
 
-def fetch_text(url, timeout=15):
-    req = urllib.request.Request(url, headers={"User-Agent": "OpenClaw/1.0"})
+def fetch_text(url, timeout=15, headers=None):
+    hdrs = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"}
+    if headers:
+        hdrs.update(headers)
+    req = urllib.request.Request(url, headers=hdrs)
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read().decode()
 
 def get_github_trending(lang="", since="daily", limit=10):
-    """Fetch GitHub trending repos via GitHub Search API (recently pushed, high stars)."""
+    """Fetch GitHub trending repos by scraping github.com/trending page."""
     try:
-        # Use date range based on 'since' param
-        from datetime import timedelta
-        since_days = {"daily": 1, "weekly": 7, "monthly": 30}.get(since, 1)
-        pushed_after = (datetime.now(timezone.utc) - timedelta(days=since_days)).strftime("%Y-%m-%d")
-        
-        # Find recently created repos sorted by stars (true "trending")
-        q = f"created:>{pushed_after} stars:>10"
-        if lang:
-            q += f" language:{lang}"
-        url = f"https://api.github.com/search/repositories?q={urllib.parse.quote(q)}&sort=stars&order=desc&per_page={limit}"
-        data = fetch_json(url, timeout=10)
+        since_param = {"daily": "", "weekly": "?since=weekly", "monthly": "?since=monthly"}.get(since, "")
+        lang_param = f"&l={lang}" if lang else ""
+        sep = "&" if "?" in since_param and lang_param else ""
+        if not since_param and lang_param:
+            url = f"https://github.com/trending?l={lang}"
+        else:
+            url = f"https://github.com/trending{since_param}{sep}{lang_param}"
+        html = fetch_text(url, timeout=15)
         repos = []
-        for r in data.get("items", [])[:limit]:
+        # Parse trending repo rows
+        # Pattern: <h2 class="h3 lh-condensed"><a href="/owner/repo">
+        repo_pattern = re.compile(
+            r'<h2[^>]*class="h3[^"]*"[^>]*>.*?'
+            r'<a\s+href="(/[^"]+?)"[^>]*>\s*'
+            r'(?:<span[^>]*>\s*)?([^<]+?)\s*(?:</span>)?\s*'
+            r'(?:/\s*(?:<span[^>]*>\s*)?([^<]+?)\s*(?:</span>)?)?\s*'
+            r'</a>', re.DOTALL)
+        # Simpler: find all /owner/repo links in h2
+        for m in re.finditer(r'<article.*?</article>', html, re.DOTALL):
+            block = m.group(0)
+            # Repo name
+            name_m = re.search(r'<h2[^>]*>.*?<a\s+href="(/[^"]+)"', block, re.DOTALL)
+            if not name_m:
+                continue
+            repo_path = name_m.group(1).strip().split('/stargazers')[0].split('/forks')[0]
+            name = repo_path.lstrip('/')
+            # Description
+            desc_m = re.search(r'<p[^>]*class="[^"]*color-fg-muted[^"]*"[^>]*>(.*?)</p>', block, re.DOTALL)
+            desc = desc_m.group(1).strip()[:120] if desc_m else ""
+            desc = re.sub(r'<[^>]+>', '', desc).strip()
+            # Language
+            lang_m = re.search(r'itemprop="programmingLanguage">(.*?)<', block)
+            repo_lang = lang_m.group(1).strip() if lang_m else ""
+            # Stars today
+            today_m = re.search(r'([\d,]+)\s*stars\s*(?:this\s*)?(?:today|week|month)', block)
+            today_stars = int(today_m.group(1).replace(',', '')) if today_m else 0
+            # Total stars
+            stars_m = re.search(r'href="/[^/]+/[^/]+/stargazers"[^>]*>\s*([\d,]+)\s*<', block)
+            stars = int(stars_m.group(1).replace(',', '')) if stars_m else 0
             repos.append({
-                "name": r.get("full_name", ""),
-                "desc": (r.get("description", "") or "")[:120],
-                "stars": r.get("stargazers_count", 0),
-                "today_stars": 0,
-                "lang": r.get("language", ""),
-                "url": r.get("html_url", ""),
+                "name": name,
+                "desc": desc,
+                "stars": stars,
+                "today_stars": today_stars,
+                "lang": repo_lang,
+                "url": f"https://github.com{repo_path}",
             })
+            if len(repos) >= limit:
+                break
         return repos
     except Exception as e:
         return [{"error": str(e)}]
@@ -64,7 +100,61 @@ def get_hn_top(limit=10):
     except Exception as e:
         return [{"error": str(e)}]
 
-def format_md(github_repos, hn_stories, date_str):
+def get_oschina_news(limit=10):
+    """Fetch OSCHINA news via RSS feed (has title + description)."""
+    try:
+        xml = fetch_text("https://www.oschina.net/news/rss", timeout=15)
+        articles = []
+        for m in re.finditer(
+            r'<item>\s*<title><!\[CDATA\[([^\]]*?)\]\]></title>\s*'
+            r'<link><!\[CDATA\[([^\]]*?)\]\]></link>.*?'
+            r'<description><!\[CDATA\[([^\]]*?)\]\]></description>',
+            xml, re.DOTALL
+        ):
+            title = m.group(1).strip()
+            url = m.group(2).strip()
+            desc = m.group(3).strip()[:200]
+            # Unescape HTML entities
+            desc = desc.replace('&quot;', '"').replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>')
+            articles.append({"title": title, "url": url, "snippet": desc})
+            if len(articles) >= limit:
+                break
+        return articles
+    except Exception as e:
+        return [{"error": str(e)}]
+
+def get_cn_news_via_search(limit=10):
+    """Fetch CN tech news via Tavily search (for SPA sites like InfoQ)."""
+    try:
+        import os
+        api_key = os.environ.get("TAVILY_API_KEY", "")
+        if not api_key:
+            return [{"error": "TAVILY_API_KEY not set"}]
+        url = "https://api.tavily.com/search"
+        payload = json.dumps({
+            "api_key": api_key,
+            "query": "最新技术资讯 AI 开发者",
+            "include_domains": ["infoq.cn"],
+            "max_results": limit,
+            "search_depth": "basic",
+            "topic": "news",
+        }).encode()
+        req = urllib.request.Request(url, data=payload,
+                                     headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=15) as r:
+            data = json.loads(r.read().decode())
+        articles = []
+        for res in data.get("results", []):
+            articles.append({
+                "title": res.get("title", ""),
+                "url": res.get("url", ""),
+                "snippet": (res.get("content", "") or "")[:150],
+            })
+        return articles[:limit]
+    except Exception as e:
+        return [{"error": str(e)}]
+
+def format_md(github_repos, hn_stories, cn_articles, date_str):
     lines = [f"# 📡 Tech Briefing — {date_str}\n"]
     
     if github_repos and "error" not in github_repos[0]:
@@ -90,13 +180,23 @@ def format_md(github_repos, hn_stories, date_str):
     elif hn_stories:
         lines.append(f"## 📰 Hacker News Top\n⚠️ {hn_stories[0].get('error', 'fetch failed')}\n")
 
+    if cn_articles and "error" not in cn_articles[0]:
+        lines.append("## 🇨🇳 国内技术资讯\n")
+        for i, a in enumerate(cn_articles, 1):
+            snippet = f"\n   {a['snippet']}" if a.get("snippet") else ""
+            lines.append(f"**{i}. [{a['title']}]({a['url']})**{snippet}")
+            lines.append("")
+    elif cn_articles:
+        lines.append(f"## 🇨🇳 国内技术资讯\n⚠️ {cn_articles[0].get('error', 'fetch failed')}\n")
+
     return "\n".join(lines)
 
-def format_json(github_repos, hn_stories, date_str):
+def format_json(github_repos, hn_stories, cn_articles, date_str):
     return json.dumps({
         "date": date_str,
         "github_trending": github_repos,
         "hn_top": hn_stories,
+        "cn_news": cn_articles,
     }, ensure_ascii=False, indent=2)
 
 def main():
@@ -106,7 +206,8 @@ def main():
     parser.add_argument("--hn-limit", type=int, default=10)
     parser.add_argument("--lang", default="", help="GitHub language filter")
     parser.add_argument("--since", default="daily", choices=["daily", "weekly", "monthly"])
-    parser.add_argument("--source", choices=["all", "github", "hn"], default="all")
+    parser.add_argument("--cn-limit", type=int, default=10, help="CN news limit")
+    parser.add_argument("--source", choices=["all", "github", "hn", "cn"], default="all")
     args = parser.parse_args()
 
     now = datetime.now(timezone.utc)
@@ -117,10 +218,20 @@ def main():
     hn = get_hn_top(limit=args.hn_limit) \
         if args.source in ("all", "hn") else []
 
+    # CN sources: OSChina (page scrape) + InfoQ (Tavily search)
+    cn = []
+    if args.source in ("all", "cn"):
+        osc = get_oschina_news(limit=args.cn_limit)
+        if osc and "error" not in osc[0]:
+            cn.extend(osc)
+        infoq = get_cn_news_via_search(limit=args.cn_limit)
+        if infoq and "error" not in infoq[0]:
+            cn.extend(infoq)
+
     if args.format == "json":
-        print(format_json(gh, hn, date_str))
+        print(format_json(gh, hn, cn, date_str))
     else:
-        print(format_md(gh, hn, date_str))
+        print(format_md(gh, hn, cn, date_str))
 
 if __name__ == "__main__":
     main()

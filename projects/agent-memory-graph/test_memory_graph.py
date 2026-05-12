@@ -1,0 +1,154 @@
+"""Tests for Agent Memory Graph."""
+import math
+import time
+import pytest
+from memory_graph import MemoryGraph, Node, Edge
+
+
+@pytest.fixture
+def mg():
+    return MemoryGraph()
+
+
+@pytest.fixture
+def populated(mg):
+    a = mg.add("Alice", "person", {"role": "engineer"})
+    b = mg.add("Bob", "person", {"role": "designer"})
+    c = mg.add("Python", "skill")
+    mg.link(a.id, b.id, "works_with")
+    mg.link(a.id, c.id, "skilled_in")
+    mg.link(b.id, c.id, "learning")
+    return mg, a, b, c
+
+
+class TestNodeCreation:
+    def test_add_basic(self, mg):
+        n = mg.add("test fact", "fact")
+        assert n.label == "test fact"
+        assert n.kind == "fact"
+        assert n.weight == 1.0
+        assert n.id  # has an id
+
+    def test_add_with_data(self, mg):
+        n = mg.add("event", "event", {"duration": 2})
+        assert n.data == {"duration": 2}
+
+    def test_add_multiple_kinds(self, mg):
+        for kind in ("fact", "event", "person", "concept", "skill"):
+            n = mg.add(f"test {kind}", kind)
+            assert n.kind == kind
+
+
+class TestLink:
+    def test_link_two_nodes(self, mg):
+        a = mg.add("A")
+        b = mg.add("B")
+        mg.link(a.id, b.id, "connects")
+        neighbors = mg.neighbors(a.id)
+        assert len(neighbors) == 1
+        assert neighbors[0].id == b.id
+
+    def test_link_with_weight(self, mg):
+        a = mg.add("A")
+        b = mg.add("B")
+        mg.link(a.id, b.id, "strong", weight=0.9)
+        # verify edge exists via neighbors
+        assert len(mg.neighbors(a.id)) == 1
+
+    def test_unlink(self, mg):
+        a = mg.add("A")
+        b = mg.add("B")
+        mg.link(a.id, b.id, "temp")
+        assert len(mg.neighbors(a.id)) == 1
+        mg.unlink(a.id, b.id, "temp")
+        assert len(mg.neighbors(a.id)) == 0
+
+    def test_unlink_nonexistent_safe(self, mg):
+        a = mg.add("A")
+        b = mg.add("B")
+        mg.unlink(a.id, b.id, "none")  # should not raise
+
+
+class TestRecall:
+    def test_recall_by_keyword(self, populated):
+        mg, a, b, c = populated
+        results = mg.recall("Alice")
+        assert len(results) == 1
+        assert results[0].id == a.id
+
+    def test_recall_partial_match(self, populated):
+        mg, a, b, c = populated
+        results = mg.recall("Pyt")
+        assert len(results) == 1
+        assert results[0].label == "Python"
+
+    def test_recall_no_match(self, mg):
+        mg.add("something")
+        assert mg.recall("nothing") == []
+
+    def test_recall_boosts_weight(self, populated):
+        mg, a, b, c = populated
+        # simulate aging
+        mg.conn.execute("UPDATE nodes SET accessed = accessed - 86400")
+        mg.conn.commit()
+        mg.conn.execute("UPDATE nodes SET weight = 0.5 WHERE id = ?", (a.id,))
+        mg.conn.commit()
+        results = mg.recall("Alice")
+        assert results[0].weight > 0.5  # boosted
+
+
+class TestNeighbors:
+    def test_depth_1(self, populated):
+        mg, a, b, c = populated
+        neighbors = mg.neighbors(a.id, depth=1)
+        ids = {n.id for n in neighbors}
+        assert b.id in ids
+        assert c.id in ids
+
+    def test_depth_2(self, populated):
+        mg, a, b, c = populated
+        neighbors = mg.neighbors(a.id, depth=2)
+        ids = {n.id for n in neighbors}
+        assert b.id in ids
+        assert c.id in ids
+
+    def test_empty_neighbors(self, mg):
+        n = mg.add("lonely")
+        assert mg.neighbors(n.id) == []
+
+
+class TestDecay:
+    def test_decay_reduces_weight(self, mg):
+        n = mg.add("old memory")
+        # simulate 1 day old (small enough to survive MIN_WEIGHT)
+        mg.conn.execute("UPDATE nodes SET accessed = ? WHERE id = ?",
+                        (time.time() - 86400, n.id))
+        mg.conn.commit()
+        mg.decay_all()
+        row = mg.conn.execute("SELECT weight FROM nodes WHERE id=?", (n.id,)).fetchone()
+        assert row is not None
+        assert row["weight"] < 1.0
+
+    def test_decay_removes_forgotten(self, mg):
+        n = mg.add("forgotten")
+        mg.conn.execute("UPDATE nodes SET weight = 0.01, accessed = ? WHERE id = ?",
+                        (time.time() - 8640000, n.id))
+        mg.conn.commit()
+        mg.decay_all()
+        row = mg.conn.execute("SELECT * FROM nodes WHERE id=?", (n.id,)).fetchone()
+        assert row is None
+
+
+class TestStats:
+    def test_empty_stats(self, mg):
+        s = mg.stats()
+        assert s["nodes"] == 0
+        assert s["edges"] == 0
+
+    def test_populated_stats(self, populated):
+        mg, a, b, c = populated
+        s = mg.stats()
+        assert s["nodes"] == 3
+        assert s["edges"] == 3
+        assert "person" in s["by_kind"]
+        assert "skill" in s["by_kind"]

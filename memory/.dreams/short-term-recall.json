@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-09T13:01:07.703Z",
+  "updatedAt": "2026-05-12T11:00:36.062Z",
   "entries": {
     "memory:memory/2026-04-12.md:71:96": {
       "key": "memory:memory/2026-04-12.md:71:96",
@@ -174,18 +174,20 @@
       "endLine": 26,
       "source": "memory",
       "snippet": "## Autoresearch Evening Session (19:00-19:15) ### Experiment Cycles Completed: 3/3 **1. prompt-router — explain() routing explainability** ✅ KEEP - Added `Agent.score(detail=True)` returning match reasons - Added `PromptRouter.explain()` for structured routing breakdown - Tests: 8→12, all passing **2. agent-context-store — batch operations** ✅ KEEP - Added `count(tag?)`, `keys(tag?)`, `put_many(items)` - Single-disk-write batch insert optimization - Tests: 8→12, all passing **3. prompt-router — confidence threshold routing** ✅ KEEP - Added `route_with_confidence(prompt, threshold)` returning status - Status: confident/low_confidence/no_match - Tests: 12→15, all passing ### Results - Bo",
-      "recallCount": 1,
+      "recallCount": 2,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 1,
+      "totalScore": 2,
       "maxScore": 1,
       "firstRecalledAt": "2026-04-28T21:00:08.198Z",
-      "lastRecalledAt": "2026-04-28T21:00:08.198Z",
+      "lastRecalledAt": "2026-05-12T11:00:19.107Z",
       "queryHashes": [
-        "251319d34e1b"
+        "251319d34e1b",
+        "2d3492507ed8"
       ],
       "recallDays": [
-        "2026-04-29"
+        "2026-04-29",
+        "2026-05-12"
       ],
       "conceptTags": [
         "router",
@@ -636,6 +638,68 @@
         "watch",
         "mode",
         "continuous"
+      ]
+    },
+    "memory:memory/2026-04-23.md:1:24": {
+      "key": "memory:memory/2026-04-23.md:1:24",
+      "path": "memory/2026-04-23.md",
+      "startLine": 1,
+      "endLine": 24,
+      "source": "memory",
+      "snippet": "## Autoresearch Evening (19:00-19:30) **项目:** Agent Memory Service (projects/agent-memory-service) **方法:** autoresearch — 3 cycles, 30min total ### Cycle 1: compareMemories(id1, id2) ✅ keep - 内容相似度 (ngram)、共享/唯一标签、层级对比、权重差异、合并建议 - 5 new tests (371→376), ~35 lines src - 教训: `new MemoryService(tmp)` vs `new MemoryService({ dbPath: tmp })` — 字符串参数不会设 dbPath ### Cycle 2: tagHierarchy(opts) ✅ keep - 标签共现层级构建，贪心父-子关系，深度计算 - 4 new tests (376→380), ~55 lines src - 教训: minCoOccurrence=2 时低频共现不建关系；totalTags 是唯一标签数不是输入标签数 ### Cycle 3: rebalance(opts) ✅ keep - 基于年龄衰减+访问频率+层级加权的权重重计算 - 4 new tests (380→384), ~30 lines src - 公式: decay=exp(-factor*ageDays), newWeight=min(decay + accessBoost + layerBoo",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1,
+      "maxScore": 1,
+      "firstRecalledAt": "2026-05-12T11:00:19.107Z",
+      "lastRecalledAt": "2026-05-12T11:00:19.107Z",
+      "queryHashes": [
+        "2d3492507ed8"
+      ],
+      "recallDays": [
+        "2026-05-12"
+      ],
+      "conceptTags": [
+        "00-19",
+        "projects/agent-memory-service",
+        "共享/唯一标签",
+        "贪心父-子关系",
+        "autoresearch",
+        "evening",
+        "项目",
+        "service"
+      ]
+    },
+    "memory:memory/2026-04-06.md:1:41": {
+      "key": "memory:memory/2026-04-06.md:1:41",
+      "path": "memory/2026-04-06.md",
+      "startLine": 1,
+      "endLine": 41,
+      "source": "memory",
+      "snippet": "# 2026-04-06 - 知识整理 ## 凌晨例行维护 (02:00) ### 完成事项 - ✅ MEMORY.md 更新：焦点日期更新至04-06，新增ctxgen项目(#8) - ✅ Next Actions 更新日期 - ✅ Recent Achievements 新增2026-04-05条目（ctxgen + Embedding插件修复） ### 当前项目状态概览 | 项目 | 状态 | |------|------| | Agent Task CLI | ✅ 完成 | | Local Embedding Memory | ✅ 插件v1.1.0 | | Prompt Weaver | ✅ v0.3.0 | | Agent Trust Network | 🔄 Web UI阶段 | | Edge Agent Runtime | ✅ 核心完成 | | Edge Agent Mesh | 🔄 核心模块已实现 | | agent-log | ✅ 完成 | | ctxgen | ✅ v1.0 | ### 下一步 - Agent Trust Network Web UI 原型（本周高优先级） - ctxgen 改进：npm publish、更多AI工具模板、自定义模板系统 ## 凌晨文档维护 (04:00) ### 完成事项 - ✅ **agent-pipeline README 完善** — 从 17 行扩展到完整文档，包含：工具参考表、YAML 配置格式、CLI 命令、自定义工具指南、所有示例说明 ### 文档现状 | 项目 | README 状态 | |-",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1,
+      "maxScore": 1,
+      "firstRecalledAt": "2026-05-12T11:00:36.062Z",
+      "lastRecalledAt": "2026-05-12T11:00:36.062Z",
+      "queryHashes": [
+        "b5096daef090"
+      ],
+      "recallDays": [
+        "2026-05-12"
+      ],
+      "conceptTags": [
+        "embedding",
+        "network",
+        "memory.md",
+        "焦点日期更新至04-06",
+        "新增2026-04-05条目",
+        "插件v1.1.0",
+        "v0.3.0",
+        "agent-log"
       ]
     }
   }

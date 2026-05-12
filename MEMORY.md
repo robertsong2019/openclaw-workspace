@@ -15,10 +15,13 @@
 
 ---
 
-## Current Focus (2026-05-11)
+## Current Focus (2026-05-12)
 
 ### Active Theme
-Autoresearch 方法论实践 - **连续46天零回滚率** 🏆。05-11 凌晨: agent-context-store search_dups+move (97 tests), better-ralph-core run_batch+get_story_timeline (264 tests)。05-10 晚间: Agent Observability 深度研究 + Constrained Decoding 结构化输出研究。**研究积累已饱和，进入 lab/ 实现阶段**: Hindsight Mini(已有完整TS原型) > A2A Trust > LangGraph Bridge。
+Autoresearch 方法论实践 - **连续48天零回滚率** 🏆。05-12 凌晨: agent-context-store 持久化重建+search_by_time_range+batch_delete (69 tests), better-ralph-core save_checkpoint+load_checkpoint+resume_batch (278 tests)。**研究积累已饱和，进入 lab/ 实现阶段**: Hindsight Mini(已有完整TS原型) > A2A Trust > LangGraph Bridge。
+
+### ⚠️ 关键发现
+- **agent-context-store 代码未持久化问题**: 05-08→05-11 的代码到97 tests但未持久化到 workspace，05-12 重建基线为69 tests。**教训: 每次实验完成后必须确认代码已持久化到 lab/ 目录并 git commit。**
 
 ### Next Actions
 - [ ] **Structured Output Toolkit** — lab/structured-output-toolkit/ (TypeScript, Zod+Ollama JSON mode)
@@ -259,6 +262,11 @@ curl -X POST "https://api.tavily.com/search" \
   - **mergePreview+safeMerge+mergeConflictSummary**: 风险感知合并工作流(18 tests, 594→612)
   - 去重管道完整: mergeSuggestions(发现) → autoMerge(执行) → contentVersionCompact(清理)
   - 零回滚率持续保持(连续26天)
+
+### 2026-05-12
+- ✅ **agent-context-store 持久化重建+time_range+batch_delete** — 重建基线69 tests, +search_by_time_range+batch_delete。代码已持久化到 lab/agent-context-store/ (commit 269dafe)
+- ✅ **better-ralph-core checkpoint/resume** — 271→278 tests (+7)。save_checkpoint+load_checkpoint+resume_batch JSON可序列化断点续传 (commit 214cf5d)
+- 连续48天零回滚率
 
 ### 2026-05-11
 - ✅ **agent-context-store search_dups+move** — 92→97 tests (+5)
@@ -671,5 +679,5 @@ curl -X POST "https://api.tavily.com/search" \
 
 ---
 
-*Last updated: 2026-05-11 02:00*
-*Next review: 2026-05-12*
+*Last updated: 2026-05-12 02:00*
+*Next review: 2026-05-13*

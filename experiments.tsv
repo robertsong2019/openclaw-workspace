@@ -39,3 +39,4 @@ date	project	tests_before	tests_after	delta	status
 2026-05-09	skill-doctor	0	0	0	19	19	0	+19 tests (from 0), added --json flag + diagnoseJSON export + module.exports for testability	all pass
 2026-05-10	catalyst-agent-mesh	207	224	+17	224	224	0	+test_mesh_selection.py: select_agents_for_task (7 tests), get_available_agents (3), execute_task edge cases (3), find_agents (4)	all pass
 2026-05-11	ai-dev-tools	fix-jest-esm	3 suites 48 tests all pass (was 3 failed due to ESM config)			healed
+2026-05-12T03:00	-	test_pass_rate	147/147	improve	ai-iot-orchestrator: +12 tests (DeviceType/State enum completeness, to_dict capability details, async callback notification, callback error resilience, custom _learn override, send_message routing)

@@ -13,7 +13,7 @@ metadata:
 
 # Tech Briefing
 
-Generate a structured daily tech digest aggregating **GitHub Trending** repos and **Hacker News** top stories.
+Generate a structured daily tech digest aggregating **GitHub Trending** repos, **Hacker News** top stories, and **CN tech news** (OSChina + InfoQ 中文).
 
 ## Quick Start
 
@@ -29,6 +29,9 @@ python3 {baseDir}/scripts/tech_briefing.py --source github --since weekly --lang
 
 # HN only, top 5
 python3 {baseDir}/scripts/tech_briefing.py --source hn --hn-limit 5
+
+# CN sources only (OSChina + InfoQ)
+python3 {baseDir}/scripts/tech_briefing.py --source cn --cn-limit 10
 ```
 
 ## Options
@@ -36,7 +39,8 @@ python3 {baseDir}/scripts/tech_briefing.py --source hn --hn-limit 5
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--format` | `md` | Output: `md` or `json` |
-| `--source` | `all` | `all`, `github`, or `hn` |
+| `--cn-limit` | `10` | Max CN news items per source |
+| `--source` | `all` | `all`, `github`, `hn`, or `cn` |
 | `--github-limit` | `10` | Max GitHub repos |
 | `--hn-limit` | `10` | Max HN stories |
 | `--lang` | _(all)_ | GitHub language filter (e.g. `python`, `rust`) |
@@ -49,8 +53,15 @@ python3 {baseDir}/scripts/tech_briefing.py --source hn --hn-limit 5
 3. Highlight repos or stories relevant to the user's interests (check USER.md / MEMORY.md)
 4. Optionally compare with previous briefings for trend detection
 
+## CN Sources
+
+- **OSChina** (`oschina.net/news`): Page scraping, no API key needed
+- **InfoQ 中文** (`infoq.cn`): Via Tavily search API (requires `TAVILY_API_KEY` env var)
+- Use `--source cn` to fetch CN news only
+
 ## Notes
 
-- No API key required (uses public endpoints)
-- Keep `--github-limit` and `--hn-limit` small (5-10) for token efficiency
+- GitHub + HN: No API key required (public endpoints)
+- InfoQ CN requires `TAVILY_API_KEY` (InfoQ is SPA, no public API)
+- Keep limits small (5-10) for token efficiency
 - For heartbeat integration: add to HEARTBEAT.md as a periodic check
