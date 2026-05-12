@@ -152,3 +152,60 @@ class TestStats:
         assert s["edges"] == 3
         assert "person" in s["by_kind"]
         assert "skill" in s["by_kind"]
+
+
+class TestMergeNodes:
+    def test_merge_combines_data(self, mg):
+        a = mg.add("A", "person", {"x": 1})
+        b = mg.add("B", "person", {"y": 2})
+        result = mg.merge_nodes(a.id, b.id)
+        assert result.data == {"x": 1, "y": 2}
+        assert mg.stats()["nodes"] == 1
+
+    def test_merge_rewires_edges(self, mg):
+        a = mg.add("A")
+        b = mg.add("B")
+        c = mg.add("C")
+        mg.link(a.id, c.id, "connects")
+        mg.merge_nodes(a.id, b.id)
+        # a's edge to c should now be b's
+        neighbors = mg.neighbors(b.id)
+        assert any(n.id == c.id for n in neighbors)
+
+    def test_merge_nonexistent_returns_none(self, mg):
+        result = mg.merge_nodes("nope", "nope2")
+        assert result is None
+
+    def test_merge_removes_self_loops(self, mg):
+        a = mg.add("A")
+        b = mg.add("B")
+        mg.link(a.id, b.id, "rel")
+        mg.link(b.id, a.id, "rel")
+        mg.merge_nodes(a.id, b.id)
+        # no self-loop
+        neighbors = mg.neighbors(b.id)
+        assert len(neighbors) == 0
+
+
+class TestShortestPath:
+    def test_direct_connection(self, populated):
+        mg, a, b, c = populated
+        path = mg.shortest_path(a.id, b.id)
+        assert path == [a.id, b.id]
+
+    def test_two_hop(self, populated):
+        mg, a, b, c = populated
+        # a -> b -> c exists (b learning c)
+        path = mg.shortest_path(a.id, c.id)
+        assert path is not None
+        assert path[0] == a.id
+        assert path[-1] == c.id
+
+    def test_no_path(self, mg):
+        a = mg.add("A")
+        b = mg.add("B")
+        assert mg.shortest_path(a.id, b.id) is None
+
+    def test_same_node(self, mg):
+        a = mg.add("A")
+        assert mg.shortest_path(a.id, a.id) == [a.id]

@@ -182,6 +182,62 @@ class MemoryGraph:
             "by_kind": {r["kind"]: r["c"] for r in kinds}
         }
 
+    def merge_nodes(self, source_id: str, target_id: str) -> Optional[Node]:
+        """Merge source into target. Target keeps its id, absorbs source's data and edges."""
+        src = self.conn.execute("SELECT * FROM nodes WHERE id=?", (source_id,)).fetchone()
+        tgt = self.conn.execute("SELECT * FROM nodes WHERE id=?", (target_id,)).fetchone()
+        if not src or not tgt:
+            return None
+        # Merge data
+        merged_data = {**json.loads(src["data"]), **json.loads(tgt["data"])}
+        new_weight = max(src["weight"], tgt["weight"])
+        # Rewire edges pointing to source -> point to target
+        # First delete edges that would become duplicates
+        self.conn.execute("""
+            DELETE FROM edges WHERE (source=? OR source=?) AND target IN (
+                SELECT e2.target FROM edges e2 WHERE e2.source=? AND e2.target=?
+                UNION
+                SELECT e2.source FROM edges e2 WHERE e2.target=? AND e2.source=?
+            )
+        """, (source_id, target_id, source_id, target_id, source_id, target_id))
+        self.conn.execute("UPDATE edges SET source=? WHERE source=?", (target_id, source_id))
+        self.conn.execute("UPDATE edges SET target=? WHERE target=?", (target_id, source_id))
+        # Remove self-loops
+        self.conn.execute("DELETE FROM edges WHERE source=? AND target=?", (target_id, target_id))
+        # Update target
+        self.conn.execute(
+            "UPDATE nodes SET data=?, weight=? WHERE id=?",
+            (json.dumps(merged_data), new_weight, target_id)
+        )
+        # Delete source
+        self.conn.execute("DELETE FROM nodes WHERE id=?", (source_id,))
+        self.conn.commit()
+        row = self.conn.execute("SELECT * FROM nodes WHERE id=?", (target_id,)).fetchone()
+        return Node(row["id"], row["label"], row["kind"],
+                    json.loads(row["data"]), row["created"], row["accessed"], row["weight"])
+
+    def shortest_path(self, start_id: str, end_id: str) -> Optional[list[str]]:
+        """BFS shortest path between two nodes. Returns list of node ids or None."""
+        if start_id == end_id:
+            return [start_id]
+        visited = {start_id}
+        queue = [(start_id, [start_id])]
+        while queue:
+            current, path = queue.pop(0)
+            neighbors = self.conn.execute(
+                "SELECT target FROM edges WHERE source=?", (current,)
+            ).fetchall()
+            for n in neighbors:
+                nid = n["target"]
+                if nid in visited:
+                    continue
+                visited.add(nid)
+                new_path = path + [nid]
+                if nid == end_id:
+                    return new_path
+                queue.append((nid, new_path))
+        return None
+
     def visualize_ascii(self) -> str:
         """简单的 ASCII 可视化。"""
         lines = ["📊 Memory Network:"]
