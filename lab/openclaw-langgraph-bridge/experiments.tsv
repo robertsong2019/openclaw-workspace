@@ -8,3 +8,7 @@ timestamp	commit	metric	value	status	description
 2026-05-08T23:00	b6cdef9	test_pass_rate	31/31	keep	withTimeout: node timeout guard with fallback state
 2026-05-09T23:00	2060985	test_pass_rate	38/38	keep	withRetry: node retry wrapper with exponential backoff + onRetry callback
 2026-05-10T23:00	fb39fc3	test_pass_rate	44/44	keep	pipeline: sequential node composition + continueOnError + completedSteps accumulation
+2026-05-12T21:00	5c09847	test_pass_rate	52/52	keep	batch(): parallel node execution with concurrency limit
+2026-05-12T21:10	350430f	test_pass_rate	60/60	keep	switchRoute(): multi-branch conditional routing with predicates
+2026-05-12T21:20	1bb6eb3	test_pass_rate	72/72	keep	transform(): pick/omit/rename/defaults/compose state utilities
+2026-05-12T21:30	bc1aec3	test_pass_rate	78/78	keep	withRateLimit(): sliding window rate limiting wrapper
