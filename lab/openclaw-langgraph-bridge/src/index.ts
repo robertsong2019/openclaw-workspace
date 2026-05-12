@@ -19,3 +19,5 @@ export { switchRoute } from "./switch-route.js";
 export type { SwitchCase, SwitchRouteConfig } from "./switch-route.js";
 export { pick, omit, rename, defaults, compose } from "./transform.js";
 export type { TransformFn } from "./transform.js";
+export { withRateLimit } from "./rate-limit.js";
+export type { RateLimitConfig } from "./rate-limit.js";
