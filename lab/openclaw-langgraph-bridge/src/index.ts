@@ -15,3 +15,5 @@ export { pipeline } from "./pipeline.js";
 export type { PipelineConfig, PipelineResult } from "./pipeline.js";
 export { batch } from "./batch.js";
 export type { BatchConfig } from "./batch.js";
+export { switchRoute } from "./switch-route.js";
+export type { SwitchCase, SwitchRouteConfig } from "./switch-route.js";
