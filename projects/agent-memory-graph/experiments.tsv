@@ -1,0 +1,4 @@
+timestamp	commit	metric	value	status	description
+2026-05-12T19:00	be74e8a	test_count	18/18	keep	Cycle 1: test suite from scratch (18 tests) + unlink() method. Covers add/link/recall/neighbors/decay/stats.
+2026-05-12T19:10	708a4de	test_count	26/26	keep	Cycle 2: merge_nodes() (data+edge rewire+self-loop cleanup) + shortest_path() (BFS). 8 new tests.
+2026-05-12T19:20	3c78134	test_count	30/30	keep	Cycle 3: tag_nodes() + search_by_tag() + add(tags=). Tags column in SQLite. 4 new tests.
