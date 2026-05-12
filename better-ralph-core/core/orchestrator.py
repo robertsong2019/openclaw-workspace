@@ -480,6 +480,51 @@ class RalphOrchestrator:
             max_consecutive_failures=max_consecutive_failures,
         )
 
+    def plan_batch(
+        self,
+        max_iterations: int = 10,
+        max_consecutive_failures: int = 3,
+    ) -> Dict[str, Any]:
+        """Dry-run batch plan: preview what run_batch would execute.
+
+        Simulates story selection order without executing any iterations.
+        Useful for planning and validation before committing to a long batch.
+
+        Args:
+            max_iterations: Same budget as run_batch.
+            max_consecutive_failures: Same threshold as run_batch.
+
+        Returns:
+            Dict with planned_stories (list of story dicts), total_planned,
+            remaining_budget, and would_complete_all (bool).
+        """
+        if not self.current_session_id:
+            raise ValueError("No active session")
+
+        stories = self.prd_manager.get_all_stories()
+        remaining = [s for s in stories if not s.passes]
+
+        planned = []
+        budget = min(max_iterations, len(remaining))
+        # Simulate consecutive failures stopping early
+        # In dry-run we assume all succeed for planning purposes
+        for i, story in enumerate(remaining[:budget]):
+            planned.append({
+                "step": i + 1,
+                "story_id": story.id,
+                "title": story.title,
+                "priority": story.priority,
+            })
+
+        return {
+            "planned_stories": planned,
+            "total_planned": len(planned),
+            "remaining_after_plan": max(0, len(remaining) - budget),
+            "would_complete_all": len(remaining) <= budget,
+            "budget": max_iterations,
+            "failure_threshold": max_consecutive_failures,
+        }
+
     def estimate_remaining(self) -> Dict[str, Any]:
         """Estimate remaining work based on completed iterations.
         Returns count of remaining stories, estimated iterations, and ETA.
