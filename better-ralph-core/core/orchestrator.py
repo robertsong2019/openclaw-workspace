@@ -542,3 +542,61 @@ class RalphOrchestrator:
             "estimated_iterations": round(est_iterations, 1),
             "avg_iterations_per_story": round(avg_iters, 1),
         }
+
+    def validate_dependencies(self) -> Dict[str, Any]:
+        """Validate story dependency graph for issues.
+
+        Checks for:
+        - Circular dependencies (cycles)
+        - Missing dependencies (referencing non-existent story IDs)
+        - Self-dependencies
+
+        Returns:
+            Dict with valid (bool), circular_deps, missing_deps, self_deps,
+            and total_stories_checked.
+        """
+        stories = self.prd_manager.get_all_stories()
+        story_ids = {s.id for s in stories}
+
+        missing_deps: List[Dict[str, str]] = []
+        self_deps: List[Dict[str, str]] = []
+
+        for s in stories:
+            for dep in s.dependencies:
+                if dep == s.id:
+                    self_deps.append({"story_id": s.id, "dependency": dep})
+                elif dep not in story_ids:
+                    missing_deps.append({"story_id": s.id, "dependency": dep})
+
+        # Detect cycles via DFS
+        circular_deps: List[List[str]] = []
+        adj: Dict[str, List[str]] = {s.id: list(s.dependencies) for s in stories}
+        visited: Set[str] = set()
+        in_stack: Set[str] = set()
+
+        def dfs(node: str, path: List[str]):
+            visited.add(node)
+            in_stack.add(node)
+            path.append(node)
+            for neighbor in adj.get(node, []):
+                if neighbor in in_stack:
+                    # Found cycle — extract it
+                    cycle_start = path.index(neighbor)
+                    circular_deps.append(path[cycle_start:] + [neighbor])
+                elif neighbor not in visited and neighbor in story_ids:
+                    dfs(neighbor, path)
+            path.pop()
+            in_stack.discard(node)
+
+        for sid in story_ids:
+            if sid not in visited:
+                dfs(sid, [])
+
+        valid = not circular_deps and not missing_deps and not self_deps
+        return {
+            "valid": valid,
+            "circular_deps": circular_deps,
+            "missing_deps": missing_deps,
+            "self_deps": self_deps,
+            "total_stories_checked": len(stories),
+        }
