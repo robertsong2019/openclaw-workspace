@@ -18,12 +18,16 @@
 ## Current Focus (2026-05-12)
 
 ### Active Theme
-Autoresearch 方法论实践 - **连续48天零回滚率** 🏆。05-12 凌晨: agent-context-store 持久化重建+search_by_time_range+batch_delete (69 tests), better-ralph-core save_checkpoint+load_checkpoint+resume_batch (278 tests)。**研究积累已饱和，进入 lab/ 实现阶段**: Hindsight Mini(已有完整TS原型) > A2A Trust > LangGraph Bridge。
+Autoresearch 方法论实践 - **连续50天零回滚率** 🏆。05-13 夜间: agent-context-store 76→93 tests (sample/count_by_tag/diff/histogram/dedup_content), agent-memory-graph 0→30, better-ralph-core 278→285。**研究积累已饱和，进入 lab/ 实现阶段**: Hindsight Mini(已有完整TS原型) > A2A Trust > LangGraph Bridge。
 
 ### ⚠️ 关键发现
 - **agent-context-store 代码未持久化问题**: 05-08→05-11 的代码到97 tests但未持久化到 workspace，05-12 重建基线为69 tests。**教训: 每次实验完成后必须确认代码已持久化到 lab/ 目录并 git commit。**
 
 ### Next Actions
+- [ ] **WASM Agent Sandbox** — lab/wasm-agent-sandbox/ PoC (Node.js 宿主 + WAT/Rust 工具)
+  - [研究笔记](catalyst-research/exploration-notes/2026-05-13-wasm-agent-sandbox-runtime.md) ✅ WASM沙箱隔离+WASI-NN推理+Extism插件+审计日志，WAT代码已编译验证通过
+  - **关键发现**: WASM cold start <10ms vs Docker 1-5s(100x优势); Component Model+WIT解决Agent工具语言碎片化; WASM是必要不充分条件(需配合OPA策略+OTel监控)
+  - **下一步**: 创建 lab/wasm-agent-sandbox/ — Node.js宿主 + Extism SDK + 文本分析/JSON处理工具 PoC
 - [ ] **Structured Output Toolkit** — lab/structured-output-toolkit/ (TypeScript, Zod+Ollama JSON mode)
   - [研究笔记](catalyst-research/exploration-notes/2026-05-10-constrained-decoding-structured-output.md) ✅ FSM constrained decoding 深度研究 + 可运行 TypeScript 代码 (5/5 tests pass)
   - **关键发现**: Ollama JSON mode 是 Level 3 约束(不需要额外库); XGrammar <40µs/token 接近零开销; SLM(Qwen3.5-0.8B, Phi-4-mini)已原生支持 function calling; constrained decoding 可能比无约束更快
@@ -49,6 +53,10 @@ Autoresearch 方法论实践 - **连续48天零回滚率** 🏆。05-12 凌晨: 
   - [研究笔记](catalyst-research/exploration-notes/2026-05-12-agent-observability-opentelemetry.md) ✅ 5核心概念+可运行TypeScript Tracer+OWASP AOS分析+工具选型
   - **关键发现**: OTel GenAI semantic conventions 已成事实标准(注意 gen_ai.tool. 路径陷阱); OWASP AOS Guardian Agent 模式 = inline policy enforcement; Agent可观测性≠LLM可观测性(需要跨步骤因果链+收敛性追踪); 推荐组合: OpenLLMetry(埋点) + Arize Phoenix(本地调试)
   - **下一步**: lab/agent-observability/ → AgentTracer(startRun/traceLLMCall/traceToolCall/traceMemory) + Guardian policy check + tail sampling
+- [ ] **Hindsight Mini** — lab/hindsight-mini/ 轻量级 agent 自反思引擎
+  - [研究笔记](catalyst-research/exploration-notes/2026-05-13-hindsight-mini.md) ✅ AgentHER + Reflexion + SE-Agent 综合 → 可运行 TypeScript HindsightMini 类(失败检测+反思生成+HER重标+教训提取)
+  - **关键发现**: HER 本质是数据增强(prompt-level HER 可不微调); thought-action misalignment 是头号杀手; 跨轨迹模式识别>单次反思; 天然集成 agent-context-store + agent-memory-graph
+  - **下一步**: 创建 lab/hindsight-mini/ — 接入 agent-context-store 持久化 + OpenClaw agent 循环集成
 - [ ] **Gossip Discovery Prototype** — 基于研究笔记，加入DID验证+A2A Trust评分
   - [研究笔记](catalyst-research/exploration-notes/2026-05-05-agent-federation-discovery.md) ✅ DUADP+GEACL+双层Churn+可运行Gossip代码
   - **核心发现**: DUADP(DNS for AI)+Gossip是A2A的发现层补丁;双层Churn(node+agent)是Agent特有挑战
@@ -130,6 +138,7 @@ Autoresearch 方法论实践 - **连续48天零回滚率** 🏆。05-12 凌晨: 
 9. **tiny-agent-workshop** - 单文件 Agent 模式教学集 (✅ 7个模式: ReAct/ToolCall/Memory/Router/Guardrail/Chain/EdgeAgent)
 10. **Agent Memory Service** - Mem0风格Agent记忆管理 (✅ v1.0-dev, 594/594 tests, 三层存储+LLM提取+语义检索+Consolidation+变更追踪+自监控+搜索三阶段(BM25+Embedding+Unified RRF)+suggestTags()+healthScore()+autoMaintain()+searchSimilar()+findDuplicatePairs()+exportJSON/importJSON()+pruneLowWeight()+inspect()+clusterByTopic()+summarizeCluster()+compareMemories()+tagHierarchy()+rebalance()+autoTag()+mergeClusters()+clusterHealth()+searchByEntity()+topEntities()+tagSearch()+memoryDiff()+clusterAutoMerge()+contentHistory()+contentVersionDiff()+searchByTimeRange()+contentRollback()+classifyFact()+searchByFactType()+statsByFactType()+reclassifyFact()+bulkReclassify()+searchByContent()+contentBranch()+searchGraph()+searchTemporal()+memoryMerge()+searchByBranch()+bulkMerge()+addOpinion()+searchOpinions()+evolveConfidence()+opinionConsensus()+opinionDrift()+opinionEvolveFromEvidence()+contentVersions持久化+mergeSuggestions())
 11. **A2A Protocol Lab** - Agent-to-Agent通信协议实验 (✅ 零依赖Python实现, Server+Client+Federation Demo)
+12. **agent-memory-graph** - SQLite知识图谱Agent记忆 (✅ 30/30 tests, unlink+merge_nodes+shortest_path+tag_nodes)
 
 ---
 
@@ -267,6 +276,19 @@ curl -X POST "https://api.tavily.com/search" \
   - **mergePreview+safeMerge+mergeConflictSummary**: 风险感知合并工作流(18 tests, 594→612)
   - 去重管道完整: mergeSuggestions(发现) → autoMerge(执行) → contentVersionCompact(清理)
   - 零回滚率持续保持(连续26天)
+
+### 2026-05-13
+- ✅ **agent-memory-graph** — 0→30 tests (3 cycles, 3 keep). unlink+merge_nodes+shortest_path+tag_nodes。SQLite知识图谱Agent记忆 (commits be74e8a/708a4de/3c78134)
+- ✅ **agent-context-store sample/count_by_tag/diff/histogram/dedup** — 76→93 tests (+17)。5新API: sample()+count_by_tag()+diff()+histogram()+dedup_content() (commits 2d151b1/a9fc58f)
+- ✅ **agent-context-store search_combined** — 69→76 tests (+7)。复合过滤(tags+prefix+age+length) (commit b916bd0)
+- ✅ **better-ralph-core plan_batch** — 278→285 tests (+7)。dry-run批量规划预览 (commit 214e16b)
+- ✅ **agent-context-store 4-cycle evening** — 93→132 tests (+39, 4 cycles, 4 keep, 零回滚)
+  - touch()+content_hash()+top_tags()+batch_put()+search_similar_to_key() (+13)
+  - update_content()+clear()+size()+has_key() (+10)
+  - export_json()+import_json()+merge_store()+keys()+values() (+8)
+  - group_by_prefix()+content_summary()+tag_cloud() (+8)
+  - 487→636 lines (commits ba0d514/cf6140a/6038d46/6963eea)
+- 连续51天零回滚率
 
 ### 2026-05-12
 - ✅ **agent-context-store 持久化重建+time_range+batch_delete** — 重建基线69 tests, +search_by_time_range+batch_delete。代码已持久化到 lab/agent-context-store/ (commit 269dafe)

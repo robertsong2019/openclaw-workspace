@@ -356,6 +356,7 @@ def generate_context(
     project_name: str,
     max_tokens: int,
     fmt: str,
+    include_source: bool = False,
 ) -> str:
     """Generate the context markdown."""
     sections = []
@@ -466,6 +467,27 @@ def generate_context(
     else:
         sections.append("- No specific patterns detected")
 
+    # Inline source
+    if include_source:
+        sections.append("\n## Source Files")
+        for category, paths in key_files.items():
+            if not paths:
+                continue
+            for p in paths[:10]:
+                fpath = root / p
+                if not fpath.is_file():
+                    continue
+                try:
+                    content = fpath.read_text(errors="ignore")
+                except Exception:
+                    continue
+                content = truncate(content)
+                ext = Path(p).suffix.lstrip('.')
+                sections.append(f"\n### `{p}`")
+                sections.append(f"```{ext}")
+                sections.append(content)
+                sections.append("```")
+
     result = "\n".join(sections)
 
     # Token check
@@ -550,6 +572,8 @@ def main():
     parser.add_argument("--name", help="Project name (default: directory name)")
     parser.add_argument("--stats", action="store_true",
                         help="Output project statistics as JSON instead of context")
+    parser.add_argument("--include-source", action="store_true",
+                        help="Embed key file contents inline in output")
     parser.add_argument("-v", "--version", action="version", version=f"ctxpack {VERSION}")
 
     args = parser.parse_args()
@@ -607,6 +631,7 @@ def main():
         project_name=project_name,
         max_tokens=args.max_tokens,
         fmt=args.format,
+        include_source=args.include_source,
     )
 
     tokens = estimate_tokens(context)

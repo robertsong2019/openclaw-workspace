@@ -1,4 +1,4 @@
-# HEARTBEAT.md - May 11, 2026 (Monday)
+# HEARTBEAT.md - May 13, 2026 (Wednesday)
 
 ## 待办任务
 
@@ -21,14 +21,15 @@
 
 ## 系统状态
 - **AMS v1.0-dev**: 645/645 tests
-- **better-ralph-core**: 264/264 tests
-- **agent-context-store**: 97/97 tests
+- **better-ralph-core**: 285/285 tests
+- **agent-context-store**: 76/76 tests (05-12 重建后基线)
+- **agent-memory-graph**: 30/30 tests (NEW)
 - **prompt-router**: 230/230 tests
 - **prompt-weaver**: 148/148 tests
-- **autoresearch**: 零回滚率持续保持（连续46天）🏆
+- **autoresearch**: 零回滚率持续保持（连续49天）🏆
 
 ## 近期发现
 - **突破点**: 研究积累已饱和，本周重点是 lab/ 实现（Structured Output > Observability > Hindsight Mini > A2A Trust > LangGraph Bridge）
-- agent-context-store search_dups() 解决 Agent 重复存储问题
-- better-ralph-core run_batch() 是缺失的原语，替代手动循环
-- Constrained Decoding 可能比无约束更快（搜索空间修剪）
+- agent-memory-graph 新项目: SQLite知识图谱+merge_nodes+shortest_path, 补充 AMS 图遍历能力
+- better-ralph-core plan_batch() 是 run_batch() 的天然搭档: plan→execute→checkpoint→resume
+- search_combined() 填补复合查询缺口, 避免多次搜索手动交集

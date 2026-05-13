@@ -433,3 +433,61 @@ class TestGenerateStats:
         assert stats["totalFiles"] == 0
         assert stats["totalLines"] == 0
         assert stats["totalExports"] == 0
+
+
+class TestIncludeSource:
+    """Tests for --include-source feature."""
+
+    def test_include_source_adds_source_section(self, project_dir):
+        from ctxpack import generate_context, scan_tree, find_key_files, detect_languages, detect_frameworks, load_gitignore, load_ctxpackignore
+
+        gitignore = load_gitignore(project_dir) | load_ctxpackignore(project_dir)
+        files = scan_tree(project_dir, gitignore)
+        key_files = find_key_files(files, project_dir)
+        languages = detect_languages(files)
+        frameworks = detect_frameworks(project_dir, files)
+
+        result = generate_context(
+            root=project_dir, files=files, key_files=key_files,
+            languages=languages, frameworks=frameworks,
+            project_name="test", max_tokens=8000, fmt="generic",
+            include_source=True,
+        )
+        assert "## Source Files" in result
+        # Should contain actual file contents
+        assert "```json" in result or "```ts" in result
+
+    def test_no_source_without_flag(self, project_dir):
+        from ctxpack import generate_context, scan_tree, find_key_files, detect_languages, detect_frameworks, load_gitignore, load_ctxpackignore
+
+        gitignore = load_gitignore(project_dir) | load_ctxpackignore(project_dir)
+        files = scan_tree(project_dir, gitignore)
+        key_files = find_key_files(files, project_dir)
+        languages = detect_languages(files)
+        frameworks = detect_frameworks(project_dir, files)
+
+        result = generate_context(
+            root=project_dir, files=files, key_files=key_files,
+            languages=languages, frameworks=frameworks,
+            project_name="test", max_tokens=8000, fmt="generic",
+            include_source=False,
+        )
+        assert "## Source Files" not in result
+
+    def test_source_has_code_blocks(self, project_dir):
+        from ctxpack import generate_context, scan_tree, find_key_files, detect_languages, detect_frameworks, load_gitignore, load_ctxpackignore
+
+        gitignore = load_gitignore(project_dir) | load_ctxpackignore(project_dir)
+        files = scan_tree(project_dir, gitignore)
+        key_files = find_key_files(files, project_dir)
+        languages = detect_languages(files)
+        frameworks = detect_frameworks(project_dir, files)
+
+        result = generate_context(
+            root=project_dir, files=files, key_files=key_files,
+            languages=languages, frameworks=frameworks,
+            project_name="test", max_tokens=8000, fmt="generic",
+            include_source=True,
+        )
+        # Should have code fences with language hint
+        assert "```ts" in result

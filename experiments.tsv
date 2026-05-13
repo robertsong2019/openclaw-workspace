@@ -40,3 +40,4 @@ date	project	tests_before	tests_after	delta	status
 2026-05-10	catalyst-agent-mesh	207	224	+17	224	224	0	+test_mesh_selection.py: select_agents_for_task (7 tests), get_available_agents (3), execute_task edge cases (3), find_agents (4)	all pass
 2026-05-11	ai-dev-tools	fix-jest-esm	3 suites 48 tests all pass (was 3 failed due to ESM config)			healed
 2026-05-12T03:00	-	test_pass_rate	147/147	improve	ai-iot-orchestrator: +12 tests (DeviceType/State enum completeness, to_dict capability details, async callback notification, callback error resilience, custom _learn override, send_message routing)
+2026-05-13T03:00	code-quality-checker	0	14	+14	✅ all pass	Fixed 3 bugs: (1) runComplexityCheck used undefined vars score/issues instead of destructuring, (2) regex patterns double-escaped (\\s→s literal), (3) split('\\n' literal instead of newline). Added test suite with 14 tests: analyzeComplexity (4), analyzeSecurity (4), calculateHealthScore (6).

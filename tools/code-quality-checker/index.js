@@ -202,7 +202,7 @@ async function runComplexityCheck(targetPath) {
     const complexityResults = [];
 
     for (const file of jsFiles) {
-      const complexity = analyzeComplexity(file);
+      const { complexity: score, issues } = analyzeComplexity(file);
       complexityResults.push({
         file: path.relative(targetPath, file),
         complexity: score,
@@ -430,7 +430,7 @@ async function findJavaScriptFiles(dir) {
 
 function analyzeComplexity(filePath) {
   const content = fs.readFileSync(filePath, 'utf8');
-  const lines = content.split('\\n');
+  const lines = content.split('\n');
   
   let complexity = 0;
   const issues = [];
@@ -439,12 +439,12 @@ function analyzeComplexity(filePath) {
     const line = lines[i].trim();
     
     // 检查循环复杂度
-    if (line.match(/\\b(if|for|while|do|switch|case|catch)\\b/)) {
+    if (line.match(/\b(if|for|while|do|switch|case|catch)\b/)) {
       complexity++;
     }
     
     // 检查嵌套层次
-    const indentLevel = line.match(/^\\s*/)?.[0].length || 0;
+    const indentLevel = line.match(/^\s*/)?.[0].length || 0;
     if (indentLevel > 16) {
       issues.push(`第${i + 1}行: 缩进过深 (${indentLevel}级)`);
     }
@@ -464,12 +464,12 @@ async function analyzeSecurity(filePath) {
   
   // 检查常见的安全问题
   const patterns = [
-    { regex: /eval\\s*\\(/g, issue: '使用eval函数，存在安全风险' },
-    { regex: /innerHTML\\s*=/g, issue: '使用innerHTML，可能存在XSS风险' },
-    { regex: /document\\.write\\s*\\(/g, issue: '使用document.write，已废弃且有安全风险' },
-    { regex: /setTimeout\\s*\\([^,]+,/g, issue: '使用setTimeout字符串参数，可能有安全风险' },
-    { regex: /setInterval\\s*\\([^,]+,/g, issue: '使用setInterval字符串参数，可能有安全风险' },
-    { regex: /\\$\\{[^}]*\\}/g, issue: '使用模板字符串拼接，注意SQL注入风险' }
+    { regex: /eval\s*\(/g, issue: '使用eval函数，存在安全风险' },
+    { regex: /innerHTML\s*=/g, issue: '使用innerHTML，可能存在XSS风险' },
+    { regex: /document\.write\s*\(/g, issue: '使用document.write，已废弃且有安全风险' },
+    { regex: /setTimeout\s*\([^,]+,/g, issue: '使用setTimeout字符串参数，可能有安全风险' },
+    { regex: /setInterval\s*\([^,]+,/g, issue: '使用setInterval字符串参数，可能有安全风险' },
+    { regex: /\$\{[^}]*\}/g, issue: '使用模板字符串拼接，注意SQL注入风险' }
   ];
   
   for (const pattern of patterns) {
@@ -496,4 +496,19 @@ async function checkOutdatedDependencies(targetPath) {
   }
 }
 
-program.parse();
+// Export for testing
+export {
+  findJavaScriptFiles,
+  analyzeComplexity,
+  analyzeSecurity,
+  calculateHealthScore,
+  runESLintCheck,
+  runComplexityCheck,
+  runSecurityCheck,
+  runDependencyCheck
+};
+
+// Only parse CLI if run directly
+if (process.argv[1] && process.argv[1].endsWith('code-quality-checker/index.js')) {
+  program.parse();
+}
