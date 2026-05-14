@@ -7,6 +7,7 @@ that helps AI agents understand your codebase.
 """
 
 import argparse
+import difflib
 import fnmatch
 import json
 import os
@@ -574,6 +575,8 @@ def main():
                         help="Output project statistics as JSON instead of context")
     parser.add_argument("--include-source", action="store_true",
                         help="Embed key file contents inline in output")
+    parser.add_argument("--diff", metavar="FILE",
+                        help="Compare generated context with existing file, show changes")
     parser.add_argument("-v", "--version", action="version", version=f"ctxpack {VERSION}")
 
     args = parser.parse_args()
@@ -633,6 +636,25 @@ def main():
         fmt=args.format,
         include_source=args.include_source,
     )
+
+    if args.diff:
+        diff_file = Path(args.diff)
+        if not diff_file.exists():
+            eprint(f"Error: diff target {diff_file} does not exist")
+            sys.exit(1)
+        existing = diff_file.read_text().splitlines(keepends=True)
+        generated = context.splitlines(keepends=True)
+        diff = list(difflib.unified_diff(existing, generated,
+                                        fromfile=str(diff_file),
+                                        tofile="(generated)"))
+        if not diff:
+            eprint("✅ No differences — generated context matches existing file.")
+        else:
+            for line in diff:
+                sys.stdout.write(line)
+            eprint(f"\n📊 {len([l for l in diff if l.startswith('+') and not l.startswith('+++')])} additions, "
+                   f"{len([l for l in diff if l.startswith('-') and not l.startswith('---')])} removals")
+        return
 
     tokens = estimate_tokens(context)
     eprint(f"   ~{tokens} tokens, {len(context)} chars")

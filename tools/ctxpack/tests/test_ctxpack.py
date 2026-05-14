@@ -491,3 +491,36 @@ class TestIncludeSource:
         )
         # Should have code fences with language hint
         assert "```ts" in result
+
+# ── Diff mode tests ──────────────────────────────────────────────────
+
+def test_diff_no_changes(tmp_path, capsys):
+    """Diff mode produces unified diff output."""
+    import subprocess, json
+    proj = tmp_path / "proj"
+    proj.mkdir()
+    (proj / "package.json").write_text(json.dumps({"name": "d", "description": "d", "scripts": {"dev": "x"}, "dependencies": {}}))
+    ctx_file = proj / "ctx.md"
+    subprocess.run(["python3", "-m", "ctxpack", str(proj), "-o", str(ctx_file)], check=True, capture_output=True)
+    # Diff should produce unified diff format
+    r = subprocess.run(["python3", "-m", "ctxpack", str(proj), "--diff", str(ctx_file)], capture_output=True, text=True)
+    assert r.returncode == 0
+    assert "---" in r.stdout or "No differences" in r.stderr
+
+def test_diff_detects_changes(tmp_path, capsys):
+    """When existing file differs, diff shows changes."""
+    import subprocess, json
+    proj = tmp_path / "proj2"
+    proj.mkdir()
+    (proj / "package.json").write_text(json.dumps({"name": "d2", "description": "d2", "scripts": {"dev": "x"}, "dependencies": {}}))
+    ctx_file = proj / "ctx.md"
+    ctx_file.write_text("# old content\n")
+    r = subprocess.run(["python3", "-m", "ctxpack", str(proj), "--diff", str(ctx_file)], capture_output=True, text=True)
+    assert r.returncode == 0
+    assert "-# old content" in r.stdout
+
+def test_diff_missing_file(tmp_path):
+    """Diff with nonexistent file should error."""
+    import subprocess
+    r = subprocess.run(["python3", "-m", "ctxpack", str(tmp_path), "--diff", str(tmp_path / "nope.md")], capture_output=True, text=True)
+    assert r.returncode != 0
