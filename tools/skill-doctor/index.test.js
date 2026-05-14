@@ -172,6 +172,67 @@ test("diagnoseJSON exitCode 0 when all pass", () => {
 });
 
 // ── diagnose (human-readable) ──────────────────────────────────
+// ── Auto-fix tests ──────────────────────────────────────────────
+const { fixers, autoFixJSON } = require("./index");
+
+test("has 3 fixers registered", () => {
+  expect(fixers.length).toBe(3);
+});
+
+test("auto-fix creates .gitignore when node_modules exists", () => {
+  const dir = createTempSkill({});
+  fs.mkdirSync(path.join(dir, "node_modules"));
+  const report = autoFixJSON(dir);
+  const fix = report.fixes.find((r) => r.name === "Add .gitignore with node_modules");
+  expect(fix.fixed).toBe(true);
+  expect(fs.existsSync(path.join(dir, ".gitignore"))).toBe(true);
+});
+
+test("auto-fix creates SKILL.md when missing", () => {
+  const dir = createTempSkill({});
+  const report = autoFixJSON(dir);
+  const fix = report.fixes.find((r) => r.name === "Create minimal SKILL.md");
+  expect(fix.fixed).toBe(true);
+  expect(fs.existsSync(path.join(dir, "SKILL.md"))).toBe(true);
+});
+
+test("auto-fix creates README.md when missing", () => {
+  const dir = createTempSkill({});
+  const report = autoFixJSON(dir);
+  const fix = report.fixes.find((r) => r.name === "Create minimal README.md");
+  expect(fix.fixed).toBe(true);
+  expect(fs.existsSync(path.join(dir, "README.md"))).toBe(true);
+});
+
+test("auto-fix skips when files already exist", () => {
+  const dir = createTempSkill({
+    "SKILL.md": "# " + "x".repeat(200),
+    "README.md": "# Test",
+  });
+  const report = autoFixJSON(dir);
+  expect(report.fixCount).toBe(0);
+});
+
+test("auto-fix appends node_modules to existing .gitignore", () => {
+  const dir = createTempSkill({ ".gitignore": "dist\n" });
+  fs.mkdirSync(path.join(dir, "node_modules"));
+  const report = autoFixJSON(dir);
+  const fix = report.fixes.find((r) => r.name === "Add .gitignore with node_modules");
+  expect(fix.fixed).toBe(true);
+  const content = fs.readFileSync(path.join(dir, ".gitignore"), "utf8");
+  expect(content).toContain("node_modules");
+  expect(content).toContain("dist");
+});
+
+test("autoFixJSON returns correct structure", () => {
+  const dir = createTempSkill({});
+  const report = autoFixJSON(dir);
+  expect(report).toHaveProperty("directory");
+  expect(report).toHaveProperty("fixes");
+  expect(report).toHaveProperty("fixCount");
+  expect(report.fixes.length).toBe(fixers.length);
+});
+
 test("diagnose returns exit code 2 on failures", () => {
   const dir = createTempSkill({}); // no SKILL.md = fail
   // Capture stdout

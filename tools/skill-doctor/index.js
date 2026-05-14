@@ -190,15 +190,86 @@ function diagnoseJSON(dir) {
   return { directory: resolved, results, summary, exitCode: summary.fail > 0 ? 2 : summary.warn > 0 ? 1 : 0 };
 }
 
+// ── Auto-fix ─────────────────────────────────────────────────
+
+const fixers = [];
+
+function fixer(name, fn) { fixers.push({ name, fn }); }
+
+fixer("Add .gitignore with node_modules", (dir) => {
+  const nmPath = path.join(dir, "node_modules");
+  const giPath = path.join(dir, ".gitignore");
+  if (!fs.existsSync(nmPath)) return { fixed: false, msg: "no node_modules dir" };
+  if (fs.existsSync(giPath)) {
+    const content = fs.readFileSync(giPath, "utf8");
+    if (/node_modules/.test(content)) return { fixed: false, msg: "already in .gitignore" };
+    fs.appendFileSync(giPath, "\nnode_modules\n");
+    return { fixed: true, msg: "appended node_modules to .gitignore" };
+  }
+  fs.writeFileSync(giPath, "node_modules\n");
+  return { fixed: true, msg: "created .gitignore with node_modules" };
+});
+
+fixer("Create minimal SKILL.md", (dir) => {
+  const p = path.join(dir, "SKILL.md");
+  if (fs.existsSync(p)) return { fixed: false, msg: "SKILL.md already exists" };
+  const name = path.basename(dir);
+  fs.writeFileSync(p, `# ${name}\n\n> Description of this skill.\n\n## Usage\n\nHow to use this skill.\n`);
+  return { fixed: true, msg: "created minimal SKILL.md" };
+});
+
+fixer("Create minimal README.md", (dir) => {
+  const p = path.join(dir, "README.md");
+  if (fs.existsSync(p)) return { fixed: false, msg: "README.md already exists" };
+  const name = path.basename(dir);
+  fs.writeFileSync(p, `# ${name}\n\nSee [SKILL.md](./SKILL.md) for details.\n`);
+  return { fixed: true, msg: "created minimal README.md" };
+});
+
+function autoFix(dir) {
+  const resolved = path.resolve(dir);
+  if (!fs.existsSync(resolved)) {
+    console.error(fail(`Directory not found: ${resolved}`));
+    return 0;
+  }
+
+  console.log(`\n${c.bold}${c.cyan}🔧 skill-doctor --fix${c.reset} — ${resolved}\n`);
+  let fixCount = 0;
+
+  for (const { name, fn } of fixers) {
+    const result = fn(resolved);
+    if (result.fixed) {
+      console.log(`  ${ok(name)}  ${c.dim}${result.msg}${c.reset}`);
+      fixCount++;
+    }
+  }
+
+  if (fixCount === 0) console.log(`  ${c.dim}Nothing to auto-fix.${c.reset}`);
+  else console.log(`\n  ${c.bold}${fixCount} issue(s) fixed.${c.reset}`);
+
+  return fixCount;
+}
+
+function autoFixJSON(dir) {
+  const resolved = path.resolve(dir);
+  const results = fixers.map(({ name, fn }) => {
+    const r = fn(resolved);
+    return { name, ...r };
+  });
+  const fixed = results.filter((r) => r.fixed).length;
+  return { directory: resolved, fixes: results, fixCount: fixed };
+}
+
 // ── CLI ───────────────────────────────────────────────────────
 
 // Export for testing
-module.exports = { checks, diagnose, diagnoseJSON };
+module.exports = { checks, diagnose, diagnoseJSON, fixers, autoFix, autoFixJSON };
 
 if (require.main === module) {
   const args = process.argv.slice(2);
   const jsonMode = args.includes("--json");
-  const dirs = args.filter((a) => a !== "--json");
+  const fixMode = args.includes("--fix");
+  const dirs = args.filter((a) => a !== "--json" && a !== "--fix");
 
   if (dirs.length === 0 || args.includes("--help") || args.includes("-h")) {
     console.log(`${c.bold}skill-doctor${c.reset} — Diagnose OpenClaw Agent Skills
@@ -206,6 +277,8 @@ if (require.main === module) {
 ${c.bold}Usage:${c.reset}
   skill-doctor <skill-dir> [skill-dir ...]
   skill-doctor --json <skill-dir>   machine-readable output
+  skill-doctor --fix <skill-dir>    auto-fix simple issues
+  skill-doctor --fix --json        auto-fix with JSON output
   skill-doctor --help
 
 ${c.bold}Exit codes:${c.reset}
@@ -215,7 +288,18 @@ ${c.bold}Exit codes:${c.reset}
     process.exit(0);
   }
 
-  if (jsonMode) {
+  if (fixMode) {
+    if (jsonMode) {
+      const reports = dirs.map((d) => autoFixJSON(d));
+      console.log(JSON.stringify(reports, null, 2));
+    } else {
+      for (const arg of dirs) autoFix(arg);
+    }
+    // After fixing, re-diagnose to show current state
+    console.log(`\n${c.bold}${c.cyan}--- Re-running diagnosis ---${c.reset}`);
+  }
+
+  if (jsonMode && !fixMode) {
     const reports = dirs.map((d) => diagnoseJSON(d));
     console.log(JSON.stringify(reports, null, 2));
     const worst = Math.max(...reports.map((r) => r.exitCode));

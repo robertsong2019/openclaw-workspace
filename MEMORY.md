@@ -28,11 +28,12 @@ Autoresearch 方法论实践 - **连续52天零回滚率** 🏆。05-14 凌晨: 
   - [研究笔记](catalyst-research/exploration-notes/2026-05-13-wasm-agent-sandbox-runtime.md) ✅ WASM沙箱隔离+WASI-NN推理+Extism插件+审计日志，WAT代码已编译验证通过
   - **关键发现**: WASM cold start <10ms vs Docker 1-5s(100x优势); Component Model+WIT解决Agent工具语言碎片化; WASM是必要不充分条件(需配合OPA策略+OTel监控)
   - **下一步**: 创建 lab/wasm-agent-sandbox/ — Node.js宿主 + Extism SDK + 文本分析/JSON处理工具 PoC
-- [ ] **Structured Output Toolkit** — lab/structured-output-toolkit/ (TypeScript, Zod+Ollama JSON mode)
-  - [研究笔记](catalyst-research/exploration-notes/2026-05-10-constrained-decoding-structured-output.md) ✅ FSM constrained decoding 深度研究 + 可运行 TypeScript 代码 (5/5 tests pass)
-  - **关键发现**: Ollama JSON mode 是 Level 3 约束(不需要额外库); XGrammar <40µs/token 接近零开销; SLM(Qwen3.5-0.8B, Phi-4-mini)已原生支持 function calling; constrained decoding 可能比无约束更快
-  - **[05-12 更新]** Constrained Decoding 深度研究 → [笔记](catalyst-research/exploration-notes/2026-05-12-constrained-decoding.md) ✅ XGrammar-2(JIT+10ms编译)、GAD/ASAp(分布扭曲问题)、搜索空间修剪(>99.9%)
-  - **下一步**: 创建 lab/structured-output-toolkit/ — 评估 XGrammar Python binding 集成 + StructuredLLMClient + SchemaCache
+- [ ] **Structured Output Toolkit** — lab/structured-output-toolkit/ (TypeScript, Zod+Multi-Provider)
+  - [研究笔记 v1](catalyst-research/exploration-notes/2026-05-10-constrained-decoding-structured-output.md) ✅ FSM constrained decoding + 5/5 tests
+  - [研究笔记 v2](catalyst-research/exploration-notes/2026-05-12-constrained-decoding.md) ✅ XGrammar-2 + GAD/ASAp + 搜索空间修剪
+  - **[05-14 更新]** Multi-Provider Toolkit 深度研究 → [笔记](catalyst-research/exploration-notes/2026-05-14-structured-output-toolkit.md) ✅ StructuredLLMClient+SchemaCache+5/5 tests passed
+  - **关键发现**: Validation Sandwich(三层验证不可省略); Schema TTL ~120s 需预热; Schema Complexity Tax(20+字段降50% tok/s); Multi-Provider fallback 是生产必需品
+  - **下一步**: 创建 lab/structured-output-toolkit/ — 集成真实 OpenAI/Anthropic SDK, 目标 18/18 tests
 - [ ] **A2A x-agent-trust 中间件原型** — Node.js ES256 签名/验证，可作 OpenClaw gateway plugin
   - [研究笔记 v1](catalyst-research/exploration-notes/2026-05-03-a2a-agent-trust.md) ✅ 代码验证通过(签名+验证+篡改检测)
   - [研究笔记 v2](catalyst-research/exploration-notes/2026-05-03-a2a-agent-trust.md) ✅ 三层信任模型+Trust Extension设计+可运行TypeScript代码
@@ -50,9 +51,11 @@ Autoresearch 方法论实践 - **连续52天零回滚率** 🏆。05-14 凌晨: 
   - **关键发现**: Executor接口是核心抽象(非GatewayClient); 确定性TaskID = sha256(name:input); OpenClaw真实API端点 /v1/agent/run; StateSchema替代Annotation更类型安全
   - **下一步**: lab/openclaw-langgraph-bridge/ — executor.ts + create-task.ts + state.ts + create-bridge-graph.ts, 目标5+ tests
 - [ ] **Agent Observability (OTel + AOS)** — lab/agent-observability/ Tracer + PolicyEngine + Evaluator
-  - [研究笔记](catalyst-research/exploration-notes/2026-05-12-agent-observability-opentelemetry.md) ✅ 5核心概念+可运行TypeScript Tracer+OWASP AOS分析+工具选型
-  - **关键发现**: OTel GenAI semantic conventions 已成事实标准(注意 gen_ai.tool. 路径陷阱); OWASP AOS Guardian Agent 模式 = inline policy enforcement; Agent可观测性≠LLM可观测性(需要跨步骤因果链+收敛性追踪); 推荐组合: OpenLLMetry(埋点) + Arize Phoenix(本地调试)
-  - **下一步**: lab/agent-observability/ → AgentTracer(startRun/traceLLMCall/traceToolCall/traceMemory) + Guardian policy check + tail sampling
+  - [研究笔记 v1](catalyst-research/exploration-notes/2026-05-12-agent-observability-opentelemetry.md) ✅ 5核心概念+可运行TypeScript Tracer+OWASP AOS分析+工具选型
+  - [研究笔记 v2](catalyst-research/exploration-notes/2026-05-14-agent-observability.md) ✅ **四支柱评估框架+PolicyEngine(OPA模式)+分层Guardrails+可运行完整Demo(Tracer+Policy+Evaluator)**
+  - **关键发现 v1**: OTel GenAI semantic conventions 已成事实标准; OWASP AOS Guardian Agent 模式 = inline policy enforcement
+  - **关键发现 v2**: 四支柱(LLM/Memory/Tools/Environment) behavior-based>outcome-based评估; OPA Input+Policy+Data=Decision模式适用于agent guardrail; Guardrails分层(Input→Prompt→Tool→Output)必须独立于prompt; 推荐接agent-context-store changelog作trace持久化后端
+  - **下一步**: lab/agent-observability/ → Tracer(对齐OTel GenAI语义约定) + PolicyEngine(JSON规则先于OPA) + 接入agent-context-store changelog + 2个评估维度(policy_compliance+latency)
 - [ ] **Hindsight Mini** — lab/hindsight-mini/ 轻量级 agent 自反思引擎
   - [研究笔记](catalyst-research/exploration-notes/2026-05-13-hindsight-mini.md) ✅ AgentHER + Reflexion + SE-Agent 综合 → 可运行 TypeScript HindsightMini 类(失败检测+反思生成+HER重标+教训提取)
   - **关键发现**: HER 本质是数据增强(prompt-level HER 可不微调); thought-action misalignment 是头号杀手; 跨轨迹模式识别>单次反思; 天然集成 agent-context-store + agent-memory-graph
