@@ -21,3 +21,7 @@ export { pick, omit, rename, defaults, compose } from "./transform.js";
 export type { TransformFn } from "./transform.js";
 export { withRateLimit } from "./rate-limit.js";
 export type { RateLimitConfig } from "./rate-limit.js";
+export { withCache } from "./cache.js";
+export type { CacheConfig } from "./cache.js";
+export { aggregate, mergeAll, collectAll } from "./aggregate.js";
+export type { AggregateConfig } from "./aggregate.js";
