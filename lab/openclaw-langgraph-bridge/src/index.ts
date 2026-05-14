@@ -25,3 +25,5 @@ export { withCache } from "./cache.js";
 export type { CacheConfig } from "./cache.js";
 export { aggregate, mergeAll, collectAll } from "./aggregate.js";
 export type { AggregateConfig } from "./aggregate.js";
+export { withMiddleware } from "./middleware.js";
+export type { Middleware, NodeFn } from "./middleware.js";
