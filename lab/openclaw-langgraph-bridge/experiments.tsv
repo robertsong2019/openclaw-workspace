@@ -12,3 +12,4 @@ timestamp	commit	metric	value	status	description
 2026-05-12T21:10	350430f	test_pass_rate	60/60	keep	switchRoute(): multi-branch conditional routing with predicates
 2026-05-12T21:20	1bb6eb3	test_pass_rate	72/72	keep	transform(): pick/omit/rename/defaults/compose state utilities
 2026-05-12T21:30	bc1aec3	test_pass_rate	78/78	keep	withRateLimit(): sliding window rate limiting wrapper
+2026-05-14T19:10	719dfdb	test_count	94/94	keep	withCache (memoization + TTL + maxSize eviction + custom keyFn + stats) + aggregate/mergeAll/collectAll (reduce partial states). +16 tests (78→94).
