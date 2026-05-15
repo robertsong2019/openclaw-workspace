@@ -447,6 +447,42 @@ class RalphOrchestrator:
         self.session_stats.total_iterations = checkpoint.get("total_iterations", 0)
         self.session_stats.total_duration = checkpoint.get("total_duration", 0.0)
 
+    @staticmethod
+    def checkpoint_diff(cp_a: Dict[str, Any], cp_b: Dict[str, Any]) -> Dict[str, Any]:
+        """Compare two checkpoints and return what changed from A to B.
+
+        Args:
+            cp_a: Earlier checkpoint (baseline).
+            cp_b: Later checkpoint (comparison).
+
+        Returns:
+            Dict with added/removed stories, added/removed commits,
+            changed numeric fields, and elapsed time.
+        """
+        stories_a = set(cp_a.get("stories_completed", []))
+        stories_b = set(cp_b.get("stories_completed", []))
+        commits_a = set(cp_a.get("commits_made", []))
+        commits_b = set(cp_b.get("commits_made", []))
+
+        numeric_keys = ["iteration_count", "successful_iterations",
+                        "failed_iterations", "total_iterations",
+                        "total_duration"]
+        changes = {}
+        for k in numeric_keys:
+            va, vb = cp_a.get(k, 0), cp_b.get(k, 0)
+            if va != vb:
+                changes[k] = {"from": va, "to": vb}
+
+        return {
+            "stories_added": sorted(stories_b - stories_a),
+            "stories_removed": sorted(stories_a - stories_b),
+            "commits_added": sorted(commits_b - commits_a),
+            "commits_removed": sorted(commits_a - commits_b),
+            "numeric_changes": changes,
+            "elapsed_iterations": cp_b.get("total_iterations", 0) - cp_a.get("total_iterations", 0),
+            "elapsed_duration": round(cp_b.get("total_duration", 0.0) - cp_a.get("total_duration", 0.0), 3),
+        }
+
     def resume_batch(
         self,
         checkpoint: Dict[str, Any],
