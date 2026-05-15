@@ -27,3 +27,5 @@ export { aggregate, mergeAll, collectAll } from "./aggregate.js";
 export type { AggregateConfig } from "./aggregate.js";
 export { withMiddleware } from "./middleware.js";
 export type { Middleware, NodeFn } from "./middleware.js";
+export { loop } from "./loop.js";
+export type { LoopConfig } from "./loop.js";

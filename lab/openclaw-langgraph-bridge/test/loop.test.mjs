@@ -1,0 +1,107 @@
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import { loop } from "../dist/loop.js";
+
+describe("loop", () => {
+  it("runs node until condition is met", async () => {
+    const counter = async (state) => ({
+      count: (state.count ?? 0) + 1,
+    });
+
+    const loopNode = loop({
+      name: "countUp",
+      node: counter,
+      until: (state) => state.count >= 5,
+    });
+
+    const result = await loopNode({});
+    assert.equal(result.count, 5);
+    assert.equal(result.countUpIterations, 5);
+  });
+
+  it("stops at maxIterations even if condition not met", async () => {
+    const alwaysIncrement = async (state) => ({
+      count: (state.count ?? 0) + 1,
+    });
+
+    const loopNode = loop({
+      name: "capped",
+      node: alwaysIncrement,
+      until: () => false,
+      maxIterations: 3,
+    });
+
+    const result = await loopNode({});
+    assert.equal(result.count, 3);
+    assert.equal(result.cappedIterations, 3);
+  });
+
+  it("runs at least once even if initial state meets condition", async () => {
+    let calls = 0;
+    const node = async (state) => {
+      calls++;
+      return { count: (state.count ?? 0) + 1 };
+    };
+
+    const loopNode = loop({
+      name: "already",
+      node,
+      until: (state) => state.count >= 3,
+      maxIterations: 5,
+    });
+
+    const result = await loopNode({ count: 3 });
+    assert.equal(result.count, 4);
+    assert.equal(result.alreadyIterations, 1);
+    assert.equal(calls, 1);
+  });
+
+  it("threads accumulated state through iterations", async () => {
+    const append = async (state) => ({
+      items: [...(state.items ?? []), "x"],
+    });
+
+    const loopNode = loop({
+      name: "append",
+      node: append,
+      until: (state) => state.items.length >= 4,
+    });
+
+    const result = await loopNode({});
+    assert.deepEqual(result.items, ["x", "x", "x", "x"]);
+  });
+
+  it("exposes iteration count in predicate", async () => {
+    const node = async (state) => ({
+      value: (state.value ?? 0) + 10,
+    });
+
+    const loopNode = loop({
+      name: "iterCheck",
+      node,
+      until: (_state, iteration) => iteration >= 2,
+    });
+
+    const result = await loopNode({});
+    assert.equal(result.value, 20);
+    assert.equal(result.iterCheckIterations, 2);
+  });
+
+  it("works as a LangGraph-compatible node returning plain object", async () => {
+    const node = async (state) => ({
+      result: `step-${(state.step ?? 0) + 1}`,
+      step: (state.step ?? 0) + 1,
+    });
+
+    const loopNode = loop({
+      name: "graph",
+      node,
+      until: (state) => state.step >= 3,
+    });
+
+    const result = await loopNode({ messages: [{ content: "start" }] });
+    assert.equal(result.step, 3);
+    assert.equal(result.result, "step-3");
+    assert.equal(result.graphIterations, 3);
+  });
+});
