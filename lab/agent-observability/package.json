@@ -1,0 +1,13 @@
+{
+  "name": "agent-observability",
+  "version": "1.0.0",
+  "description": "Minimal Agent Observability toolkit — Tracer, PolicyEngine, Evaluator",
+  "type": "module",
+  "scripts": {
+    "test": "npx tsx --test tests/*.test.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "tsx": "^4.19.0"
+  }
+}

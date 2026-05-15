@@ -1,4 +1,4 @@
-# HEARTBEAT.md - May 14, 2026 (Thursday)
+# HEARTBEAT.md - May 15, 2026 (Friday)
 
 ## 待办任务
 
@@ -18,13 +18,13 @@
 ## 系统状态
 - **AMS v1.0-dev**: 645/645 tests
 - **better-ralph-core**: 292/292 tests
-- **agent-context-store**: 139/139 tests (changelog audit trail added)
+- **agent-context-store**: 159/159 tests (version history + namespaces added)
 - **agent-memory-graph**: 30/30 tests
 - **prompt-router**: 230/230 tests
-- **prompt-weaver**: 148/148 tests
-- **autoresearch**: 零回滚率持续保持（连续52天）🏆
+- **prompt-weaver": 148/148 tests
+- **autoresearch**: 零回滚率持续保持（连续53天）🏆
 
 ## 近期发现
-- agent-context-store changelog 是可观测性基础：可与未来 agent-observability lab 对接
-- validate_dependencies() 是 PRD 安全网：循环依赖/缺失依赖/自引用，与 plan_batch() 形成验证闭环
+- agent-context-store namespaces 实现了多Agent隔离：namespace() 创建独立child store，为 multi-agent 架构提供天然分区
+- version history + rollback 是 changelog 的自然进化：changelog = "发生了什么", versions = "之前是什么"
 - 研究积累已饱和，lab/ 实现是本周重点

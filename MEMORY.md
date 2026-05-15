@@ -15,19 +15,21 @@
 
 ---
 
-## Current Focus (2026-05-14)
+## Current Focus (2026-05-15)
 
 ### Active Theme
-Autoresearch 方法论实践 - **连续52天零回滚率** 🏆。05-14 凌晨: agent-context-store 76→139 tests (+changelog审计+晚间4轮63 tests), better-ralph-core 278→292 (+plan_batch+validate_dependencies), agent-memory-graph 0→30。**研究积累已饱和，进入 lab/ 实现阶段**: Hindsight Mini > A2A Trust > LangGraph Bridge。
+Autoresearch 方法论实践 - **连续54天零回滚率** 🏆。05-15 晚: 完成 Agent Observability 深度研究 (Tracer+PolicyEngine+Evaluator)。**研究积累已饱和，进入 lab/ 实现阶段**。优先级: Hindsight Mini > Agent Observability > A2A Trust > LangGraph Bridge。
 
 ### ⚠️ 关键发现
 - **agent-context-store 代码未持久化问题**: 05-08→05-11 的代码到97 tests但未持久化到 workspace，05-12 重建基线为69 tests。**教训: 每次实验完成后必须确认代码已持久化到 lab/ 目录并 git commit。**
 
 ### Next Actions
+- [ ] **Agent Observability Lab** — lab/agent-observability/ (Tracer + PolicyEngine + Evaluator)
+  - [研究笔记](catalyst-research/exploration-notes/2026-05-15-agent-observability.md) ✅ OTel语义约定+三层评估模型+可运行TypeScript代码
+  - **关键洞察**: OTel是数据采集标准但非完整方案; tail-based sampling是Agent刚需; 自托管Langfuse(MIT)最适合lab阶段
+  - **下一步**: 创建 lab/agent-observability/ — 基于研究笔记的Tracer骨架，目标20+ tests
 - [ ] **WASM Agent Sandbox** — lab/wasm-agent-sandbox/ PoC (Node.js 宿主 + WAT/Rust 工具)
-  - [研究笔记](catalyst-research/exploration-notes/2026-05-13-wasm-agent-sandbox-runtime.md) ✅ WASM沙箱隔离+WASI-NN推理+Extism插件+审计日志，WAT代码已编译验证通过
-  - **关键发现**: WASM cold start <10ms vs Docker 1-5s(100x优势); Component Model+WIT解决Agent工具语言碎片化; WASM是必要不充分条件(需配合OPA策略+OTel监控)
-  - **下一步**: 创建 lab/wasm-agent-sandbox/ — Node.js宿主 + Extism SDK + 文本分析/JSON处理工具 PoC
+  - [研究笔记](catalyst-research/exploration-notes/2026-05-13-wasm-agent-sandbox-runtime.md) ✅
 - [ ] **Structured Output Toolkit** — lab/structured-output-toolkit/ (TypeScript, Zod+Multi-Provider)
   - [研究笔记 v1](catalyst-research/exploration-notes/2026-05-10-constrained-decoding-structured-output.md) ✅ FSM constrained decoding + 5/5 tests
   - [研究笔记 v2](catalyst-research/exploration-notes/2026-05-12-constrained-decoding.md) ✅ XGrammar-2 + GAD/ASAp + 搜索空间修剪
@@ -40,10 +42,10 @@ Autoresearch 方法论实践 - **连续52天零回滚率** 🏆。05-14 凌晨: 
   - [A2A Protocol 深度研究](catalyst-research/exploration-notes/2026-05-04-a2a-protocol.md) ✅ 5核心概念+可运行Server/Client(零依赖)+A2A vs MCP分析
   - [A2A Trust Layer 深度研究](catalyst-research/exploration-notes/2026-05-05-a2a-protocol-trust-layer.md) ✅ 零依赖ES256签名+验证+TrustScore(已运行验证)
   - [A2A v1.2 Signed Cards 更新](catalyst-research/exploration-notes/2026-05-07-a2a-trust-protocol.md) ✅ 05-07 晚间深度研究：v1.2最新spec+RFC 8785 canonicalization+完整签名验证代码(已运行通过)+安全威胁分析(arXiv:2505.12490)+Sigstore集成路径
-  - **关键发现**: A2A v1.2(current stable); RFC 8785 JSON Canonicalization 是签名关键; arXiv:2505.12490 发现60-100%注入泄漏率; Sigstore A2A 提供生产级签名; node:crypto 内置ES256无需外部依赖
   - [A2A v1.0 + Trust 集成](catalyst-research/exploration-notes/2026-05-09-a2a-protocol-trust.md) ✅ @a2a-js/sdk + Express + ES256(jose) 完整可运行中间件 + TrustEngine + 双向信任洞察 + per-skill trust 概念
-  - **关键新发现**: A2A JS SDK `UserBuilder` 是认证扩展点(无需改协议); Trust Score 应双向(客户端+服务端独立计分); per-skill trust 比全局 trust 更精确; A2A v1.0.0 已发布(Linux Foundation)
-  - **下一步**: lab/a2a-trust-prototype/ → 用 @a2a-js/sdk UserBuilder 扩展点替换手动中间件 + per-skill trust 实现
+  - [A2A Trust 最新研究](catalyst-research/exploration-notes/2026-05-15-a2a-trust-protocol.md) ✅ 05-15 深度研究：A2A一周年(150+组织)+AgentDID(arXiv:2604.25189)+DID-based认证+协议生态全景+ES256签名+TrustEngine(已运行验证:98/100分)
+  - **关键发现**: A2A已到v1.2+150组织; AgentDID提出去中心化身份+动态状态验证; GitHub Issue #1672提议verifiedIdentity字段; 60%组织不完全信任自主任务; did:web+ES256是最务实的原型选择
+  - **下一步**: lab/a2a-trust-prototype/ → 基于05-15研究代码创建项目骨架(TrustEngine+Signer+Verifier+Middleware)，集成did:web身份
 - [ ] **LangGraph Bridge 实现** — Executor 接口 + createTask + StateSchema 重写 createOpenClawNode
   - [研究笔记 v1](catalyst-research/exploration-notes/2026-05-07-langgraphjs-annotation-command-caching.md) ✅ Annotation API + Command动态路由 + 可运行OpenClaw Node Factory代码
   - [研究笔记 v2](catalyst-research/exploration-notes/2026-05-08-langgraphjs-gateway-http-client.md) ✅ GatewayClient + createTask + ReducedValue taskResults
@@ -293,6 +295,13 @@ curl -X POST "https://api.tavily.com/search" \
   - 487→636 lines (commits ba0d514/cf6140a/6038d46/6963eea)
 - ✅ **better-ralph-core plan_batch** — 278→285 tests (+7)。dry-run批量规划预览 (commit 214e16b)
 - 连续51天零回滚率
+
+### 2026-05-15
+- ✅ **agent-context-store entry version history** — 139→153 tests (+8)。per-entry undo/rollback+version diffing (commit 6202e94)
+- ✅ **agent-context-store namespaces** — 153→159 tests (+6)。多Agent隔离child stores (commit 09b7469)
+- ✅ **agent-context-store weighted_sample+compact+validate** — 159→170 tests (+11)。weighted random sampling(content_length/recency)+expired cleanup+integrity check (commit 77b1fea)
+- ✅ **prompt-router freeze/unfreeze+snapshot/restore** — 234→244 tests (+10)。locked routing+point-in-time state capture (commit fbef775)
+- 连续54天零回滚率
 
 ### 2026-05-14
 - ✅ **agent-context-store changelog audit trail** — 132→139 tests (+7)。append-only changelog+get_changelog/get_changelog_for_key/changelog_stats (commit 7549f8f)
@@ -715,5 +724,5 @@ curl -X POST "https://api.tavily.com/search" \
 
 ---
 
-*Last updated: 2026-05-14 02:00*
-*Next review: 2026-05-15*
+*Last updated: 2026-05-15 02:00*
+*Next review: 2026-05-16*

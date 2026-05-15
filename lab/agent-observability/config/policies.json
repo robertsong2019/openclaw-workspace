@@ -1,0 +1,21 @@
+[
+  {
+    "name": "block_destructive_ops",
+    "description": "Blocks commands that look destructive",
+    "category": "tool_execution",
+    "type": "blockDestructiveOps"
+  },
+  {
+    "name": "cost_limit",
+    "description": "Enforce max cost of $1.00 per call",
+    "category": "cost_control",
+    "type": "costLimit",
+    "config": { "maxCost": 1.0 }
+  },
+  {
+    "name": "pii_filter",
+    "description": "Blocks input containing PII",
+    "category": "data_privacy",
+    "type": "piiFilter"
+  }
+]

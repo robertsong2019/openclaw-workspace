@@ -1,0 +1,145 @@
+export interface PolicyRule {
+  name: string;
+  description: string;
+  category: string;
+  evaluate: (input: Record<string, unknown>) => { allow: boolean; reason?: string };
+}
+
+export interface EvalResult {
+  allowed: boolean;
+  violations: Array<{ rule: string; reason: string }>;
+}
+
+export class PolicyEngine {
+  private rules: Map<string, PolicyRule[]> = new Map();
+
+  addPolicy(category: string, rule: PolicyRule): void {
+    const list = this.rules.get(category) ?? [];
+    list.push(rule);
+    this.rules.set(category, list);
+  }
+
+  removePolicy(category: string, ruleName: string): boolean {
+    const list = this.rules.get(category);
+    if (!list) return false;
+    const before = list.length;
+    const filtered = list.filter(r => r.name !== ruleName);
+    this.rules.set(category, filtered);
+    return filtered.length < before;
+  }
+
+  evaluate(category: string, input: Record<string, unknown>): EvalResult {
+    const rules = this.rules.get(category) ?? [];
+    const violations: Array<{ rule: string; reason: string }> = [];
+    for (const rule of rules) {
+      const result = rule.evaluate(input);
+      if (!result.allow) {
+        violations.push({ rule: rule.name, reason: result.reason ?? 'Denied by policy' });
+      }
+    }
+    return { allowed: violations.length === 0, violations };
+  }
+
+  loadFromJSON(data: Array<{ name: string; description: string; category: string; type: string; config?: Record<string, unknown> }>): void {
+    this._jsonDefs = data;
+    for (const def of data) {
+      const rule = this.buildRule(def);
+      if (rule) this.addPolicy(def.category, rule);
+    }
+  }
+
+  private _jsonDefs: Array<{ name: string; description: string; category: string; type: string; config?: Record<string, unknown> }> = [];
+
+  listCategories(): string[] {
+    return [...this.rules.keys()];
+  }
+
+  ruleCount(category: string): number {
+    return this.rules.get(category)?.length ?? 0;
+  }
+
+  exportJSON(): Array<{ name: string; description: string; category: string; type: string; config?: Record<string, unknown> }> {
+    return [...this._jsonDefs];
+  }
+
+  private buildRule(def: { name: string; description: string; category: string; type: string; config?: Record<string, unknown> }): PolicyRule | null {
+    const helpers: Record<string, (cfg: Record<string, unknown>) => PolicyRule> = {
+      blockDestructiveOps: blockDestructiveOps,
+      costLimit: costLimit,
+      rateLimit: rateLimit,
+      piiFilter: piiFilter,
+    };
+    const builder = helpers[def.type];
+    return builder ? builder(def.config ?? {}) : null;
+  }
+}
+
+// --- Built-in rule helpers ---
+
+const DESTRUCTIVE_PATTERNS = ['rm ', 'drop ', 'delete ', 'truncate ', 'DROP ', 'DELETE ', 'TRUNCATE '];
+
+export function blockDestructiveOps(_cfg: Record<string, unknown> = {}): PolicyRule {
+  return {
+    name: 'block_destructive_ops',
+    description: 'Blocks commands that look destructive',
+    category: 'tool_execution',
+    evaluate: (input) => {
+      const cmd = String(input.command ?? input.input ?? '');
+      const blocked = DESTRUCTIVE_PATTERNS.some(p => cmd.includes(p));
+      return blocked ? { allow: false, reason: `Destructive operation detected: ${cmd.slice(0, 50)}` } : { allow: true };
+    },
+  };
+}
+
+export function costLimit(cfg: Record<string, unknown> = {}): PolicyRule {
+  const maxCost = Number(cfg.maxCost ?? 1.0);
+  return {
+    name: 'cost_limit',
+    description: `Enforce max cost of $${maxCost}`,
+    category: 'cost_control',
+    evaluate: (input) => {
+      const cost = Number(input.cost ?? input.estimatedCost ?? 0);
+      return cost > maxCost
+        ? { allow: false, reason: `Cost $${cost} exceeds limit $${maxCost}` }
+        : { allow: true };
+    },
+  };
+}
+
+export function rateLimit(cfg: Record<string, unknown> = {}): PolicyRule {
+  const maxCalls = Number(cfg.maxCalls ?? 10);
+  const windowMs = Number(cfg.windowMs ?? 60_000);
+  const timestamps: number[] = [];
+  return {
+    name: 'rate_limit',
+    description: `Max ${maxCalls} calls per ${windowMs}ms`,
+    category: 'rate_control',
+    evaluate: (input) => {
+      const now = Number(input.timestamp ?? Date.now());
+      timestamps.push(now);
+      const cutoff = now - windowMs;
+      const recent = timestamps.filter(t => t >= cutoff);
+      if (recent.length > maxCalls) {
+        return { allow: false, reason: `Rate limit: ${recent.length} calls in window` };
+      }
+      return { allow: true };
+    },
+  };
+}
+
+const PII_PATTERNS = [/\b\d{3}[-.]?\d{2}[-.]?\d{4}\b/, /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/];
+
+export function piiFilter(_cfg: Record<string, unknown> = {}): PolicyRule {
+  return {
+    name: 'pii_filter',
+    description: 'Blocks input containing PII (SSN-like, email)',
+    category: 'data_privacy',
+    evaluate: (input) => {
+      const text = String(input.text ?? input.content ?? input.input ?? '');
+      const matched = PII_PATTERNS.find(p => p.test(text));
+      return matched
+        ? { allow: false, reason: 'PII detected in input' }
+        : { allow: true };
+    },
+  };
+}

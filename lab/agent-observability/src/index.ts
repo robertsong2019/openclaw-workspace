@@ -1,0 +1,95 @@
+import { Tracer } from './tracer.js';
+import type { Span } from './tracer.js';
+import { PolicyEngine } from './policy-engine.js';
+import { Evaluator, policyComplianceCheck, latencyCheck, reliabilityCheck, costEfficiencyCheck } from './evaluator.js';
+import type { EvalCheckResult } from './evaluator.js';
+
+export interface ObservabilityReport {
+  traceReport: ReturnType<Tracer['getTraceReport']>;
+  evalResults: EvalCheckResult[];
+  aggregateScore: number;
+}
+
+export class AgentObserver {
+  private tracer: Tracer;
+  private policyEngine: PolicyEngine;
+  private evaluator: Evaluator;
+  private rootSpanId: string | null = null;
+
+  constructor() {
+    this.tracer = new Tracer();
+    this.policyEngine = new PolicyEngine();
+    this.evaluator = new Evaluator();
+    this.evaluator.addCheck('policy_compliance', policyComplianceCheck, 1.5);
+    this.evaluator.addCheck('latency', latencyCheck, 1.0);
+    this.evaluator.addCheck('reliability', reliabilityCheck, 2.0);
+    this.evaluator.addCheck('cost_efficiency', costEfficiencyCheck, 1.0);
+  }
+
+  startRun(agentId: string, task: string): Span {
+    const span = this.tracer.startSpan('agent.run', { agentId, task });
+    this.rootSpanId = span.spanId;
+    return span;
+  }
+
+  llmCall(model: string, prompt: string, completion: string, tokenUsage?: { promptTokens: number; completionTokens: number }): Span {
+    const span = this.tracer.startSpan('llm.call', {
+      'gen_ai.request.model': model,
+      'gen_ai.prompt': prompt,
+      'gen_ai.completion': completion,
+      promptTokens: tokenUsage?.promptTokens ?? 0,
+      completionTokens: tokenUsage?.completionTokens ?? 0,
+      totalTokens: (tokenUsage?.promptTokens ?? 0) + (tokenUsage?.completionTokens ?? 0),
+    });
+    this.tracer.endSpan(span.spanId);
+    return span;
+  }
+
+  toolExecute(tool: string, input: string): { span: Span; allowed: boolean } {
+    const policyResult = this.policyEngine.evaluate('tool_execution', { tool, command: input, input });
+    const span = this.tracer.startSpan('tool.execute', {
+      'tool.name': tool,
+      'tool.input': input,
+      policyDenied: !policyResult.allowed,
+    });
+    if (!policyResult.allowed) {
+      span.status = 'error';
+      span.attributes.policyViolations = policyResult.violations.map(v => v.reason);
+    }
+    this.tracer.endSpan(span.spanId, policyResult.allowed ? 'ok' : 'error');
+    return { span, allowed: policyResult.allowed };
+  }
+
+  endRun(): Span | undefined {
+    if (!this.rootSpanId) return undefined;
+    const span = this.tracer.endSpan(this.rootSpanId);
+    this.rootSpanId = null;
+    return span;
+  }
+
+  memoryOperation(type: 'read' | 'write', attrs: Record<string, unknown>): Span {
+    const span = this.tracer.startSpan(`memory.${type}`, attrs);
+    this.tracer.endSpan(span.spanId);
+    return span;
+  }
+
+  retrievalSearch(method: string, attrs: Record<string, unknown>): Span {
+    const span = this.tracer.startSpan('retrieval.search', { method, ...attrs });
+    this.tracer.endSpan(span.spanId);
+    return span;
+  }
+
+  getReport(): ObservabilityReport {
+    const spans = this.tracer.getSpans();
+    const evalResults = this.evaluator.evaluate(spans);
+    return {
+      traceReport: this.tracer.getTraceReport(),
+      evalResults,
+      aggregateScore: this.evaluator.aggregateScore(evalResults),
+    };
+  }
+
+  getTracer(): Tracer { return this.tracer; }
+  getPolicyEngine(): PolicyEngine { return this.policyEngine; }
+  getEvaluator(): Evaluator { return this.evaluator; }
+}
