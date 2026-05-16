@@ -4,3 +4,4 @@ timestamp	commit	metric	value	status	description
 2026-05-15T21:10:00+08:00	cycle2	test_pass_rate	31/31 (100%)	keep	PolicyEngine: listCategories/ruleCount/exportJSON
 2026-05-15T21:15:00+08:00	cycle3	test_pass_rate	34/34 (100%)	keep	Evaluator: listChecks/removeCheck/aggregateScore edge
 2026-05-15T21:20:00+08:00	73fb3ab	test_pass_rate	37/37 (100%)	keep	Integration: memoryOperation/retrievalSearch/convenience methods
+2026-05-16T19:00	6f402bb	test_count	48/48	keep	Tracer:getChildren+getSpanTree | PolicyEngine:disableRule/enableRule/evaluateAll | AgentObserver:reportMarkdown+spanStats. 37→48 (+11), 480→559 lines

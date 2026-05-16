@@ -308,6 +308,10 @@ curl -X POST "https://api.tavily.com/search" \
 - ✅ **better-ralph-core checkpoint_diff** — 292→299 tests (+7)。检查点差异对比 (commit 05c563b)
 - 连续56天零回滚率
 
+### 2026-05-16 (晚间)
+- ✅ **agent-observability 3-cycle** — 37→48 tests (+11)。Tracer:getChildren+getSpanTree | PolicyEngine:disableRule/enableRule/evaluateAll | AgentObserver:reportMarkdown+spanStats (commit 6f402bb)
+- 连续57天零回滚率
+
 ### 2026-05-14
 - ✅ **agent-context-store changelog audit trail** — 132→139 tests (+7)。append-only changelog (commit 7549f8f)
 - ✅ **better-ralph-core validate_dependencies** — 285→292 tests (+7)。DFS循环检测 (commit cbd7772)
