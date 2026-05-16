@@ -25,9 +25,10 @@ Autoresearch 方法论实践 - **连续56天零回滚率** 🏆。05-16 凌晨: 
 
 ### Next Actions
 - [ ] **Agent Observability Lab** — lab/agent-observability/ (Tracer + PolicyEngine + Evaluator)
-  - [研究笔记](catalyst-research/exploration-notes/2026-05-15-agent-observability.md) ✅ OTel语义约定+三层评估模型+可运行TypeScript代码
-  - **关键洞察**: OTel是数据采集标准但非完整方案; tail-based sampling是Agent刚需; 自托管Langfuse(MIT)最适合lab阶段
-  - **下一步**: 创建 lab/agent-observability/ — 基于研究笔记的Tracer骨架，目标20+ tests
+  - [研究笔记 Day 1](catalyst-research/exploration-notes/2026-05-15-agent-observability.md) ✅ OTel语义约定+三层评估模型
+  - [研究笔记 Day 2](catalyst-research/exploration-notes/2026-05-16-agent-observability.md) ✅ **零依赖AgentTracer实现** + 内置策略/评估器 + OTLP导出，代码已验证可运行
+  - **关键洞察**: 纯JS零依赖方案可行；50行代码就能覆盖 tracer+policy+eval 三位一体；OTLP导出确保可接入任何后端
+  - **下一步**: 创建 lab/agent-observability/ — 基于 Day 2 的 AgentTracer 转为 TypeScript，目标 20+ tests
 - [ ] **WASM Agent Sandbox** — lab/wasm-agent-sandbox/ PoC (Node.js 宿主 + WAT/Rust 工具)
   - [研究笔记](catalyst-research/exploration-notes/2026-05-13-wasm-agent-sandbox-runtime.md) ✅
 - [ ] **Structured Output Toolkit** — lab/structured-output-toolkit/ (TypeScript, Zod+Multi-Provider)
@@ -310,6 +311,7 @@ curl -X POST "https://api.tavily.com/search" \
 
 ### 2026-05-16 (晚间)
 - ✅ **agent-observability 3-cycle** — 37→48 tests (+11)。Tracer:getChildren+getSpanTree | PolicyEngine:disableRule/enableRule/evaluateAll | AgentObserver:reportMarkdown+spanStats (commit 6f402bb)
+- ✅ **Structured Output XGrammar-2 深度研究** — TagDispatch(动态结构切换) + Cross-Grammar Cache(跨请求子结构复用) + Format Tax(两层质量损害) + 可运行 StructuredOutputClient (6/6 tests passed)
 - 连续57天零回滚率
 
 ### 2026-05-14

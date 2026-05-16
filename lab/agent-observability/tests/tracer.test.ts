@@ -170,4 +170,70 @@ describe('Tracer', () => {
     assert.equal(subtree[0].operation, 'tool.execute');
     assert.equal(subtree[0].children.length, 1);
   });
+
+  // --- Causal links ---
+
+  it('linkSpans creates causal link between spans', () => {
+    const tracer = new Tracer();
+    const s1 = tracer.startSpan('retrieval.search');
+    tracer.endSpan(s1.spanId);
+    const s2 = tracer.startSpan('tool.execute');
+    tracer.endSpan(s2.spanId);
+    const ok = tracer.linkSpans(s1.spanId, s2.spanId, 'triggered');
+    assert.equal(ok, true);
+    const links = tracer.getCausalLinks();
+    assert.equal(links.length, 1);
+    assert.equal(links[0].from, s1.spanId);
+    assert.equal(links[0].to, s2.spanId);
+    assert.equal(links[0].type, 'triggered');
+  });
+
+  it('linkSpans returns false for missing span', () => {
+    const tracer = new Tracer();
+    const s1 = tracer.startSpan('agent.run');
+    tracer.endSpan(s1.spanId);
+    assert.equal(tracer.linkSpans(s1.spanId, 'nonexistent'), false);
+    assert.equal(tracer.linkSpans('nonexistent', s1.spanId), false);
+  });
+
+  it('getCausalChain follows upstream links', () => {
+    const tracer = new Tracer();
+    const s1 = tracer.startSpan('retrieval.search');
+    tracer.endSpan(s1.spanId);
+    const s2 = tracer.startSpan('tool.execute');
+    tracer.endSpan(s2.spanId);
+    const s3 = tracer.startSpan('llm.call');
+    tracer.endSpan(s3.spanId);
+    tracer.linkSpans(s1.spanId, s2.spanId);
+    tracer.linkSpans(s2.spanId, s3.spanId);
+    const chain = tracer.getCausalChain(s3.spanId, 'upstream');
+    assert.equal(chain.length, 2);
+    assert.equal(chain[0].operation, 'tool.execute');
+    assert.equal(chain[1].operation, 'retrieval.search');
+  });
+
+  it('getCausalChain downstream direction', () => {
+    const tracer = new Tracer();
+    const s1 = tracer.startSpan('agent.run');
+    tracer.endSpan(s1.spanId);
+    const s2 = tracer.startSpan('tool.execute');
+    tracer.endSpan(s2.spanId);
+    tracer.linkSpans(s1.spanId, s2.spanId);
+    const chain = tracer.getCausalChain(s1.spanId, 'downstream');
+    assert.equal(chain.length, 1);
+    assert.equal(chain[0].operation, 'tool.execute');
+  });
+
+  it('getCausalChain handles cycles gracefully', () => {
+    const tracer = new Tracer();
+    const s1 = tracer.startSpan('agent.run');
+    tracer.endSpan(s1.spanId);
+    const s2 = tracer.startSpan('tool.execute');
+    tracer.endSpan(s2.spanId);
+    tracer.linkSpans(s1.spanId, s2.spanId);
+    tracer.linkSpans(s2.spanId, s1.spanId);
+    const chain = tracer.getCausalChain(s1.spanId, 'upstream');
+    // Should not infinite loop, returns at most the other span
+    assert.ok(chain.length <= 2);
+  });
 });

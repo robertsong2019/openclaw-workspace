@@ -152,4 +152,43 @@ export class Tracer {
     };
     return roots.map(build);
   }
+
+  // --- Causal links ---
+
+  private causalLinks: Array<{ from: string; to: string; type: string }> = [];
+
+  linkSpans(fromSpanId: string, toSpanId: string, type: string = 'causal'): boolean {
+    const from = this.spans.find(s => s.spanId === fromSpanId);
+    const to = this.spans.find(s => s.spanId === toSpanId);
+    if (!from || !to) return false;
+    this.causalLinks.push({ from: fromSpanId, to: toSpanId, type });
+    return true;
+  }
+
+  getCausalChain(spanId: string, direction: 'upstream' | 'downstream' = 'upstream'): Span[] {
+    const visited = new Set<string>();
+    const result: Span[] = [];
+    const queue = [spanId];
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      if (visited.has(current)) continue;
+      visited.add(current);
+      const links = direction === 'upstream'
+        ? this.causalLinks.filter(l => l.to === current)
+        : this.causalLinks.filter(l => l.from === current);
+      for (const link of links) {
+        const nextId = direction === 'upstream' ? link.from : link.to;
+        const span = this.spans.find(s => s.spanId === nextId);
+        if (span && !visited.has(nextId)) {
+          result.push(span);
+          queue.push(nextId);
+        }
+      }
+    }
+    return result;
+  }
+
+  getCausalLinks(): Array<{ from: string; to: string; type: string }> {
+    return [...this.causalLinks];
+  }
 }
