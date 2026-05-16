@@ -18,7 +18,7 @@
 ## Current Focus (2026-05-15)
 
 ### Active Theme
-Autoresearch 方法论实践 - **连续54天零回滚率** 🏆。05-15 晚: 完成 Agent Observability 深度研究 (Tracer+PolicyEngine+Evaluator)。**研究积累已饱和，进入 lab/ 实现阶段**。优先级: Hindsight Mini > Agent Observability > A2A Trust > LangGraph Bridge。
+Autoresearch 方法论实践 - **连续56天零回滚率** 🏆。05-16 凌晨: agent-context-store 加入 XRefs(类型化交叉引用+BFS图遍历, 170→178) + better-ralph checkpoint_diff (292→299)。**研究积累已饱和，进入 lab/ 实现阶段**。优先级: Hindsight Mini > Agent Observability > A2A Trust > LangGraph Bridge。
 
 ### ⚠️ 关键发现
 - **agent-context-store 代码未持久化问题**: 05-08→05-11 的代码到97 tests但未持久化到 workspace，05-12 重建基线为69 tests。**教训: 每次实验完成后必须确认代码已持久化到 lab/ 目录并 git commit。**
@@ -299,13 +299,18 @@ curl -X POST "https://api.tavily.com/search" \
 ### 2026-05-15
 - ✅ **agent-context-store entry version history** — 139→153 tests (+8)。per-entry undo/rollback+version diffing (commit 6202e94)
 - ✅ **agent-context-store namespaces** — 153→159 tests (+6)。多Agent隔离child stores (commit 09b7469)
-- ✅ **agent-context-store weighted_sample+compact+validate** — 159→170 tests (+11)。weighted random sampling(content_length/recency)+expired cleanup+integrity check (commit 77b1fea)
+- ✅ **agent-context-store weighted_sample+compact+validate** — 159→170 tests (+11)。weighted random sampling+expired cleanup+integrity check (commit 77b1fea)
 - ✅ **prompt-router freeze/unfreeze+snapshot/restore** — 234→244 tests (+10)。locked routing+point-in-time state capture (commit fbef775)
 - 连续54天零回滚率
 
+### 2026-05-16 (凌晨)
+- ✅ **agent-context-store xrefs** — 170→178 tests (+8)。类型化交叉引用+双向追踪+BFS图遍历 (commit 4c960d5)
+- ✅ **better-ralph-core checkpoint_diff** — 292→299 tests (+7)。检查点差异对比 (commit 05c563b)
+- 连续56天零回滚率
+
 ### 2026-05-14
-- ✅ **agent-context-store changelog audit trail** — 132→139 tests (+7)。append-only changelog+get_changelog/get_changelog_for_key/changelog_stats (commit 7549f8f)
-- ✅ **better-ralph-core validate_dependencies** — 285→292 tests (+7)。DFS循环检测+缺失依赖+自引用扫描 (commit cbd7772)
+- ✅ **agent-context-store changelog audit trail** — 132→139 tests (+7)。append-only changelog (commit 7549f8f)
+- ✅ **better-ralph-core validate_dependencies** — 285→292 tests (+7)。DFS循环检测 (commit cbd7772)
 - 连续52天零回滚率
 
 ### 2026-05-12
@@ -724,5 +729,5 @@ curl -X POST "https://api.tavily.com/search" \
 
 ---
 
-*Last updated: 2026-05-15 02:00*
-*Next review: 2026-05-16*
+*Last updated: 2026-05-16 02:00*
+*Next review: 2026-05-17*

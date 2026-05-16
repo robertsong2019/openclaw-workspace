@@ -1,4 +1,4 @@
-# HEARTBEAT.md - May 15, 2026 (Friday)
+# HEARTBEAT.md - May 16, 2026 (Saturday)
 
 ## 待办任务
 
@@ -16,15 +16,15 @@
 - [ ] Edge Agent Runtime Dashboard
 
 ## 系统状态
+- **agent-context-store**: 178/178 tests (新增: xrefs 类型化交叉引用+BFS图遍历)
+- **better-ralph-core**: 299/299 tests (新增: checkpoint_diff 检查点差异对比)
 - **AMS v1.0-dev**: 645/645 tests
-- **better-ralph-core**: 292/292 tests
-- **agent-context-store**: 159/159 tests (version history + namespaces added)
 - **agent-memory-graph**: 30/30 tests
-- **prompt-router**: 230/230 tests
-- **prompt-weaver": 148/148 tests
-- **autoresearch**: 零回滚率持续保持（连续53天）🏆
+- **prompt-router**: 244/244 tests
+- **prompt-weaver**: 148/148 tests
+- **autoresearch**: 零回滚率持续保持（连续56天）🏆
 
 ## 近期发现
-- agent-context-store namespaces 实现了多Agent隔离：namespace() 创建独立child store，为 multi-agent 架构提供天然分区
-- version history + rollback 是 changelog 的自然进化：changelog = "发生了什么", versions = "之前是什么"
-- 研究积累已饱和，lab/ 实现是本周重点
+- **agent-context-store xrefs** 是从 tags(平面分类) 到结构化关系图的进化：entries=节点, xrefs=类型化边, BFS遍历支持多跳推理
+- **checkpoint_diff** 填补了 checkpoint save/load 之间的可观测性缺口——可以对比两个快照看发生了什么变化
+- 研究积累已饱和，lab/ 实现是本周重点——需要从"研究笔记"转向"可运行项目"

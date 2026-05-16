@@ -92,4 +92,45 @@ export class AgentObserver {
   getTracer(): Tracer { return this.tracer; }
   getPolicyEngine(): PolicyEngine { return this.policyEngine; }
   getEvaluator(): Evaluator { return this.evaluator; }
+
+  reportMarkdown(): string {
+    const report = this.getReport();
+    const lines: string[] = [];
+    lines.push(`# Observability Report`);
+    lines.push(``);
+    lines.push(`**Trace:** ${report.traceReport.traceId.slice(0, 8)}...`);
+    lines.push(`**Spans:** ${report.traceReport.totalSpans}`);
+    lines.push(`**Errors:** ${report.traceReport.errorCount}`);
+    lines.push(`**Duration:** ${report.traceReport.totalDurationMs.toFixed(1)}ms`);
+    lines.push(`**Score:** ${(report.aggregateScore * 100).toFixed(0)}%`);
+    lines.push(``);
+    if (report.evalResults.length > 0) {
+      lines.push(`## Evaluation`);
+      for (const r of report.evalResults) {
+        lines.push(`- **${r.dimension}:** ${(r.score * 100).toFixed(0)}% — ${r.reason}`);
+      }
+      lines.push(``);
+    }
+    if (report.traceReport.durationByOp) {
+      lines.push(`## Duration by Operation`);
+      for (const [op, dur] of Object.entries(report.traceReport.durationByOp)) {
+        lines.push(`- ${op}: ${dur.toFixed(1)}ms`);
+      }
+    }
+    return lines.join('\n');
+  }
+
+  spanStats(): { total: number; completed: number; errors: number; byOperation: Record<string, number> } {
+    const spans = this.tracer.getSpans();
+    const byOperation: Record<string, number> = {};
+    for (const s of spans) {
+      byOperation[s.operation] = (byOperation[s.operation] ?? 0) + 1;
+    }
+    return {
+      total: spans.length,
+      completed: spans.filter(s => s.endTime !== null).length,
+      errors: spans.filter(s => s.status === 'error').length,
+      byOperation,
+    };
+  }
 }

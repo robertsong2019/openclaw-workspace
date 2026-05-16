@@ -114,4 +114,60 @@ describe('Tracer', () => {
     tracer.startSpan('agent.run');
     assert.equal(tracer.spanCount(), 1);
   });
+
+  it('getChildren returns direct child spans', () => {
+    const tracer = new Tracer();
+    const parent = tracer.startSpan('agent.run');
+    const c1 = tracer.startSpan('llm.call');
+    tracer.endSpan(c1.spanId);
+    // Must end c1 before starting c2 so c2's parent is root, not c1
+    const c2 = tracer.startSpan('tool.execute');
+    tracer.endSpan(c2.spanId);
+    tracer.endSpan(parent.spanId);
+    const kids = tracer.getChildren(parent.spanId);
+    assert.equal(kids.length, 2);
+    assert.ok(kids.some(k => k.operation === 'llm.call'));
+    assert.ok(kids.some(k => k.operation === 'tool.execute'));
+  });
+
+  it('getChildren returns empty for leaf span', () => {
+    const tracer = new Tracer();
+    const span = tracer.startSpan('agent.run');
+    tracer.endSpan(span.spanId);
+    assert.equal(tracer.getChildren(span.spanId).length, 0);
+  });
+
+  it('getSpanTree builds full hierarchy', () => {
+    const tracer = new Tracer();
+    const root = tracer.startSpan('agent.run');
+    const c1 = tracer.startSpan('llm.call');
+    tracer.endSpan(c1.spanId);
+    const c2 = tracer.startSpan('tool.execute');
+    const gc = tracer.startSpan('llm.call');
+    tracer.endSpan(gc.spanId);
+    tracer.endSpan(c2.spanId);
+    tracer.endSpan(root.spanId);
+    const tree = tracer.getSpanTree();
+    assert.equal(tree.length, 1);
+    assert.equal(tree[0].operation, 'agent.run');
+    assert.equal(tree[0].children.length, 2);
+    const toolNode = tree[0].children.find(c => c.operation === 'tool.execute');
+    assert.ok(toolNode);
+    assert.equal(toolNode!.children.length, 1);
+    assert.equal(toolNode!.children[0].operation, 'llm.call');
+  });
+
+  it('getSpanTree with spanId returns subtree', () => {
+    const tracer = new Tracer();
+    const root = tracer.startSpan('agent.run');
+    const c1 = tracer.startSpan('tool.execute');
+    const gc = tracer.startSpan('llm.call');
+    tracer.endSpan(gc.spanId);
+    tracer.endSpan(c1.spanId);
+    tracer.endSpan(root.spanId);
+    const subtree = tracer.getSpanTree(c1.spanId);
+    assert.equal(subtree.length, 1);
+    assert.equal(subtree[0].operation, 'tool.execute');
+    assert.equal(subtree[0].children.length, 1);
+  });
 });

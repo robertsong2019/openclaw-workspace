@@ -102,4 +102,32 @@ describe('AgentObserver integration', () => {
     assert.equal(obs.getTracer().spanCount(), 2);
     assert.equal(obs.getTracer().findSpansByOperation('llm.call').length, 1);
   });
+
+  it('generates markdown report', () => {
+    const obs = new AgentObserver();
+    obs.startRun('a7', 'report-test');
+    obs.llmCall('gpt-4', 'prompt', 'response', { promptTokens: 50, completionTokens: 30 });
+    obs.endRun();
+    const md = obs.reportMarkdown();
+    assert.ok(md.includes('Observability Report'));
+    assert.ok(md.includes('**Spans:** 2'));
+    assert.ok(md.includes('Evaluation'));
+    assert.ok(md.includes('Duration by Operation'));
+  });
+
+  it('spanStats returns summary', () => {
+    const obs = new AgentObserver();
+    obs.startRun('a8', 'stats');
+    obs.llmCall('gpt-4', 'hi', 'hello');
+    const tool = obs.toolExecute('bash', 'ls');
+    assert.equal(tool.allowed, true);
+    obs.endRun();
+    const stats = obs.spanStats();
+    assert.equal(stats.total, 3);
+    assert.equal(stats.completed, 3);
+    assert.equal(stats.errors, 0);
+    assert.equal(stats.byOperation['agent.run'], 1);
+    assert.equal(stats.byOperation['llm.call'], 1);
+    assert.equal(stats.byOperation['tool.execute'], 1);
+  });
 });

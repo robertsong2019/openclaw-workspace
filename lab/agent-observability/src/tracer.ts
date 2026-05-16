@@ -137,4 +137,19 @@ export class Tracer {
     this.activeStack = [];
     this.traceId = randomUUID();
   }
+
+  getChildren(spanId: string): Span[] {
+    return this.spans.filter(s => s.parentSpanId === spanId);
+  }
+
+  getSpanTree(spanId?: string): Array<Span & { children: Span[] }> {
+    const roots = spanId
+      ? this.spans.filter(s => s.spanId === spanId)
+      : this.spans.filter(s => s.parentSpanId === null);
+    const build = (span: Span): Span & { children: Span[] } => {
+      const kids = this.getChildren(span.spanId).map(build);
+      return { ...span, children: kids };
+    };
+    return roots.map(build);
+  }
 }

@@ -88,4 +88,45 @@ describe('PolicyEngine', () => {
     assert.equal(exported.length, 1);
     assert.equal(exported[0].category, 'cost');
   });
+
+  it('disableRule skips rule in evaluation', () => {
+    const engine = new PolicyEngine();
+    engine.addPolicy('tool_execution', blockDestructiveOps());
+    engine.disableRule('tool_execution', 'block_destructive_ops');
+    const result = engine.evaluate('tool_execution', { command: 'rm -rf /' });
+    assert.equal(result.allowed, true);
+  });
+
+  it('enableRule re-enables a disabled rule', () => {
+    const engine = new PolicyEngine();
+    engine.addPolicy('tool_execution', blockDestructiveOps());
+    engine.disableRule('tool_execution', 'block_destructive_ops');
+    engine.enableRule('tool_execution', 'block_destructive_ops');
+    const result = engine.evaluate('tool_execution', { command: 'rm -rf /' });
+    assert.equal(result.allowed, false);
+  });
+
+  it('isRuleEnabled reports status', () => {
+    const engine = new PolicyEngine();
+    assert.equal(engine.isRuleEnabled('cat', 'rule1'), true);
+    engine.disableRule('cat', 'rule1');
+    assert.equal(engine.isRuleEnabled('cat', 'rule1'), false);
+    engine.enableRule('cat', 'rule1');
+    assert.equal(engine.isRuleEnabled('cat', 'rule1'), true);
+  });
+
+  it('evaluateAll checks all categories at once', () => {
+    const engine = new PolicyEngine();
+    engine.addPolicy('tool_execution', blockDestructiveOps());
+    engine.addPolicy('data_privacy', piiFilter());
+    const results = engine.evaluateAll({ command: 'rm -rf /', text: 'clean email@x.com here' });
+    assert.equal(results['tool_execution']?.allowed, false);
+    assert.equal(results['data_privacy']?.allowed, false);
+  });
+
+  it('evaluateAll returns empty for no categories', () => {
+    const engine = new PolicyEngine();
+    const results = engine.evaluateAll({});
+    assert.deepEqual(results, {});
+  });
 });

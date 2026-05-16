@@ -17,3 +17,4 @@ timestamp	commit	metric	value	status	description
 2026-05-07T13:12	524d3aa	test_count	249/249	keep	get_blocked_stories+get_ready_stories+batch_update_priority +12 tests
 2026-05-11T21:14:13+08:00	030a556	test_count	271	keep	+7: story_count_by_status+search_stories
 2026-05-14T01:00	cbd7772	test_count	292/292	keep	validate_dependencies(): circular/missing/self-dep detection via DFS. +7 tests (285→292).
+2026-05-16T01:00	05c563b	test_count	299/299	keep	checkpoint_diff(): compare two checkpoints for stories/commits/numeric deltas. +7 tests (292→299).

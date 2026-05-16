@@ -32,6 +32,7 @@ export class PolicyEngine {
     const rules = this.rules.get(category) ?? [];
     const violations: Array<{ rule: string; reason: string }> = [];
     for (const rule of rules) {
+      if (!this.isRuleEnabled(category, rule.name)) continue;
       const result = rule.evaluate(input);
       if (!result.allow) {
         violations.push({ rule: rule.name, reason: result.reason ?? 'Denied by policy' });
@@ -60,6 +61,28 @@ export class PolicyEngine {
 
   exportJSON(): Array<{ name: string; description: string; category: string; type: string; config?: Record<string, unknown> }> {
     return [...this._jsonDefs];
+  }
+
+  private disabledRules: Set<string> = new Set();
+
+  enableRule(category: string, ruleName: string): void {
+    this.disabledRules.delete(`${category}::${ruleName}`);
+  }
+
+  disableRule(category: string, ruleName: string): void {
+    this.disabledRules.add(`${category}::${ruleName}`);
+  }
+
+  isRuleEnabled(category: string, ruleName: string): boolean {
+    return !this.disabledRules.has(`${category}::${ruleName}`);
+  }
+
+  evaluateAll(input: Record<string, unknown>): Record<string, EvalResult> {
+    const results: Record<string, EvalResult> = {};
+    for (const category of this.rules.keys()) {
+      results[category] = this.evaluate(category, input);
+    }
+    return results;
   }
 
   private buildRule(def: { name: string; description: string; category: string; type: string; config?: Record<string, unknown> }): PolicyRule | null {

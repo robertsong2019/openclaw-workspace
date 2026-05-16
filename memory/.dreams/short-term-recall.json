@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-12T11:00:36.062Z",
+  "updatedAt": "2026-05-15T21:00:07.895Z",
   "entries": {
     "memory:memory/2026-04-12.md:71:96": {
       "key": "memory:memory/2026-04-12.md:71:96",
@@ -106,19 +106,21 @@
       "endLine": 12,
       "source": "memory",
       "snippet": "## agent-log CLI 工具 (22:00) 创建了 `projects/agent-log/agent-log.sh` — OpenClaw 日志搜索/汇总工具： - `search <query>` — 跨 memory + sessions 全文搜索 - `today` / `date YYYY-MM-DD` — 查看指定日期日志 - `summary [N]` — 最近 N 天活动概览 - `stats` — 工作区统计 - `cron` — 查看定时任务 单文件 Bash，零依赖，已测试可用。",
-      "recallCount": 2,
+      "recallCount": 3,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 2,
+      "totalScore": 3,
       "maxScore": 1,
       "firstRecalledAt": "2026-04-25T13:00:09.946Z",
-      "lastRecalledAt": "2026-05-03T13:00:10.127Z",
+      "lastRecalledAt": "2026-05-15T19:00:10.836Z",
       "queryHashes": [
-        "edad6b6abe41"
+        "edad6b6abe41",
+        "13c8e7f9c644"
       ],
       "recallDays": [
         "2026-04-25",
-        "2026-05-03"
+        "2026-05-03",
+        "2026-05-16"
       ],
       "conceptTags": [
         "agent-log",
@@ -138,23 +140,25 @@
       "endLine": 89,
       "source": "memory",
       "snippet": "3. **Flexible Output**: Supports both Markdown (human-readable) and JSON (machine-readable) 4. **Zero Dependencies**: Pure Python 3, no external packages needed 5. **CLI-Friendly**: Simple command-line interface with argparse ## Testing Successfully tested on: - The OpenClaw workspace (~25k files, multi-language) - The tool itself (self-referential test) - Example integration scripts ## Use Cases 1. **AI Assistant Onboarding**: Generate context for Claude, GPT-4, etc. 2. **Project Documentation**: Quick overviews for new team members 3. **Code Reviews**: Snapshot before diving in 4. **Portfolio Documentation**: Auto-generate project summaries ## Location ``` /root/code-lab-projects/pro",
-      "recallCount": 4,
+      "recallCount": 5,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 4,
+      "totalScore": 5,
       "maxScore": 1,
       "firstRecalledAt": "2026-04-25T13:00:09.946Z",
-      "lastRecalledAt": "2026-05-09T13:01:07.703Z",
+      "lastRecalledAt": "2026-05-15T19:00:10.836Z",
       "queryHashes": [
         "edad6b6abe41",
         "c01118dd4aa9",
-        "ce39a2e814fa"
+        "ce39a2e814fa",
+        "13c8e7f9c644"
       ],
       "recallDays": [
         "2026-04-25",
         "2026-05-03",
         "2026-05-07",
-        "2026-05-09"
+        "2026-05-09",
+        "2026-05-16"
       ],
       "conceptTags": [
         "gpt",
@@ -174,20 +178,22 @@
       "endLine": 26,
       "source": "memory",
       "snippet": "## Autoresearch Evening Session (19:00-19:15) ### Experiment Cycles Completed: 3/3 **1. prompt-router — explain() routing explainability** ✅ KEEP - Added `Agent.score(detail=True)` returning match reasons - Added `PromptRouter.explain()` for structured routing breakdown - Tests: 8→12, all passing **2. agent-context-store — batch operations** ✅ KEEP - Added `count(tag?)`, `keys(tag?)`, `put_many(items)` - Single-disk-write batch insert optimization - Tests: 8→12, all passing **3. prompt-router — confidence threshold routing** ✅ KEEP - Added `route_with_confidence(prompt, threshold)` returning status - Status: confident/low_confidence/no_match - Tests: 12→15, all passing ### Results - Bo",
-      "recallCount": 2,
+      "recallCount": 3,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 2,
+      "totalScore": 3,
       "maxScore": 1,
       "firstRecalledAt": "2026-04-28T21:00:08.198Z",
-      "lastRecalledAt": "2026-05-12T11:00:19.107Z",
+      "lastRecalledAt": "2026-05-15T21:00:07.895Z",
       "queryHashes": [
         "251319d34e1b",
-        "2d3492507ed8"
+        "2d3492507ed8",
+        "953f55dc58ff"
       ],
       "recallDays": [
         "2026-04-29",
-        "2026-05-12"
+        "2026-05-12",
+        "2026-05-16"
       ],
       "conceptTags": [
         "router",
