@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { Evaluator, policyComplianceCheck, latencyCheck, reliabilityCheck, costEfficiencyCheck } from '../src/evaluator.js';
+import { Evaluator, policyComplianceCheck, latencyCheck, reliabilityCheck, costEfficiencyCheck, compareTraces } from '../src/evaluator.js';
 import type { Span } from '../src/tracer.js';
 
 function makeSpan(overrides: Partial<Span> = {}): Span {
@@ -89,5 +89,35 @@ describe('Evaluator', () => {
   it('aggregateScore returns 0 for empty results', () => {
     const ev = new Evaluator();
     assert.equal(ev.aggregateScore([]), 0);
+  });
+
+  // --- compareTraces ---
+
+  it('compareTraces detects no regression when identical', () => {
+    const spans = [makeSpan()];
+    const diffs = compareTraces(spans, spans);
+    assert.ok(diffs.length > 0);
+    for (const d of diffs) {
+      assert.equal(d.regression, false);
+    }
+  });
+
+  it('compareTraces detects latency regression', () => {
+    const fast: Span[] = [{ ...makeSpan(), operation: 'llm.call' as const, startTime: 0, endTime: 10, attributes: { totalTokens: 50 } }];
+    const slow: Span[] = [{ ...makeSpan(), operation: 'llm.call' as const, startTime: 0, endTime: 10000, attributes: { totalTokens: 100000 } }];
+    const diffs = compareTraces(fast, slow);
+    const latDiff = diffs.find(d => d.dimension === 'latency');
+    assert.ok(latDiff);
+    assert.ok(latDiff!.delta < 0);
+  });
+
+  it('compareTraces detects reliability regression', () => {
+    const good = [makeSpan(), makeSpan()];
+    const bad: Span[] = [makeSpan(), { ...makeSpan(), status: 'error' as const }];
+    const diffs = compareTraces(good, bad);
+    const rel = diffs.find(d => d.dimension === 'reliability');
+    assert.ok(rel);
+    assert.ok(rel!.delta < 0);
+    assert.equal(rel!.regression, true);
   });
 });

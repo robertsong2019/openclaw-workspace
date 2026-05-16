@@ -86,6 +86,41 @@ export function reliabilityCheck(spans: Span[]): EvalCheckResult[] {
   }];
 }
 
+export interface TraceComparison {
+  dimension: string;
+  baseline: number;
+  current: number;
+  delta: number;
+  regression: boolean;
+}
+
+export function compareTraces(
+  baselineSpans: Span[],
+  currentSpans: Span[],
+  checks: EvalCheck[] = [policyComplianceCheck, latencyCheck, reliabilityCheck, costEfficiencyCheck],
+  threshold = -0.1
+): TraceComparison[] {
+  const results: TraceComparison[] = [];
+  for (const check of checks) {
+    const bResults = check(baselineSpans);
+    const cResults = check(currentSpans);
+    // Match by dimension
+    for (const br of bResults) {
+      const cr = cResults.find(c => c.dimension === br.dimension);
+      const cv = cr?.score ?? 0;
+      const delta = cv - br.score;
+      results.push({
+        dimension: br.dimension,
+        baseline: br.score,
+        current: cv,
+        delta: Math.round(delta * 1000) / 1000,
+        regression: delta < threshold,
+      });
+    }
+  }
+  return results;
+}
+
 export function costEfficiencyCheck(spans: Span[]): EvalCheckResult[] {
   const llmSpans = spans.filter(s => s.operation === 'llm.call');
   if (llmSpans.length === 0) return [{ dimension: 'cost_efficiency', score: 1, reason: 'No LLM calls' }];
