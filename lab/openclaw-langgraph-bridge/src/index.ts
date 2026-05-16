@@ -29,3 +29,5 @@ export { withMiddleware } from "./middleware.js";
 export type { Middleware, NodeFn } from "./middleware.js";
 export { loop } from "./loop.js";
 export type { LoopConfig } from "./loop.js";
+export { subgraph } from "./subgraph.js";
+export type { SubgraphConfig } from "./subgraph.js";
