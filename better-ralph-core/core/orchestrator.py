@@ -579,6 +579,48 @@ class RalphOrchestrator:
             "avg_iterations_per_story": round(avg_iters, 1),
         }
 
+    def story_digest(self) -> Dict[str, Any]:
+        """Generate a compact summary of the current PRD and session state.
+
+        Returns a dict with counts, top pending stories, and optional
+        session stats if a session is active. Useful for quick status
+        reports and logging.
+
+        Returns:
+            Dict with total, completed, pending, skipped, top_pending,
+            session (optional), and is_complete.
+        """
+        stories = self.prd_manager.get_all_stories()
+        completed = [s for s in stories if s.passes and not s.notes.startswith("[SKIPPED]")]
+        skipped = [s for s in stories if s.passes and s.notes.startswith("[SKIPPED]")]
+        pending = [s for s in stories if not s.passes]
+
+        # Top 5 pending by priority
+        top_pending = sorted(pending, key=lambda s: s.priority)[:5]
+
+        digest: Dict[str, Any] = {
+            "total": len(stories),
+            "completed": len(completed),
+            "pending": len(pending),
+            "skipped": len(skipped),
+            "completion_pct": round(len(completed) / max(len(stories), 1) * 100, 1),
+            "top_pending": [
+                {"id": s.id, "title": s.title, "priority": s.priority}
+                for s in top_pending
+            ],
+            "is_complete": len(pending) == 0,
+        }
+
+        if self.current_session_id:
+            digest["session"] = {
+                "session_id": self.current_session_id,
+                "iterations": self.session_stats.total_iterations,
+                "successes": self.session_stats.successful_iterations,
+                "failures": self.session_stats.failed_iterations,
+            }
+
+        return digest
+
     def validate_dependencies(self) -> Dict[str, Any]:
         """Validate story dependency graph for issues.
 
