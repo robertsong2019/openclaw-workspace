@@ -5,3 +5,7 @@ timestamp	commit	metric	value	status	description
 2026-05-15T21:15:00+08:00	cycle3	test_pass_rate	34/34 (100%)	keep	Evaluator: listChecks/removeCheck/aggregateScore edge
 2026-05-15T21:20:00+08:00	73fb3ab	test_pass_rate	37/37 (100%)	keep	Integration: memoryOperation/retrievalSearch/convenience methods
 2026-05-16T19:00	6f402bb	test_count	48/48	keep	Tracer:getChildren+getSpanTree | PolicyEngine:disableRule/enableRule/evaluateAll | AgentObserver:reportMarkdown+spanStats. 37→48 (+11), 480→559 lines
+2026-05-16T21:10	926dd49	test_pass_rate	53/53 (100%)	keep	Tracer: linkSpans + getCausalChain + getCausalLinks (+5, causal link tracking)
+2026-05-16T21:15	8662f9a	test_pass_rate	56/56 (100%)	keep	Evaluator: compareTraces regression detection (+3)
+2026-05-16T21:20	2915cbc	test_pass_rate	58/58 (100%)	keep	PolicyEngine: addPolicies + batchEvaluate (+2)
+2026-05-16T21:25	4303cc9	test_pass_rate	60/60 (100%)	keep	AgentObserver: observeSync + getErrorSummary (+2)
