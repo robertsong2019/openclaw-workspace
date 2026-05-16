@@ -129,4 +129,22 @@ describe('PolicyEngine', () => {
     const results = engine.evaluateAll({});
     assert.deepEqual(results, {});
   });
+
+  it('addPolicies adds multiple rules at once', () => {
+    const engine = new PolicyEngine();
+    engine.addPolicies('safety', [blockDestructiveOps(), piiFilter()]);
+    assert.equal(engine.ruleCount('safety'), 2);
+  });
+
+  it('batchEvaluate evaluates multiple categories with different inputs', () => {
+    const engine = new PolicyEngine();
+    engine.addPolicy('tool_execution', blockDestructiveOps());
+    engine.addPolicy('data_privacy', piiFilter());
+    const results = engine.batchEvaluate({
+      tool_execution: { command: 'ls' },
+      data_privacy: { text: 'clean email@x.com' },
+    });
+    assert.equal(results['tool_execution']?.allowed, true);
+    assert.equal(results['data_privacy']?.allowed, false);
+  });
 });

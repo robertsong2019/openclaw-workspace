@@ -85,6 +85,20 @@ export class PolicyEngine {
     return results;
   }
 
+  addPolicies(category: string, rules: PolicyRule[]): void {
+    const list = this.rules.get(category) ?? [];
+    list.push(...rules);
+    this.rules.set(category, list);
+  }
+
+  batchEvaluate(inputs: Record<string, Record<string, unknown>>): Record<string, EvalResult> {
+    const results: Record<string, EvalResult> = {};
+    for (const [category, input] of Object.entries(inputs)) {
+      results[category] = this.evaluate(category, input);
+    }
+    return results;
+  }
+
   private buildRule(def: { name: string; description: string; category: string; type: string; config?: Record<string, unknown> }): PolicyRule | null {
     const helpers: Record<string, (cfg: Record<string, unknown>) => PolicyRule> = {
       blockDestructiveOps: blockDestructiveOps,
