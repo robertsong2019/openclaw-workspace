@@ -3,3 +3,4 @@ timestamp	commit	metric	value	status	description
 2026-05-05T22:15	cfb4294	test_pass_rate	43/43=100%	keep	ctxpack: + .ctxpackignore (3 tests)
 2026-05-13T22:10	71f4b7e	test_pass_rate	46/46=100%	keep	ctxpack: + --include-source flag (3 tests)
 2026-05-14T22:20	162a6f3	test_pass_rate	49/49=100%	keep	ctxpack: + --diff mode (3 tests)
+2026-05-16T22:10	ca8f8ce	test_pass_rate	52/52=100%	keep	ctxpack: + --exclude flag (3 tests)

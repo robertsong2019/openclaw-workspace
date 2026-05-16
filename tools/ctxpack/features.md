@@ -14,8 +14,8 @@
 ## Recent Additions
 - [x] **`.ctxpackignore`** — ctxpack-specific ignore file ✅ 2026-05-05
 - [x] **Include inline source** — embed key file contents in output ✅ 2026-05-13
+- [x] **`--exclude` flag** — exclude additional file patterns ✅ 2026-05-16
 
 ## Planned
 - [ ] **Diff mode** — compare generated context with existing file, show changes → ✅ 2026-05-14 (3 tests)
-- [ ] **Include inline source** — embed key file contents in output
 - [ ] **Watch mode** — regenerate on file changes
