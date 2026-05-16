@@ -524,3 +524,44 @@ def test_diff_missing_file(tmp_path):
     import subprocess
     r = subprocess.run(["python3", "-m", "ctxpack", str(tmp_path), "--diff", str(tmp_path / "nope.md")], capture_output=True, text=True)
     assert r.returncode != 0
+
+# ── --exclude flag ──────────────────────────────────────────────
+
+def test_exclude_removes_matching_files(tmp_path):
+    """--exclude filters out matching files."""
+    import subprocess
+    proj = tmp_path / "proj"
+    proj.mkdir()
+    (proj / "app.py").write_text("print('hello')")
+    (proj / "test_app.py").write_text("def test(): pass")
+    (proj / "util.py").write_text("x = 1")
+    r = subprocess.run(["python3", "-m", "ctxpack", str(proj), "--exclude", "test_*", "--stats"],
+                       capture_output=True, text=True)
+    assert r.returncode == 0
+    stats = json.loads(r.stdout)
+    # test_app.py should be excluded
+    assert all("test_" not in f for f in stats.get("files", {}).get("byType", {}))
+
+def test_exclude_multiple_patterns(tmp_path):
+    """--exclude can be used multiple times."""
+    import subprocess
+    proj = tmp_path / "proj"
+    proj.mkdir()
+    (proj / "app.py").write_text("print('hello')")
+    (proj / "style.css").write_text("body{}")
+    (proj / "util.py").write_text("x = 1")
+    r = subprocess.run(["python3", "-m", "ctxpack", str(proj), "--exclude", "*.css", "--exclude", "util*", "--stats"],
+                       capture_output=True, text=True)
+    assert r.returncode == 0
+    stats = json.loads(r.stdout)
+    assert stats["totalFiles"] == 1  # only app.py remains
+
+def test_exclude_no_match_no_effect(tmp_path):
+    """--exclude with non-matching pattern has no effect."""
+    import subprocess
+    proj = tmp_path / "proj"
+    proj.mkdir()
+    (proj / "app.py").write_text("print('hello')")
+    r1 = subprocess.run(["python3", "-m", "ctxpack", str(proj), "--stats"], capture_output=True, text=True)
+    r2 = subprocess.run(["python3", "-m", "ctxpack", str(proj), "--exclude", "*.xyz", "--stats"], capture_output=True, text=True)
+    assert json.loads(r1.stdout)["totalFiles"] == json.loads(r2.stdout)["totalFiles"]

@@ -570,6 +570,8 @@ def main():
                         help="Max target tokens (default: 8000)")
     parser.add_argument("--include", action="append", default=[],
                         help="Additional glob patterns to include")
+    parser.add_argument("--exclude", action="append", default=[],
+                        help="Additional glob patterns to exclude")
     parser.add_argument("--name", help="Project name (default: directory name)")
     parser.add_argument("--stats", action="store_true",
                         help="Output project statistics as JSON instead of context")
@@ -591,7 +593,14 @@ def main():
 
     gitignore = load_gitignore(root) | load_ctxpackignore(root)
     files = scan_tree(root, gitignore)
-    eprint(f"   Found {len(files)} files")
+
+    # Apply --exclude patterns
+    if args.exclude:
+        before = len(files)
+        files = [f for f in files if not any(fnmatch.fnmatch(f, pat) for pat in args.exclude)]
+        eprint(f"   Excluded {before - len(files)} files ({len(files)} remaining)")
+    else:
+        eprint(f"   Found {len(files)} files")
 
     languages = detect_languages(files)
     frameworks = detect_frameworks(root, files)
