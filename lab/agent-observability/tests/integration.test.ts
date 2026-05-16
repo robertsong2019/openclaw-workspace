@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { AgentObserver } from '../src/index.js';
+import { blockDestructiveOps } from '../src/policy-engine.js';
 
 describe('AgentObserver integration', () => {
   it('runs a complete agent workflow', () => {
@@ -129,5 +130,23 @@ describe('AgentObserver integration', () => {
     assert.equal(stats.byOperation['agent.run'], 1);
     assert.equal(stats.byOperation['llm.call'], 1);
     assert.equal(stats.byOperation['tool.execute'], 1);
+  });
+
+  it('observeSync wraps function and returns result with report', () => {
+    const obs = new AgentObserver();
+    const { result, report } = obs.observeSync(() => 42);
+    assert.equal(result, 42);
+    assert.ok(report.traceReport.totalSpans >= 1);
+  });
+
+  it('getErrorSummary returns error details', () => {
+    const obs = new AgentObserver();
+    obs.startRun('e1', 'test');
+    obs.getPolicyEngine().addPolicy('tool_execution', blockDestructiveOps());
+    obs.toolExecute('bash', 'rm -rf /'); // blocked by policy
+    obs.endRun();
+    const summary = obs.getErrorSummary();
+    assert.equal(summary.length, 1);
+    assert.equal(summary[0].operation, 'tool.execute');
   });
 });

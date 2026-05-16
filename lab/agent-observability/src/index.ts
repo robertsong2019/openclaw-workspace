@@ -133,4 +133,20 @@ export class AgentObserver {
       byOperation,
     };
   }
+
+  observeSync<T>(fn: () => T): { result: T; report: ObservabilityReport } {
+    this.startRun('observer', 'observeSync');
+    const result = fn();
+    this.endRun();
+    return { result, report: this.getReport() };
+  }
+
+  getErrorSummary(): Array<{ operation: string; reason: string }> {
+    const spans = this.tracer.getSpans();
+    const errors = spans.filter(s => s.status === 'error');
+    return errors.map(s => ({
+      operation: s.operation,
+      reason: String(s.attributes.policyViolations ?? s.attributes.error ?? 'unknown'),
+    }));
+  }
 }
