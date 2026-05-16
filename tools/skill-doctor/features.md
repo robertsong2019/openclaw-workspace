@@ -14,5 +14,6 @@
 
 ## Planned
 - [x] **JSON output** (`--json`) — machine-readable output for CI integration ✅ 2026-05-09
-- [ ] **Custom checks** — load additional checks from `.skill-doctor.js`
-- [ ] **Auto-fix** (`--fix`) — auto-fix simple issues (add .gitignore, create SKILL.md/README.md) → ✅ 2026-05-14 (7 tests)
+- [x] **Custom checks** — load additional checks from `.skill-doctor.js` ✅ 2026-05-16
+- [x] **Quiet mode** (`--quiet`) — only show warnings/failures ✅ 2026-05-16
+- [x] **Auto-fix** (`--fix`) — auto-fix simple issues (add .gitignore, create SKILL.md/README.md) ✅ 2026-05-14 (7 tests)
