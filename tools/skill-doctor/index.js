@@ -131,20 +131,23 @@ check("Valid package.json (if present)", (dir) => {
 
 // ── Runner ────────────────────────────────────────────────────
 
-function diagnose(dir) {
+function diagnose(dir, quiet = false) {
   const resolved = path.resolve(dir);
   if (!fs.existsSync(resolved)) {
     console.error(fail(`Directory not found: ${resolved}`));
     process.exit(2);
   }
 
+  const allChecks = [...checks, ...loadCustomChecks(resolved)];
+
   console.log(`\n${c.bold}${c.cyan}🩺 skill-doctor${c.reset} — ${resolved}\n`);
 
   let passes = 0, warns = 0, fails = 0, skips = 0;
 
-  for (const { name, fn } of checks) {
+  for (const { name, fn } of allChecks) {
     try {
       const result = fn(resolved);
+      if (quiet && result.status === "pass") { passes++; continue; }
       const icon =
         result.status === "pass" ? ok(name) :
         result.status === "warn" ? warn(name) :
@@ -173,7 +176,8 @@ function diagnose(dir) {
 
 function diagnoseJSON(dir) {
   const resolved = path.resolve(dir);
-  const results = checks.map(({ name, fn }) => {
+  const allChecks = [...checks, ...loadCustomChecks(resolved)];
+  const results = allChecks.map(({ name, fn }) => {
     try {
       const r = fn(resolved);
       return { name, ...r };
@@ -262,14 +266,32 @@ function autoFixJSON(dir) {
 
 // ── CLI ───────────────────────────────────────────────────────
 
+// ── Custom checks loader ────────────────────────────────────
+
+function loadCustomChecks(dir) {
+  const customPath = path.join(dir, ".skill-doctor.js");
+  if (!fs.existsSync(customPath)) return [];
+  try {
+    const mod = require(customPath);
+    const customChecks = Array.isArray(mod) ? mod : (mod.checks || []);
+    return customChecks.map((c, i) => ({
+      name: c.name || `Custom check #${i + 1}`,
+      fn: c.fn || c.check || (() => ({ status: "skip", msg: "no function" })),
+    }));
+  } catch (e) {
+    return [{ name: "Load .skill-doctor.js", fn: () => ({ status: "fail", msg: e.message }) }];
+  }
+}
+
 // Export for testing
-module.exports = { checks, diagnose, diagnoseJSON, fixers, autoFix, autoFixJSON };
+module.exports = { checks, diagnose, diagnoseJSON, fixers, autoFix, autoFixJSON, loadCustomChecks };
 
 if (require.main === module) {
   const args = process.argv.slice(2);
   const jsonMode = args.includes("--json");
   const fixMode = args.includes("--fix");
-  const dirs = args.filter((a) => a !== "--json" && a !== "--fix");
+  const quietMode = args.includes("--quiet");
+  const dirs = args.filter((a) => a !== "--json" && a !== "--fix" && a !== "--quiet");
 
   if (dirs.length === 0 || args.includes("--help") || args.includes("-h")) {
     console.log(`${c.bold}skill-doctor${c.reset} — Diagnose OpenClaw Agent Skills
@@ -279,6 +301,7 @@ ${c.bold}Usage:${c.reset}
   skill-doctor --json <skill-dir>   machine-readable output
   skill-doctor --fix <skill-dir>    auto-fix simple issues
   skill-doctor --fix --json        auto-fix with JSON output
+  skill-doctor --quiet <skill-dir> only show warnings/failures
   skill-doctor --help
 
 ${c.bold}Exit codes:${c.reset}
@@ -308,7 +331,7 @@ ${c.bold}Exit codes:${c.reset}
 
   let exitCode = 0;
   for (const arg of dirs) {
-    const code = diagnose(arg);
+    const code = diagnose(arg, quietMode);
     if (code > exitCode) exitCode = code;
   }
   process.exit(exitCode);

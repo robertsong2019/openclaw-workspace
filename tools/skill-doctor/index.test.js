@@ -244,3 +244,85 @@ test("diagnose returns exit code 2 on failures", () => {
   expect(code).toBe(2);
   expect(output).toContain("skill-doctor");
 });
+
+// ── Custom checks (.skill-doctor.js) ────────────────────────────
+
+test("loadCustomChecks returns empty array when no .skill-doctor.js", () => {
+  const { loadCustomChecks: lc } = require("./index");
+  const dir = createTempSkill({ "SKILL.md": "x".repeat(100) });
+  expect(lc(dir)).toEqual([]);
+});
+
+test("loadCustomChecks loads checks from .skill-doctor.js (array export)", () => {
+  const dir = createTempSkill({
+    ".skill-doctor.js": `module.exports = [
+      { name: "Custom A", fn: (dir) => ({ status: "pass", msg: "ok" }) },
+      { name: "Custom B", fn: (dir) => ({ status: "warn", msg: "meh" }) },
+    ];`,
+  });
+  const { loadCustomChecks: lc } = require("./index");
+  const custom = lc(dir);
+  expect(custom.length).toBe(2);
+  expect(custom[0].name).toBe("Custom A");
+  expect(custom[1].fn(dir).status).toBe("warn");
+});
+
+test("loadCustomChecks loads checks from .skill-doctor.js ({ checks } export)", () => {
+  const dir = createTempSkill({
+    ".skill-doctor.js": `module.exports = { checks: [
+      { name: "From object", fn: (dir) => ({ status: "pass", msg: "yep" }) },
+    ] };`,
+  });
+  const { loadCustomChecks: lc } = require("./index");
+  const custom = lc(dir);
+  expect(custom.length).toBe(1);
+  expect(custom[0].name).toBe("From object");
+});
+
+test("diagnoseJSON includes custom checks in results", () => {
+  const dir = createTempSkill({
+    "SKILL.md": "# Test\n\n" + "x".repeat(200),
+    ".skill-doctor.js": `module.exports = [
+      { name: "My custom", fn: () => ({ status: "warn", msg: "custom warn" }) },
+    ];`,
+  });
+  const report = diagnoseJSON(dir);
+  const custom = report.results.find((r) => r.name === "My custom");
+  expect(custom).toBeDefined();
+  expect(custom.status).toBe("warn");
+});
+
+test("loadCustomChecks handles broken .skill-doctor.js gracefully", () => {
+  const dir = createTempSkill({
+    ".skill-doctor.js": `throw new Error("boom");`,
+  });
+  const { loadCustomChecks: lc } = require("./index");
+  const custom = lc(dir);
+  expect(custom.length).toBe(1);
+  expect(custom[0].name).toContain("Load .skill-doctor.js");
+});
+
+// ── Quiet mode ──────────────────────────────────────────────────
+
+test("diagnose quiet mode hides passing checks", () => {
+  const dir = createTempSkill({ "SKILL.md": "# Test\n\n" + "x".repeat(200) });
+  const origLog = console.log;
+  let output = "";
+  console.log = (...args) => { output += args.join(" ") + "\n"; };
+  diagnose(dir, true);
+  console.log = origLog;
+  // Should not show "SKILL.md exists" (pass) but still shows summary
+  expect(output).not.toContain("SKILL.md exists");
+  expect(output).toContain("Summary");
+});
+
+test("diagnose quiet mode shows warnings and failures", () => {
+  const dir = createTempSkill({}); // no SKILL.md = fail, no README = warn
+  const origLog = console.log;
+  let output = "";
+  console.log = (...args) => { output += args.join(" ") + "\n"; };
+  diagnose(dir, true);
+  console.log = origLog;
+  expect(output).toContain("SKILL.md exists"); // fail - shown
+  expect(output).toContain("README.md exists"); // warn - shown
+});
