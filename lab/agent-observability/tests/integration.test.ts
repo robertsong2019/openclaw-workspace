@@ -149,4 +149,17 @@ describe('AgentObserver integration', () => {
     assert.equal(summary.length, 1);
     assert.equal(summary[0].operation, 'tool.execute');
   });
+
+  it('observeWithPolicy provides guarded tool context', () => {
+    const obs = new AgentObserver();
+    obs.getPolicyEngine().addPolicy('tool_execution', blockDestructiveOps());
+    const { result, report } = obs.observeWithPolicy((ctx) => {
+      const r1 = ctx.tool('safe', 'echo hello');
+      const r2 = ctx.tool('bash', 'rm -rf /');
+      return { safe: r1.allowed, blocked: r2.allowed };
+    }, 'test-agent');
+    assert.strictEqual(result.safe, true);
+    assert.strictEqual(result.blocked, false);
+    assert.ok(report.aggregateScore > 0);
+  });
 });

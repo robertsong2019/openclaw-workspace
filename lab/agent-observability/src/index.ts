@@ -141,6 +141,21 @@ export class AgentObserver {
     return { result, report: this.getReport() };
   }
 
+  /** Observe with automatic policy-guarded tool execution */
+  observeWithPolicy<T>(
+    fn: (ctx: { tool: (name: string, input: string) => { allowed: boolean; reason?: string } }) => T,
+    agentId = 'observer'
+  ): { result: T; report: ObservabilityReport } {
+    this.startRun(agentId, 'observeWithPolicy');
+    const tool = (name: string, input: string) => {
+      const { allowed, span } = this.toolExecute(name, input);
+      return { allowed, reason: allowed ? undefined : String(span.attributes.policyViolations ?? 'denied') };
+    };
+    const result = fn({ tool });
+    this.endRun();
+    return { result, report: this.getReport() };
+  }
+
   getErrorSummary(): Array<{ operation: string; reason: string }> {
     const spans = this.tracer.getSpans();
     const errors = spans.filter(s => s.status === 'error');
