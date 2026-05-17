@@ -120,4 +120,29 @@ describe('Evaluator', () => {
     assert.ok(rel!.delta < 0);
     assert.equal(rel!.regression, true);
   });
+
+  // --- setWeight + resetChecks ---
+
+  it('setWeight updates existing check weight', () => {
+    const e = new Evaluator();
+    e.addCheck('test', () => [{ dimension: 'test', score: 1, reason: 'ok' }], 1.0);
+    assert.ok(e.setWeight('test', 2.5));
+    const results = e.evaluate([]);
+    assert.strictEqual(e.aggregateScore(results), 1); // score doesn't change, weight does
+  });
+
+  it('setWeight returns false for unknown check', () => {
+    const e = new Evaluator();
+    assert.strictEqual(e.setWeight('nonexistent', 1.0), false);
+  });
+
+  it('resetChecks clears all checks', () => {
+    const e = new Evaluator();
+    e.addCheck('a', () => []);
+    e.addCheck('b', () => []);
+    assert.strictEqual(e.listChecks().length, 2);
+    e.resetChecks();
+    assert.strictEqual(e.listChecks().length, 0);
+    assert.strictEqual(e.aggregateScore([]), 0);
+  });
 });

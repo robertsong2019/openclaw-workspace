@@ -99,6 +99,14 @@ export class PolicyEngine {
     return results;
   }
 
+  getRule(category: string, ruleName: string): PolicyRule | undefined {
+    return this.rules.get(category)?.find(r => r.name === ruleName);
+  }
+
+  hasCategory(category: string): boolean {
+    return this.rules.has(category) && (this.rules.get(category)?.length ?? 0) > 0;
+  }
+
   private buildRule(def: { name: string; description: string; category: string; type: string; config?: Record<string, unknown> }): PolicyRule | null {
     const helpers: Record<string, (cfg: Record<string, unknown>) => PolicyRule> = {
       blockDestructiveOps: blockDestructiveOps,

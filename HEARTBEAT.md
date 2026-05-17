@@ -1,4 +1,4 @@
-# HEARTBEAT.md - May 16, 2026 (Saturday)
+# HEARTBEAT.md - May 17, 2026 (Sunday)
 
 ## 待办任务
 
@@ -16,15 +16,17 @@
 - [ ] Edge Agent Runtime Dashboard
 
 ## 系统状态
-- **agent-context-store**: 178/178 tests (新增: xrefs 类型化交叉引用+BFS图遍历)
-- **better-ralph-core**: 299/299 tests (新增: checkpoint_diff 检查点差异对比)
+- **agent-context-store**: 186/186 tests (新增: event hooks on/off/_emit + xrefs)
+- **better-ralph-core**: 307/307 tests (新增: story_digest + checkpoint_diff)
+- **lab/agent-observability**: 60/60 tests (实现中: Tracer因果链接 + Evaluator回归检测 + Policy批量评估 + Observer同步模式)
 - **AMS v1.0-dev**: 645/645 tests
 - **agent-memory-graph**: 30/30 tests
 - **prompt-router**: 244/244 tests
 - **prompt-weaver**: 148/148 tests
-- **autoresearch**: 零回滚率持续保持（连续56天）🏆
+- **autoresearch**: 零回滚率持续保持（连续58天）🏆
 
 ## 近期发现
-- **agent-context-store xrefs** 是从 tags(平面分类) 到结构化关系图的进化：entries=节点, xrefs=类型化边, BFS遍历支持多跳推理
-- **checkpoint_diff** 填补了 checkpoint save/load 之间的可观测性缺口——可以对比两个快照看发生了什么变化
-- 研究积累已饱和，lab/ 实现是本周重点——需要从"研究笔记"转向"可运行项目"
+- **agent-context-store event hooks** 实现了 pub/sub 模式，解耦 changelog(审计) 与 hooks(响应)，为 agent 自动同步奠定基础
+- **story_digest** 是单调用状态快照，填补 get_status(轻量) 与 get_session_summary(详细) 之间的缺口
+- **lab/agent-observability 已启动实现**: 60 tests 覆盖因果链接追踪、回归检测、批量策略评估、同步观察——这是第一个从研究笔记进入 lab/ 的项目
+- 下周目标: agent-observability 继续迭代 + 启动 Hindsight Mini lab 实现

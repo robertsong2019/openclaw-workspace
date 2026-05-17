@@ -191,4 +191,18 @@ export class Tracer {
   getCausalLinks(): Array<{ from: string; to: string; type: string }> {
     return [...this.causalLinks];
   }
+
+  getActiveSpanCount(): number {
+    return this.activeStack.length;
+  }
+
+  getSpanDepth(spanId: string): number {
+    let depth = 0;
+    let current = this.spans.find(s => s.spanId === spanId);
+    while (current?.parentSpanId) {
+      depth++;
+      current = this.spans.find(s => s.spanId === current!.parentSpanId);
+    }
+    return depth;
+  }
 }

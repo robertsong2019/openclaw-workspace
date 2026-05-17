@@ -147,4 +147,30 @@ describe('PolicyEngine', () => {
     assert.equal(results['tool_execution']?.allowed, true);
     assert.equal(results['data_privacy']?.allowed, false);
   });
+
+  // --- getRule + hasCategory ---
+
+  it('getRule returns specific rule from category', () => {
+    const engine = new PolicyEngine();
+    engine.addPolicy('tool_execution', blockDestructiveOps());
+    const rule = engine.getRule('tool_execution', 'block_destructive_ops');
+    assert.ok(rule);
+    assert.equal(rule!.name, 'block_destructive_ops');
+  });
+
+  it('getRule returns undefined for missing rule', () => {
+    const engine = new PolicyEngine();
+    assert.strictEqual(engine.getRule('tool_execution', 'nonexistent'), undefined);
+  });
+
+  it('hasCategory returns true for non-empty category', () => {
+    const engine = new PolicyEngine();
+    engine.addPolicy('test', blockDestructiveOps());
+    assert.strictEqual(engine.hasCategory('test'), true);
+  });
+
+  it('hasCategory returns false for empty/missing category', () => {
+    const engine = new PolicyEngine();
+    assert.strictEqual(engine.hasCategory('missing'), false);
+  });
 });

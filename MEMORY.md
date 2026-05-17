@@ -15,10 +15,10 @@
 
 ---
 
-## Current Focus (2026-05-15)
+## Current Focus (2026-05-17)
 
 ### Active Theme
-Autoresearch 方法论实践 - **连续56天零回滚率** 🏆。05-16 凌晨: agent-context-store 加入 XRefs(类型化交叉引用+BFS图遍历, 170→178) + better-ralph checkpoint_diff (292→299)。**研究积累已饱和，进入 lab/ 实现阶段**。优先级: Hindsight Mini > Agent Observability > A2A Trust > LangGraph Bridge。
+Autoresearch 方法论实践 - **连续58天零回滚率** 🏆。05-17 凌晨: agent-context-store 加入 event hooks (178→186) + better-ralph story_digest (299→307)。**lab/agent-observability 已进入实现阶段** (48→60 tests, 因果链接+回归检测+批量策略+同步观察)。优先级: Agent Observability Lab > Hindsight Mini > A2A Trust > LangGraph Bridge。
 
 ### ⚠️ 关键发现
 - **agent-context-store 代码未持久化问题**: 05-08→05-11 的代码到97 tests但未持久化到 workspace，05-12 重建基线为69 tests。**教训: 每次实验完成后必须确认代码已持久化到 lab/ 目录并 git commit。**

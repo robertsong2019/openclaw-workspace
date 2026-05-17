@@ -44,7 +44,21 @@ export class Evaluator {
   removeCheck(name: string): boolean {
     const before = this.checks.length;
     this.checks = this.checks.filter(c => c.name !== name);
+    this.weights.delete(name);
     return this.checks.length < before;
+  }
+
+  setWeight(name: string, weight: number): boolean {
+    if (!this.weights.has(name)) return false;
+    this.weights.set(name, weight);
+    const check = this.checks.find(c => c.name === name);
+    if (check) check.weight = weight;
+    return true;
+  }
+
+  resetChecks(): void {
+    this.checks = [];
+    this.weights.clear();
   }
 }
 

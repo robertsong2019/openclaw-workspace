@@ -236,4 +236,48 @@ describe('Tracer', () => {
     // Should not infinite loop, returns at most the other span
     assert.ok(chain.length <= 2);
   });
+
+  // --- getActiveSpanCount + getSpanDepth ---
+
+  it('getActiveSpanCount returns 0 when no active spans', () => {
+    const tracer = new Tracer();
+    assert.strictEqual(tracer.getActiveSpanCount(), 0);
+  });
+
+  it('getActiveSpanCount tracks nested spans', () => {
+    const tracer = new Tracer();
+    const s1 = tracer.startSpan('agent.run');
+    assert.strictEqual(tracer.getActiveSpanCount(), 1);
+    const s2 = tracer.startSpan('llm.call');
+    assert.strictEqual(tracer.getActiveSpanCount(), 2);
+    tracer.endSpan(s2.spanId);
+    assert.strictEqual(tracer.getActiveSpanCount(), 1);
+    tracer.endSpan(s1.spanId);
+    assert.strictEqual(tracer.getActiveSpanCount(), 0);
+  });
+
+  it('getSpanDepth returns 0 for root span', () => {
+    const tracer = new Tracer();
+    const s = tracer.startSpan('agent.run');
+    tracer.endSpan(s.spanId);
+    assert.strictEqual(tracer.getSpanDepth(s.spanId), 0);
+  });
+
+  it('getSpanDepth returns correct depth for nested spans', () => {
+    const tracer = new Tracer();
+    const s1 = tracer.startSpan('agent.run');
+    const s2 = tracer.startSpan('tool.execute');
+    const s3 = tracer.startSpan('llm.call');
+    tracer.endSpan(s3.spanId);
+    tracer.endSpan(s2.spanId);
+    tracer.endSpan(s1.spanId);
+    assert.strictEqual(tracer.getSpanDepth(s1.spanId), 0);
+    assert.strictEqual(tracer.getSpanDepth(s2.spanId), 1);
+    assert.strictEqual(tracer.getSpanDepth(s3.spanId), 2);
+  });
+
+  it('getSpanDepth returns 0 for unknown span', () => {
+    const tracer = new Tracer();
+    assert.strictEqual(tracer.getSpanDepth('nonexistent'), 0);
+  });
 });
