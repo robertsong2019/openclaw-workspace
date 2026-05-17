@@ -280,4 +280,21 @@ describe('Tracer', () => {
     const tracer = new Tracer();
     assert.strictEqual(tracer.getSpanDepth('nonexistent'), 0);
   });
+
+  it('traceFn wraps sync fn in span', () => {
+    const tracer = new Tracer();
+    const { result, span } = tracer.traceFn('tool.execute', () => 42, { tool: 'calc' });
+    assert.strictEqual(result, 42);
+    assert.strictEqual(span.operation, 'tool.execute');
+    assert.strictEqual(span.status, 'ok');
+    assert.notStrictEqual(span.endTime, null);
+  });
+
+  it('traceFn marks error on throw', () => {
+    const tracer = new Tracer();
+    assert.throws(() => tracer.traceFn('tool.execute', () => { throw new Error('boom'); }));
+    const spans = tracer.getSpans();
+    assert.strictEqual(spans.length, 1);
+    assert.strictEqual(spans[0].status, 'error');
+  });
 });

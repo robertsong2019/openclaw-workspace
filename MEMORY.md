@@ -37,7 +37,12 @@ Autoresearch 方法论实践 - **连续58天零回滚率** 🏆。05-17 凌晨: 
   - **[05-14 更新]** Multi-Provider Toolkit 深度研究 → [笔记](catalyst-research/exploration-notes/2026-05-14-structured-output-toolkit.md) ✅ StructuredLLMClient+SchemaCache+5/5 tests passed
   - **关键发现**: Validation Sandwich(三层验证不可省略); Schema TTL ~120s 需预热; Schema Complexity Tax(20+字段降50% tok/s); Multi-Provider fallback 是生产必需品
   - **下一步**: 创建 lab/structured-output-toolkit/ — 集成真实 OpenAI/Anthropic SDK, 目标 18/18 tests
-- [ ] **A2A x-agent-trust 中间件原型** — Node.js ES256 签名/验证，可作 OpenClaw gateway plugin
+- [ ] **A2A Trust Prototype** — lab/a2a-trust-prototype/
+  - [研究笔记](catalyst-research/exploration-notes/2026-05-17-a2a-trust-protocol.md) ✅ Signed Agent Cards + AgentRank + Trust Scorer + 可运行代码
+  - **核心洞察**: 签名验证是必要不充分条件；三层信任栈(预验证→历史聚合→持续监控)是最佳实践；AgentRank的Sybil防护+24h衰减是关键设计
+  - **技术选型**: EdDSA(Ed25519) via jose + JCS规范化 + JWKS公钥解析
+  - **最小scope**: card-verifier中间件 + TrustScorer类 + jwks-resolver
+  - **与agent-observability联动**: Tracer的因果链接数据可作为TrustScorer的交互评分输入
   - [研究笔记 v1](catalyst-research/exploration-notes/2026-05-03-a2a-agent-trust.md) ✅ 代码验证通过(签名+验证+篡改检测)
   - [研究笔记 v2](catalyst-research/exploration-notes/2026-05-03-a2a-agent-trust.md) ✅ 三层信任模型+Trust Extension设计+可运行TypeScript代码
   - [A2A Protocol 深度研究](catalyst-research/exploration-notes/2026-05-04-a2a-protocol.md) ✅ 5核心概念+可运行Server/Client(零依赖)+A2A vs MCP分析
@@ -46,7 +51,8 @@ Autoresearch 方法论实践 - **连续58天零回滚率** 🏆。05-17 凌晨: 
   - [A2A v1.0 + Trust 集成](catalyst-research/exploration-notes/2026-05-09-a2a-protocol-trust.md) ✅ @a2a-js/sdk + Express + ES256(jose) 完整可运行中间件 + TrustEngine + 双向信任洞察 + per-skill trust 概念
   - [A2A Trust 最新研究](catalyst-research/exploration-notes/2026-05-15-a2a-trust-protocol.md) ✅ 05-15 深度研究：A2A一周年(150+组织)+AgentDID(arXiv:2604.25189)+DID-based认证+协议生态全景+ES256签名+TrustEngine(已运行验证:98/100分)
   - **关键发现**: A2A已到v1.2+150组织; AgentDID提出去中心化身份+动态状态验证; GitHub Issue #1672提议verifiedIdentity字段; 60%组织不完全信任自主任务; did:web+ES256是最务实的原型选择
-  - **下一步**: lab/a2a-trust-prototype/ → 基于05-15研究代码创建项目骨架(TrustEngine+Signer+Verifier+Middleware)，集成did:web身份
+  - [Trust Score Middleware 研究](catalyst-research/exploration-notes/2026-05-17-a2a-trust-score-middleware.md) ✅ 05-17 深度研究：Context-Conditioned Trust Score + Verification Strength + 时间衰减 + Express中间件 + 完整测试用例
+  - **下一步**: 将 trust-score.ts + trust-middleware.ts 集成到 lab/a2a-trust-prototype/src/，补全测试，实现 TrustEvent 持久化
 - [ ] **LangGraph Bridge 实现** — Executor 接口 + createTask + StateSchema 重写 createOpenClawNode
   - [研究笔记 v1](catalyst-research/exploration-notes/2026-05-07-langgraphjs-annotation-command-caching.md) ✅ Annotation API + Command动态路由 + 可运行OpenClaw Node Factory代码
   - [研究笔记 v2](catalyst-research/exploration-notes/2026-05-08-langgraphjs-gateway-http-client.md) ✅ GatewayClient + createTask + ReducedValue taskResults

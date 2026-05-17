@@ -173,4 +173,14 @@ describe('PolicyEngine', () => {
     const engine = new PolicyEngine();
     assert.strictEqual(engine.hasCategory('missing'), false);
   });
+
+  it('clearCategory removes all rules in category', () => {
+    const engine = new PolicyEngine();
+    engine.addPolicy('test', { name: 'r1', description: '', category: 'test', evaluate: () => ({ allow: true }) });
+    engine.addPolicy('test', { name: 'r2', description: '', category: 'test', evaluate: () => ({ allow: true }) });
+    assert.strictEqual(engine.ruleCount('test'), 2);
+    assert.strictEqual(engine.clearCategory('test'), true);
+    assert.strictEqual(engine.ruleCount('test'), 0);
+    assert.strictEqual(engine.clearCategory('nonexistent'), false);
+  });
 });

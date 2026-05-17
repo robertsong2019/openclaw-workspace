@@ -9,3 +9,4 @@ timestamp	commit	metric	value	status	description
 2026-05-16T21:15	8662f9a	test_pass_rate	56/56 (100%)	keep	Evaluator: compareTraces regression detection (+3)
 2026-05-16T21:20	2915cbc	test_pass_rate	58/58 (100%)	keep	PolicyEngine: addPolicies + batchEvaluate (+2)
 2026-05-16T21:25	4303cc9	test_pass_rate	60/60 (100%)	keep	AgentObserver: observeSync + getErrorSummary (+2)
+2026-05-17T19:05	c62e33e	test_count	72/72	keep	Tracer:getActiveSpanCount+getSpanDepth | Evaluator:setWeight+resetChecks | PolicyEngine:getRule+hasCategory. 60→72 (+12), 3 cycles, 3 keep, 零回滚

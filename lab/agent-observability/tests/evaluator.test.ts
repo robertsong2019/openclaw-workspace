@@ -145,4 +145,14 @@ describe('Evaluator', () => {
     assert.strictEqual(e.listChecks().length, 0);
     assert.strictEqual(e.aggregateScore([]), 0);
   });
+
+  it('getCheck returns check by name', () => {
+    const e = new Evaluator();
+    const fn = () => [];
+    e.addCheck('mycheck', fn, 2.5);
+    const found = e.getCheck('mycheck');
+    assert.ok(found);
+    assert.strictEqual(found!.weight, 2.5);
+    assert.strictEqual(e.getCheck('nope'), undefined);
+  });
 });

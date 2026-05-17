@@ -107,6 +107,10 @@ export class PolicyEngine {
     return this.rules.has(category) && (this.rules.get(category)?.length ?? 0) > 0;
   }
 
+  clearCategory(category: string): boolean {
+    return this.rules.delete(category);
+  }
+
   private buildRule(def: { name: string; description: string; category: string; type: string; config?: Record<string, unknown> }): PolicyRule | null {
     const helpers: Record<string, (cfg: Record<string, unknown>) => PolicyRule> = {
       blockDestructiveOps: blockDestructiveOps,

@@ -205,4 +205,17 @@ export class Tracer {
     }
     return depth;
   }
+
+  /** Convenience: run fn inside a span, auto-end, return result */
+  traceFn<T>(operation: SpanOperation, fn: () => T, attributes?: Record<string, unknown>): { result: T; span: Span } {
+    const span = this.startSpan(operation, attributes);
+    try {
+      const result = fn();
+      this.endSpan(span.spanId, 'ok');
+      return { result, span };
+    } catch (err) {
+      this.endSpan(span.spanId, 'error');
+      throw err;
+    }
+  }
 }

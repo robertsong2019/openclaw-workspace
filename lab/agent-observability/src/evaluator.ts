@@ -60,6 +60,10 @@ export class Evaluator {
     this.checks = [];
     this.weights.clear();
   }
+
+  getCheck(name: string): { name: string; fn: EvalCheck; weight: number } | undefined {
+    return this.checks.find(c => c.name === name);
+  }
 }
 
 // --- Built-in checks ---
