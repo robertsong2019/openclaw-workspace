@@ -10,3 +10,7 @@ timestamp	commit	metric	value	status	description
 2026-05-16T21:20	2915cbc	test_pass_rate	58/58 (100%)	keep	PolicyEngine: addPolicies + batchEvaluate (+2)
 2026-05-16T21:25	4303cc9	test_pass_rate	60/60 (100%)	keep	AgentObserver: observeSync + getErrorSummary (+2)
 2026-05-17T19:05	c62e33e	test_count	72/72	keep	Tracer:getActiveSpanCount+getSpanDepth | Evaluator:setWeight+resetChecks | PolicyEngine:getRule+hasCategory. 60→72 (+12), 3 cycles, 3 keep, 零回滚
+2026-05-17T21:00\t5796f2e\ttests\t76→76\tpass\tTracer.traceFn + PolicyEngine.clearCategory + Evaluator.getCheck (+4 tests)
+2026-05-17T21:05\tfbeca86\ttests\t77→77\tpass\tAgentObserver.observeWithPolicy() (+1 test)
+2026-05-17T21:10\t1409d7a\ttests\t78→78\tpass\tTracer.exportOTLP() — OTLP JSON export (+1 test)
+2026-05-17T21:15\tb1c1e03\ttests\t79→79\tpass\tEvaluator.evaluate(dimensions?) filtering (+1 test)
