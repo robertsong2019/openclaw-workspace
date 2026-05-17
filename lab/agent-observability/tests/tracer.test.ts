@@ -298,6 +298,32 @@ describe('Tracer', () => {
     assert.strictEqual(spans[0].status, 'error');
   });
 
+  it('getSlowSpans returns spans exceeding threshold', () => {
+    const tracer = new Tracer();
+    const slow = tracer.startSpan('agent.run');
+    // simulate slow span by adjusting startTime
+    slow.startTime = performance.now() - 200;
+    tracer.endSpan(slow.spanId);
+    const fast = tracer.startSpan('tool.execute');
+    tracer.endSpan(fast.spanId);
+    const result = tracer.getSlowSpans(100);
+    assert.equal(result.length, 1);
+    assert.equal(result[0].spanId, slow.spanId);
+  });
+
+  it('getErrorSpans returns only error spans', () => {
+    const tracer = new Tracer();
+    const s1 = tracer.startSpan('agent.run');
+    tracer.endSpan(s1.spanId, 'ok');
+    const s2 = tracer.startSpan('tool.execute');
+    tracer.endSpan(s2.spanId, 'error');
+    const s3 = tracer.startSpan('llm.call');
+    tracer.endSpan(s3.spanId, 'ok');
+    const errors = tracer.getErrorSpans();
+    assert.equal(errors.length, 1);
+    assert.equal(errors[0].spanId, s2.spanId);
+  });
+
   it('exportOTLP produces valid OTLP structure', () => {
     const tracer = new Tracer();
     const s = tracer.startSpan('agent.run', { key: 'val' });

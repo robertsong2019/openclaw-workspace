@@ -233,6 +233,16 @@ export class Tracer {
     };
   }
 
+  /** Return spans with duration >= thresholdMs */
+  getSlowSpans(thresholdMs: number): Span[] {
+    return this.spans.filter(s => s.endTime !== null && (s.endTime - s.startTime) >= thresholdMs);
+  }
+
+  /** Return all spans with status='error' */
+  getErrorSpans(): Span[] {
+    return this.spans.filter(s => s.status === 'error');
+  }
+
   /** Convenience: run fn inside a span, auto-end, return result */
   traceFn<T>(operation: SpanOperation, fn: () => T, attributes?: Record<string, unknown>): { result: T; span: Span } {
     const span = this.startSpan(operation, attributes);
