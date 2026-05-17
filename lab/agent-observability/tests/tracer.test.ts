@@ -297,4 +297,19 @@ describe('Tracer', () => {
     assert.strictEqual(spans.length, 1);
     assert.strictEqual(spans[0].status, 'error');
   });
+
+  it('exportOTLP produces valid OTLP structure', () => {
+    const tracer = new Tracer();
+    const s = tracer.startSpan('agent.run', { key: 'val' });
+    tracer.addEvent(s.spanId, 'test-event', { detail: 42 });
+    tracer.endSpan(s.spanId);
+    const otlp = tracer.exportOTLP();
+    assert.ok(otlp.resourceSpans);
+    const scope = (otlp.resourceSpans as any[])[0].scopeSpans[0];
+    assert.equal(scope.scope.name, 'agent-observability');
+    assert.equal(scope.spans.length, 1);
+    assert.equal(scope.spans[0].name, 'agent.run');
+    assert.ok(scope.spans[0].attributes.length > 0);
+    assert.equal(scope.spans[0].events.length, 1);
+  });
 });

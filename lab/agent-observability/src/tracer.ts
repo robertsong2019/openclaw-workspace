@@ -206,6 +206,33 @@ export class Tracer {
     return depth;
   }
 
+  /** Export spans in OTLP JSON format (compatible with OTel Collector) */
+  exportOTLP(): Record<string, unknown> {
+    return {
+      resourceSpans: [{
+        scopeSpans: [{
+          scope: { name: 'agent-observability', version: '1.0.0' },
+          spans: this.spans.map(s => ({
+            traceId: s.traceId,
+            spanId: s.spanId,
+            parentSpanId: s.parentSpanId ?? undefined,
+            name: s.operation,
+            kind: 1, // INTERNAL
+            startTimeUnixNano: Math.round(s.startTime * 1e6),
+            endTimeUnixNano: s.endTime !== null ? Math.round(s.endTime * 1e6) : undefined,
+            status: { code: s.status === 'error' ? 2 : s.status === 'ok' ? 1 : 0 },
+            attributes: Object.entries(s.attributes).map(([k, v]) => ({ key: k, value: { stringValue: String(v) } })),
+            events: s.events.map(e => ({
+              timeUnixNano: e.timestamp * 1e6,
+              name: e.name,
+              attributes: Object.entries(e.attributes ?? {}).map(([k, v]) => ({ key: k, value: { stringValue: String(v) } })),
+            })),
+          })),
+        }],
+      }],
+    };
+  }
+
   /** Convenience: run fn inside a span, auto-end, return result */
   traceFn<T>(operation: SpanOperation, fn: () => T, attributes?: Record<string, unknown>): { result: T; span: Span } {
     const span = this.startSpan(operation, attributes);
