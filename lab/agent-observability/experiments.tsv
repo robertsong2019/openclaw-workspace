@@ -14,3 +14,4 @@ timestamp	commit	metric	value	status	description
 2026-05-17T21:05\tfbeca86\ttests\t77→77\tpass\tAgentObserver.observeWithPolicy() (+1 test)
 2026-05-17T21:10\t1409d7a\ttests\t78→78\tpass\tTracer.exportOTLP() — OTLP JSON export (+1 test)
 2026-05-17T21:15\tb1c1e03\ttests\t79→79\tpass\tEvaluator.evaluate(dimensions?) filtering (+1 test)
+2026-05-17T15:03	c4178df	tests	79→81	pass	Tracer.getSlowSpans + getErrorSpans (+2 tests)
