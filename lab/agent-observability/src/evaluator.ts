@@ -17,9 +17,10 @@ export class Evaluator {
     this.weights.set(name, weight);
   }
 
-  evaluate(spans: Span[]): EvalCheckResult[] {
+  evaluate(spans: Span[], dimensions?: string[]): EvalCheckResult[] {
     const results: EvalCheckResult[] = [];
     for (const check of this.checks) {
+      if (dimensions && !dimensions.includes(check.name)) continue;
       results.push(...check.fn(spans));
     }
     return results;

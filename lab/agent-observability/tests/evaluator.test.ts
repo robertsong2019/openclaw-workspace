@@ -155,4 +155,15 @@ describe('Evaluator', () => {
     assert.strictEqual(found!.weight, 2.5);
     assert.strictEqual(e.getCheck('nope'), undefined);
   });
+
+  it('evaluate filters by dimensions', () => {
+    const e = new Evaluator();
+    e.addCheck('dim_a', () => [{ dimension: 'a', score: 1, reason: '' }]);
+    e.addCheck('dim_b', () => [{ dimension: 'b', score: 0.5, reason: '' }]);
+    const all = e.evaluate([]);
+    assert.strictEqual(all.length, 2);
+    const filtered = e.evaluate([], ['dim_a']);
+    assert.strictEqual(filtered.length, 1);
+    assert.strictEqual(filtered[0].dimension, 'a');
+  });
 });
