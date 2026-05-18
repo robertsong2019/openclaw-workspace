@@ -338,4 +338,26 @@ describe('Tracer', () => {
     assert.ok(scope.spans[0].attributes.length > 0);
     assert.equal(scope.spans[0].events.length, 1);
   });
+
+  it('filter returns spans matching predicate', () => {
+    const tracer = new Tracer();
+    const s1 = tracer.startSpan('agent.run');
+    tracer.endSpan(s1.spanId, 'error');
+    const s2 = tracer.startSpan('llm.call');
+    tracer.endSpan(s2.spanId, 'ok');
+    const errors = tracer.filter(s => s.status === 'error');
+    assert.equal(errors.length, 1);
+    assert.equal(errors[0].operation, 'agent.run');
+  });
+
+  it('groupByOperation groups spans correctly', () => {
+    const tracer = new Tracer();
+    tracer.startSpan('agent.run');
+    tracer.startSpan('agent.run');
+    tracer.startSpan('llm.call');
+    const groups = tracer.groupByOperation();
+    assert.equal(Object.keys(groups).length, 2);
+    assert.equal(groups['agent.run'].length, 2);
+    assert.equal(groups['llm.call'].length, 1);
+  });
 });

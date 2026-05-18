@@ -164,4 +164,11 @@ export class AgentObserver {
       reason: String(s.attributes.policyViolations ?? s.attributes.error ?? 'unknown'),
     }));
   }
+
+  /** Get error rate as a ratio (0-1) */
+  getErrorRate(): number {
+    const spans = this.tracer.getSpans();
+    if (spans.length === 0) return 0;
+    return spans.filter(s => s.status === 'error').length / spans.length;
+  }
 }

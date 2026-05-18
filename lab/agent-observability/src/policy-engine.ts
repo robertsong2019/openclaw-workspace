@@ -107,6 +107,23 @@ export class PolicyEngine {
     return this.rules.has(category) && (this.rules.get(category)?.length ?? 0) > 0;
   }
 
+  /** Import rules from JSON array, replacing existing rules */
+  importRules(data: Array<{ name: string; description: string; category: string; type: string; config?: Record<string, unknown> }>): number {
+    this.rules.clear();
+    this.disabledRules.clear();
+    this._jsonDefs = [];
+    let count = 0;
+    for (const def of data) {
+      const rule = this.buildRule(def);
+      if (rule) {
+        this.addPolicy(def.category, rule);
+        this._jsonDefs.push(def);
+        count++;
+      }
+    }
+    return count;
+  }
+
   clearCategory(category: string): boolean {
     return this.rules.delete(category);
   }

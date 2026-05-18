@@ -183,4 +183,17 @@ describe('PolicyEngine', () => {
     assert.strictEqual(engine.ruleCount('test'), 0);
     assert.strictEqual(engine.clearCategory('nonexistent'), false);
   });
+
+  it('importRules replaces all rules', () => {
+    const engine = new PolicyEngine();
+    engine.addPolicy('old', { name: 'old-rule', description: '', category: 'old', evaluate: () => ({ allow: true }) });
+    const count = engine.importRules([
+      { name: 'block_rm', description: 'Block rm', category: 'security', type: 'blockDestructiveOps' },
+      { name: 'cheap', description: 'Cost limit', category: 'cost', type: 'costLimit', config: { maxCost: 0.5 } },
+    ]);
+    assert.strictEqual(count, 2);
+    assert.strictEqual(engine.hasCategory('old'), false);
+    assert.strictEqual(engine.hasCategory('security'), true);
+    assert.strictEqual(engine.hasCategory('cost'), true);
+  });
 });

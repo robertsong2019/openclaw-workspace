@@ -243,6 +243,20 @@ export class Tracer {
     return this.spans.filter(s => s.status === 'error');
   }
 
+  /** Filter spans by a predicate */
+  filter(predicate: (span: Span) => boolean): Span[] {
+    return this.spans.filter(predicate);
+  }
+
+  /** Group spans by operation name */
+  groupByOperation(): Record<string, Span[]> {
+    const groups: Record<string, Span[]> = {};
+    for (const s of this.spans) {
+      (groups[s.operation] ??= []).push(s);
+    }
+    return groups;
+  }
+
   /** Convenience: run fn inside a span, auto-end, return result */
   traceFn<T>(operation: SpanOperation, fn: () => T, attributes?: Record<string, unknown>): { result: T; span: Span } {
     const span = this.startSpan(operation, attributes);

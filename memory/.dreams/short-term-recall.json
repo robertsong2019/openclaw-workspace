@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-15T21:00:07.895Z",
+  "updatedAt": "2026-05-18T01:11:45.715Z",
   "entries": {
     "memory:memory/2026-04-12.md:71:96": {
       "key": "memory:memory/2026-04-12.md:71:96",
@@ -213,20 +213,22 @@
       "endLine": 55,
       "source": "memory",
       "snippet": "# Memory - March 25, 2026 ## Key Development Task 3 (1:00 AM) ### Focus: AI Embedded Applications & AI Rapid Prototyping ### ✅ Completed Tasks 1. **Committed agent-task-cli Changes** - 14 files changed, 3540 lines added - New features: orchestrator-v2.js, cache.js, concurrency-manager.js, retry-handler.js - Tests: 109 tests passing, 80%+ coverage - Documentation: TUTORIAL.md (1051 lines) 2. **Created OpenClaw Plugin for Local Embedding Memory** - Location: `~/.openclaw/extensions/local-embedding-memory/` - Skill: semantic-memory (semantic search for MEMORY.md) - Features: - Local embeddings (no API calls) - Incremental indexing - Compare mode (semanti",
-      "recallCount": 2,
+      "recallCount": 3,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 2,
+      "totalScore": 3,
       "maxScore": 1,
       "firstRecalledAt": "2026-05-01T03:14:59.241Z",
-      "lastRecalledAt": "2026-05-02T12:09:15.739Z",
+      "lastRecalledAt": "2026-05-18T01:11:45.715Z",
       "queryHashes": [
         "0b3c506aa361",
-        "a329b2b0974c"
+        "a329b2b0974c",
+        "35ad01e422ec"
       ],
       "recallDays": [
         "2026-05-01",
-        "2026-05-02"
+        "2026-05-02",
+        "2026-05-18"
       ],
       "conceptTags": [
         "embedding",
@@ -246,18 +248,20 @@
       "endLine": 99,
       "source": "memory",
       "snippet": "- ✅ agent-task-cli now has comprehensive utilities - ✅ Unified toolkit foundations in place - Next: Build unified CLI wrapper ### 💡 Next Steps 1. **High Priority:** - Test the local-embedding-memory plugin with OpenClaw - Create integration tests for agent-task-cli - Add Web UI to agent-trust-network 2. **Medium Priority:** - Build unified \"ai-toolkit\" CLI - Edge AI deployment experiments - Model quantization toolkit 3. **Exploratory:** - Prompt-to-prototype generator - Embedded AI on Raspberry Pi --- ## Knowledge Organization Session (2:00 AM) ### 📊 探索成果总结 #### 1. 代码里程碑 (2026-03-25) **agent-task-cli 重大提交:** - ✅ 14 个文件提交 - ✅ 3540 行代码新增 - ✅ 109 个测试通过 (80%+ 覆盖",
-      "recallCount": 1,
+      "recallCount": 2,
       "dailyCount": 0,
       "groundedCount": 0,
-      "totalScore": 1,
+      "totalScore": 2,
       "maxScore": 1,
       "firstRecalledAt": "2026-05-02T12:09:15.739Z",
-      "lastRecalledAt": "2026-05-02T12:09:15.739Z",
+      "lastRecalledAt": "2026-05-18T01:11:45.715Z",
       "queryHashes": [
-        "a329b2b0974c"
+        "a329b2b0974c",
+        "35ad01e422ec"
       ],
       "recallDays": [
-        "2026-05-02"
+        "2026-05-02",
+        "2026-05-18"
       ],
       "conceptTags": [
         "embedding",
@@ -706,6 +710,68 @@
         "插件v1.1.0",
         "v0.3.0",
         "agent-log"
+      ]
+    },
+    "memory:memory/2026-04-05.md:1:42": {
+      "key": "memory:memory/2026-04-05.md:1:42",
+      "path": "memory/2026-04-05.md",
+      "startLine": 1,
+      "endLine": 42,
+      "source": "memory",
+      "snippet": "# 2026-04-05 - 开发工具 ## ctxgen - AI 上下文文件生成器 今晚创建了一个实用的 CLI 工具：**ctxgen** **位置：** `/root/.openclaw/workspace/code-lab/ctxgen/` **功能：** - 分析 Git 仓库结构、技术栈、代码模式 - 自动生成 AI 编码助手友好的上下文文件 - 支持多种目标：AGENTS.md、.cursorrules、CLAUDE.md、context.md **使用：** ```bash cd /root/.openclaw/workspace/code-lab/ctxgen node cli.js <path> node cli.js <path> --dry-run node cli.js <path> --target agents.md ``` **技术栈：** - 纯 Node.js，无依赖 - 模块化设计：analyzer.js、generator.js、writer.js - 递归目录扫描，支持 .gitignore **检测能力：** - 语言识别（通过文件扩展名） - 框架检测（Next.js、Vue、React、Express 等） - 工具检测（Tailwind、Vite、Webpack、Docker 等） - 代码规范识别（命名约定、测试模式、目录结构） **验证：** ✅ 在 workspace 和 ctxgen 项目上测试通过 --- **后续改进方向：** - 添加 npm publish 支持 - 支持更多 AI 工具模板",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1,
+      "maxScore": 1,
+      "firstRecalledAt": "2026-05-18T01:11:45.715Z",
+      "lastRecalledAt": "2026-05-18T01:11:45.715Z",
+      "queryHashes": [
+        "35ad01e422ec"
+      ],
+      "recallDays": [
+        "2026-05-18"
+      ],
+      "conceptTags": [
+        "agents.md",
+        "claude.md",
+        "context.md",
+        "cli.js",
+        "dry-run",
+        "node.js",
+        "analyzer.js",
+        "generator.js"
+      ]
+    },
+    "memory:memory/2026-03-24.md:38:82": {
+      "key": "memory:memory/2026-03-24.md:38:82",
+      "path": "memory/2026-03-24.md",
+      "startLine": 38,
+      "endLine": 82,
+      "source": "memory",
+      "snippet": "- 多个用户报告严重回归问题 #### 3. 待处理工作 **未提交更改:** - agent-task-cli: 11个文件待提交 - 新工具：cache.js, concurrency-manager.js, retry-handler.js - 实验性：orchestrator-v2.js - 新测试：agents.test.js, integration.test.js, utils.test.js **下一步行动:** 1. 高优先级： - 提交 agent-task-cli 更改 - 调查低覆盖率区域 - 创建 OpenClaw 本地嵌入内存插件 2. 中优先级： - 为 agent-trust-network 添加 Web UI - 编写完整工具链集成测试 - 构建统一的 \"ai-toolkit\" CLI ### 📈 知识体系更新 **核心洞察:** 1. **测试优先**: 质量保证比功能开发更重要 2. **社区反馈循环**: 版本发布后立即监控问题 3. **渐进式改进**: 从简单模式开始，逐步增加复杂度 **工具生态系统价值:** - 项目入门：30分钟 → 2分钟（93%减少） - 健康监控：1小时 → 5分钟（92%减少） - 知识检索：20分钟 → 2分钟（90%减少） ### 📝 文档更新 - ✅ MEMORY.md - 更新当前焦点和会话笔记 - ✅ HEARTBEAT.md - 调整优先级和里程碑 - ✅ heartbeat-state.json - 记录检查时间和状态 --",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 1,
+      "maxScore": 1,
+      "firstRecalledAt": "2026-05-18T01:11:45.715Z",
+      "lastRecalledAt": "2026-05-18T01:11:45.715Z",
+      "queryHashes": [
+        "35ad01e422ec"
+      ],
+      "recallDays": [
+        "2026-05-18"
+      ],
+      "conceptTags": [
+        "network",
+        "agent-task-cli",
+        "cache.js",
+        "concurrency-manager.js",
+        "retry-handler.js",
+        "orchestrator-v2.js",
+        "agents.test.js",
+        "integration.test.js"
       ]
     }
   }

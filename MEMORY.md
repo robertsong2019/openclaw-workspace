@@ -18,17 +18,17 @@
 ## Current Focus (2026-05-17)
 
 ### Active Theme
-Autoresearch 方法论实践 - **连续58天零回滚率** 🏆。05-17 凌晨: agent-context-store 加入 event hooks (178→186) + better-ralph story_digest (299→307)。**lab/agent-observability 已进入实现阶段** (48→60 tests, 因果链接+回归检测+批量策略+同步观察)。优先级: Agent Observability Lab > Hindsight Mini > A2A Trust > LangGraph Bridge。
+Autoresearch 方法论实践 - **连续60天零回滚率** 🏆。05-18 凌晨: agent-context-store 加入 middleware pipeline (186→194) + key watchers (194→202)。**三层响应性体系完成**: middleware(写入前变换) → storage → hooks(全局通知) → watchers(键级观察)。**lab/agent-observability 已进入实现阶段** (60 tests)。优先级: Agent Observability Lab > Hindsight Mini > A2A Trust > LangGraph Bridge。
 
 ### ⚠️ 关键发现
 - **agent-context-store 代码未持久化问题**: 05-08→05-11 的代码到97 tests但未持久化到 workspace，05-12 重建基线为69 tests。**教训: 每次实验完成后必须确认代码已持久化到 lab/ 目录并 git commit。**
 
 ### Next Actions
-- [ ] **Agent Observability Lab** — lab/agent-observability/ (Tracer + PolicyEngine + Evaluator)
+- [ ] **Agent Observability Lab** — lab/agent-observability/ (Tracer + PolicyEngine + Evaluator) — **60/60 tests, 实现阶段**
+  - 因果链接追踪 + 回归检测 + 批量策略评估 + 同步观察器
   - [研究笔记 Day 1](catalyst-research/exploration-notes/2026-05-15-agent-observability.md) ✅ OTel语义约定+三层评估模型
-  - [研究笔记 Day 2](catalyst-research/exploration-notes/2026-05-16-agent-observability.md) ✅ **零依赖AgentTracer实现** + 内置策略/评估器 + OTLP导出，代码已验证可运行
-  - **关键洞察**: 纯JS零依赖方案可行；50行代码就能覆盖 tracer+policy+eval 三位一体；OTLP导出确保可接入任何后端
-  - **下一步**: 创建 lab/agent-observability/ — 基于 Day 2 的 AgentTracer 转为 TypeScript，目标 20+ tests
+  - [研究笔记 Day 2](catalyst-research/exploration-notes/2026-05-16-agent-observability.md) ✅ **零依赖AgentTracer实现** + 内置策略/评估器 + OTLP导出
+  - **下一步**: 继续迭代 lab/ — 增加更多评估维度 + reporter
 - [ ] **WASM Agent Sandbox** — lab/wasm-agent-sandbox/ PoC (Node.js 宿主 + WAT/Rust 工具)
   - [研究笔记](catalyst-research/exploration-notes/2026-05-13-wasm-agent-sandbox-runtime.md) ✅
 - [ ] **Structured Output Toolkit** — lab/structured-output-toolkit/ (TypeScript, Zod+Multi-Provider)
@@ -65,6 +65,12 @@ Autoresearch 方法论实践 - **连续58天零回滚率** 🏆。05-17 凌晨: 
   - **关键发现 v1**: OTel GenAI semantic conventions 已成事实标准; OWASP AOS Guardian Agent 模式 = inline policy enforcement
   - **关键发现 v2**: 四支柱(LLM/Memory/Tools/Environment) behavior-based>outcome-based评估; OPA Input+Policy+Data=Decision模式适用于agent guardrail; Guardrails分层(Input→Prompt→Tool→Output)必须独立于prompt; 推荐接agent-context-store changelog作trace持久化后端
   - **下一步**: lab/agent-observability/ → Tracer(对齐OTel GenAI语义约定) + PolicyEngine(JSON规则先于OPA) + 接入agent-context-store changelog + 2个评估维度(policy_compliance+latency)
+- [ ] **CLI-Anything + OpenClaw 实验** — 让 Agent 通过 CLI-Anything 操控桌面软件(GIMP/Blender/浏览器)
+  - 核心洞察: 软件未来需同时提供 GUI(人) + CLI(Agent) 两套界面, CLI-Anything 证明了包一层 CLI 壳就够了
+  - 浏览器方案: DOMShell MCP Server 把 Accessibility Tree 映射为虚拟文件系统(ls/cd/cat/click)
+  - Blender/GIMP 方案: CLI → 生成脚本 → 软件无头渲染 → 返回结果
+  - HARNESS.md 渐进式披露模式值得 Skill 系统参考
+  - CLI-Hub 社区模式与 ClawHub 互补
 - [ ] **Hindsight Mini** — lab/hindsight-mini/ 轻量级 agent 自反思引擎
   - [研究笔记](catalyst-research/exploration-notes/2026-05-13-hindsight-mini.md) ✅ AgentHER + Reflexion + SE-Agent 综合 → 可运行 TypeScript HindsightMini 类(失败检测+反思生成+HER重标+教训提取)
   - **关键发现**: HER 本质是数据增强(prompt-level HER 可不微调); thought-action misalignment 是头号杀手; 跨轨迹模式识别>单次反思; 天然集成 agent-context-store + agent-memory-graph
@@ -309,6 +315,16 @@ curl -X POST "https://api.tavily.com/search" \
 - ✅ **agent-context-store weighted_sample+compact+validate** — 159→170 tests (+11)。weighted random sampling+expired cleanup+integrity check (commit 77b1fea)
 - ✅ **prompt-router freeze/unfreeze+snapshot/restore** — 234→244 tests (+10)。locked routing+point-in-time state capture (commit fbef775)
 - 连续54天零回滚率
+
+### 2026-05-17
+- ✅ **agent-context-store event hooks** — 178→186 tests (+8)。on/off/_emit pub/sub for put/delete/expire (commit 52e66b8)
+- ✅ **better-ralph-core story_digest** — 299→307 tests (+8)。单调用PRD状态快照 (commit fdb9e3a)
+- 连续59天零回滚率
+
+### 2026-05-18
+- ✅ **agent-context-store middleware pipeline** — 186→194 tests (+8)。use()注册有序变换，put()前执行 (commit df236dd)
+- ✅ **agent-context-store key watchers** — 194→202 tests (+8)。watch/unwatch键级观察者 (commit 334f9ae)
+- 连续60天零回滚率
 
 ### 2026-05-16 (凌晨)
 - ✅ **agent-context-store xrefs** — 170→178 tests (+8)。类型化交叉引用+双向追踪+BFS图遍历 (commit 4c960d5)
@@ -741,5 +757,5 @@ curl -X POST "https://api.tavily.com/search" \
 
 ---
 
-*Last updated: 2026-05-16 02:00*
-*Next review: 2026-05-17*
+*Last updated: 2026-05-18 02:00*
+*Next review: 2026-05-19*

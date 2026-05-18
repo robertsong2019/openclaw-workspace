@@ -162,4 +162,16 @@ describe('AgentObserver integration', () => {
     assert.strictEqual(result.blocked, false);
     assert.ok(report.aggregateScore > 0);
   });
+
+  it('getErrorRate returns correct ratio', () => {
+    const obs = new AgentObserver();
+    obs.startRun('test', 'task');
+    obs.toolExecute('safe', 'echo hi');
+    obs.getPolicyEngine().addPolicy('tool_execution', blockDestructiveOps());
+    obs.toolExecute('bash', 'rm -rf /');
+    obs.endRun();
+    // 3 spans: agent.run(ok), tool.execute(ok), tool.execute(error)
+    assert.ok(obs.getErrorRate() > 0);
+    assert.ok(obs.getErrorRate() <= 1);
+  });
 });

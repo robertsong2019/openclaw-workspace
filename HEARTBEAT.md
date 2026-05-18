@@ -1,4 +1,4 @@
-# HEARTBEAT.md - May 17, 2026 (Sunday)
+# HEARTBEAT.md - May 18, 2026 (Monday)
 
 ## 待办任务
 
@@ -7,7 +7,7 @@
   - 研究已完成, 18/18 tests (Executor双模式 + createTask + BridgeState)
 - [ ] **创建 lab/a2a-trust-prototype/** — Node.js ES256 签名中间件 + Trust Score
 - [ ] **创建 lab/structured-output-toolkit/** — StructuredLLMClient + SchemaCache
-- [ ] **创建 lab/agent-observability/** — Tracer + PolicyEngine + Evaluator
+- [ ] **创建 lab/agent-observability/** — 继续迭代 (60→80+ tests 目标)
 - [ ] **AMS 生产化** — EmbeddingProvider真实接入(ONNX/远程API), Docker化
 
 ### 中优先级（本月）
@@ -16,17 +16,19 @@
 - [ ] Edge Agent Runtime Dashboard
 
 ## 系统状态
-- **agent-context-store**: 186/186 tests (新增: event hooks on/off/_emit + xrefs)
+- **agent-context-store**: 202/202 tests (新增: middleware pipeline + key watchers)
+  - 三层响应性: middleware(写入前) → storage → hooks(全局) → watchers(键级)
 - **better-ralph-core**: 307/307 tests (新增: story_digest + checkpoint_diff)
 - **lab/agent-observability**: 60/60 tests (实现中: Tracer因果链接 + Evaluator回归检测 + Policy批量评估 + Observer同步模式)
 - **AMS v1.0-dev**: 645/645 tests
 - **agent-memory-graph**: 30/30 tests
 - **prompt-router**: 244/244 tests
 - **prompt-weaver**: 148/148 tests
-- **autoresearch**: 零回滚率持续保持（连续58天）🏆
+- **autoresearch**: 零回滚率持续保持（连续60天）🏆
 
 ## 近期发现
-- **agent-context-store event hooks** 实现了 pub/sub 模式，解耦 changelog(审计) 与 hooks(响应)，为 agent 自动同步奠定基础
-- **story_digest** 是单调用状态快照，填补 get_status(轻量) 与 get_session_summary(详细) 之间的缺口
-- **lab/agent-observability 已启动实现**: 60 tests 覆盖因果链接追踪、回归检测、批量策略评估、同步观察——这是第一个从研究笔记进入 lab/ 的项目
-- 下周目标: agent-observability 继续迭代 + 启动 Hindsight Mini lab 实现
+- **agent-context-store 三层响应性完成**: middleware(transform before) + hooks(global broadcast) + watchers(per-key observe) — 完整的 store 响应性栈
+- **middleware pipeline** 支持 auto-trim、validation、auto-tagging 等链式变换
+- **key watchers** 实现精确订阅，agent 可 `watch('config', onChange)` 而非过滤全局 hook
+- **lab/agent-observability** 是第一个从研究笔记进入 lab/ 实现的项目（研究→实现流程验证）
+- 本周目标: agent-observability 继续 + 启动 langgraph-bridge 或 a2a-trust lab

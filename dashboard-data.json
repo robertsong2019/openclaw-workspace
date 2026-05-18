@@ -1,10 +1,10 @@
 {
-  "updatedAt": "2026-05-17T06:00:00+08:00",
+  "updatedAt": "2026-05-18T06:00:00+08:00",
   "generatedBy": "Catalyst",
   "cronJobs": [
-    {"id":"f38e0365","name":"dashboard-update-morning","schedule":"0 6 * * *","next":"in ~24h","last":"now","status":"running"},
-    {"id":"9b2a8701","name":"github-trending-daily","schedule":"0 7 * * *","next":"in 60m","last":"23h ago","status":"ok"},
-    {"id":"2c714952","name":"github-trending-deep-","schedule":"0 8 * * *","next":"in 2h","last":"22h ago","status":"ok"},
+    {"id":"f38e0365","name":"dashboard-update-morning","schedule":"0 6 * * *","next":"~24h","last":"now","status":"running"},
+    {"id":"9b2a8701","name":"github-trending-daily","schedule":"0 7 * * * @ Asia/Shanghai","next":"in 60m","last":"23h ago","status":"ok"},
+    {"id":"2c714952","name":"github-trending-deep-","schedule":"0 8 * * * @ Asia/Shanghai","next":"in 2h","last":"22h ago","status":"ok"},
     {"id":"610a8d6d","name":"github-creative-evening","schedule":"0 19 * * *","next":"in 13h","last":"11h ago","status":"ok"},
     {"id":"265091b6","name":"deep-exploration-evening","schedule":"0 20 * * *","next":"in 14h","last":"10h ago","status":"ok"},
     {"id":"bb46cb70","name":"deep-exploration-evening","schedule":"0 12 * * * UTC","next":"in 14h","last":"10h ago","status":"ok"},
@@ -18,12 +18,12 @@
     {"id":"77a5bcc6","name":"documentation-morning","schedule":"0 4 * * *","next":"in 22h","last":"2h ago","status":"ok"},
     {"id":"686ec55c","name":"essay-generation-morning","schedule":"0 5 * * *","next":"in 23h","last":"1h ago","status":"ok"}
   ],
-  "activeSessions": 16,
+  "activeSessions": 1,
   "sessionSummary": {
-    "oldest": "60d ago (glm-5)",
-    "newest": "9h ago (glm-5.1)",
-    "models": ["glm-5.1", "glm-5"],
-    "contextUsage": "9% - 30%"
+    "currentSession": "Cron: dashboard-update-morning",
+    "model": "glm-5.1",
+    "tokensUsed": 27377,
+    "contextLimit": 204800
   },
   "systemHealth": {
     "allCronOk": true,
