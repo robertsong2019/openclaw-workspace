@@ -257,6 +257,15 @@ export class Tracer {
     return groups;
   }
 
+  /** Count spans by status */
+  spanCountByStatus(): Record<string, number> {
+    const counts: Record<string, number> = {};
+    for (const s of this.spans) {
+      counts[s.status] = (counts[s.status] ?? 0) + 1;
+    }
+    return counts;
+  }
+
   /** Convenience: run fn inside a span, auto-end, return result */
   traceFn<T>(operation: SpanOperation, fn: () => T, attributes?: Record<string, unknown>): { result: T; span: Span } {
     const span = this.startSpan(operation, attributes);

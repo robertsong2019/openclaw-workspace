@@ -65,6 +65,11 @@ export class Evaluator {
   getCheck(name: string): { name: string; fn: EvalCheck; weight: number } | undefined {
     return this.checks.find(c => c.name === name);
   }
+
+  /** Return dimensions with lowest scores from a set of results */
+  topFailures(results: EvalCheckResult[], limit = 3): EvalCheckResult[] {
+    return [...results].sort((a, b) => a.score - b.score).slice(0, limit);
+  }
 }
 
 // --- Built-in checks ---

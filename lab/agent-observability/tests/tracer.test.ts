@@ -360,4 +360,18 @@ describe('Tracer', () => {
     assert.equal(groups['agent.run'].length, 2);
     assert.equal(groups['llm.call'].length, 1);
   });
+
+  it('spanCountByStatus returns correct counts', () => {
+    const tracer = new Tracer();
+    const s1 = tracer.startSpan('agent.run');
+    tracer.endSpan(s1.spanId, 'error');
+    const s2 = tracer.startSpan('llm.call');
+    tracer.endSpan(s2.spanId, 'ok');
+    const s3 = tracer.startSpan('tool.execute'); // unset
+    void s3;
+    const counts = tracer.spanCountByStatus();
+    assert.equal(counts['error'], 1);
+    assert.equal(counts['ok'], 1);
+    assert.equal(counts['unset'], 1);
+  });
 });

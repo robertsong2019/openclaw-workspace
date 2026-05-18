@@ -174,4 +174,13 @@ describe('AgentObserver integration', () => {
     assert.ok(obs.getErrorRate() > 0);
     assert.ok(obs.getErrorRate() <= 1);
   });
+
+  it('observeAsync wraps async function with tracing', async () => {
+    const obs = new AgentObserver();
+    const { result, report } = await obs.observeAsync(async () => {
+      return 42;
+    });
+    assert.strictEqual(result, 42);
+    assert.ok(report.traceReport.totalSpans >= 1);
+  });
 });

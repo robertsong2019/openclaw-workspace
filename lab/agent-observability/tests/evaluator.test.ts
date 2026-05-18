@@ -166,4 +166,17 @@ describe('Evaluator', () => {
     assert.strictEqual(filtered.length, 1);
     assert.strictEqual(filtered[0].dimension, 'a');
   });
+
+  it('topFailures returns lowest-scoring dimensions', () => {
+    const e = new Evaluator();
+    const results = [
+      { dimension: 'a', score: 0.9, reason: '' },
+      { dimension: 'b', score: 0.3, reason: 'bad' },
+      { dimension: 'c', score: 0.7, reason: '' },
+    ];
+    const failures = e.topFailures(results, 2);
+    assert.strictEqual(failures.length, 2);
+    assert.strictEqual(failures[0].dimension, 'b');
+    assert.strictEqual(failures[1].dimension, 'c');
+  });
 });

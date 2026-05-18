@@ -171,4 +171,17 @@ export class AgentObserver {
     if (spans.length === 0) return 0;
     return spans.filter(s => s.status === 'error').length / spans.length;
   }
+
+  /** Observe an async function with tracing */
+  async observeAsync<T>(fn: () => Promise<T>, agentId = 'observer'): Promise<{ result: T; report: ObservabilityReport }> {
+    this.startRun(agentId, 'observeAsync');
+    try {
+      const result = await fn();
+      this.endRun();
+      return { result, report: this.getReport() };
+    } catch (err) {
+      this.endRun();
+      throw err;
+    }
+  }
 }
