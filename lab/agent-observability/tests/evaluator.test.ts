@@ -179,4 +179,11 @@ describe('Evaluator', () => {
     assert.strictEqual(failures[0].dimension, 'b');
     assert.strictEqual(failures[1].dimension, 'c');
   });
+
+  it('dimensionNames returns registered check names', () => {
+    const e = new Evaluator();
+    e.addCheck('latency', () => []);
+    e.addCheck('reliability', () => []);
+    assert.deepEqual(e.dimensionNames(), ['latency', 'reliability']);
+  });
 });

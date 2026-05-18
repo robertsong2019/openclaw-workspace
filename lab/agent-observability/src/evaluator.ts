@@ -66,6 +66,11 @@ export class Evaluator {
     return this.checks.find(c => c.name === name);
   }
 
+  /** Return dimension names from all registered checks */
+  dimensionNames(): string[] {
+    return this.checks.map(c => c.name);
+  }
+
   /** Return dimensions with lowest scores from a set of results */
   topFailures(results: EvalCheckResult[], limit = 3): EvalCheckResult[] {
     return [...results].sort((a, b) => a.score - b.score).slice(0, limit);

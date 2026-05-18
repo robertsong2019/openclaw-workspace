@@ -374,4 +374,14 @@ describe('Tracer', () => {
     assert.equal(counts['ok'], 1);
     assert.equal(counts['unset'], 1);
   });
+
+  it('clear resets all spans and generates new traceId', () => {
+    const tracer = new Tracer();
+    tracer.startSpan('agent.run');
+    assert.equal(tracer.getSpans().length, 1);
+    const oldTraceId = tracer.getTraceReport().traceId;
+    tracer.clear();
+    assert.equal(tracer.getSpans().length, 0);
+    assert.notEqual(tracer.getTraceReport().traceId, oldTraceId);
+  });
 });

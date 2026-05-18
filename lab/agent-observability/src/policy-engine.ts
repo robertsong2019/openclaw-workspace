@@ -85,6 +85,17 @@ export class PolicyEngine {
     return results;
   }
 
+  /** Return all rule names across all categories */
+  ruleNames(): string[] {
+    const names: string[] = [];
+    for (const rules of this.rules.values()) {
+      for (const r of rules) {
+        names.push(r.name);
+      }
+    }
+    return names;
+  }
+
   addPolicies(category: string, rules: PolicyRule[]): void {
     const list = this.rules.get(category) ?? [];
     list.push(...rules);
