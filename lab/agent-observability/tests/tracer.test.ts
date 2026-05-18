@@ -384,4 +384,14 @@ describe('Tracer', () => {
     assert.equal(tracer.getSpans().length, 0);
     assert.notEqual(tracer.getTraceReport().traceId, oldTraceId);
   });
+
+  it('getSpanDuration returns ms for completed span, null for active', () => {
+    const tracer = new Tracer();
+    const span = tracer.startSpan('agent.run');
+    assert.equal(tracer.getSpanDuration(span.spanId), null);
+    tracer.endSpan(span.spanId);
+    const dur = tracer.getSpanDuration(span.spanId);
+    assert.ok(dur !== null && dur >= 0);
+    assert.equal(tracer.getSpanDuration('nonexistent'), null);
+  });
 });

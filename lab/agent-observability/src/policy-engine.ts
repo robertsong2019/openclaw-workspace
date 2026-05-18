@@ -135,6 +135,11 @@ export class PolicyEngine {
     return count;
   }
 
+  /** Return all rules for a given category */
+  getRulesByCategory(category: string): PolicyRule[] {
+    return [...(this.rules.get(category) ?? [])];
+  }
+
   clearCategory(category: string): boolean {
     return this.rules.delete(category);
   }

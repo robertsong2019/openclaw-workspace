@@ -186,4 +186,15 @@ describe('Evaluator', () => {
     e.addCheck('reliability', () => []);
     assert.deepEqual(e.dimensionNames(), ['latency', 'reliability']);
   });
+
+  it('overallPassRate returns fraction of passing results', () => {
+    const e = new Evaluator();
+    assert.equal(e.overallPassRate([]), 1);
+    const results = [
+      { dimension: 'a', score: 0.8, reason: 'ok' },
+      { dimension: 'b', score: 0.3, reason: 'fail' },
+      { dimension: 'c', score: 0.6, reason: 'ok' },
+    ];
+    assert.equal(e.overallPassRate(results), 2 / 3);
+  });
 });

@@ -273,6 +273,13 @@ export class Tracer {
     this.traceId = newTraceId;
   }
 
+  /** Get duration of a completed span in ms, or null if still active */
+  getSpanDuration(spanId: string): number | null {
+    const span = this.spans.find(s => s.spanId === spanId);
+    if (!span || span.endTime === null) return null;
+    return span.endTime - span.startTime;
+  }
+
   /** Convenience: run fn inside a span, auto-end, return result */
   traceFn<T>(operation: SpanOperation, fn: () => T, attributes?: Record<string, unknown>): { result: T; span: Span } {
     const span = this.startSpan(operation, attributes);

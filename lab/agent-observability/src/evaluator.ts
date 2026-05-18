@@ -71,6 +71,12 @@ export class Evaluator {
     return this.checks.map(c => c.name);
   }
 
+  /** Return overall pass rate (fraction of results with score >= 0.5) */
+  overallPassRate(results: EvalCheckResult[]): number {
+    if (results.length === 0) return 1;
+    return results.filter(r => r.score >= 0.5).length / results.length;
+  }
+
   /** Return dimensions with lowest scores from a set of results */
   topFailures(results: EvalCheckResult[], limit = 3): EvalCheckResult[] {
     return [...results].sort((a, b) => a.score - b.score).slice(0, limit);

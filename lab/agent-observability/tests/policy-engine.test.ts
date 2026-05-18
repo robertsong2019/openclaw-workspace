@@ -204,4 +204,16 @@ describe('PolicyEngine', () => {
     const names = engine.ruleNames();
     assert.deepEqual(names.sort(), ['rule1', 'rule2']);
   });
+
+  it('getRulesByCategory returns rules for a category', () => {
+    const engine = new PolicyEngine();
+    engine.addPolicy('sec', { name: 'r1', description: 'd1', category: 'sec', evaluate: () => ({ allow: true }) });
+    engine.addPolicy('sec', { name: 'r2', description: 'd2', category: 'sec', evaluate: () => ({ allow: false }) });
+    engine.addPolicy('cost', { name: 'r3', description: 'd3', category: 'cost', evaluate: () => ({ allow: true }) });
+    const rules = engine.getRulesByCategory('sec');
+    assert.equal(rules.length, 2);
+    assert.equal(rules[0].name, 'r1');
+    assert.equal(rules[1].name, 'r2');
+    assert.equal(engine.getRulesByCategory('empty').length, 0);
+  });
 });
