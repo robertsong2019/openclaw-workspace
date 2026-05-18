@@ -18,7 +18,7 @@
 ## Current Focus (2026-05-17)
 
 ### Active Theme
-Autoresearch 方法论实践 - **连续60天零回滚率** 🏆。05-18 凌晨: agent-context-store 加入 middleware pipeline (186→194) + key watchers (194→202)。**三层响应性体系完成**: middleware(写入前变换) → storage → hooks(全局通知) → watchers(键级观察)。**lab/agent-observability 已进入实现阶段** (60 tests)。优先级: Agent Observability Lab > Hindsight Mini > A2A Trust > LangGraph Bridge。
+Autoresearch 方法论实践 - **连续61天零回滚率** 🏆。05-18 晚间: agent-observability 81→91 tests (+10, 3 cycles, 3 keep)。**三层响应性体系完成**: middleware(写入前变换) → storage → hooks(全局通知) → watchers(键级观察)。**lab/agent-observability 已进入实现阶段** (91 tests)。优先级: Agent Observability Lab > Hindsight Mini > A2A Trust > LangGraph Bridge。
 
 ### ⚠️ 关键发现
 - **agent-context-store 代码未持久化问题**: 05-08→05-11 的代码到97 tests但未持久化到 workspace，05-12 重建基线为69 tests。**教训: 每次实验完成后必须确认代码已持久化到 lab/ 目录并 git commit。**
@@ -35,8 +35,10 @@ Autoresearch 方法论实践 - **连续60天零回滚率** 🏆。05-18 凌晨: 
   - [研究笔记 v1](catalyst-research/exploration-notes/2026-05-10-constrained-decoding-structured-output.md) ✅ FSM constrained decoding + 5/5 tests
   - [研究笔记 v2](catalyst-research/exploration-notes/2026-05-12-constrained-decoding.md) ✅ XGrammar-2 + GAD/ASAp + 搜索空间修剪
   - **[05-14 更新]** Multi-Provider Toolkit 深度研究 → [笔记](catalyst-research/exploration-notes/2026-05-14-structured-output-toolkit.md) ✅ StructuredLLMClient+SchemaCache+5/5 tests passed
+  - **[05-18 更新]** 2026 Q2 深度研究 → [笔记](catalyst-research/exploration-notes/2026-05-18-structured-output-toolkit.md) ✅ 四代演进+三层可靠性架构+Provider对比+可运行SchemaCache+StructuredLLMClient
   - **关键发现**: Validation Sandwich(三层验证不可省略); Schema TTL ~120s 需预热; Schema Complexity Tax(20+字段降50% tok/s); Multi-Provider fallback 是生产必需品
-  - **下一步**: 创建 lab/structured-output-toolkit/ — 集成真实 OpenAI/Anthropic SDK, 目标 18/18 tests
+  - **05-18 新洞察**: 多步Agent中结构化失败指数放大(12步×5%=46%失败率); Provider差异正在收敛; SchemaCache应追踪质量指标做优化反馈循环
+  - **下一步**: 创建 lab/structured-output-toolkit/ — 集成真实 OpenAI/Anthropic SDK, 目标 50+ tests
 - [ ] **A2A Trust Prototype** — lab/a2a-trust-prototype/
   - [研究笔记](catalyst-research/exploration-notes/2026-05-17-a2a-trust-protocol.md) ✅ Signed Agent Cards + AgentRank + Trust Scorer + 可运行代码
   - **核心洞察**: 签名验证是必要不充分条件；三层信任栈(预验证→历史聚合→持续监控)是最佳实践；AgentRank的Sybil防护+24h衰减是关键设计
@@ -196,6 +198,10 @@ Autoresearch 方法论实践 - **连续60天零回滚率** 🏆。05-18 凌晨: 
   - **下一步**: lab/agent-observability/ → tracer.ts + policy.ts + evaluator.ts + reporter.ts, 目标10+ tests
 - [ ] **Edge Agent Runtime 增强** - MLReasoner(ONNX)、真实硬件驱动、Async支持、MicroPython适配
 - [ ] **Agent Mesh Network 原型** - 去中心化协作、P2P通信协议、共识算法
+- [ ] **A2A Trust Prototype** — `lab/a2a-trust-prototype/` ES256签名中间件 + TrustEngine动态信任评分
+  - [研究笔记](catalyst-research/exploration-notes/2026-05-18-a2a-trust-prototype.md) ✅ 5核心概念+可运行JS代码(TrustEngine/签名验证中间件)+5关键洞察
+  - **核心发现**: A2A复用OpenAPI security schemes不做新认证; Trust Score应用滑动窗口非全量; 与agent-context-store middleware pipeline/agent-observability Tracer天然对齐
+  - **下一步**: 创建lab/a2a-trust-prototype/ TypeScript项目, TrustEngine改滑动窗口+指数衰减, Fastify plugin格式, 目标20+ tests
 - [ ] **Agent状态与会话管理结合** - 探索LangGraph的checkpointer与OpenClaw session的集成
 
 ---
@@ -324,7 +330,12 @@ curl -X POST "https://api.tavily.com/search" \
 ### 2026-05-18
 - ✅ **agent-context-store middleware pipeline** — 186→194 tests (+8)。use()注册有序变换，put()前执行 (commit df236dd)
 - ✅ **agent-context-store key watchers** — 194→202 tests (+8)。watch/unwatch键级观察者 (commit 334f9ae)
-- 连续60天零回滚率
+- ✅ **agent-observability 3-cycle evening** — 81→91 tests (+10, 3 cycles, 3 keep, 零回滚)
+  - Cycle 1: Tracer.filter+groupByOperation, PolicyEngine.importRules, AgentObserver.getErrorRate (+4)
+  - Cycle 2: Tracer.spanCountByStatus, Evaluator.topFailures, AgentObserver.observeAsync (+3)
+  - Cycle 3: Tracer.clear, PolicyEngine.ruleNames, Evaluator.dimensionNames (+3)
+  - 773→861 lines (commits d556e3a/5023827/46fa728)
+- 连续61天零回滚率
 
 ### 2026-05-16 (凌晨)
 - ✅ **agent-context-store xrefs** — 170→178 tests (+8)。类型化交叉引用+双向追踪+BFS图遍历 (commit 4c960d5)

@@ -246,6 +246,30 @@ export const OPENCLAW_TOOLS: Tool[] = [
     },
   },
   {
+    name: "head",
+    description: "Read the first N lines of a text file. Useful for previewing large files without loading them entirely.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Path to the file" },
+        lines: { type: "number", description: "Number of lines to read from the beginning (default: 10)" },
+      },
+      required: ["path"],
+    },
+  },
+  {
+    name: "tail",
+    description: "Read the last N lines of a text file. Useful for checking the end of log files or large files.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Path to the file" },
+        lines: { type: "number", description: "Number of lines to read from the end (default: 10)" },
+      },
+      required: ["path"],
+    },
+  },
+  {
     name: "file_info",
     description: "Get detailed metadata for a file or directory: size, type, timestamps, permissions. Optionally compute SHA-256 hash.",
     inputSchema: {
@@ -277,6 +301,8 @@ export const toolHandlers: Record<string, (args: any) => Promise<any>> = {
   find_files: executeFindFiles,
   system_status: executeSystemStatus,
   file_info: executeFileInfo,
+  head: executeHead,
+  tail: executeTail,
 };
 
 // --- Handler implementations ---
@@ -634,6 +660,25 @@ async function executeFindFiles(args: any): Promise<any> {
   }
 
   return { tool: "find_files", pattern, path: inputPath, count: results.length, files: results };
+}
+
+async function executeHead(args: any): Promise<any> {
+  const { path, lines: numLines = 10 } = args;
+  const resolved = safePath(path);
+  const content = await readFile(resolved, "utf-8");
+  const allLines = content.split("\n");
+  const selected = allLines.slice(0, numLines).join("\n");
+  return { tool: "head", path, requestedLines: numLines, totalLines: allLines.length, returnedLines: Math.min(numLines, allLines.length), content: selected };
+}
+
+async function executeTail(args: any): Promise<any> {
+  const { path, lines: numLines = 10 } = args;
+  const resolved = safePath(path);
+  const content = await readFile(resolved, "utf-8");
+  const allLines = content.split("\n");
+  const start = Math.max(0, allLines.length - numLines);
+  const selected = allLines.slice(start).join("\n");
+  return { tool: "tail", path, requestedLines: numLines, totalLines: allLines.length, returnedLines: allLines.length - start, content: selected };
 }
 
 async function executeSystemStatus(): Promise<any> {
