@@ -224,4 +224,30 @@ describe('AgentObserver integration', () => {
     assert.equal(obs.getTracer().spanCount(), 0);
     assert.equal(obs.getRootSpanId(), null);
   });
+
+  it('observeSync tracks successful operation', () => {
+    const obs = new AgentObserver();
+    const result = obs.runSync('tool.execute', () => 42);
+    assert.equal(result, 42);
+    assert.equal(obs.getSpanCount(), 1);
+  });
+
+  it('observeSync tracks error', () => {
+    const obs = new AgentObserver();
+    assert.throws(() => obs.runSync('tool.execute', () => { throw new Error('boom'); }));
+    assert.equal(obs.getSpanCount(), 1);
+  });
+
+  it('getSpanCount returns count', () => {
+    const obs = new AgentObserver();
+    obs.startRun('agent1', 'task');
+    assert.equal(obs.getSpanCount(), 1);
+  });
+
+  it('hasPolicyCategory checks existence', () => {
+    const obs = new AgentObserver();
+    obs.getPolicyEngine().addPolicy('custom', { name: 'r1', description: '', category: 'custom', evaluate: () => ({ allow: true }) });
+    assert.ok(obs.hasPolicyCategory('custom'));
+    assert.ok(!obs.hasPolicyCategory('nonexistent'));
+  });
 });

@@ -201,4 +201,27 @@ export class AgentObserver {
     this.tracer.reset();
     this.rootSpanId = null;
   }
+
+  /** Observe a synchronous operation with span tracking */
+  runSync<T>(operation: string, fn: () => T): T {
+    const span = this.tracer.startSpan(operation as any);
+    try {
+      const result = fn();
+      this.tracer.endSpan(span.spanId, 'ok');
+      return result;
+    } catch (err) {
+      this.tracer.endSpan(span.spanId, 'error');
+      throw err;
+    }
+  }
+
+  /** Quick span count accessor */
+  getSpanCount(): number {
+    return this.tracer.spanCount();
+  }
+
+  /** Check if policy category exists */
+  hasPolicyCategory(category: string): boolean {
+    return this.policyEngine.listCategories().includes(category);
+  }
 }
