@@ -23,6 +23,10 @@ export interface Span {
   events: SpanEvent[];
 }
 
+export interface SpanTreeNode extends Span {
+  children: SpanTreeNode[];
+}
+
 export interface TraceReport {
   traceId: string;
   spans: Span[];
@@ -142,11 +146,11 @@ export class Tracer {
     return this.spans.filter(s => s.parentSpanId === spanId);
   }
 
-  getSpanTree(spanId?: string): Array<Span & { children: Span[] }> {
+  getSpanTree(spanId?: string): SpanTreeNode[] {
     const roots = spanId
       ? this.spans.filter(s => s.spanId === spanId)
       : this.spans.filter(s => s.parentSpanId === null);
-    const build = (span: Span): Span & { children: Span[] } => {
+    const build = (span: Span): SpanTreeNode => {
       const kids = this.getChildren(span.spanId).map(build);
       return { ...span, children: kids };
     };

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "anysearch": {
+      "baseUrl": "https://api.anysearch.com/mcp"
+    }
+  },
+  "imports": []
+}

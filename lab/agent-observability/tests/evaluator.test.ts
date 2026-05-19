@@ -218,4 +218,53 @@ describe('Evaluator', () => {
     ];
     assert.equal(e.passCount(results), 2);
   });
+
+  it('summary returns aggregate stats', () => {
+    const e = new Evaluator();
+    const results = [
+      { dimension: 'a', score: 0.9, reason: 'ok' },
+      { dimension: 'a', score: 0.3, reason: 'bad' },
+      { dimension: 'b', score: 0.7, reason: 'ok' },
+    ];
+    const s = e.summary(results);
+    assert.equal(s.total, 3);
+    assert.equal(s.passed, 2);
+    assert.equal(s.failed, 1);
+    assert.equal(s.avgScore, 0.63);
+    assert.equal(s.dimensions, 2);
+  });
+
+  it('summary handles empty results', () => {
+    const e = new Evaluator();
+    const s = e.summary([]);
+    assert.equal(s.total, 0);
+    assert.equal(s.avgScore, 0);
+  });
+
+  it('byDimension filters results', () => {
+    const e = new Evaluator();
+    const results = [
+      { dimension: 'a', score: 0.9, reason: 'ok' },
+      { dimension: 'b', score: 0.7, reason: 'ok' },
+      { dimension: 'a', score: 0.3, reason: 'bad' },
+    ];
+    const filtered = e.byDimension(results, 'a');
+    assert.equal(filtered.length, 2);
+    assert.equal(filtered[0].score, 0.9);
+    assert.equal(filtered[1].score, 0.3);
+  });
+
+  it('toMarkdown generates report', () => {
+    const e = new Evaluator();
+    const results = [
+      { dimension: 'latency', score: 0.85, reason: 'Avg 200ms' },
+      { dimension: 'reliability', score: 0.3, reason: '2/5 errors' },
+    ];
+    const md = e.toMarkdown(results);
+    assert.ok(md.includes('# Evaluation Report'));
+    assert.ok(md.includes('latency'));
+    assert.ok(md.includes('reliability'));
+    assert.ok(md.includes('✅'));
+    assert.ok(md.includes('❌'));
+  });
 });

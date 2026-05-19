@@ -40,13 +40,16 @@ Autoresearch 方法论实践 - **连续63天零回滚率** 🏆。05-18 晚间: 
   - **05-18 新洞察**: 多步Agent中结构化失败指数放大(12步×5%=46%失败率); Provider差异正在收敛; SchemaCache应追踪质量指标做优化反馈循环
   - **下一步**: 创建 lab/structured-output-toolkit/ — 集成真实 OpenAI/Anthropic SDK, 目标 50+ tests
 - [ ] **A2A Trust Prototype** — lab/a2a-trust-prototype/
-  - [研究笔记](catalyst-research/exploration-notes/2026-05-17-a2a-trust-protocol.md) ✅ Signed Agent Cards + AgentRank + Trust Scorer + 可运行代码
-  - **核心洞察**: 签名验证是必要不充分条件；三层信任栈(预验证→历史聚合→持续监控)是最佳实践；AgentRank的Sybil防护+24h衰减是关键设计
-  - **技术选型**: EdDSA(Ed25519) via jose + JCS规范化 + JWKS公钥解析
+  - [研究笔记 v4 (2026-05-19 六层信任模型)](catalyst-research/exploration-notes/2026-05-19-a2a-trust-protocol.md) ✅ **原生crypto ES256** + TrustScorer五维加权 + Express中间件 + **全部断言通过**
+  - **[05-19 新洞察]**: arxiv:2511.03434 六层信任模型(Brief/Claim/Proof/Stake/Reputation/Constraint); A2A 原生仅 Claim+Constraint，Proof层是 lab 的核心价值; Trust Score = 5维加权(签名30%+签发者25%+信誉20%+成功率15%+质押10%)
+  - **[05-19 代码]**: Node.js 原生 crypto 实现 ES256 签名/验证(无需 jose 依赖); 可运行原型 → 全部断言通过
+  - **技术选型决策**: Node.js crypto 原生 ES256 (vs jose EdDSA) — 更少依赖、更易审计、A2A 生态主流
+  - [研究笔记 v3](catalyst-research/exploration-notes/2026-05-19-a2a-trust-protocol.md) ✅ ES256 jose实现 + TrustEngine衰减函数
+  - [研究笔记 v2](catalyst-research/exploration-notes/2026-05-17-a2a-trust-protocol.md) ✅ Signed Agent Cards + AgentRank + Trust Scorer
+  - **核心洞察**: 签名验证是必要不充分条件；三层信任栈是最佳实践；AgentRank的Sybil防护是关键设计
   - **最小scope**: card-verifier中间件 + TrustScorer类 + jwks-resolver
-  - **与agent-observability联动**: Tracer的因果链接数据可作为TrustScorer的交互评分输入
-  - [研究笔记 v1](catalyst-research/exploration-notes/2026-05-03-a2a-agent-trust.md) ✅ 代码验证通过(签名+验证+篡改检测)
-  - [研究笔记 v2](catalyst-research/exploration-notes/2026-05-03-a2a-agent-trust.md) ✅ 三层信任模型+Trust Extension设计+可运行TypeScript代码
+  - **与agent-observability联动**: Tracer因果链接数据可作TrustScorer交互评分输入
+  - **下一步**: 创建 lab/a2a-trust-prototype/ — 目标 30+ tests, Express中间件 + ES256签名 + TrustScorer
   - [A2A Protocol 深度研究](catalyst-research/exploration-notes/2026-05-04-a2a-protocol.md) ✅ 5核心概念+可运行Server/Client(零依赖)+A2A vs MCP分析
   - [A2A Trust Layer 深度研究](catalyst-research/exploration-notes/2026-05-05-a2a-protocol-trust-layer.md) ✅ 零依赖ES256签名+验证+TrustScore(已运行验证)
   - [A2A v1.2 Signed Cards 更新](catalyst-research/exploration-notes/2026-05-07-a2a-trust-protocol.md) ✅ 05-07 晚间深度研究：v1.2最新spec+RFC 8785 canonicalization+完整签名验证代码(已运行通过)+安全威胁分析(arXiv:2505.12490)+Sigstore集成路径

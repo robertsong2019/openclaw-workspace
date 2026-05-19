@@ -91,6 +91,42 @@ export class Evaluator {
   passCount(results: EvalCheckResult[]): number {
     return results.filter(r => r.score >= 0.5).length;
   }
+
+  /** Aggregate summary: total/pass/fail/avg/min/max by dimension */
+  summary(results: EvalCheckResult[]): {
+    total: number; passed: number; failed: number;
+    avgScore: number; dimensions: number;
+  } {
+    const passed = results.filter(r => r.score >= 0.5).length;
+    const avgScore = results.length > 0
+      ? Math.round(results.reduce((s, r) => s + r.score, 0) / results.length * 100) / 100
+      : 0;
+    const dims = new Set(results.map(r => r.dimension));
+    return { total: results.length, passed, failed: results.length - passed, avgScore, dimensions: dims.size };
+  }
+
+  /** Filter results by dimension name */
+  byDimension(results: EvalCheckResult[], dimension: string): EvalCheckResult[] {
+    return results.filter(r => r.dimension === dimension);
+  }
+
+  /** Generate human-readable markdown report */
+  toMarkdown(results: EvalCheckResult[]): string {
+    const s = this.summary(results);
+    const lines: string[] = [
+      `# Evaluation Report`,
+      ``,
+      `**Total**: ${s.total} | **Passed**: ${s.passed} | **Failed**: ${s.failed} | **Avg Score**: ${s.avgScore}`,
+      ``,
+      `| Dimension | Score | Status | Reason |`,
+      `|-----------|-------|--------|--------|`,
+    ];
+    for (const r of results) {
+      const status = r.score >= 0.5 ? '✅' : '❌';
+      lines.push(`| ${r.dimension} | ${r.score.toFixed(2)} | ${status} | ${r.reason} |`);
+    }
+    return lines.join('\n');
+  }
 }
 
 // --- Built-in checks ---

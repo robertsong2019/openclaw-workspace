@@ -1,0 +1,176 @@
+export class Evaluator {
+    checks = [];
+    weights = new Map();
+    addCheck(name, fn, weight = 1.0) {
+        this.checks.push({ name, fn, weight });
+        this.weights.set(name, weight);
+    }
+    evaluate(spans, dimensions) {
+        const results = [];
+        for (const check of this.checks) {
+            if (dimensions && !dimensions.includes(check.name))
+                continue;
+            results.push(...check.fn(spans));
+        }
+        return results;
+    }
+    aggregateScore(results) {
+        if (results.length === 0)
+            return 0;
+        let totalWeight = 0;
+        let weightedSum = 0;
+        for (const r of results) {
+            const w = this.weights.get(r.dimension) ?? 1.0;
+            weightedSum += r.score * w;
+            totalWeight += w;
+        }
+        return totalWeight > 0 ? weightedSum / totalWeight : 0;
+    }
+    listChecks() {
+        return this.checks.map(c => c.name);
+    }
+    removeCheck(name) {
+        const before = this.checks.length;
+        this.checks = this.checks.filter(c => c.name !== name);
+        this.weights.delete(name);
+        return this.checks.length < before;
+    }
+    setWeight(name, weight) {
+        if (!this.weights.has(name))
+            return false;
+        this.weights.set(name, weight);
+        const check = this.checks.find(c => c.name === name);
+        if (check)
+            check.weight = weight;
+        return true;
+    }
+    resetChecks() {
+        this.checks = [];
+        this.weights.clear();
+    }
+    getCheck(name) {
+        return this.checks.find(c => c.name === name);
+    }
+    /** Return dimension names from all registered checks */
+    dimensionNames() {
+        return this.checks.map(c => c.name);
+    }
+    /** Return overall pass rate (fraction of results with score >= 0.5) */
+    overallPassRate(results) {
+        if (results.length === 0)
+            return 1;
+        return results.filter(r => r.score >= 0.5).length / results.length;
+    }
+    /** Return dimensions with lowest scores from a set of results */
+    topFailures(results, limit = 3) {
+        return [...results].sort((a, b) => a.score - b.score).slice(0, limit);
+    }
+    /** Run each check separately and return per-check results */
+    evaluateEach(spans) {
+        return this.checks.map(c => ({ check: c.name, results: c.fn(spans) }));
+    }
+    /** Count how many results pass (score >= 0.5) */
+    passCount(results) {
+        return results.filter(r => r.score >= 0.5).length;
+    }
+    /** Aggregate summary: total/pass/fail/avg/min/max by dimension */
+    summary(results) {
+        const passed = results.filter(r => r.score >= 0.5).length;
+        const avgScore = results.length > 0
+            ? Math.round(results.reduce((s, r) => s + r.score, 0) / results.length * 100) / 100
+            : 0;
+        const dims = new Set(results.map(r => r.dimension));
+        return { total: results.length, passed, failed: results.length - passed, avgScore, dimensions: dims.size };
+    }
+    /** Filter results by dimension name */
+    byDimension(results, dimension) {
+        return results.filter(r => r.dimension === dimension);
+    }
+    /** Generate human-readable markdown report */
+    toMarkdown(results) {
+        const s = this.summary(results);
+        const lines = [
+            `# Evaluation Report`,
+            ``,
+            `**Total**: ${s.total} | **Passed**: ${s.passed} | **Failed**: ${s.failed} | **Avg Score**: ${s.avgScore}`,
+            ``,
+            `| Dimension | Score | Status | Reason |`,
+            `|-----------|-------|--------|--------|`,
+        ];
+        for (const r of results) {
+            const status = r.score >= 0.5 ? '✅' : '❌';
+            lines.push(`| ${r.dimension} | ${r.score.toFixed(2)} | ${status} | ${r.reason} |`);
+        }
+        return lines.join('\n');
+    }
+}
+// --- Built-in checks ---
+export function policyComplianceCheck(spans) {
+    const toolSpans = spans.filter(s => s.operation === 'tool.execute');
+    const blocked = toolSpans.filter(s => s.status === 'error' && s.attributes.policyDenied === true);
+    const ratio = toolSpans.length > 0 ? 1 - blocked.length / toolSpans.length : 1;
+    return [{
+            dimension: 'policy_compliance',
+            score: ratio,
+            reason: `${blocked.length}/${toolSpans.length} tool calls blocked by policy`,
+        }];
+}
+export function latencyCheck(spans) {
+    const completed = spans.filter(s => s.endTime !== null);
+    if (completed.length === 0)
+        return [{ dimension: 'latency', score: 1, reason: 'No completed spans' }];
+    const durations = completed.map(s => s.endTime - s.startTime);
+    const avg = durations.reduce((a, b) => a + b, 0) / durations.length;
+    // Score 1 if avg < 100ms, degrade to 0 at 5000ms
+    const score = Math.max(0, Math.min(1, 1 - (avg - 100) / 4900));
+    return [{
+            dimension: 'latency',
+            score: Math.round(score * 100) / 100,
+            reason: `Avg span duration: ${avg.toFixed(1)}ms`,
+        }];
+}
+export function reliabilityCheck(spans) {
+    if (spans.length === 0)
+        return [{ dimension: 'reliability', score: 1, reason: 'No spans' }];
+    const errors = spans.filter(s => s.status === 'error').length;
+    const score = 1 - errors / spans.length;
+    return [{
+            dimension: 'reliability',
+            score: Math.round(score * 100) / 100,
+            reason: `${errors}/${spans.length} spans errored`,
+        }];
+}
+export function compareTraces(baselineSpans, currentSpans, checks = [policyComplianceCheck, latencyCheck, reliabilityCheck, costEfficiencyCheck], threshold = -0.1) {
+    const results = [];
+    for (const check of checks) {
+        const bResults = check(baselineSpans);
+        const cResults = check(currentSpans);
+        // Match by dimension
+        for (const br of bResults) {
+            const cr = cResults.find(c => c.dimension === br.dimension);
+            const cv = cr?.score ?? 0;
+            const delta = cv - br.score;
+            results.push({
+                dimension: br.dimension,
+                baseline: br.score,
+                current: cv,
+                delta: Math.round(delta * 1000) / 1000,
+                regression: delta < threshold,
+            });
+        }
+    }
+    return results;
+}
+export function costEfficiencyCheck(spans) {
+    const llmSpans = spans.filter(s => s.operation === 'llm.call');
+    if (llmSpans.length === 0)
+        return [{ dimension: 'cost_efficiency', score: 1, reason: 'No LLM calls' }];
+    const totalTokens = llmSpans.reduce((sum, s) => sum + Number(s.attributes.totalTokens ?? 0), 0);
+    // Score 1 if < 1000 tokens, degrade to 0 at 100k
+    const score = Math.max(0, Math.min(1, 1 - (totalTokens - 1000) / 99000));
+    return [{
+            dimension: 'cost_efficiency',
+            score: Math.round(score * 100) / 100,
+            reason: `Total tokens: ${totalTokens}`,
+        }];
+}
