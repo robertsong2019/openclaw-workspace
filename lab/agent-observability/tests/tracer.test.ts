@@ -427,4 +427,24 @@ describe('Tracer', () => {
     const s3 = tracer.startSpan('tool.execute'); // active, not ended
     assert.equal(tracer.totalDuration(), tracer.getSpans()[0].endTime! - tracer.getSpans()[0].startTime + tracer.getSpans()[1].endTime! - tracer.getSpans()[1].startTime);
   });
+
+  it('getPercentile returns p50/p99 of completed spans', () => {
+    const tracer = new Tracer();
+    // Create spans with known durations (sorted by completion)
+    for (let i = 0; i < 10; i++) {
+      const span = tracer.startSpan('llm.call');
+      // Force known startTime/endTime
+      span.startTime = i * 100;
+      span.endTime = i * 100 + (i + 1) * 10; // durations: 10,20,30,...100
+    }
+    const p50 = tracer.getPercentile(50);
+    const p99 = tracer.getPercentile(99);
+    assert.ok(p50 >= 10 && p50 <= 100);
+    assert.ok(p99 >= p50);
+  });
+
+  it('getPercentile returns 0 for no spans', () => {
+    const tracer = new Tracer();
+    assert.equal(tracer.getPercentile(50), 0);
+  });
 });

@@ -313,4 +313,15 @@ export class Tracer {
       return sum + (s.endTime - s.startTime);
     }, 0);
   }
+
+  /** Get duration at a given percentile (0-100) among completed spans */
+  getPercentile(p: number): number {
+    const durs = this.spans
+      .filter(s => s.endTime !== null)
+      .map(s => s.endTime! - s.startTime)
+      .sort((a, b) => a - b);
+    if (durs.length === 0) return 0;
+    const idx = Math.min(Math.floor(p / 100 * durs.length), durs.length - 1);
+    return durs[idx];
+  }
 }

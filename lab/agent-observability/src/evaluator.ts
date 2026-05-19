@@ -86,6 +86,11 @@ export class Evaluator {
   evaluateEach(spans: Span[]): Array<{ check: string; results: EvalCheckResult[] }> {
     return this.checks.map(c => ({ check: c.name, results: c.fn(spans) }));
   }
+
+  /** Count how many results pass (score >= 0.5) */
+  passCount(results: EvalCheckResult[]): number {
+    return results.filter(r => r.score >= 0.5).length;
+  }
 }
 
 // --- Built-in checks ---

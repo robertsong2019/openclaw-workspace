@@ -225,4 +225,22 @@ describe('PolicyEngine', () => {
     engine.addPolicy('b', piiFilter());
     assert.equal(engine.countAll(), 3);
   });
+
+  it('toJSON serializes rules', () => {
+    const engine = new PolicyEngine();
+    engine.addPolicy('sec', blockDestructiveOps());
+    engine.addPolicy('cost', costLimit());
+    const json = engine.toJSON() as Record<string, unknown[]>;
+    assert.ok(json['sec']);
+    assert.ok(json['cost']);
+    assert.equal((json['sec'] as unknown[]).length, 1);
+  });
+
+  it('fromJSON creates engine with metadata', () => {
+    const engine = PolicyEngine.fromJSON({
+      test: [{ name: 'r1', description: 'desc' }],
+    });
+    assert.equal(engine.listCategories().length, 1);
+    assert.equal(engine.ruleCount('test'), 1);
+  });
 });

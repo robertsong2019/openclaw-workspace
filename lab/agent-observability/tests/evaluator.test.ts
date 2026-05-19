@@ -208,4 +208,14 @@ describe('Evaluator', () => {
     assert.equal(each[1].check, 'latency');
     assert.ok(each[0].results.length > 0);
   });
+
+  it('passCount counts passing results', () => {
+    const e = new Evaluator();
+    const results = [
+      { dimension: 'a', score: 0.9, reason: 'ok' },
+      { dimension: 'b', score: 0.3, reason: 'fail' },
+      { dimension: 'c', score: 0.6, reason: 'ok' },
+    ];
+    assert.equal(e.passCount(results), 2);
+  });
 });

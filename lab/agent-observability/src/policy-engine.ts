@@ -147,6 +147,35 @@ export class PolicyEngine {
     return [...(this.rules.get(category) ?? [])];
   }
 
+  /** Serialize all rules to JSON */
+  toJSON(): object {
+    const data: Record<string, Array<{ name: string; description: string; enabled: boolean }>> = {};
+    for (const [cat, rules] of this.rules) {
+      data[cat] = rules.map(r => ({
+        name: r.name,
+        description: r.description,
+        enabled: this.isRuleEnabled(cat, r.name),
+      }));
+    }
+    return data;
+  }
+
+  /** Import rules from toJSON output (note: evaluate fns are lost, only metadata) */
+  static fromJSON(data: Record<string, Array<{ name: string; description: string }>>): PolicyEngine {
+    const engine = new PolicyEngine();
+    for (const [cat, rules] of Object.entries(data)) {
+      for (const r of rules) {
+        engine.addPolicy(cat, {
+          name: r.name,
+          description: r.description,
+          category: cat,
+          evaluate: () => ({ allow: true }),
+        });
+      }
+    }
+    return engine;
+  }
+
   clearCategory(category: string): boolean {
     return this.rules.delete(category);
   }
