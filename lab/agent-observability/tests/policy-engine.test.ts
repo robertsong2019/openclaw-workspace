@@ -179,9 +179,9 @@ describe('PolicyEngine', () => {
     engine.addPolicy('test', { name: 'r1', description: '', category: 'test', evaluate: () => ({ allow: true }) });
     engine.addPolicy('test', { name: 'r2', description: '', category: 'test', evaluate: () => ({ allow: true }) });
     assert.strictEqual(engine.ruleCount('test'), 2);
-    assert.strictEqual(engine.clearCategory('test'), true);
+    assert.strictEqual(engine.removeCategory('test'), true);
     assert.strictEqual(engine.ruleCount('test'), 0);
-    assert.strictEqual(engine.clearCategory('nonexistent'), false);
+    assert.strictEqual(engine.removeCategory('nonexistent'), false);
   });
 
   it('importRules replaces all rules', () => {
@@ -242,5 +242,31 @@ describe('PolicyEngine', () => {
     });
     assert.equal(engine.listCategories().length, 1);
     assert.equal(engine.ruleCount('test'), 1);
+  });
+
+  it('removeCategory deletes entire category', () => {
+    const engine = new PolicyEngine();
+    engine.addPolicy('cat1', { name: 'r1', description: 'd', category: 'cat1', evaluate: () => ({ allow: true }) });
+    engine.addPolicy('cat2', { name: 'r2', description: 'd', category: 'cat2', evaluate: () => ({ allow: true }) });
+    assert.ok(engine.removeCategory('cat1'));
+    assert.ok(!engine.removeCategory('nonexistent'));
+    assert.deepEqual(engine.listCategories(), ['cat2']);
+  });
+
+  it('renameCategory renames', () => {
+    const engine = new PolicyEngine();
+    engine.addPolicy('old', { name: 'r1', description: 'd', category: 'old', evaluate: () => ({ allow: true }) });
+    assert.ok(engine.renameCategory('old', 'new'));
+    assert.ok(!engine.renameCategory('nope', 'x'));
+    assert.deepEqual(engine.listCategories(), ['new']);
+    assert.equal(engine.ruleCount('new'), 1);
+  });
+
+  it('enabledCount counts only enabled rules', () => {
+    const engine = new PolicyEngine();
+    engine.addPolicy('cat', { name: 'r1', description: 'd', category: 'cat', evaluate: () => ({ allow: true }) });
+    engine.addPolicy('cat', { name: 'r2', description: 'd', category: 'cat', evaluate: () => ({ allow: true }) });
+    engine.disableRule('cat', 'r1');
+    assert.equal(engine.enabledCount(), 1);
   });
 });

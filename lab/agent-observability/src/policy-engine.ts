@@ -176,10 +176,6 @@ export class PolicyEngine {
     return engine;
   }
 
-  clearCategory(category: string): boolean {
-    return this.rules.delete(category);
-  }
-
   private buildRule(def: { name: string; description: string; category: string; type: string; config?: Record<string, unknown> }): PolicyRule | null {
     const helpers: Record<string, (cfg: Record<string, unknown>) => PolicyRule> = {
       blockDestructiveOps: blockDestructiveOps,
@@ -189,6 +185,27 @@ export class PolicyEngine {
     };
     const builder = helpers[def.type];
     return builder ? builder(def.config ?? {}) : null;
+  }
+
+  /** Remove an entire category of rules */
+  removeCategory(category: string): boolean {
+    return this.rules.delete(category);
+  }
+
+  /** Rename a category */
+  renameCategory(oldName: string, newName: string): boolean {
+    const rules = this.rules.get(oldName);
+    if (!rules) return false;
+    this.rules.set(newName, rules);
+    this.rules.delete(oldName);
+    return true;
+  }
+
+  /** Count enabled rules across all categories */
+  enabledCount(): number {
+    let total = 0;
+    for (const rules of this.rules.values()) total += rules.length;
+    return total - this.disabledRules.size;
   }
 }
 
