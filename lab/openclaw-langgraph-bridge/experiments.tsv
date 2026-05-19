@@ -16,3 +16,4 @@ timestamp	commit	metric	value	status	description
 2026-05-14T23:00	6a895bb	test_pass_rate	102/102	keep	withMiddleware: composable middleware chain for node wrappers (left-to-right, short-circuit, retry pattern). 8 tests (94→102).
 2026-05-15T23:00	f7b28c4	test_count	108/108	keep	loop(): conditional loop node with until predicate + maxIterations guard. 6 tests (102→108).
 2026-05-16T23:00	3d6caaf	test_pass_rate	114/114	keep	subgraph(): composable sub-graph with input/output state mapping + error isolation
+2026-05-19T23:00	2a24ef8	test_count	122/122	keep	race(): Promise.any-based fastest-responder-wins node, 8 tests (114→122)
