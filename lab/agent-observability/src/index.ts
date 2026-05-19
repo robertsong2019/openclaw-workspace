@@ -184,4 +184,21 @@ export class AgentObserver {
       throw err;
     }
   }
+
+  /** Get the AgentObserver's root span ID */
+  getRootSpanId(): string | null {
+    return this.rootSpanId;
+  }
+
+  /** Quick health check: returns { healthy, errorRate, spanCount } */
+  healthCheck(threshold = 0.1): { healthy: boolean; errorRate: number; spanCount: number } {
+    const errorRate = this.getErrorRate();
+    return { healthy: errorRate <= threshold, errorRate, spanCount: this.tracer.spanCount() };
+  }
+
+  /** Reset observer state for reuse */
+  reset(): void {
+    this.tracer.reset();
+    this.rootSpanId = null;
+  }
 }

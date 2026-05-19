@@ -183,4 +183,45 @@ describe('AgentObserver integration', () => {
     assert.strictEqual(result, 42);
     assert.ok(report.traceReport.totalSpans >= 1);
   });
+
+  it('getRootSpanId returns null before start and id after', () => {
+    const obs = new AgentObserver();
+    assert.equal(obs.getRootSpanId(), null);
+    obs.startRun('a1', 'task');
+    assert.ok(obs.getRootSpanId() !== null);
+    obs.endRun();
+  });
+
+  it('healthCheck reports healthy when no errors', () => {
+    const obs = new AgentObserver();
+    obs.startRun('a', 't');
+    obs.llmCall('gpt-4', 'hi', 'hello');
+    obs.endRun();
+    const hc = obs.healthCheck();
+    assert.equal(hc.healthy, true);
+    assert.equal(hc.errorRate, 0);
+    assert.ok(hc.spanCount >= 2);
+  });
+
+  it('healthCheck detects unhealthy state', () => {
+    const obs = new AgentObserver();
+    obs.getPolicyEngine().addPolicy('tool_execution', blockDestructiveOps());
+    obs.startRun('a', 't');
+    obs.toolExecute('bash', 'rm -rf /');
+    obs.endRun();
+    const hc = obs.healthCheck(0.4);
+    assert.equal(hc.healthy, false);
+    assert.ok(hc.errorRate > 0);
+  });
+
+  it('reset clears state for reuse', () => {
+    const obs = new AgentObserver();
+    obs.startRun('a', 't');
+    obs.llmCall('gpt-4', 'hi', 'hello');
+    obs.endRun();
+    assert.ok(obs.getTracer().spanCount() > 0);
+    obs.reset();
+    assert.equal(obs.getTracer().spanCount(), 0);
+    assert.equal(obs.getRootSpanId(), null);
+  });
 });
