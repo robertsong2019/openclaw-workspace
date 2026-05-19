@@ -31,3 +31,5 @@ export { loop } from "./loop.js";
 export type { LoopConfig } from "./loop.js";
 export { subgraph } from "./subgraph.js";
 export type { SubgraphConfig } from "./subgraph.js";
+export { race } from "./race.js";
+export type { RaceConfig } from "./race.js";

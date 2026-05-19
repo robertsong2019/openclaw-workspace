@@ -130,10 +130,11 @@ cmd_date() {
 }
 
 cmd_summary() {
-  local days="7" keyword=""
+  local days="7" keyword="" csv_output=0
   while [[ $# -gt 0 ]]; do
     case "$1" in
       -j|--json) JSON_OUTPUT=1 ;;
+      --csv) csv_output=1 ;;
       -d|--days) shift; days="${1:-7}" ;;
       -k|--keyword) shift; keyword="${1:-}" ;;
       [0-9]*) days="$1" ;;
@@ -142,7 +143,7 @@ cmd_summary() {
     shift
   done
 
-  [[ $JSON_OUTPUT -eq 0 ]] && { echo -e "${CYAN}📊 Activity summary (last $days days)${RESET}"; [[ -n "$keyword" ]] && echo "  [filter: $keyword]"; echo; }
+  [[ $JSON_OUTPUT -eq 0 ]] && [[ $csv_output -eq 0 ]] && { echo -e "${CYAN}📊 Activity summary (last $days days)${RESET}"; [[ -n "$keyword" ]] && echo "  [filter: $keyword]"; echo; }
 
   local total_lines=0 total_files=0 json_entries=()
 
@@ -156,10 +157,20 @@ cmd_summary() {
     total_lines=$((total_lines + lines)); total_files=$((total_files + 1))
     local weekday; weekday=$(date -d "$d" +%a 2>/dev/null || date -j -f "%Y-%m-%d" "$d" +%a 2>/dev/null)
     json_entries+=("{\"date\":\"$d\",\"weekday\":\"$weekday\",\"lines\":$lines}")
-    [[ $JSON_OUTPUT -eq 0 ]] && printf "  ${GREEN}%s %-3s${RESET} %4d lines\n" "$d" "$weekday" "$lines"
+    [[ $JSON_OUTPUT -eq 0 ]] && [[ $csv_output -eq 0 ]] && printf "  ${GREEN}%s %-3s${RESET} %4d lines\n" "$d" "$weekday" "$lines"
   done
 
-  if [[ $JSON_OUTPUT -eq 1 ]]; then
+  if [[ $csv_output -eq 1 ]]; then
+    echo "date,weekday,lines"
+    for (( idx=0; idx<${#json_entries[@]}; idx++ )); do
+      local e="${json_entries[$idx]}"
+      local ed ewd el
+      ed=$(echo "$e" | sed 's/.*"date":"\([^"]*\)".*/\1/')
+      ewd=$(echo "$e" | sed 's/.*"weekday":"\([^"]*\)".*/\1/')
+      el=$(echo "$e" | sed 's/.*"lines":\([0-9]*\).*/\1/')
+      echo "$ed,$ewd,$el"
+    done
+  elif [[ $JSON_OUTPUT -eq 1 ]]; then
     printf '{"command":"summary","days":%s,"keyword":"%s","total_files":%d,"total_lines":%d,"entries":[%s]}\n' \
       "$days" "$keyword" "$total_files" "$total_lines" "$(IFS=,; echo "${json_entries[*]+${json_entries[*]}}")"
   else
@@ -179,6 +190,87 @@ cmd_cron() {
   else
     echo -e "${GRAY}(openclaw CLI not in PATH)${RESET}"
   fi
+}
+
+cmd_sessions() {
+  local json_out=0
+  while [[ $# -gt 0 ]]; do case "$1" in -j|--json) json_out=1 ;; esac; shift; done
+
+  [[ -d "$SESSIONS_DIR" ]] || { echo -e "${GRAY}(no sessions directory)${RESET}"; return; }
+
+  local count=0 json_items=()
+  local files; files=$(find "$SESSIONS_DIR" -name '*.md' -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -30)
+
+  [[ $json_out -eq 0 ]] && echo -e "${CYAN}📋 Recent sessions${RESET}"
+
+  while IFS=' ' read -r ts f; do
+    [[ -z "$f" ]] && continue
+    local rel="${f#$HOME/}"
+    local lines; lines=$(wc -l < "$f" 2>/dev/null || echo 0)
+    local mod; mod=$(stat -c %y "$f" 2>/dev/null | cut -d. -f1)
+    local size; size=$(stat -c %s "$f" 2>/dev/null || echo 0)
+    count=$((count + 1))
+    if [[ $json_out -eq 1 ]]; then
+      json_items+=("{\"file\":\"$rel\",\"lines\":$lines,\"size\":$size,\"modified\":\"$mod\"}")
+    else
+      printf "  ${GREEN}%s${RESET} %5d lines %6s bytes  %s\n" "$mod" "$lines" "$size" "$(basename "$f")"
+    fi
+  done <<< "$files"
+
+  if [[ $json_out -eq 1 ]]; then
+    printf '{"command":"sessions","count":%d,"entries":[%s]}\n' "$count" "$(IFS=,; echo "${json_items[*]+${json_items[*]}}")"
+  else
+    echo; echo -e "  ${YELLOW}Total:${RESET} $count sessions shown"
+  fi
+}
+
+cmd_clean() {
+  local dry_run=0 age_days=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -n|--dry-run) dry_run=1 ;;
+      -a|--age) shift; age_days="${1:-0}" ;;
+      *) die "Usage: agent-log clean [-n|--dry-run] [-a|--age DAYS]" ;;
+    esac
+    shift
+  done
+
+  local removed=0 total_size=0
+
+  echo -e "${CYAN}🧹 Clean log files${RESET}"
+  [[ $dry_run -eq 1 ]] && echo -e "  ${YELLOW}(dry run — no files deleted)${RESET}"
+  echo
+
+  # Remove empty files
+  for f in "$MEMORY_DIR"/*.md; do
+    [[ -f "$f" ]] || continue
+    local lines; lines=$(wc -l < "$f")
+    if [[ $lines -eq 0 ]]; then
+      local sz; sz=$(stat -c %s "$f" 2>/dev/null || echo 0)
+      echo -e "  ${RED}empty:${RESET} $(basename "$f")"
+      [[ $dry_run -eq 0 ]] && rm "$f"
+      removed=$((removed + 1)); total_size=$((total_size + sz))
+    fi
+  done
+
+  # Remove files older than age_days
+  if [[ $age_days -gt 0 ]]; then
+    local cutoff; cutoff=$(date -d "$age_days days ago" +%Y-%m-%d 2>/dev/null || date -v-${age_days}d +%Y-%m-%d 2>/dev/null)
+    for f in "$MEMORY_DIR"/*.md; do
+      [[ -f "$f" ]] || continue
+      local fname; fname=$(basename "$f" .md)
+      # Only match date-formatted files (YYYY-MM-DD)
+      [[ "$fname" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || continue
+      [[ "$fname" < "$cutoff" ]] || continue
+      local sz; sz=$(stat -c %s "$f" 2>/dev/null || echo 0)
+      echo -e "  ${RED}old ($fname):${RESET} $(basename "$f")"
+      [[ $dry_run -eq 0 ]] && rm "$f"
+      removed=$((removed + 1)); total_size=$((total_size + sz))
+    done
+  fi
+
+  echo
+  echo -e "  ${YELLOW}Files removed:${RESET} $removed (${total_size} bytes)"
 }
 
 cmd_stats() {
@@ -223,5 +315,7 @@ case "${1:-help}" in
   summary) shift; cmd_summary "$@" ;;
   cron)    cmd_cron ;;
   stats)   shift; cmd_stats "$@" ;;
+  clean)   shift; cmd_clean "$@" ;;
+  sessions) shift; cmd_sessions "$@" ;;
   help|*)  usage ;;
 esac

@@ -23,19 +23,19 @@
 - [ ] **F6**: `trend` command — show activity trends over time (charts/graphs)
 
 ### Session Analysis
-- [ ] **F7**: `sessions` command — list all session files with metadata
+- [x] **F7**: `sessions` command — list all session files with metadata ✅ 2026-05-19
 - [ ] **F8**: `session <id>` command — show detailed session transcript
 - [ ] **F9**: `find` command — find sessions by agent/model/date
 
 ### Output Formats
 - [x] **F10**: JSON output mode — `-j` flag for structured output ✅ 2026-04-30
-- [ ] **F11**: CSV export — export stats/summary as CSV
+- [x] **F11**: CSV export — export stats/summary as CSV ✅ 2026-05-19
 - [ ] **F12**: Markdown export — format output as Markdown
 
 ### Utilities
 - [ ] **F13**: `grep` wrapper — fast grep across all log files
 - [ ] **F14**: `tail` wrapper — watch latest log files in real-time
-- [ ] **F15**: `clean` command — remove old/empty log files (with confirmation)
+- [x] **F15**: `clean` command — remove old/empty log files (--dry-run, --age) ✅ 2026-05-19
 
 ### Testing & Quality
 - [ ] **F16**: Unit tests for each command (Bats framework)
