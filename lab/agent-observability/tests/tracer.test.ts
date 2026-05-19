@@ -447,4 +447,36 @@ describe('Tracer', () => {
     const tracer = new Tracer();
     assert.equal(tracer.getPercentile(50), 0);
   });
+
+  it('spanCountByStatus counts by status', () => {
+    const tracer = new Tracer();
+    const s1 = tracer.startSpan('agent.run');
+    const s2 = tracer.startSpan('llm.call');
+    tracer.endSpan(s1.spanId, 'ok');
+    tracer.endSpan(s2.spanId, 'error');
+    const counts = tracer.spanCountByStatus();
+    assert.equal(counts.ok, 1);
+    assert.equal(counts.error, 1);
+    assert.equal(counts.unset, 0);
+  });
+
+  it('addAttribute adds to existing span', () => {
+    const tracer = new Tracer();
+    const span = tracer.startSpan('agent.run');
+    assert.ok(tracer.addAttribute(span.spanId, 'foo', 'bar'));
+    const retrieved = tracer.getSpanById(span.spanId);
+    assert.equal(retrieved!.attributes.foo, 'bar');
+  });
+
+  it('addAttribute returns false for missing span', () => {
+    const tracer = new Tracer();
+    assert.ok(!tracer.addAttribute('nope', 'key', 'val'));
+  });
+
+  it('hasSpan checks existence', () => {
+    const tracer = new Tracer();
+    const span = tracer.startSpan('agent.run');
+    assert.ok(tracer.hasSpan(span.spanId));
+    assert.ok(!tracer.hasSpan('nope'));
+  });
 });

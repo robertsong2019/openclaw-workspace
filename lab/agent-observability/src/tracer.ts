@@ -261,15 +261,6 @@ export class Tracer {
     return groups;
   }
 
-  /** Count spans by status */
-  spanCountByStatus(): Record<string, number> {
-    const counts: Record<string, number> = {};
-    for (const s of this.spans) {
-      counts[s.status] = (counts[s.status] ?? 0) + 1;
-    }
-    return counts;
-  }
-
   /** Clear all spans and reset trace */
   clear(): void {
     const newTraceId = randomUUID();
@@ -327,5 +318,25 @@ export class Tracer {
     if (durs.length === 0) return 0;
     const idx = Math.min(Math.floor(p / 100 * durs.length), durs.length - 1);
     return durs[idx];
+  }
+
+  /** Count spans by status */
+  spanCountByStatus(): Record<SpanStatus, number> {
+    const counts: Record<SpanStatus, number> = { ok: 0, error: 0, unset: 0 };
+    for (const s of this.spans) counts[s.status]++;
+    return counts;
+  }
+
+  /** Add or update a single attribute on a span */
+  addAttribute(spanId: string, key: string, value: unknown): boolean {
+    const span = this.spans.find(s => s.spanId === spanId);
+    if (!span) return false;
+    span.attributes[key] = value;
+    return true;
+  }
+
+  /** Check if a span exists */
+  hasSpan(spanId: string): boolean {
+    return this.spans.some(s => s.spanId === spanId);
   }
 }
