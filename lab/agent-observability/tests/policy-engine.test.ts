@@ -216,4 +216,13 @@ describe('PolicyEngine', () => {
     assert.equal(rules[1].name, 'r2');
     assert.equal(engine.getRulesByCategory('empty').length, 0);
   });
+
+  it('countAll returns total across categories', () => {
+    const engine = new PolicyEngine();
+    assert.equal(engine.countAll(), 0);
+    engine.addPolicy('a', blockDestructiveOps());
+    engine.addPolicy('a', costLimit({ maxCost: 5 }));
+    engine.addPolicy('b', piiFilter());
+    assert.equal(engine.countAll(), 3);
+  });
 });

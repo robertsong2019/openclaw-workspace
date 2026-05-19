@@ -197,4 +197,15 @@ describe('Evaluator', () => {
     ];
     assert.equal(e.overallPassRate(results), 2 / 3);
   });
+
+  it('evaluateEach returns per-check results', () => {
+    const e = new Evaluator();
+    e.addCheck('compliance', policyComplianceCheck);
+    e.addCheck('latency', latencyCheck);
+    const each = e.evaluateEach([]);
+    assert.equal(each.length, 2);
+    assert.equal(each[0].check, 'compliance');
+    assert.equal(each[1].check, 'latency');
+    assert.ok(each[0].results.length > 0);
+  });
 });

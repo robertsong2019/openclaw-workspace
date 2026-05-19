@@ -292,4 +292,25 @@ export class Tracer {
       throw err;
     }
   }
+
+  /** Async version of traceFn */
+  async traceAsync<T>(operation: SpanOperation, fn: () => Promise<T>, attributes?: Record<string, unknown>): Promise<{ result: T; span: Span }> {
+    const span = this.startSpan(operation, attributes);
+    try {
+      const result = await fn();
+      this.endSpan(span.spanId, 'ok');
+      return { result, span };
+    } catch (err) {
+      this.endSpan(span.spanId, 'error');
+      throw err;
+    }
+  }
+
+  /** Get total duration of all completed spans */
+  totalDuration(): number {
+    return this.spans.reduce((sum, s) => {
+      if (s.endTime === null) return sum;
+      return sum + (s.endTime - s.startTime);
+    }, 0);
+  }
 }

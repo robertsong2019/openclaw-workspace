@@ -394,4 +394,37 @@ describe('Tracer', () => {
     assert.ok(dur !== null && dur >= 0);
     assert.equal(tracer.getSpanDuration('nonexistent'), null);
   });
+
+
+  it('traceAsync wraps async fn in span', async () => {
+    const tracer = new Tracer();
+    const { result, span } = await tracer.traceAsync('tool.execute', async () => {
+      await new Promise(r => setTimeout(r, 5));
+      return 42;
+    });
+    assert.equal(result, 42);
+    assert.equal(span.status, 'ok');
+    assert.ok(span.endTime !== null);
+  });
+
+  it('traceAsync marks error on rejection', async () => {
+    const tracer = new Tracer();
+    await assert.rejects(
+      () => tracer.traceAsync('tool.execute', async () => { throw new Error('boom'); }),
+      /boom/
+    );
+    const spans = tracer.getSpans();
+    assert.equal(spans.length, 1);
+    assert.equal(spans[0].status, 'error');
+  });
+
+  it('totalDuration sums completed spans', () => {
+    const tracer = new Tracer();
+    const s1 = tracer.startSpan('agent.run');
+    tracer.endSpan(s1.spanId);
+    const s2 = tracer.startSpan('llm.call');
+    tracer.endSpan(s2.spanId);
+    const s3 = tracer.startSpan('tool.execute'); // active, not ended
+    assert.equal(tracer.totalDuration(), tracer.getSpans()[0].endTime! - tracer.getSpans()[0].startTime + tracer.getSpans()[1].endTime! - tracer.getSpans()[1].startTime);
+  });
 });

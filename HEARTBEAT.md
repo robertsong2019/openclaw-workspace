@@ -1,4 +1,4 @@
-# HEARTBEAT.md - May 18, 2026 (Monday)
+# HEARTBEAT.md - May 19, 2026 (Tuesday)
 
 ## 待办任务
 
@@ -19,12 +19,12 @@
 - **agent-context-store**: 202/202 tests (新增: middleware pipeline + key watchers)
   - 三层响应性: middleware(写入前) → storage → hooks(全局) → watchers(键级)
 - **better-ralph-core**: 307/307 tests (新增: story_digest + checkpoint_diff)
-- **lab/agent-observability**: 60/60 tests (实现中: Tracer因果链接 + Evaluator回归检测 + Policy批量评估 + Observer同步模式)
+- **lab/agent-observability**: 91/91 tests ✅ (三层响应性完成: middleware→storage→hooks→watchers)
 - **AMS v1.0-dev**: 645/645 tests
 - **agent-memory-graph**: 30/30 tests
 - **prompt-router**: 244/244 tests
 - **prompt-weaver**: 148/148 tests
-- **autoresearch**: 零回滚率持续保持（连续60天）🏆
+- **autoresearch**: 零回滚率持续保持（连续63天）🏆
 
 ## 近期发现
 - **agent-context-store 三层响应性完成**: middleware(transform before) + hooks(global broadcast) + watchers(per-key observe) — 完整的 store 响应性栈

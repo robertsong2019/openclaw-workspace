@@ -118,6 +118,13 @@ export class PolicyEngine {
     return this.rules.has(category) && (this.rules.get(category)?.length ?? 0) > 0;
   }
 
+  /** Total rule count across all categories */
+  countAll(): number {
+    let total = 0;
+    for (const rules of this.rules.values()) total += rules.length;
+    return total;
+  }
+
   /** Import rules from JSON array, replacing existing rules */
   importRules(data: Array<{ name: string; description: string; category: string; type: string; config?: Record<string, unknown> }>): number {
     this.rules.clear();

@@ -81,6 +81,11 @@ export class Evaluator {
   topFailures(results: EvalCheckResult[], limit = 3): EvalCheckResult[] {
     return [...results].sort((a, b) => a.score - b.score).slice(0, limit);
   }
+
+  /** Run each check separately and return per-check results */
+  evaluateEach(spans: Span[]): Array<{ check: string; results: EvalCheckResult[] }> {
+    return this.checks.map(c => ({ check: c.name, results: c.fn(spans) }));
+  }
 }
 
 // --- Built-in checks ---
