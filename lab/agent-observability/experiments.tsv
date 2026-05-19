@@ -22,3 +22,7 @@ timestamp	commit	metric	value	status	description
 2026-05-19T19:10	c178ce0	tests	94→99	keep	Tracer.traceAsync+totalDuration, PolicyEngine.countAll, Evaluator.evaluateEach (+5)
 2026-05-19T19:15	59a7dfa	tests	99→103	keep	AgentObserver: getRootSpanId+healthCheck+reset (+4)
 2026-05-19T19:20	707f37f	tests	103→108	keep	Tracer.getPercentile, PolicyEngine.toJSON/fromJSON, Evaluator.passCount (+5)
+2026-05-19T21:05	509b465	tests	108→112	keep	Evaluator: summary+byDimension+toMarkdown (+4)
+2026-05-19T21:10	52e7fb3	tests	112→116	keep	Tracer: spanCountByStatus+addAttribute+hasSpan, dedup (+4)
+2026-05-19T21:15	549a405	tests	116→119	keep	PolicyEngine: removeCategory+renameCategory+enabledCount (+3)
+2026-05-19T21:20	eaba67b	tests	119→123	keep	AgentObserver: runSync+getSpanCount+hasPolicyCategory (+4)
