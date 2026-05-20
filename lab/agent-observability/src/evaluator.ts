@@ -92,6 +92,11 @@ export class Evaluator {
     return results.filter(r => r.score >= 0.5).length;
   }
 
+  /** Get all configured weights */
+  getWeights(): Map<string, number> {
+    return new Map(this.weights);
+  }
+
   /** Aggregate summary: total/pass/fail/avg/min/max by dimension */
   summary(results: EvalCheckResult[]): {
     total: number; passed: number; failed: number;

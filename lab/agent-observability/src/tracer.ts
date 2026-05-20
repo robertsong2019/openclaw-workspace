@@ -348,6 +348,19 @@ export class Tracer {
     return true;
   }
 
+  /** One-call summary stats */
+  getStats(): { total: number; active: number; completed: number; errors: number; avgDurationMs: number } {
+    const completed = this.spans.filter(s => s.endTime !== null);
+    const totalDur = completed.reduce((sum, s) => sum + (s.endTime! - s.startTime), 0);
+    return {
+      total: this.spans.length,
+      active: this.spans.filter(s => s.endTime === null).length,
+      completed: completed.length,
+      errors: this.spans.filter(s => s.status === 'error').length,
+      avgDurationMs: completed.length > 0 ? totalDur / completed.length : 0,
+    };
+  }
+
   /** Return spans sorted by startTime as a timeline */
   getOperationTimeline(): Array<{ spanId: string; operation: string; startMs: number; durationMs: number | null; status: SpanStatus }> {
     return [...this.spans]

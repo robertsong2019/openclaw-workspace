@@ -241,6 +241,15 @@ export class PolicyEngine {
     }
     return { allowed: details.every(d => d.allowed), details };
   }
+
+  /** Count rules per category */
+  countByCategory(): Record<string, number> {
+    const result: Record<string, number> = {};
+    for (const [cat, rules] of this.rules) {
+      result[cat] = rules.length;
+    }
+    return result;
+  }
 }
 
 // --- Built-in rule helpers ---
