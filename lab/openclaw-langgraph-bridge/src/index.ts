@@ -33,3 +33,5 @@ export { subgraph } from "./subgraph.js";
 export type { SubgraphConfig } from "./subgraph.js";
 export { race } from "./race.js";
 export type { RaceConfig } from "./race.js";
+export { tap, tapBefore, tapAfter } from "./tap.js";
+export type { TapConfig } from "./tap.js";
