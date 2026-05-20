@@ -339,4 +339,17 @@ export class Tracer {
   hasSpan(spanId: string): boolean {
     return this.spans.some(s => s.spanId === spanId);
   }
+
+  /** Return spans sorted by startTime as a timeline */
+  getOperationTimeline(): Array<{ spanId: string; operation: string; startMs: number; durationMs: number | null; status: SpanStatus }> {
+    return [...this.spans]
+      .sort((a, b) => a.startTime - b.startTime)
+      .map(s => ({
+        spanId: s.spanId,
+        operation: s.operation,
+        startMs: s.startTime,
+        durationMs: s.endTime !== null ? s.endTime - s.startTime : null,
+        status: s.status,
+      }));
+  }
 }

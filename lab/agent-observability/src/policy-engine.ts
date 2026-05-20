@@ -207,6 +207,22 @@ export class PolicyEngine {
     for (const rules of this.rules.values()) total += rules.length;
     return total - this.disabledRules.size;
   }
+
+  /** Merge another PolicyEngine's rules into this one (additive) */
+  merge(other: PolicyEngine): number {
+    let added = 0;
+    for (const [cat, rules] of other.rules) {
+      for (const rule of rules) {
+        const existing = this.rules.get(cat) ?? [];
+        if (!existing.some(r => r.name === rule.name)) {
+          existing.push(rule);
+          this.rules.set(cat, existing);
+          added++;
+        }
+      }
+    }
+    return added;
+  }
 }
 
 // --- Built-in rule helpers ---

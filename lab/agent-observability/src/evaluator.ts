@@ -127,6 +127,11 @@ export class Evaluator {
     }
     return lines.join('\n');
   }
+
+  /** Compare two sets of spans and return regression info */
+  runComparison(baselineSpans: Span[], currentSpans: Span[], threshold = -0.1): TraceComparison[] {
+    return compareTraces(baselineSpans, currentSpans, this.checks.map(c => c.fn), threshold);
+  }
 }
 
 // --- Built-in checks ---
