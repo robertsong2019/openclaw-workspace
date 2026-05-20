@@ -35,3 +35,5 @@ export { race } from "./race.js";
 export type { RaceConfig } from "./race.js";
 export { tap, tapBefore, tapAfter } from "./tap.js";
 export type { TapConfig } from "./tap.js";
+export { partition, splitBy } from "./partition.js";
+export type { PartitionBranch, PartitionConfig } from "./partition.js";
