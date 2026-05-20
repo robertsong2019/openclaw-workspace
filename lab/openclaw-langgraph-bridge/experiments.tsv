@@ -17,3 +17,7 @@ timestamp	commit	metric	value	status	description
 2026-05-15T23:00	f7b28c4	test_count	108/108	keep	loop(): conditional loop node with until predicate + maxIterations guard. 6 tests (102→108).
 2026-05-16T23:00	3d6caaf	test_pass_rate	114/114	keep	subgraph(): composable sub-graph with input/output state mapping + error isolation
 2026-05-19T23:00	2a24ef8	test_count	122/122	keep	race(): Promise.any-based fastest-responder-wins node, 8 tests (114→122)
+2026-05-20T21:05	e593d69	test_count	130/130	keep	tap()+tapBefore()+tapAfter(): side-effect nodes, errors swallowed (+8, 122→130)
+2026-05-20T21:10	369394d	test_count	138/138	keep	partition()+splitBy(): predicate-based state branching (+8, 130→138)
+2026-05-20T21:18	fa97120	test_count	143/143	keep	throttle(): sliding window node throttling with queue (+5, 138→143)
+2026-05-20T21:25	7d14d14	test_count	150/150	keep	seal()+isSealed()+unseal(): frozen state protection + mutation detection (+7, 143→150)
