@@ -340,6 +340,14 @@ export class Tracer {
     return this.spans.some(s => s.spanId === spanId);
   }
 
+  /** Bulk annotate: add multiple key-value pairs to a span */
+  annotate(spanId: string, attrs: Record<string, unknown>): boolean {
+    const span = this.spans.find(s => s.spanId === spanId);
+    if (!span) return false;
+    Object.assign(span.attributes, attrs);
+    return true;
+  }
+
   /** Return spans sorted by startTime as a timeline */
   getOperationTimeline(): Array<{ spanId: string; operation: string; startMs: number; durationMs: number | null; status: SpanStatus }> {
     return [...this.spans]

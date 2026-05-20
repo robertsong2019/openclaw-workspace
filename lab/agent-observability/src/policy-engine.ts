@@ -223,6 +223,24 @@ export class PolicyEngine {
     }
     return added;
   }
+
+  /** Evaluate with per-rule detail */
+  evaluateWithDetails(category: string, input: Record<string, unknown>): {
+    allowed: boolean;
+    details: Array<{ rule: string; allowed: boolean; reason?: string }>;
+  } {
+    const rules = this.rules.get(category) ?? [];
+    const details: Array<{ rule: string; allowed: boolean; reason?: string }> = [];
+    for (const rule of rules) {
+      if (!this.isRuleEnabled(category, rule.name)) {
+        details.push({ rule: rule.name, allowed: true, reason: 'disabled' });
+        continue;
+      }
+      const result = rule.evaluate(input);
+      details.push({ rule: rule.name, allowed: result.allow, reason: result.reason });
+    }
+    return { allowed: details.every(d => d.allowed), details };
+  }
 }
 
 // --- Built-in rule helpers ---

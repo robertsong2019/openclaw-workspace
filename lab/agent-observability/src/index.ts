@@ -224,4 +224,17 @@ export class AgentObserver {
   hasPolicyCategory(category: string): boolean {
     return this.policyEngine.listCategories().includes(category);
   }
+
+  /** Trace an entire agent run (start→fn→end) returning result + report */
+  traceAgent<T>(agentId: string, task: string, fn: () => T): { result: T; report: ObservabilityReport } {
+    this.startRun(agentId, task);
+    try {
+      const result = fn();
+      this.endRun();
+      return { result, report: this.getReport() };
+    } catch (err) {
+      this.endRun();
+      throw err;
+    }
+  }
 }
