@@ -39,3 +39,5 @@ export { partition, splitBy } from "./partition.js";
 export type { PartitionBranch, PartitionConfig } from "./partition.js";
 export { throttle } from "./throttle.js";
 export type { ThrottleConfig } from "./throttle.js";
+export { seal, isSealed, unseal } from "./seal.js";
+export type { SealConfig } from "./seal.js";
