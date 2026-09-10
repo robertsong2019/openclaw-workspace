@@ -15,6 +15,7 @@ import json
 import subprocess
 import threading
 import uuid
+from collections import deque
 from typing import Any, Dict, List, Optional, Callable
 from dataclasses import dataclass, asdict
 from enum import Enum
@@ -104,6 +105,7 @@ class MCPClient:
         self.pending_requests: Dict[str, threading.Event] = {}
         self.responses: Dict[str, Any] = {}
         self._initialized = False
+        self._stderr_tail: deque = deque(maxlen=50)
 
     def start(self) -> bool:
         """启动 MCP 服务器进程；initialize 无应答/出错时回收进程并返回 False"""
@@ -119,6 +121,12 @@ class MCPClient:
 
             # 启动响应监听线程
             threading.Thread(target=self._listen_responses, daemon=True).start()
+
+            # 排空 stderr：MCP stdio server 的标准日志通道。不排空则 64KB pipe
+            # 缓冲区填满后 server 阻塞在 stderr 写入上，永远无法响应请求
+            # （经典 subprocess 管道死锁）。保留最后 50 行供调试。
+            threading.Thread(target=self._drain_stderr,
+                             args=(self.process.stderr,), daemon=True).start()
 
             # 发送 initialize 请求——无应答即失败，绝不假成功
             response = self._initialize()
@@ -149,7 +157,7 @@ class MCPClient:
 
     def _initialize(self):
         """发送初始化请求，返回响应（超时/错误时为 None 或含 error 的响应）"""
-        return self._send_request({
+        response = self._send_request({
             "jsonrpc": "2.0",
             "id": self._next_id(),
             "method": "initialize",
@@ -167,11 +175,16 @@ class MCPClient:
             }
         })
 
-        # 发送 initialized 通知
-        self._send_notification({
-            "jsonrpc": "2.0",
-            "method": "notifications/initialized"
-        })
+        # MCP 规范：收到 initialize 响应后必须发送 initialized 通知。
+        # （原实现 return 之后的发送代码不可达——通知从未发出，
+        # 符合规范的 server 会拒绝后续请求。）
+        if response is not None and "error" not in response:
+            self._send_notification({
+                "jsonrpc": "2.0",
+                "method": "notifications/initialized"
+            })
+
+        return response
 
     def _next_id(self) -> str:
         """生成下一个请求 ID"""
@@ -216,9 +229,22 @@ class MCPClient:
         if not self.process or not self.process.stdin:
             return
 
-        message = json.dumps(notification) + "\n"
-        self.process.stdin.write(message)
-        self.process.stdin.flush()
+        try:
+            message = json.dumps(notification) + "\n"
+            self.process.stdin.write(message)
+            self.process.stdin.flush()
+        except (OSError, ValueError):
+            # server 可能在 initialize 后立即死亡（die-after-init）——
+            # 通知失败不应炸掉调用方（与 _send_request 的 OSError 契约一致）
+            pass
+
+    def _drain_stderr(self, stderr):
+        """后台排空 server 的 stderr，保留最后 50 行供调试"""
+        try:
+            for line in stderr:
+                self._stderr_tail.append(line.rstrip("\n"))
+        except (OSError, ValueError):
+            pass
 
     def _listen_responses(self):
         """监听服务器的响应"""
