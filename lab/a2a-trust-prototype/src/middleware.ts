@@ -6,8 +6,14 @@ import type { SignedAgentCard } from './agent-card.js';
 import { verifyAgentCard } from './agent-card.js';
 
 export interface Middleware {
-  /** Verify an inbound signed agent card */
-  verifyInbound(signedCard: SignedAgentCard): Promise<boolean>;
+  /**
+   * Verify an inbound signed agent card.
+   * With `pinnedJwk`: authenticate against the registry-pinned key — the
+   * card-embedded key is attacker-controlled data, so self-consistency
+   * alone never proves identity. Without it: legacy self-consistency check
+   * (card agrees with its own embedded key — NOT identity proof).
+   */
+  verifyInbound(signedCard: SignedAgentCard, pinnedJwk?: JsonWebKey): Promise<boolean>;
   /** Sign outbound data with this agent's key */
   signOutbound(data: unknown): Promise<string>;
   /** Check if caller has sufficient trust for a skill */
@@ -20,7 +26,20 @@ export function createMiddleware(
   keyPair: KeyPair,
 ): Middleware {
   return {
-    async verifyInbound(signedCard: SignedAgentCard): Promise<boolean> {
+    async verifyInbound(signedCard: SignedAgentCard, pinnedJwk?: JsonWebKey): Promise<boolean> {
+      if (pinnedJwk) {
+        // Pinned mode: verify the signature against the registry-pinned key,
+        // ignoring the attacker-controlled card-embedded key.
+        const pinnedPubKey = await crypto.subtle.importKey(
+          'jwk',
+          pinnedJwk,
+          { name: 'ECDSA', namedCurve: 'P-256' },
+          true,
+          ['verify'],
+        );
+        const { signature, ...payload } = signedCard;
+        return verify(pinnedPubKey, payload, signature);
+      }
       // Import the caller's public key from their card
       const callerPubKey = await crypto.subtle.importKey(
         'jwk',

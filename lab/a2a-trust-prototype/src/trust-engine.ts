@@ -104,6 +104,7 @@ export class TrustEngine {
   scoreDecay(agentId: string, hoursElapsed: number): void {
     const rec = this.agents.get(agentId);
     if (!rec) return;
+    if (!(hoursElapsed > 0)) return; // negative/NaN: time-travel guard — decay must never raise trust
     const decay = hoursElapsed * 0.1;
     rec.score = Math.max(0, rec.score - decay);
     rec.lastUpdated = Date.now();
