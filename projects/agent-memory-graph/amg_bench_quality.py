@@ -5083,6 +5083,21 @@ _PP_NOW_RE = re.compile(
 _PP_BEFORE_JOB_RE = re.compile(
     r"before\s+i\s+started\s+my\s+current\s+job\s+at\s+"
     r"([a-z0-9 .&'-]+?)\s*\??\s*$", re.I)
+
+# Promotion-subtract surface (C564): current-role tenure whose
+# two stated facts are a company-experience total and a
+# promotion-after span (census: unique to one row across 500).
+_PP_CURROLE_RE = re.compile(
+    r"how\s+long\s+(?:have|had)\s+(?:i\s+)?been\s+working\s+"
+    r"(?:in|at)\s+my\s+current\s+(?:role|position|job)", re.I)
+_PP_EXP_TOTAL_RE = re.compile(
+    r"(\w+)\s+years?\s*(?:,?\s*and\s+(\w+)\s*months?)?\s+"
+    r"experience\s+(?:in|at|with)\s+(?:the\s+)?company", re.I)
+_PP_PROMO_RE = re.compile(
+    r"(?:worked\s+my\s+way\s+up\s+to|promoted\s+to)\s+"
+    r"([a-z][a-z ]{2,60}?)\s+after\s+"
+    + _PP_NUM_RE_SRC + r"\s+years?"
+    r"(?:\s*,?\s*and\s+" + _PP_NUM_RE_SRC + r"\s*months?)?", re.I)
 _PP_TENURE_RE = re.compile(
     r"for\s+(?:about\s+|around\s+|over\s+|almost\s+)?"
     + _PP_NUM_RE_SRC
@@ -5341,6 +5356,71 @@ def _pp_session_span(question: str,
     return None
 
 
+def _pp_promotion_subtract(
+        question: str,
+        sessions: list[tuple[datetime, list[dict]]],
+) -> tuple[str, dict] | None:
+    """Route (e): promotion subtraction (C564).
+
+    "How long have I been working in my current role?" with no
+    tenure line anywhere (route (c) missed): the two stated facts
+    are the company-experience total ("3 years and 9 months
+    experience in the company") and the promotion span ("worked
+    my way up to <role> after 2 years and 4 months"); tenure =
+    total − promotion. Engages only on the strict head, after
+    route (c) misses; requires BOTH facts, total > promotion, and
+    a role echo (the promoted-to role re-stated as the speaker's
+    own current role in another user line). Otherwise honest
+    fall-through — the gate chain keeps its claims.
+    """
+    if not _PP_CURROLE_RE.search(question):
+        return None
+    total_m = promo_m = None
+    promo_role: str | None = None
+    lines: list[str] = []
+    for _dt, turns in sessions:
+        for turn in turns:
+            if turn.get("role") != "user":
+                continue
+            line = str(turn.get("content", ""))
+            lines.append(line)
+            mt = _PP_EXP_TOTAL_RE.search(line)
+            if mt:
+                n = _pp_num(mt.group(1))
+                if n is not None:
+                    tm = n * 12
+                    if mt.group(2):
+                        e = _pp_num(mt.group(2))
+                        if e is not None:
+                            tm += e
+                    total_m = tm
+            mp = _PP_PROMO_RE.search(line)
+            if mp:
+                y = _pp_num(mp.group(2))
+                if y is not None:
+                    pm = y * 12
+                    if mp.group(3):
+                        e = _pp_num(mp.group(3))
+                        if e is not None:
+                            pm += e
+                    promo_m = pm
+                    promo_role = mp.group(1).strip()
+    if total_m is None or promo_m is None or promo_role is None:
+        return None
+    if total_m <= promo_m:
+        return None
+    low_role = promo_role.lower()
+    echoes = sum(1 for line in lines
+                 if low_role in line.lower()
+                 and not _PP_PROMO_RE.search(line))
+    if echoes < 1:
+        return None
+    return (_pp_ym_sub(total_m, promo_m),
+            {"route": "promotion_subtract", "total_m": total_m,
+             "promo_m": promo_m, "role": promo_role,
+             "echoes": echoes})
+
+
 def answer_pp_duration(
         question: str,
         dated_sessions: list[tuple[str, list[dict]]],
@@ -5470,10 +5550,13 @@ def answer_pp_duration(
                             best is None or dt > best[0]):
                         best = (dt, pick)
         detail["route"] = "pure_tenure"
-        if best is None:
-            detail["missing"] = "tenure line"
-            return None, detail
-        return best[1], detail
+        if best is not None:
+            return best[1], detail
+        sub = _pp_promotion_subtract(question, sessions)
+        if sub is not None:
+            return sub
+        detail["missing"] = "tenure line"
+        return None, detail
 
     # route (b): event_abs − state_abs
     if re.search(r"\bwhen\b", question, re.I):
