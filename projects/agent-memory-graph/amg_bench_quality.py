@@ -79,6 +79,7 @@ __all__ = [
     "pp_pure_tenure_form",
     "pp_have_had_form",
     "pp_finish_sum_form",
+    "pp_activity_sum_form",
     "_pp_finish_num",
     "_pp_finish_render",
     "answer_pp_duration",
@@ -1109,7 +1110,8 @@ class LongMemEvalAdapter:
                 and (pp_duration_form(question)
                      or pp_pure_tenure_form(question)
                      or pp_have_had_form(question)
-                     or pp_finish_sum_form(question))):
+                     or pp_finish_sum_form(question)
+                     or pp_activity_sum_form(question))):
             dated = [(self._session_dates.get(s["session_id"], ""),
                       s["turns"]) for s in self._counting_sessions()]
             p_ans, p_detail = answer_pp_duration(question, dated)
@@ -5220,6 +5222,37 @@ def pp_finish_sum_form(question: str) -> bool:
     return not re.search(r"\b(?:when|before)\b", q, re.I)
 
 
+# Activity-span-sum head (C566): "How many weeks in total do I
+# spent on reading 'X' and listening to 'Y'?" — census (all 500):
+# exactly 1 row, unbanked (gpt4_a1b77f9c). The banked spend-total
+# siblings (edced276 Hawaii/NYC days) put ``in total`` AFTER
+# ``spend`` and stay out by construction, as do the education-range
+# head (372c3eed — ``spend in formal education``, no activity
+# gerund) and the counting total (6cb6f249 — no spend frame).
+_PP_ACTIVITY_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+(?:days?|weeks?|months?|years?)\s+"
+    r"in\s+total\s+(?:do|did|have)\s+(?:i|we)\s+"
+    r"(?:spend|spent)\s+on\s+(?:reading|listening)\b", re.I)
+_PP_ACTIVITY_TODAY_RE = re.compile(r"\btoday\b", re.I)
+_PP_ACTIVITY_START_RE = re.compile(
+    r"\b(?:just\s+)?(?:started|began)\b", re.I)
+_PP_ACTIVITY_FINISH_RE = re.compile(r"\b(?:just\s+)?finished\b", re.I)
+
+
+def pp_activity_sum_form(question: str) -> bool:
+    """Activity-span-sum form (C566): ``how many <unit> in total
+    (do|did|have) (i|we) spend|spent on reading|listening …`` —
+    media-consumption totals whose per-entity spans are
+    session-date arithmetic (start-fact session → finish-fact
+    session), with no explicit duration expressions anywhere.
+    when/before siblings stay with route (b).
+    """
+    q = question.strip()
+    if not _PP_ACTIVITY_HEAD_RE.match(q):
+        return False
+    return not re.search(r"\b(?:when|before)\b", q, re.I)
+
+
 def _pp_dur_exprs(line: str):
     """Yield ``(kind, n, unit, raw)`` for every duration expression.
 
@@ -5553,6 +5586,87 @@ def _pp_finish_sum(
     return r, detail
 
 
+def _pp_activity_sum(
+        question: str,
+        sessions: list[tuple[datetime, list[dict]]],
+) -> tuple[str | None, dict]:
+    """Route (g): activity-span sum (C566).
+
+    Per-entity span = session date of the start fact ("I started
+    reading 'X' … today") → session date of the finish fact ("I
+    just finished 'X' today"); the answer is the sum over the
+    question's quoted titles, rendered in the question's own unit.
+    No explicit duration expressions exist in this family — the
+    durations ARE the session gaps (Nightingale s26→s28 = 14d,
+    Sapiens s35→s38 = 28d, The Power s40→s41 = 14d → 8 weeks).
+
+    Binding is quote-wrapped and quote-style agnostic (single AND
+    double quotes both occur in the wild — s26 '…' vs s28 "…");
+    unquoted co-mentions ("The Power of Habit") cannot bind, and
+    they lack start/finish+today anyway (defense in depth).
+    Assistant lines are ignored (user-facts only — C482 trust
+    tiers). Any unresolved entity → honest fall-through: a partial
+    sum would be a fabrication, not an answer.
+    """
+    detail: dict = {"form": "pp_duration", "route": "activity_sum"}
+    titles: list[str] = []
+    seen: set[str] = set()
+    for m in re.finditer(r"'([^']+)'|\"([^\"]+)\"", question):
+        t = (m.group(1) or m.group(2)).strip()
+        if t and t.lower() not in seen:
+            seen.add(t.lower())
+            titles.append(t)
+    if not titles:
+        detail["missing"] = "titles"
+        return None, detail
+    qm = re.match(r"\s*how\s+many\s+(days?|weeks?|months?|years?)",
+                  question, re.I)
+    unit = qm.group(1).lower().rstrip("s") if qm else "day"
+    bind = {t.lower(): re.compile(
+        r"[\"'“”]" + re.escape(t) + r"[\"'“”]", re.I)
+        for t in titles}
+    starts: dict[str, list] = {t.lower(): [] for t in titles}
+    finishes: dict[str, list] = {t.lower(): [] for t in titles}
+    for dt, turns in sessions:
+        for turn in turns:
+            if turn.get("role") != "user":
+                continue
+            line = str(turn.get("content", ""))
+            if not _PP_ACTIVITY_TODAY_RE.search(line):
+                continue
+            is_start = bool(_PP_ACTIVITY_START_RE.search(line))
+            is_finish = bool(_PP_ACTIVITY_FINISH_RE.search(line))
+            if not (is_start or is_finish):
+                continue
+            for t in titles:
+                tl = t.lower()
+                if bind[tl].search(line):
+                    (starts[tl] if is_start
+                     else finishes[tl]).append(dt)
+    total_days = 0
+    spans: dict[str, int] = {}
+    for t in titles:
+        tl = t.lower()
+        ss, ff = starts[tl], finishes[tl]
+        if not ss or not ff:
+            detail["missing"] = (
+                "start: " if not ss else "finish: ") + t
+            return None, detail
+        days = (max(ff) - min(ss)).days
+        if days < 0:
+            detail["missing"] = f"negative span: {t}"
+            return None, detail
+        spans[t] = days
+        total_days += days
+    detail["spans"] = spans
+    detail["total_days"] = total_days
+    r = _pp_render(total_days, [unit])
+    if r is None or r == "0 days":
+        detail["missing"] = "render"
+        return None, detail
+    return r, detail
+
+
 def answer_pp_duration(
         question: str,
         dated_sessions: list[tuple[str, list[dict]]],
@@ -5637,6 +5751,13 @@ def answer_pp_duration(
             return ABSTAIN_ANSWER, detail
         detail["tenure_m"], detail["total_m"] = best_tenure, best_total
         return _pp_ym_sub(best_total, best_tenure), detail
+
+    if pp_activity_sum_form(question):
+        # route (g): activity-span sum (C566) — census-1 head;
+        # session-date arithmetic, not duration expressions. Must
+        # precede the expression-driven routes, which would find
+        # no anchors here and fall through to garbage.
+        return _pp_activity_sum(question, sessions)
 
     if (_PP_FINISH_HEAD_RE.match(question)
             and not re.search(r"\b(?:when|before)\b", question,
