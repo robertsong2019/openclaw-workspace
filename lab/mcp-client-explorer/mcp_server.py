@@ -54,6 +54,16 @@ class MCPServer:
         params = request.get("params", {})
         request_id = request.get("id")
 
+        # params 若存在必须是 object——非 dict params 会让后续 params.get() 抛
+        # AttributeError，被 run() 主循环守卫吞掉 → 请求永无响应（客户端悬挂到
+        # 超时）。静默失联比显式错误危险，必须回 -32602。
+        if not isinstance(params, dict):
+            return {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "error": {"code": -32602, "message": "Invalid params: expected object"},
+            }
+
         # initialized 通知（无响应）
         if method == "notifications/initialized":
             self.initialized = True

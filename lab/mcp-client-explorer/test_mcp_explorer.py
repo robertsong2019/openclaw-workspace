@@ -436,3 +436,35 @@ def test_methods_after_server_death_return_none_not_raise(client):
     assert client.call_tool("calculate", {"operation": "add", "a": 1, "b": 2}) is None
     assert client.read_resource("data://weather/current") is None
     assert client.get_prompt("code_review") is None
+
+
+# ========== 服务端 params 校验（silent-hang 家族回归） ==========
+
+
+def test_non_dict_params_gets_error_response_not_silence(server):
+    """红色回归：params 为非 object（list/str/int）时旧实现 params.get() 抛
+    AttributeError → 被 run() 主循环守卫吞掉 → 请求永无响应，客户端悬挂到超时。
+    静默失联比显式错误危险——必须回 -32602 Invalid params。"""
+    for bad_params in [["not", "a", "dict"], "uri-string", 42]:
+        server.send({"jsonrpc": "2.0", "id": f"p-{id(bad_params)}",
+                     "method": "resources/read", "params": bad_params})
+        resp = server.recv(timeout=1.5)
+        assert resp is not None, f"silent hang for params={bad_params!r}"
+        assert resp["error"]["code"] == -32602
+
+
+def test_missing_params_on_param_methods_responds(server):
+    """params 缺失 → {} → 走正常错误路径（not found），不得静默"""
+    server.send({"jsonrpc": "2.0", "id": "np-1", "method": "resources/read"})
+    resp = server.recv(timeout=1.5)
+    assert resp is not None
+    assert resp["error"]["code"] == -32602
+
+
+def test_null_arguments_still_responds(server):
+    """arguments: null → 工具内部 KeyError/TypeError 被捕获 → -32603 错误回包（不静默）"""
+    server.send({"jsonrpc": "2.0", "id": "na-1", "method": "tools/call",
+                 "params": {"name": "calculate", "arguments": None}})
+    resp = server.recv(timeout=1.5)
+    assert resp is not None
+    assert "error" in resp
