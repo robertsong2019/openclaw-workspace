@@ -56,6 +56,12 @@ export function createMiddleware(
     },
 
     checkAccess(agentId: string, skillId: string, requiredLevel: TrustLevel): boolean {
+      const levels: TrustLevel[] = ['untrusted', 'neutral', 'trusted'];
+      if (!levels.includes(requiredLevel)) {
+        // Fail-fast: invalid/typo'd level (or 'unknown', meaningless as a
+        // minimum bar) must never silently allow everything.
+        throw new TypeError(`invalid requiredLevel: ${String(requiredLevel)}`);
+      }
       // Per-skill trust takes priority
       const skillLevel = trustEngine.getSkillTrustLevel(agentId, skillId);
       if (skillLevel !== 'unknown') {

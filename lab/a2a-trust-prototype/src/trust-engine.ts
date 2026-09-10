@@ -96,6 +96,11 @@ export class TrustEngine {
   /** Check if delegation is allowed at a given level */
   canDelegate(agentId: string, requiredLevel: TrustLevel): boolean {
     const levels: TrustLevel[] = ['unknown', 'untrusted', 'neutral', 'trusted'];
+    if (!levels.includes(requiredLevel)) {
+      // Fail-fast: an invalid level must never silently allow everything
+      // (invalid indexOf would compare >= -1 → always true).
+      throw new TypeError(`invalid requiredLevel: ${String(requiredLevel)}`);
+    }
     const actual = this.getTrustLevel(agentId);
     return levels.indexOf(actual) >= levels.indexOf(requiredLevel);
   }

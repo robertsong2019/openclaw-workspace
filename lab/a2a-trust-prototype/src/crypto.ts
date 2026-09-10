@@ -19,6 +19,10 @@ export async function generateKeyPair(): Promise<KeyPair> {
 
 /** JCS-lite canonical JSON: recursive key sort, no whitespace */
 function canonicalize(obj: unknown): string {
+  if (obj === undefined) {
+    // JSON.stringify([undefined]) → '[null]': arrays keep a null slot
+    return 'null';
+  }
   if (obj === null || typeof obj !== 'object') {
     return JSON.stringify(obj);
   }
@@ -26,6 +30,9 @@ function canonicalize(obj: unknown): string {
     return '[' + obj.map(canonicalize).join(',') + "]";
   }
   const sorted = Object.keys(obj as Record<string, unknown>)
+    // JSON.stringify drops undefined-valued properties: signatures must
+    // survive a JSON wire round-trip, so canonical form matches that.
+    .filter((k) => (obj as Record<string, unknown>)[k] !== undefined)
     .sort()
     .map((k) => JSON.stringify(k) + ':' + canonicalize((obj as Record<string, unknown>)[k]));
   return '{' + sorted.join(',') + '}';
