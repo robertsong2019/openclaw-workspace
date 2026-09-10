@@ -77,6 +77,10 @@ __all__ = [
     "temporal_arith_judge",
     "pp_duration_form",
     "pp_pure_tenure_form",
+    "pp_have_had_form",
+    "pp_finish_sum_form",
+    "_pp_finish_num",
+    "_pp_finish_render",
     "answer_pp_duration",
     "pp_duration_judge",
     "order_form",
@@ -1103,7 +1107,9 @@ class LongMemEvalAdapter:
         # tenure line for the company anywhere) resolves here.
         if (self.pp_duration and self._session_dates
                 and (pp_duration_form(question)
-                     or pp_pure_tenure_form(question))):
+                     or pp_pure_tenure_form(question)
+                     or pp_have_had_form(question)
+                     or pp_finish_sum_form(question))):
             dated = [(self._session_dates.get(s["session_id"], ""),
                       s["turns"]) for s in self._counting_sessions()]
             p_ans, p_detail = answer_pp_duration(question, dated)
@@ -5107,6 +5113,30 @@ _PP_TENURE_RE = re.compile(
 
 _PP_HEAD_RE = re.compile(r"^\s*how long\s+(?:had|have|did)\b", re.I)
 
+# Have-had possession-tenure head (C565): "How long have I had my
+# cat, Luna?" — possessive tenure, not state tenure. Census (all
+# 500): exactly 1 row, unbanked; route (c)'s clause strip, all-
+# keywords wall and now-suffixed tenure machinery answer it once
+# the gate claims the head — no new route needed.
+_PP_HAVE_HAD_RE = re.compile(
+    r"^\s*how\s+long\s+(?:have|had)\s+(?:i|we)\s+had\b", re.I)
+
+# Finish-duration-sum head (C565): "How long did I take to finish
+# X and Y combined?" — census (all 500): exactly 1 row, unbanked.
+# Anchors are per-entity "took me N units to finish" user lines
+# (evidence: "three weeks" + "two and a half weeks" = 5.5 weeks).
+_PP_FINISH_HEAD_RE = re.compile(
+    r"^\s*how\s+long\s+did\s+(?:i|we)\s+take\s+to\s+finish\b",
+    re.I)
+_PP_FINISH_ANCHOR_RE = re.compile(
+    r"\btook\s+(?:me\s+)?(\w+(?:\s+and\s+a\s+half)?)\s+"
+    r"(days?|weeks?|months?)\s+to\s+finish\b", re.I)
+_PP_FINISH_MECH = frozenset({"take", "finish", "combined", "total",
+                            # glue words are not entity bindings
+                            # ("and I loved it" must not admit a
+                            # foreign anchor — C565 miniature bug)
+                            "and", "or"})
+
 # Units-progressive head (C563): "How many weeks have I been taking
 # sculpting classes when …" — present-perfect PROGRESSIVE carries a
 # duration-up-to-event semantics identical to the ``how long``
@@ -5163,6 +5193,31 @@ def pp_pure_tenure_form(question: str) -> bool:
     if re.search(r"\b(?:when|before)\b", q, re.I):
         return False
     return bool(re.search(r"\bbeen\b", q, re.I))
+
+
+def pp_have_had_form(question: str) -> bool:
+    """Possessive tenure form (C565): ``how long (have|had) (i|we)
+    had …`` — the tenure is stated by a have-had line ("I've had
+    my cat, Luna, for about 9 months now"), answered by route (c)'s
+    existing wall+tenure scan; only the gate entry was missing.
+    ``did``-forms and when/before siblings stay out.
+    """
+    q = question.strip()
+    if not _PP_HAVE_HAD_RE.match(q):
+        return False
+    return not re.search(r"\b(?:when|before)\b", q, re.I)
+
+
+def pp_finish_sum_form(question: str) -> bool:
+    """Finish-duration-sum form (C565): ``how long did (i|we) take
+    to finish …`` — combined reading/listening durations. The
+    impersonal ``it`` sibling ("how long did it take to finish…")
+    and when/before forms stay out (census-verified heads).
+    """
+    q = question.strip()
+    if not _PP_FINISH_HEAD_RE.match(q):
+        return False
+    return not re.search(r"\b(?:when|before)\b", q, re.I)
 
 
 def _pp_dur_exprs(line: str):
@@ -5421,6 +5476,83 @@ def _pp_promotion_subtract(
              "echoes": echoes})
 
 
+def _pp_finish_num(tok: str) -> float | None:
+    """``three`` / ``two and a half`` / ``2 and a half`` → number."""
+    t = tok.lower().strip()
+    half = t.endswith("half")
+    core = re.sub(r"\s+and\s+a\s+half$", "", t).strip()
+    n = _pp_num(core) if not core.isdigit() else int(core)
+    if n is None and core in ("a", "an", "one"):
+        n = 1
+    if n is None:
+        return None
+    return float(n) + (0.5 if half else 0.0)
+
+
+def _pp_finish_render(days: float, units: list[str]) -> str | None:
+    """Render a summed day count in the anchors' unit, halves kept
+    (``5.5 weeks`` — _pp_render rounds to integers, losing the
+    half-week granularity the oracle stores)."""
+    if "week" in units:
+        val, unit = days / 7.0, "week"
+    elif "month" in units:
+        val, unit = days / 30.44, "month"
+    else:
+        val, unit = days, "day"
+    val = round(val, 2)
+    if val <= 0:
+        return None
+    return f"{val:g} {unit}" + ("s" if val != 1 else "")
+
+
+def _pp_finish_sum(
+        question: str,
+        sessions: list[tuple[datetime, list[dict]]],
+) -> tuple[str | None, dict]:
+    """Route (f): finish-duration sum (C565).
+
+    Sum of per-entity "took me N units to finish" user lines,
+    each line bound to a question title word (the mechanical
+    tokens take/finish/combined/total excluded from binding);
+    both-facts guard — a single anchor is not a ``combined``
+    answer, so <2 anchors falls through honestly.
+    """
+    detail: dict = {"form": "pp_duration", "route": "finish_sum"}
+    qtoks = [w for w in re.findall(r"[a-z]+", question.lower())
+             if w not in _PP_STOP and w not in _PP_FINISH_MECH
+             and len(w) >= 3]
+    total = 0.0
+    units: list[str] = []
+    found = 0
+    for _dt, turns in sessions:
+        for turn in turns:
+            if turn.get("role") != "user":
+                continue
+            line = str(turn.get("content", ""))
+            m = _PP_FINISH_ANCHOR_RE.search(line)
+            if not m:
+                continue
+            low = line.lower()
+            if not any(w in low for w in qtoks):
+                continue
+            n = _pp_finish_num(m.group(1))
+            if n is None:
+                continue
+            u = m.group(2).lower().rstrip("s")
+            total += n * _PP_UNIT_DAYS[u]
+            units.append(u)
+            found += 1
+    detail["anchors"] = found
+    if found < 2 or not units:
+        detail["missing"] = "finish anchors"
+        return None, detail
+    r = _pp_finish_render(total, units)
+    if r is None:
+        detail["missing"] = "render"
+        return None, detail
+    return r, detail
+
+
 def answer_pp_duration(
         question: str,
         dated_sessions: list[tuple[str, list[dict]]],
@@ -5505,6 +5637,14 @@ def answer_pp_duration(
             return ABSTAIN_ANSWER, detail
         detail["tenure_m"], detail["total_m"] = best_tenure, best_total
         return _pp_ym_sub(best_total, best_tenure), detail
+
+    if (_PP_FINISH_HEAD_RE.match(question)
+            and not re.search(r"\b(?:when|before)\b", question,
+                              re.I)):
+        # route (f): finish-duration sum (C565) — must precede the
+        # pure-tenure branch, whose all-keywords wall can never be
+        # satisfied by a multi-title finish question anyway.
+        return _pp_finish_sum(question, sessions)
 
     if not re.search(r"\b(?:when|before)\b", question, re.I):
         # route (c): pure tenure — no event anchor to subtract; the
