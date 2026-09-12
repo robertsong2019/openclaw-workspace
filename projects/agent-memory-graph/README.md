@@ -2,7 +2,7 @@
 
 > 基于 SQLite 的轻量知识图谱，模拟 AI Agent 的长期记忆管理
 
-[![Tests](https://img.shields.io/badge/tests-10413-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-10491-brightgreen)]()
 [![Python](https://img.shields.io/badge/python-3.10+-blue)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-success)]()
@@ -66,7 +66,7 @@
 - **拓扑快捷统计** — hub_nodes/peripheral_nodes/mean_degree 一键获取关键结构指标 (Cycle 339)
 - **图分类套件** — 8 种分类方法 + 基准评估 + 最大置信度元分类器 + 噪声鲁棒性测试 (Cycles 326-341)
 - **Temporal QA 家族 (5 路由)** — LongMemEval temporal-reasoning 零 LLM 解法：temporal_arith 日历算术 + pp_duration/pure_tenure 状态时长 + order 排序 + pairwise which-first，form gate + 最早-FRESH 锚定 + 负存在弃权，temporal-133 0.323→0.474 全程 zero-flip (Cycles 457-489)
-- **确定性语义判分级联** — judge_semantic 规范化阶梯（大小写/日期折叠/时间单位/守卫包含）零 LLM 可判面 + judge_cascade 仅 NEEDS_JUDGE 才降级 LLM；readonly 确定性召回让评估成为 dataset 纯函数，官方 LME_s cascade-500 破半后持续进化：0.494（Cycles 520-531）→ **0.594**（Cycles 548-563，答案面家族 + judge 侧 rescue faces + 计数/时序/时长值解析族 + 锚点选择三连（角色优先/事件跨度/多日期）+ 两跳日期合成、定义式指代 bearer、度量单位求和、类别求和与时长残留面 + judge 溯源指纹，见 [TUTORIAL-ANSWER-FACES.md](TUTORIAL-ANSWER-FACES.md)）
+- **确定性语义判分级联** — judge_semantic 规范化阶梯（大小写/日期折叠/时间单位/守卫包含）零 LLM 可判面 + judge_cascade 仅 NEEDS_JUDGE 才降级 LLM；readonly 确定性召回让评估成为 dataset 纯函数，官方 LME_s cascade-500 破半后持续进化：0.494（Cycles 520-531）→ **0.610**（Cycles 548-569，答案面家族 + judge 侧 rescue faces + 计数/时序/时长值解析族 + 锚点选择三连（角色优先/事件跨度/多日期）+ 两跳日期合成、定义式指代 bearer、度量/类别/时长求和面 + 晋职扣减、持有期限、活动跨度、页码进度、成书页数与教育年限链 + judge 溯源指纹，见 [TUTORIAL-ANSWER-FACES.md](TUTORIAL-ANSWER-FACES.md)）
 - **零依赖** — 仅用 Python 标准库（sqlite3 + json + math），sqlite-vec 为可选依赖
 - **传播激活家族 (5 API)** — ACT-R 认知模型: spreading_activation (基础) → activation_trace (可解释) → competitive_spreading (多种子竞争) → temporal_spreading (时间衰减) → activation_diff (对比分析) (Cycles 366-383)
 - **流式熵追踪** — FINGEREntropy O(Δ) 增量 von Neumann 熵 + StreamingGraph 实时异常检测 (Cycle 361)
@@ -4461,6 +4461,34 @@ counting_form 一直只认 amount/cost/number；"What is the total **distance/we
 #### C563：pp_duration residual faces — 同句状态绑定 + 进行体问头与会话跨度 (79d0cf2)
 
 两个病根一个家族。**同句状态绑定**：route (b) 相位 2 重叠平局的状态候选，改选**所在句带状态关键词**的 dur 表达（`_pp_expr_sentence`，ss 列进 scored tuple，ss 再平局保留 first-maximal）——gpt4_cd90e484 从 "3 weeks" 翻到 "2 weeks"：跨句 tenure 句 "for about a month now" 因带状态词胜过同句的 "Speaking of my new binoculars, I got them exactly three weeks ago"。**进行体问头**："How many weeks have I been X-ing when Y" 的 blanket 扩展问头在 census 里吞 25 行（含 banked counting/temporal_arith 行 "did it take"、"had passed since"），收窄到进行体 **-ing 判别式**恰剩目标行，被动式兄弟 gpt4_4cd9eba1 按构造留在 counting（banked CORRECT，零误伤）。新 route (d) `_pp_session_span`：同会话 "today" 锚（无 ago/now 表达）解析为**会话对距离**，按问题自身单位渲染（years 排除 → 诚实落穿）；`pp_duration_judge` 对裸数字 GT（"3"）只在预测带问题自身单位（"3 weeks"，绝不是 "3 months"）时认领。banked 295→297（0.594），2 救 0 杀（gpt4_cd90e484 route-b re-pick 23d→14d + 6e984301 counting "6 weeks" 幻觉 → 会话跨度 03-04 减 02-11 = 21 天 = "3 weeks" = oracle "3"），live-500 tripwire PASS（恰 2 pred change），+14 tests test_pp_duration_faces.py（10399→10413）。
+
+## Cycles 564-569: 0.594→0.610 — 晋职扣减、持有期限、页码进度与教育年限链
+
+> 官方口径轨迹：0.594（C563）→ **0.596（C564）** → **0.600（C565）** → 0.602（C566）→ **0.606（C567）** → **0.608（C568）** → **0.610（C569）**，banked 297→305，套件 10413→10491。本段主轴：值解析族的期限/跨度/求和扩展——pp_duration 三条新 route（晋职扣减 / 完成时长求和 / 活动跨度求和）+ 一个门入口（have-had 持有期限），counting 三个新 gate entry（页码进度双面、成书页数求和、教育年限链）。六个 cycle 全部 census-first、零 kills。教程同步增补：[TUTORIAL-ANSWER-FACES.md](TUTORIAL-ANSWER-FACES.md) §5.15-§5.20。
+
+#### C564：promotion-subtract route (e) — 晋职扣减，弃权注记被 census 翻案 (9582c53)
+
+"How long have I been working in my current role?"（92a0aa75）全库无 tenure line → route (c) miss → answer gate 垃圾 FAQ echo。队列原注记 "negative-existence abstention"，census 翻案为 **rescue**：事实齐全——公司经验总 span（"3 years and 9 months experience"）减 promotion-after（"for 2 years and 4 months"）= "1 year and 5 months"，逐字命中 oracle。`_pp_promotion_subtract` 仅挂 route (c) miss 分支，四重 guard（严格头 / 双事实 / total>promo / role echo），事实缺失诚实下落（missing 原因记录，弃权由 gate 自有）。census：严格头全 500 恰 1 行，两个证据 pattern 全库唯一 → 零 kill 构造性保证；route (c) 的 9 行纯任期面不可扰动。方法论注：**队列注记 ≠ 最终判决——弃权只在事实真缺失时成立，census 可以翻案**。banked 297→298（0.596），1 救 0 杀，+10 tests test_promotion_subtract_face.py（10413→10423）。
+
+#### C565：have-had 门入口 + finish-duration-sum route (f) — 0.600 里程碑 (43fb9b9)
+
+两个 pp 邻居面一个周期全收，banked 298→300（0.600）。**Face A（have-had 持有期限，e61a7584）**："How long have I had my cat, Luna?" —— route (c) 的从句剥离 + 全关键词墙 + now 后缀任期机制**本来就能答对**（s17 "I've had Luna..." 因无 "cat" 死于 [cat, luna] 全关键词墙；s32 "I've had my cat, Luna, for about 9 months now" 通过）——缺的只是 gate 入口认领，新增 `pp_have_had_form`，route 零改动。**Face B（finish-duration 求和，b9cfe692）**："How long did I take to finish 'The Seven Husbands of Evelyn Hugo' and 'The Nightingale' combined?" = three weeks + two and a half weeks = "5.5 weeks"。新 route (f) `_pp_finish_sum`：逐实体 "took me N units to finish" 锚点 + 题干书名词绑定 + both-facts guard（≥2 锚点）+ 半周粒度渲染（四舍五入不再丢 0.5）。微型测试抓到真 bug："and" 不在停用词表时，无书名的 "random novel... and I loved it" 行混过绑定 → 求和错，`_PP_FINISH_MECH` 补 and/or 后升格回归 pin。教训：**直接调用 ≠ 生产路径**——route 级能答 ≠ adapter 级能答，entry-only bug 要求微型测试双层 pin。+14 tests（10423→10437）。
+
+#### C566：activity-span sum route (g) — 无显式时长时的会话日期差 (31f5f58)
+
+"How many weeks in total do I spent on reading X and listening to Y and Z?"（gpt4_a1b77f9c）**没有任何显式时长**——C565 队列注记 "route (f) 现成，只需放宽 both-facts guard" 被证据定位证伪：haystack 里没有 "took me N weeks" 锚点，oracle 的 2/4/2 weeks 是**会话日期差**（起点 "I started reading 'X' ... today" ↔ 终点 "I just finished reading 'X' today"）。新 route (g) `_pp_activity_sum` + gate entry `pp_activity_sum_form`：引号标题绑定每对起点/终点事实，跨会话文档序配对，按题干单位求和渲染（8 weeks = number-subset face 判 CORRECT）。banked 300→301（0.602），1 救 0 杀，+11 tests（10437→10448）。
+
+#### C567：pages-progress 双面 — 同一 "on page N" 锚族的两问 (04ed73d)
+
+counting gate 新 form "pages"，两个 head 一族：(A) **read-so-far latest-wins**（184da446 "How many pages of 'A Short History…' have I read so far?"）——跨会话文档序取**末位** on-page 锚（s2 "on page 200" → s41 "on page 220" = 220）；(B) **pages-left**（2311e44b "How many pages do I have left to read in 'The Nightingale'?"）= 总页数事实（range+pace 双 guard 拒 pace 行为 total）− 最新 on-page 锚（440 − 250 = 190）。零 kill 由构造保证：wired-head census 全 500 恰 3 行进 lane；abs 兄弟（'Sapiens'）双事实不齐 honest fall-through，pred 字节不变；诱饵（assistant 估算、$250 行车记录仪）全灭于 user-role 墙。工程坑：handler 单值返回约定被 tuple 返回打破（miniatures 在 replay 前抓住）；tripwire 期望值手算滑差 → **expect-total 烧进 harness 程序化推导**（chain banked + unbanked drift 行）。banked 301→303（0.606），2 救 0 杀，+15 tests（10448→10463）。
+
+#### C568：page-count sum lane — month-blind 的成书页数求和 (d7602f9)
+
+"What was the page count of the two novels I finished in January and March?"（37f165cf，GT 856 = 440 + 416）：全 haystack 零 January 提及、March 全是诱饵、session 日期全在 May 2023——**月份不可恢复**，机制设计成 month-blind：只承诺 "just finished" 语义，不承诺月份。counting gate entry `page_count_sum` + handler `_cnt_page_count_sum`：user 行 just-finished 标记后的**句内首个**页数短语（Power 的 341 pages 因 416 同句先行被天然排除），distinct 去重求和，基数由题面 count word（"two"）钉死，distinct 数 ≠ 2 一律 fall-through。**本周期最佳教训（正则回溯陷阱）**：前缀 `[\w'"]+`（`\w` 吃数字）+ 懒惰通配符 + 回溯，把 "416-page" 的捕获啃成 '6'（引擎把 416 回溯成 41 让捕获组偷走尾数字）——mega-alternation 锚点正则废弃，改朴素位置扫描；陷阱固化为永久回归 pin（单事实值必须恰为 416）。次坑：sh printf 多行续行断裂使 tsv append 静默失效 → 多字段 tsv append 改用 Python（断言 + 复读验证）。banked 303→304（0.608），1 救 0 杀（垃圾引文 → '856'），+13 tests（10463→10476）。
+
+#### C569：education-span 链 — 完成年份链求和与 resolved negative existence (da12c08)
+
+"How many years in total did I spend in formal education from high school to the completion of my X's degree?"（gpt4_372c3eed GT '10 years' + _abs 兄弟，2 行一族）。counting 第 14 个 form `education_span`，head 带 'from high school' 锚（C518 旧 pin 碰撞的修法是收紧自己的 head，不动旧 pin）。证据链 = user 行完成年份链：HS 'Arcadia High School from 2010 to 2014'（4）→ PCC AA May 2016（gap 2）→ UCLA BS 2020 'took me four years'（**显式时长优先**于年份差）= 10 years。guards：user-role 墙、(degree, year) 去重（GPA 重提）、pre-HS 年份跳过、premise conflict → fall-through。**abs 兄弟行是本周期的判分课**：Master's 仅存在为 "I'm considering pursuing a Master's degree"（无年份 aspiration）——链显式 + target 缺失 = **resolved negative existence → 显式 ABSTAIN_ANSWER**（"I don't know"），而非 fall-through 让 answer gate 产垃圾 pred；"handler 返 None" 不等于 "行 abstain"。banked 304→305（0.610），1 救 0 杀，+15 tests test_education_span_face.py（10476→10491）。
 
 ## 许可
 

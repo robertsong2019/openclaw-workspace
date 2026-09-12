@@ -1,4 +1,4 @@
-# TUTORIAL: Answer Faces — 问题结构驱动的答案选择（Cycles 529-548）
+# TUTORIAL: Answer Faces — 问题结构驱动的答案选择（Cycles 529-569）
 
 > 本文解释 amg 评测管线里最反直觉的一个设计：**答案选哪个句子，不该由"分数阈值"决定，而该由"问题在问什么"决定**。
 > 覆盖 Cycle 529-554 的机制演进（banked 0.494 → 0.566），所有例子都是 LongMemEval s_cleaned full-500 里的真实题目。
@@ -165,9 +165,9 @@ judge cascade（exact → semantic → LLM）里有一个 NEEDS_JUDGE 区间：e
 
 ---
 
-## 5. 值解析与锚点族 face：数字、日期、时长、锚点选择（C549-C563）
+## 5. 值解析与锚点族 face：数字、日期、时长、锚点选择（C549-C569）
 
-§3-§4 的 face 都长在"**选哪句话**"上；C549-C554 是第三波：答案本身是个数值/日期/时长，face 长在"**值解析**"上——不是从候选里挑句子，而是从通过 gate 的内容里提炼出**正确的值**。C555-C557 是第四波：值对了还不够，**锚点选择**本身也是信号源——锚是谁说的（角色）、跨度怎么定义（口径）、行内多个日期选哪个（临近度/连续对）。外加一次方法论升级（C549：census-negative 的第三种用法）。C561-C563 是值解析族的残留地带清扫：counting 的非金钱度量兄弟（距离/重量/时长）、item_total 的空清单分支（类别求和）、时长族最后两个病根（同句状态绑定 + 进行体问头/会话跨度）。
+§3-§4 的 face 都长在"**选哪句话**"上；C549-C554 是第三波：答案本身是个数值/日期/时长，face 长在"**值解析**"上——不是从候选里挑句子，而是从通过 gate 的内容里提炼出**正确的值**。C555-C557 是第四波：值对了还不够，**锚点选择**本身也是信号源——锚是谁说的（角色）、跨度怎么定义（口径）、行内多个日期选哪个（临近度/连续对）。外加一次方法论升级（C549：census-negative 的第三种用法）。C561-C563 是值解析族的残留地带清扫：counting 的非金钱度量兄弟（距离/重量/时长）、item_total 的空清单分支（类别求和）、时长族最后两个病根（同句状态绑定 + 进行体问头/会话跨度）。C564-C569 是第五波：**期限/跨度/求和面**——pp_duration 三条新 route（晋职扣减、完成时长求和、活动跨度求和）与一个门入口（have-had），counting 三个新 gate entry（页码进度双面、成书页数求和、教育年限链）；附赠两次"队列注记被证据翻案"的方法论实录（C564 弃权→rescue、C565 现成→错面）。
 
 ### 5.1 C549 松弛空间穷举 — census-negative 变成局部最优证书
 
@@ -259,6 +259,42 @@ counting_form 认得 amount/cost/number，但 "What is the total **distance/weig
 
 ---
 
+### 5.15 C564 promotion-subtract — 弃权注记被 census 翻案
+
+"How long have I been working in my current role?" 全库无 tenure line，队列按 "negative-existence abstention" 规划。census 翻案：**事实齐全**——公司经验总 span（"3 years and 9 months experience"）减 promotion-after（"for 2 years and 4 months"）= "1 year and 5 months"，逐字命中 oracle。`_pp_promotion_subtract` 只挂 route (c) miss 分支，四重 guard；严格头全 500 恰 1 行、两个证据 pattern 全库唯一，零 kill 由构造保证。
+
+> 方法论：**队列注记 ≠ 最终判决**。弃权只在事实真缺失时成立；census 的职责就是把"看起来缺失"和"真的缺失"分开。同族反例在 C566："route (f) 现成只需放宽 guard"的注记同样被证据定位证伪。两个方向的翻案都发生了——规划时的人是猜，census 是验。
+
+### 5.16 C565 have-had 门入口 — 机制本就胜任，缺的只是认领
+
+"How long have I had my cat, Luna?" —— route (c) 的从句剥离 + 全关键词墙 + now 后缀任期机制**本来就能答对**（"I've had my cat, Luna, for about 9 months now" 通过全关键词墙），缺的只是 gate 入口认领。新增 `pp_have_had_form`，route 零改动。同周期 Face B："How long did I take to finish A and B combined?" 新 route (f) `_pp_finish_sum`——逐实体 "took me N units to finish" 锚点 + 题干书名词绑定 + ≥2 锚点 guard + 半周粒度渲染。微型测试抓到真 bug："and" 不在停用词表时无书名行混过绑定 → 求和错。
+
+> 两条通用课：**(1) 先查机制再写机制**——handwriting 前先验证现有 route 是否已能答对（直接调用测试），bug 可能是 entry-only（route 级能答 ≠ adapter 级能答，微型测试要双层 pin）；**(2) 绑定词表要含连接词**——题干里 "A and B" 的 and 既是求和信号也是绑定噪声源。
+
+### 5.17 C566 activity-span sum — 无显式时长时，会话日期差就是值
+
+"How many weeks in total do I spent on reading X and listening to Y and Z?" **没有任何显式时长**。oracle 的 2/4/2 weeks 是**会话日期差**：起点事实（"I started reading 'X' ... today"）与终点事实（"I just finished reading 'X' today"）各锚一次，`_pp_activity_sum` 跨会话文档序配对后按题干单位求和。
+
+> 概念：值不一定写在文本里，可以是**两个时间戳的差**。识别信号是"总投入 + 无任何时长短语"——这时找 start/finish 事实对，而不是硬找 dur 表达。引号标题是天然的绑定键。
+
+### 5.18 C567 pages-progress 双面 — 同一锚族的两问
+
+counting gate 新 form "pages"：(A) **read-so-far latest-wins**——"How many pages have I read so far?" 取跨会话文档序**末位** on-page 锚（200 → 220 = 220）；(B) **pages-left**——total-pages 事实（range+pace 双 guard 拒 pace 行）减最新 on-page 锚（440 − 250 = 190）。零 kill 由构造保证：wired-head census 全 500 恰 3 行进 lane，abs 兄弟双事实不齐 honest fall-through。
+
+> 概念：**同族双面 = 同一锚族的互补读法**——latest-wins 问"读到哪"，total-minus-current 问"还剩多少"。两问共享锚点选择规则（文档序末位、user-role 墙），只在聚合步分叉。另外两件工程课：handler 返回值约定被 tuple 打破（miniatures 在 replay 前抓住）；tripwire 期望值**程序化推导**而非手算（滑差 → 烧进 harness）。
+
+### 5.19 C568 page-count sum — month-blind 设计与正则回溯陷阱
+
+"What was the page count of the two novels I finished in January and March?"：全 haystack 零 January 提及、session 日期全在 May——**月份不可恢复**。机制 month-blind：只承诺 "just finished" 语义，不承诺月份。取 user 行 just-finished 标记后**句内首个**页数短语（同句先行的兄弟数字被天然排除），distinct 去重求和，基数由题面 count word（"two"）钉死，对不上就 fall-through。
+
+> ⚠️ 本周期最佳教训（正则回溯陷阱）：前缀 `[\w'"]+`（`\w` 吃数字）+ 懒惰通配符 + 回溯，把 "416-page" 的捕获啃成 '6'——引擎把 416 回溯成 41，让捕获组偷走尾数字。mega-alternation 锚点正则废弃，改**朴素位置扫描**（标记后首个页数短语）；陷阱固化为永久回归 pin（单事实值必须恰为 416）。**当捕获结果比肉眼预期短时，先怀疑回溯，再怀疑词形。**
+
+### 5.20 C569 education-span 链 — 完成年份链与 resolved negative existence
+
+"How many years in total did I spend in formal education from high school to the completion of my X's degree?"（GT '10 years' + _abs 兄弟）。证据链 = user 行**完成年份链**：HS 2010-2014（4）→ AA May 2016（gap 2）→ BS 2020 'took me four years'（**显式时长优先**于年份差）= 10 years。guards：user-role 墙、(degree, year) 去重、pre-HS 跳过、premise conflict。head 带 'from high school' 锚——与旧 pin 碰撞时的修法是**收紧自己的 head**，不动旧 pin。
+
+> 判分课：**resolved negative existence → 显式弃答**。abs 兄弟行里 Master's 仅存在为 "I'm considering pursuing..."（无年份 aspiration）——链显式 + target 缺失 = 可证明的"不存在"，应显式 ABSTAIN_ANSWER（"I don't know"），而非 handler 返 None 让 answer gate 产垃圾 pred。"handler 返 None" ≠ "行 abstain"——两种 silence 语义不同。
+
 ## 6. 反面教材：枚举清单没有结构键（C536，RECORD-NEGATIVE）
 
 序数清单（"5. Absinthe"）看起来也能做个 face。实现后发现 **census 全负**：
@@ -335,12 +371,19 @@ answer-face 家族的开发纪律（每个 face 都走了这套流程）：
 | 问题问总距离/总重量/总时长 | measure_sum（counting） | user 角色单位求和；连字符与后置单位词形；total 标记两档选择；takes 锚定时长 | C561 |
 | 问题问花在某类东西上的总额 | category_sum（item_total 空清单分支） | 类别 ≠ 枚举清单；user 挥霍锚每项一价；next-sentence 价格面指代 | C562 |
 | 时长候选平局 / 进行体问头 / 裸数字 GT | pp_duration residual（同句状态绑定 + session_span） | 所在句带状态关键词优先；-ing 判别式收窄问头；同会话 today 锚 = 会话对距离；裸数字须带问题单位 | C563 |
+| 纯任期问句、无任期行，但经验总时长+晋职时长都在 | promotion-subtract（pp route e） | 公司经验总 span − promotion-after = 当前角色任期；事实缺失诚实下落；弃权注记可被 census 翻案为 rescue | C564 |
+| 问题问 "How long have I had X" | have-had 门入口（pp） | route (c) 任期机制本就胜任，缺的只是 gate 认领——先查机制再写机制；entry-only bug 双层 pin | C565 |
+| "How long to finish A and B combined" | finish-duration-sum（pp route f） | 逐实体 took-N-to-finish 锚 + 书名绑定（停用词含 and/or）+ ≥2 facts guard；半周粒度渲染 | C565 |
+| 问总投入但无任何显式时长 | activity-span sum（pp route g） | start/finish 事实对的**会话日期差**即值；引号标题绑定；按题干单位求和 | C566 |
+| "pages read so far" / "pages left" | pages-progress 双面（counting） | latest on-page 锚文档序末位；left = total（range+pace guard）− latest；双面共享锚族只分叉聚合步 | C567 |
+| "page count of the two novels I finished" | page-count sum（counting） | month-blind：just-finished 句内首个页数短语；distinct 求和、基数由题面 count word 钉死；🚫 懒惰通配符+回溯正则会啃捕获 | C568 |
+| "years in formal education from high school" | education-span 链（counting） | (degree, year) 完成年份链求和，显式时长 > 年份差；target 缺失 = resolved negative existence → 显式弃答 | C569 |
 | kh-floor 想救 kh=0 GT | 🚫 census-negative，不接线 | 1 救 vs 14 杀，absence pin 钉死 | C543 |
 | kh-elite 准入救窗口死区 | 🚫 census-negative，不接线 | impostor 杀率 23.3% vs 4 救，admission-only 全族否决 | C546 |
 | 松弛 run 门想多救几行 | 🚫 census-negative = 局部最优证书 | 全部 kill 是 run-TIE impostor；absence pin 钉死 C548 配置 | C549 |
 | 嵌入 side-channel 重排 | 🚫 census-negative，默认 False | 离线增益被 gate+judge 吸收，pin 死默认值 | C545 |
 
-**八条带走的原则**：
+**九条带走的原则**：
 1. 答案选择读**问题结构**，不调阈值
 2. face 重排不越权翻地板；地板排除自有理由
 3. census-first：先数人口，先离线模拟，再接线；证伪的方向写进台账并用 absence pin 钉住
@@ -349,7 +392,8 @@ answer-face 家族的开发纪律（每个 face 都走了这套流程）：
 6. 离线中间指标的提升不等于端到端收益；下游通路可能吸收全部扰动（C545 net-zero）
 7. 证伪的尸体是矿：关闭方向后别扔 census 数据——杀面的分布里可能藏着让机制起死回生的门（C546 杀面全 assistant → C548 role=user 门）
 8. 值解析题（多少/多久/哪天）的 face 不选句子，选**值**——限定词收窄解析人口（C552）、单位即证据（C553）、模糊量诚实弃权（C550）；且"现配置是局部最优"也能被 census 证明（C549）
+9. 队列注记 ≠ 判决：弃权规划可被 census 翻案为 rescue（C564），"现成只需放宽"可被证据定位证伪为错面（C566）——规划是猜，census 是验
 
 ---
 
-*生成：documentation-morning cron，2026-09-02；Cycles 540-542 增补：2026-09-03；Cycles 543-545 增补：2026-09-04；Cycles 546-548 增补：2026-09-05；Cycles 549-554 增补：2026-09-07；Cycles 555-557 增补：2026-09-08；Cycles 558-559 增补：2026-09-09；Cycles 561-563 增补：2026-09-10。数据口径：LongMemEval s_cleaned full-500，PYTHONHASHSEED=7，deterministic cascade banked。轨迹明细见 README Cycles 532-563 段。*
+*生成：documentation-morning cron，2026-09-02；Cycles 540-542 增补：2026-09-03；Cycles 543-545 增补：2026-09-04；Cycles 546-548 增补：2026-09-05；Cycles 549-554 增补：2026-09-07；Cycles 555-557 增补：2026-09-08；Cycles 558-559 增补：2026-09-09；Cycles 561-563 增补：2026-09-10；Cycles 564-569 增补：2026-09-13。数据口径：LongMemEval s_cleaned full-500，PYTHONHASHSEED=7，deterministic cascade banked。轨迹明细见 README Cycles 532-569 段。*
