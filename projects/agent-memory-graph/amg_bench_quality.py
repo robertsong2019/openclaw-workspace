@@ -8228,6 +8228,15 @@ def counting_form(question: str) -> str | None:
     if (_PP_PAGES_READ_RE.match(ql)
             or _PP_PAGES_LEFT_RE.match(ql)):
         return "pages"
+    # C568: page-count-of-finished-novels sum — "what was the page
+    # count of the two novels I finished in January and March?"
+    # Census (all 500): head matches EXACTLY 1 row (37f165cf,
+    # unbanked, gate=answer today); no abs sibling. Disjoint from
+    # the pages-progress heads (no quoted title, not a how-many-
+    # pages question). Behavior-neutral elsewhere: the fn-map
+    # handler only runs for rows this head claims.
+    if _PC_SUM_HEAD_RE.match(ql):
+        return "page_count_sum"
     if re.match(r'^how (much|many)\b', q, re.I) \
             and re.search(r'\btotal\b', ql):
         if re.search(r'\bhow many (hours|years|months)\b', ql):
@@ -9366,6 +9375,71 @@ def _cnt_pages_progress(question: str, sessions: list[dict]):
         return None
     left = total - reads[-1]
     return str(left) if left > 0 else None
+
+
+# ---------------------------------------------------------------------------
+# C568: page-count-of-finished-novels sum (37f165cf).
+# Head: "what was the page count of the <count-word> novels I finished
+# in <month> and <month>?" The months are unrecoverable from the
+# haystack (census-backed: zero month mentions bind to the anchors;
+# all its session dates are May 2023), so the evidence path is the
+# sum of DISTINCT just-finished page-count facts from user lines —
+# one fact per sentence (the FIRST page-count phrase after the
+# just-finished marker) — requiring exactly the cardinality the
+# question names. Sentence scoping kills the December decoy ('I
+# read "The Power" ... which had 341 pages'): its page-count is not
+# the first after the marker (the 416-page fact precedes it in that
+# same sentence), and repeated mentions of the same book (Nightingale
+# 440 twice) collapse via distinct-value dedupe. A digit-consuming
+# prefix regex would backtrack '416-page' into capturing '6'
+# (step3b) — hence plain positional scanning, no anchor prefix.
+# Census (all 500): the head matches EXACTLY 1 row (37f165cf,
+# unbanked, gate=answer today); no abs sibling exists (verified in
+# frozen). Zero kills by construction: the handler only runs for
+# rows this head claims.
+# ---------------------------------------------------------------------------
+
+_PC_SUM_HEAD_RE = re.compile(
+    r"^what\s+(?:is|was)\s+the\s+page\s+count\s+(?:of|for)\b", re.I)
+_PC_SUM_JUST_FIN_RE = re.compile(r"just\s+finished", re.I)
+_PC_SUM_PAGES_RE = re.compile(r"(\d[\d,]*)\s*[-\s]pages?\b", re.I)
+
+
+def _cnt_page_count_sum(question: str, sessions: list[dict]):
+    """Sum DISTINCT just-finished page-count facts (C568, 37f165cf).
+
+    One fact per sentence: the first ``N pages`` / ``N-page`` phrase
+    after a ``just finished`` marker in a user line. The question's
+    count word ("two novels") pins the required distinct-fact
+    cardinality; any mismatch falls through (None) — the gates own
+    abstention and the month phrases are treated as opaque
+    qualifiers (unrecoverable from the haystack). Returns the answer
+    string or ``None`` (dispatch convention).
+    """
+    m = re.search(r"\b(a|an|one|two|three|four|five|six|seven|eight"
+                  r"|nine|ten)\s+novels?\b", question, re.I)
+    if not m:
+        return None
+    want = _CNT_WORD2NUM.get(m.group(1).lower())
+    if not want:
+        return None
+    vals: list[int] = []
+    for sess in sessions:
+        for turn in sess.get("turns", []):
+            if turn.get("role") != "user":
+                continue
+            for sent in re.split(r"(?<=[.!?])\s+",
+                                 str(turn.get("content", ""))):
+                fm = _PC_SUM_JUST_FIN_RE.search(sent)
+                if not fm:
+                    continue
+                pm = _PC_SUM_PAGES_RE.search(sent, fm.end())
+                if pm:
+                    vals.append(int(pm.group(1).replace(",", "")))
+    distinct = sorted(set(vals))
+    if len(distinct) != want:
+        return None
+    return str(sum(distinct))
 
 
 def _cnt_item_total(question: str, sessions: list[dict]):
@@ -11225,7 +11299,8 @@ def answer_counting(question: str,
           "age_diff": _cnt_age_diff,
           "number_total": _cnt_number_total,
           "argmax": _cnt_argmax_entity,
-          "pages": _cnt_pages_progress}
+          "pages": _cnt_pages_progress,
+          "page_count_sum": _cnt_page_count_sum}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break

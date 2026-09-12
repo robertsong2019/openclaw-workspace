@@ -23,8 +23,9 @@ Census (all 500): each head matches EXACTLY 1 row, both
 unbanked. The only other page-count question (37f165cf, 'what
 was the page count of the two novels I finished in January and
 March' — a month-bound sum, GT 856) matches neither head and
-stays out of lane; the 'grant aim page' reminder (8cf51dda) is
-not a pages question at all.
+stays out of THIS lane (C568 later gave it its own
+page_count_sum lane); the 'grant aim page' reminder (8cf51dda)
+is not a pages question at all.
 """
 import os
 import sys
@@ -157,7 +158,9 @@ class TestPagesProgressFace(unittest.TestCase):
     def test_counting_form_claims_pages(self):
         self.assertEqual(counting_form(LEFT_Q), "pages")
         self.assertEqual(counting_form(READ_Q), "pages")
-        self.assertIsNone(counting_form(NOVELS_Q))
+        # C568: 37f165cf now claimed by its own page_count_sum lane
+        # (was pinned None in C567 when it stayed out of THIS lane)
+        self.assertEqual(counting_form(NOVELS_Q), "page_count_sum")
         self.assertIsNone(counting_form(REMINDER_Q))
 
     # ── adapter-level production pins (real rows) ──
