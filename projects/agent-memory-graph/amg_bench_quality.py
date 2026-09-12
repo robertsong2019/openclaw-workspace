@@ -8237,6 +8237,19 @@ def counting_form(question: str) -> str | None:
     # handler only runs for rows this head claims.
     if _PC_SUM_HEAD_RE.match(ql):
         return "page_count_sum"
+    # C569: education-span face — "how many years in total did I
+    # spend in formal education from high school to the completion
+    # of my Bachelor's/Master's degree?" Census (all 500): head
+    # matches EXACTLY 2 rows (gpt4_372c3eed + its _abs sibling,
+    # both unbanked WRONG, gate=counting via unit_sum today).
+    # The 'from high school' anchor is part of the head — the bare
+    # C518 pin variant ('… formal education?') stays with unit_sum
+    # (test_age_diff test_unit_sum_total_not_stolen). Claims ahead
+    # of the how-many-total block; behavior-neutral elsewhere (the
+    # handler only runs for rows this head claims, and the _abs
+    # sibling resolves to an explicit abstain).
+    if _EDU_SPAN_HEAD_RE.match(ql):
+        return "education_span"
     if re.match(r'^how (much|many)\b', q, re.I) \
             and re.search(r'\btotal\b', ql):
         if re.search(r'\bhow many (hours|years|months)\b', ql):
@@ -9440,6 +9453,130 @@ def _cnt_page_count_sum(question: str, sessions: list[dict]):
     if len(distinct) != want:
         return None
     return str(sum(distinct))
+
+
+# ---------------------------------------------------------------------------
+# C569: education-span face (gpt4_372c3eed + _abs, one family).
+# Head: "how many years in total did I spend in formal education from
+# high school to the completion of my <Degree>'s degree?" The 'from
+# high school' anchor is part of the head — the bare C518 pin variant
+# ('… formal education?') stays with unit_sum (test_age_diff
+# test_unit_sum_total_not_stolen). Census (all
+# 500): the head matches EXACTLY these 2 rows, both unbanked WRONG
+# (gate=counting today — unit_sum answered '4' from a stray 'four
+# years' anchor). Evidence path is a completion-year chain over user
+# lines: the high-school year-range ('Arcadia High School from 2010
+# to 2014'), then degree segments ordered by completion year — each
+# contributes its explicit duration ('took me four years to
+# complete') when present, else the year-gap from the previous
+# segment's end (PCC Associate's May 2016 ← 2014 = 2). The question's
+# target degree must END the chain: present-and-last → the sum;
+# absent while the chain itself is explicit → RESOLVED negative
+# existence (ABSTAIN_ANSWER — the _abs sibling's Master's is only
+# ever 'I'm considering pursuing a Master's degree', aspiration-
+# guarded and year-less); target mid-chain (later degree exists) →
+# None ("up to X" contradicted, don't fabricate). Repeated
+# Bachelor's mentions (GPA line, 'graduating
+# from UCLA in 2020 with a Bachelor's degree') dedupe by
+# (degree, year); assistant lines die on the user-role wall.
+# ---------------------------------------------------------------------------
+
+_EDU_SPAN_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+years\s+in\s+total\s+did\s+(?:i|we)\s+"
+    r"spend\s+in\s+formal\s+education\s+from\s+high\s+school\b",
+    re.I)
+_EDU_SPAN_TARGET_RE = re.compile(
+    r"completion\s+of\s+my\s+([a-z]+)'?s?\s+degree", re.I)
+_EDU_SPAN_HS_RE = re.compile(
+    r"high\s+school\b[^.?!]{0,120}?\b(20\d\d)\s*(?:to|[-–—])\s*(20\d\d)",
+    re.I)
+_EDU_SPAN_DEG_RE = re.compile(
+    r"\b(associate|bachelor|master|doctorate)\b(?:'s)?\s+"
+    r"(?:degree\b|in\b|from\b)", re.I)
+_EDU_SPAN_YEAR_RE = re.compile(
+    r"\bin\s+(?:(?:january|february|march|april|may|june|july|august"
+    r"|september|october|november|december)\s+)?(20\d\d)\b", re.I)
+_EDU_SPAN_DUR_RE = re.compile(
+    r"took\s+(?:me\s+)?(\w+|\d+)\s+years?\b", re.I)
+_EDU_SPAN_CONSIDER_RE = re.compile(
+    r"\b(?:considering|planning|thinking\s+(?:of|about)|want(?:\s+to)?"
+    r"|hoping\s+to|hope\s+to|interested\s+in)\b[^.?!]{0,80}?"
+    r"\b(associate|bachelor|master|doctorate)\b", re.I)
+
+
+def _cnt_education_span(question: str, sessions: list[dict]):
+    """Sum the formal-education completion chain (C569, 372c3eed).
+
+    Segments: the high-school year-range plus degree facts from
+    user lines (explicit ``took me N years`` wins over the year-gap
+    to the previous segment's end). The question's target degree
+    must appear as the chain's LAST completed segment — otherwise
+    the sum would fabricate a duration the haystack never states
+    (the Master's sibling) — and the handler returns ``None``
+    (dispatch convention: the gates own abstention)."""
+    tm = _EDU_SPAN_TARGET_RE.search(question)
+    if not tm:
+        return None
+    target = tm.group(1).lower()
+    hs = None                              # (start, end)
+    degs: dict[tuple[str, int], int | None] = {}
+    for sess in sessions:
+        for turn in sess.get("turns", []):
+            if turn.get("role") != "user":
+                continue                   # role wall
+            line = str(turn.get("content", ""))
+            if _EDU_SPAN_CONSIDER_RE.search(line):
+                continue                   # aspiration, not completion
+            hm = _EDU_SPAN_HS_RE.search(line)
+            if hm:
+                a, b = int(hm.group(1)), int(hm.group(2))
+                if b > a and (hs is None or b - a < hs[1] - hs[0]):
+                    hs = (a, b)
+            for dm in _EDU_SPAN_DEG_RE.finditer(line):
+                ym = _EDU_SPAN_YEAR_RE.search(
+                    line[dm.end():dm.end() + 120])
+                if not ym:
+                    continue               # degree w/o completion year
+                key = (dm.group(1).lower(), int(ym.group(1)))
+                dur = None
+                du = _EDU_SPAN_DUR_RE.search(line)
+                if du:
+                    w = du.group(1).lower()
+                    n = _CNT_WORD2NUM.get(w)
+                    if n is None and w.isdigit():
+                        n = int(w)
+                    if n is not None:
+                        dur = n
+                if key not in degs or (degs[key] is None and dur
+                                       is not None):
+                    degs[key] = dur
+    if hs is None or not degs:
+        return None
+    prev_end = hs[1]
+    total = prev_end - hs[0]               # high-school years
+    seen: list[str] = []                   # processed degree words, in order
+    for deg, year in sorted(degs, key=lambda k: k[1]):
+        if year < prev_end:
+            continue                       # chronological sanity
+        dur = degs[(deg, year)]
+        span = dur if dur is not None else year - prev_end
+        if span <= 0:
+            return None                    # would fabricate overlap
+        total += span
+        prev_end = year
+        seen.append(deg)
+    if target in seen:
+        # premise check: education must END at the target degree —
+        # evidence of later degrees contradicts "up to X" (don't
+        # fabricate; the gates own this abstention)
+        return f"{int(total)} years" if seen[-1] == target else None
+    if seen:
+        # resolved negative existence (C514 museum_count / C564
+        # before-job precedent): the completed-education chain is
+        # explicit in the haystack and the target degree is not in
+        # it — the Master's is only ever an aspiration line
+        return ABSTAIN_ANSWER
+    return None
 
 
 def _cnt_item_total(question: str, sessions: list[dict]):
@@ -11300,7 +11437,8 @@ def answer_counting(question: str,
           "number_total": _cnt_number_total,
           "argmax": _cnt_argmax_entity,
           "pages": _cnt_pages_progress,
-          "page_count_sum": _cnt_page_count_sum}
+          "page_count_sum": _cnt_page_count_sum,
+          "education_span": _cnt_education_span}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break
