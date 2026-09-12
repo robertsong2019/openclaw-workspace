@@ -8216,6 +8216,18 @@ def counting_form(question: str) -> str | None:
     if re.match(r'^what (?:is|was) the total '
                r'(?:distance|weight|time)\b', ql):
         return "measure_sum"
+    # C567: pages-progress faces — "how many pages of 'X' have I
+    # read so far?" (latest on-page anchor) and "how many pages do
+    # I have left to read in 'X'?" (total-pages fact − latest
+    # on-page anchor). Census (all 500): each head EXACTLY 1 row,
+    # both unbanked (184da446 / 2311e44b); the month-bound novel
+    # sum (37f165cf) and the 'grant aim page' reminder match
+    # neither head. Claims ahead of the enum/museum/inventory
+    # block — behavior-neutral there (both heads were unclaimed,
+    # gate=answer today).
+    if (_PP_PAGES_READ_RE.match(ql)
+            or _PP_PAGES_LEFT_RE.match(ql)):
+        return "pages"
     if re.match(r'^how (much|many)\b', q, re.I) \
             and re.search(r'\btotal\b', ql):
         if re.search(r'\bhow many (hours|years|months)\b', ql):
@@ -9267,6 +9279,93 @@ def _cnt_category_sum(question: str, sessions: list[dict]):
     if not seen:
         return None
     return f"${round(total, 2):g}"
+
+
+# ---------------------------------------------------------------------------
+# C567: pages-progress faces. Two question heads over one anchor
+# family ("on page N" user lines bound to a quoted title):
+#   A) "How many pages of 'X' have I read so far?" — the latest
+#      on-page anchor wins (document order).
+#   B) "How many pages do I have left to read in 'X'?" — a
+#      total-pages fact minus the latest on-page anchor.
+# Census (all 500): each head EXACTLY 1 row, both unbanked
+# (184da446 → 220 latest-wins across s2→s41; 2311e44b →
+# 440 − 250 = 190). The _abs sibling ('Sapiens', 2311e44b_abs)
+# routes into the lane but its haystack holds no total (the
+# '10-20 pages a week' pace line is range+pace-rejected) and no
+# Sapiens on-page anchor → honest fall-through, pred byte-stable.
+# Assistant page estimates ('assume ... 400 pages per book') die
+# on the user-role wall; "$250" price decoys never match an
+# on-page/total-pages anchor. Unquoted-title questions stay out
+# (the census-1 heads are all quoted).
+# ---------------------------------------------------------------------------
+
+_PP_PAGES_READ_RE = re.compile(
+    r"^how\s+many\s+pages\s+of\s+.+?\s+(?:have|had)\s+(?:i|we)\s+"
+    r"read\b", re.I)
+_PP_PAGES_LEFT_RE = re.compile(
+    r"^how\s+many\s+pages\s+(?:do|did)\s+(?:i|we)\s+have\s+left\s+"
+    r"to\s+read\s+(?:in|of|from)\s+['\"]", re.I)
+_PP_PAGES_ONPAGE_RE = re.compile(r"\bon\s+page\s+(\d[\d,]*)\b", re.I)
+_PP_PAGES_TOTAL_RE = re.compile(r"(\d[\d,]*)\s*pages?\b", re.I)
+_PP_PAGES_PACE_RE = re.compile(
+    r"^\s*(?:a|per|each)\s+(?:day|week|month|year)\b", re.I)
+
+
+def pp_pages_form(question: str) -> bool:
+    """Pages-progress heads (C567). Both require a quoted title in
+    the question — unquoted-title siblings stay out (the
+    census-1 heads are all quoted)."""
+    q = question.strip()
+    if not (_PP_PAGES_READ_RE.match(q)
+            or _PP_PAGES_LEFT_RE.match(q)):
+        return False
+    return re.search(r"['\"]", q) is not None
+
+
+def _cnt_pages_progress(question: str, sessions: list[dict]):
+    """Pages-progress routes (C567) — see the census block above.
+
+    Anchors are user-line only; a title binds a line by substring
+    containment (census-backed: both real rows' titles are long
+    and distinctive). Latest-wins = the last matching anchor in
+    document order (the C509 delta-family order discipline);
+    totals take the last accepted total-pages fact for the same
+    reason. Pace/range lines never count as totals. Returns the
+    answer string or ``None`` (dispatch convention: unresolved
+    forms fall through to the gate chain)."""
+    m = re.search(r"['\"]([^'\"]{3,120})['\"]", question)
+    if not m:
+        return None
+    title = m.group(1).strip().lower()
+    reads: list[int] = []
+    total = None
+    for sess in sessions:
+        for turn in sess.get("turns", []):
+            if turn.get("role") != "user":
+                continue
+            line = str(turn.get("content", ""))
+            low = line.lower()
+            if title not in low:
+                continue
+            for om in _PP_PAGES_ONPAGE_RE.finditer(low):
+                reads.append(int(om.group(1).replace(",", "")))
+            for tm in _PP_PAGES_TOTAL_RE.finditer(low):
+                pre = low[max(0, tm.start() - 4):tm.start()]
+                post = low[tm.end():tm.end() + 24]
+                if re.search(r"\d\s*[-–—]\s*$", pre):
+                    continue    # range upper bound ('10-20 pages')
+                if _PP_PAGES_PACE_RE.match(post):
+                    continue    # reading pace ('pages a week')
+                total = int(tm.group(1).replace(",", ""))
+    if _PP_PAGES_READ_RE.match(' '.join(question.split())):
+        # face A: latest on-page anchor IS the answer
+        return str(reads[-1]) if reads else None
+    # face B: total-pages fact − latest on-page anchor
+    if not reads or total is None:
+        return None
+    left = total - reads[-1]
+    return str(left) if left > 0 else None
 
 
 def _cnt_item_total(question: str, sessions: list[dict]):
@@ -11125,7 +11224,8 @@ def answer_counting(question: str,
           "museum_count": _cnt_museum_count,
           "age_diff": _cnt_age_diff,
           "number_total": _cnt_number_total,
-          "argmax": _cnt_argmax_entity}
+          "argmax": _cnt_argmax_entity,
+          "pages": _cnt_pages_progress}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break
