@@ -1113,6 +1113,7 @@ class LongMemEvalAdapter:
                      or pp_finish_sum_form(question)
                      or pp_activity_sum_form(question)
                      or pp_book_span_form(question)
+                     or pp_trip_span_form(question)
                      or pp_finish_when_form(question))):
             dated = [(self._session_dates.get(s["session_id"], ""),
                       s["turns"]) for s in self._counting_sessions()]
@@ -5507,6 +5508,37 @@ def pp_finish_when_form(question: str) -> bool:
     return bool(_PP_FINISH_WHEN_HEAD_RE.match(question.strip()))
 
 
+# Trip-span head (C573): "How many days did I spend on my <desc>
+# trip …?" — single-trip duration whose facts are session-date
+# arithmetic (start-fact session → return-fact session). Census
+# (all 500): exactly 1 row, unbanked (gpt4_1d80365e). The banked
+# in-total sum (edced276 ``spend in total traveling …``) puts the
+# sum frame before the descriptor and stays out, as do the
+# take-breaks total (6cb6f249 ``did I take``), the
+# participating/attending frames (5a7937c8, 10d9b85a) and the
+# how-long cousin (19b5f2b3).
+_PP_TRIP_SPAN_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+(?:days?|weeks?|months?|years?)\s+"
+    r"did\s+(?:i|we)\s+spend\s+on\s+(?:my|our)\s+(.+)\s*"
+    r"[?.!]*$", re.I)
+_PP_TRIP_RETURN_RE = re.compile(
+    r"\b(?:just\s+)?(?:got|came)\s+back\s+from\b", re.I)
+
+
+def pp_trip_span_form(question: str) -> bool:
+    """Trip-span form (C573): ``how many <unit> did (i|we) spend
+    on (my|our) <descriptor> trip …`` — single-trip session-date
+    span, route-(h) sibling. The descriptor must end in ``trip``
+    and bind with an ALL-keywords wall (route (c) discipline)."""
+    m = _PP_TRIP_SPAN_HEAD_RE.match(question.strip())
+    if not m:
+        return False
+    # the descriptor must END in ``trip`` (possibly ``trip to X``):
+    # ``spend on my solo camping trip to Yosemite`` ✓;
+    # ``spend on reading …``/``participating in …`` stay out.
+    return re.search(r"\btrip\b", m.group(1), re.I) is not None
+
+
 def _pp_dur_exprs(line: str):
     """Yield ``(kind, n, unit, raw)`` for every duration expression.
 
@@ -6008,6 +6040,69 @@ def _pp_book_span(
     return r, detail
 
 
+def _pp_trip_span(
+        question: str,
+        sessions: list[tuple[datetime, list[dict]]],
+) -> tuple[str | None, dict]:
+    """Route (t): single-trip span (C573).
+
+    Census-1 head (``how many <unit> did (i|we) spend on (my|our)
+    <desc> trip``): the span between the trip's start fact ("just
+    started my … trip … today") and return fact ("just got back
+    from … trip … today") IS the duration — session-date
+    arithmetic, route-(h) sibling. The question's trip descriptor
+    binds with an ALL-keywords wall: a partial match ("solo
+    camping trip" lines when the question names Yosemite) must
+    NOT fire. Same-sitting (0 days) and negative spans fall
+    through honestly. Assistant echoes of both facts die on the
+    user-role wall (C482) — the real row's echo carries every
+    descriptor keyword and only the wall (plus its missing
+    ``today``) keeps it out.
+    """
+    detail: dict = {"form": "pp_duration", "route": "trip_span"}
+    m = (_PP_TRIP_SPAN_HEAD_RE.match(question.strip())
+         if pp_trip_span_form(question) else None)
+    if m is None:
+        detail["missing"] = "form"
+        return None, detail
+    qm = re.match(r"\s*how\s+many\s+(days?|weeks?|months?|years?)",
+                  question, re.I)
+    unit = qm.group(1).lower().rstrip("s") if qm else "day"
+    kws = [w for w in _pp_kws(m.group(1))]
+    if not kws:
+        detail["missing"] = "descriptor"
+        return None, detail
+    starts: list[datetime] = []
+    finishes: list[datetime] = []
+    for dt, turns in sessions:
+        for turn in turns:
+            if turn.get("role") != "user":
+                continue
+            line = str(turn.get("content", ""))
+            low = line.lower()
+            if not _PP_ACTIVITY_TODAY_RE.search(line):
+                continue
+            if not all(w in low for w in kws):
+                continue
+            if _PP_ACTIVITY_START_RE.search(line):
+                starts.append(dt)
+            if _PP_TRIP_RETURN_RE.search(line):
+                finishes.append(dt)
+    if not starts or not finishes:
+        detail["missing"] = "start" if not starts else "finish"
+        return None, detail
+    days = (max(finishes) - min(starts)).days
+    if days < 0:
+        detail["missing"] = "negative span"
+        return None, detail
+    detail["days"] = days
+    r = _pp_render(days, [unit])
+    if r is None or r == "0 days":
+        detail["missing"] = "render"
+        return None, detail
+    return r, detail
+
+
 def _pp_finish_when(
         question: str,
         sessions: list[tuple[datetime, list[dict]]],
@@ -6167,6 +6262,13 @@ def answer_pp_duration(
         # single-titled sibling of (g), same session-date
         # arithmetic, minus the sum.
         return _pp_book_span(question, sessions)
+
+    if pp_trip_span_form(question):
+        # route (t): single-trip span (C573) — census-1 head;
+        # route-(h) sibling where the descriptor (not a quoted
+        # title) binds via an ALL-keywords wall and the return
+        # fact is a ``got back from`` marker.
+        return _pp_trip_span(question, sessions)
 
     if pp_finish_when_form(question):
         # route (i): reverse finish lookup (C570) — census-1 head;
