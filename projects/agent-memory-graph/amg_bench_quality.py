@@ -3094,6 +3094,19 @@ _TA_SINCEWHEN_RE = re.compile(
     r"how many (days?|weeks?|months?|years?)\s+had\s+passed\s+since\s+"
     r"(?:i\s+)?(.+?)\s+when\s+(?:i\s+)?(.+?)\s*[?.!]*$",
     re.I | re.S)
+# Cycle 571: "how many days did it take for me to X after Y" —
+# event-span form mapped onto the between machinery (goal event,
+# onset event). Receive/order cousins stay out: b3c15d39 ("take
+# for me to receive ... after I ordered it") is owned by the
+# counting gate (banked), and its order-side lines are lexically
+# ambiguous across unrelated order mentions (tripod, bike rack,
+# blanket) — the counting route already resolves it.
+_TA_TAKEAFTER_RE = re.compile(
+    r"how many (days?|weeks?|months?|years?)\s+did\s+it\s+take\s+"
+    r"for\s+(?:me|us)\s+to\s+(.+?)\s+after\s+(.+?)\s*[?.!]*$",
+    re.I | re.S)
+_TA_RECEIVE_ORDER_RE = re.compile(
+    r"\breceiv(?:e|es|ed|ing)\b|\bord(?:er|ers|ered|ering)\b", re.I)
 
 # Cycle 482: in-text adverbial dates. The true event lines STATE
 # their dates ("attended the workshop on January 10th") while the
@@ -4687,6 +4700,10 @@ def temporal_arith_form(question: str) -> tuple | None:
     if m:
         return ("since", m.group(1).rstrip("s") or "day",
                 m.group(2).strip(), None)
+    m = _TA_TAKEAFTER_RE.match(q)
+    if m and not _TA_RECEIVE_ORDER_RE.search(q):
+        return ("take_after", m.group(1).rstrip("s") or "day",
+                m.group(2).strip(), m.group(3).strip())
     return None
 
 
@@ -4823,6 +4840,15 @@ _TA_PAST_RE = re.compile(
 # ladder's other callers.
 _TA_YESTERDAY_RE = re.compile(r"\byesterday\b", re.I)
 
+# Cycle 571: line-relative day shift for event-span anchors — a
+# realized-event line saying it happens "tomorrow" dates the event
+# one day AFTER its session (gpt4_4fc4f797: "preparing for an open
+# track day ... tomorrow, where I'll be testing my new suspension
+# setup" in the 04-23 session → test day 04-24; GT 38 = 04-24 minus
+# the 03-17 feedback day). Engaged only by the between/take_after
+# span paths (event_span), never by ago/since ask-distance paths.
+_TA_TOMORROW_RE = re.compile(r"\btomorrow\b", re.I)
+
 
 def answer_temporal_arith(question: str,
                           dated_lines: list[tuple[str, str]],
@@ -4852,7 +4878,9 @@ def answer_temporal_arith(question: str,
     detail = {"form": kind, "unit": unit}
 
     def best_line(anchor: str,
-                  span_mode: bool = False) -> tuple[int, str] | None:
+                  span_mode: bool = False,
+                  event_span: bool = False,
+                  pool: list | None = None) -> tuple[int, str] | None:
         """Best dated line for *anchor* (≥1 distinctive hit).
 
         Cycle 471 tie ladder (was: silent first-max = list-position
@@ -4882,6 +4910,12 @@ def answer_temporal_arith(question: str,
         winning line text and whether ``eff`` came from an in-text
         adverbial (the relative-advance composition only engages
         when the line has no absolute date of its own).
+        C571: ``event_span`` (between/take_after anchors) adds the
+        mirror ``tomorrow`` shift (+1 day, realized-event lines
+        only); ``pool`` restricts the candidate scan (the C571
+        same-date retry's intent-free subset, and the take_after
+        dated-realized subsets) — ``None`` scans all dated lines
+        as before.
         """
         ks = _anchor_keywords(anchor)
         if not ks:
@@ -4897,7 +4931,7 @@ def answer_temporal_arith(question: str,
                                     % re.escape(w), line, re.I))
 
         best, best_key = None, None
-        for line, sdate in dated_lines:
+        for line, sdate in (pool if pool is not None else dated_lines):
             hits = _keyword_hits(line, ks)
             if hits <= 0:
                 continue
@@ -4926,6 +4960,12 @@ def answer_temporal_arith(question: str,
                 try:
                     eff = (date.fromisoformat(eff)
                            - timedelta(days=1)).isoformat()
+                except ValueError:
+                    pass
+            elif event_span and _TA_TOMORROW_RE.search(line):
+                try:
+                    eff = (date.fromisoformat(eff)
+                           + timedelta(days=1)).isoformat()
                 except ValueError:
                     pass
             try:
@@ -5029,8 +5069,94 @@ def answer_temporal_arith(question: str,
         detail["span"] = True
         return f"{n} {unit}{'' if n == 1 else 's'}", detail
 
+    if kind == "take_after":
+        # Cycle 571: "how many days did it take for me to X after
+        # Y" — span = latest(GOAL date) − earliest(ONSET date), both
+        # over realized (past-aspect) lines carrying a gate-passing
+        # in-text date. Rationale: start/started are _ANCHOR_GENERIC
+        # and house-hunt chatter is dense with lexically-near
+        # distractors ("day off work on March 1st" out-dates the
+        # true "started working with her on 2/15" onset; assistant
+        # "help you find a house you love" lines out-hit the
+        # realized sighting), so raw hit ladders cannot pick the
+        # dated events this form asks about. The dated-realized
+        # subset is the form's whole point; empty subset → standard
+        # ladder (graceful degradation). Census: exactly one member
+        # in the full 500 (2c63a862) — zero hijack surface.
+        def _dated_pool(anchor: str) -> list[tuple[str, str, str]]:
+            ks = _anchor_keywords(anchor)
+            if not ks:
+                return []
+            out = []
+            for ln, sd in dated_lines:
+                if (_keyword_hits(ln, ks) > 0
+                        and _TA_PAST_RE.search(ln)):
+                    eff = _line_eff_date(ln, sd, question_date, ks)
+                    if eff:
+                        out.append((eff, ln, sd))
+            return out
+
+        ra = rb = None
+        pa, pb = _dated_pool(a), _dated_pool(b)
+        if pa:
+            top = max(pa)[0]          # goal: achievement = latest
+            ra = best_line(a, pool=[(ln, sd) for e, ln, sd in pa
+                                    if e == top])
+        if pb:
+            bot = min(pb)[0]          # onset: beginning = earliest
+            rb = best_line(b, pool=[(ln, sd) for e, ln, sd in pb
+                                    if e == bot])
+        if ra is None:
+            ra = best_line(a)
+        if rb is None:
+            rb = best_line(b)
+        detail["anchors"] = [bool(ra), bool(rb)]
+        if not ra or not rb:
+            return None, detail
+        if ra[1] == rb[1]:
+            return None, detail
+        n = duration_units(ra[1], rb[1], unit)
+        detail["dates"] = [ra[1], rb[1]]
+        detail["value"] = n
+        detail["span"] = True
+        return f"{n} {unit}{'' if n == 1 else 's'}", detail
+
     # between
-    ra, rb = best_line(a), best_line(b)
+    ra = best_line(a, event_span=True)
+    rb = best_line(b, event_span=True)
+    # C571 same-date retry: a plan line out-hitting the realized
+    # event collapses both anchors onto one date → abstain (the
+    # gpt4_4fc4f797 pre-fix state: "planning to test ... next
+    # month" at 4 hits vs the realized "testing ... tomorrow" at
+    # 3, while the reference anchor's true lines are assistant
+    # echoes that future-aspect demotes — blanket future penalties
+    # broke A while fixing B, probe-verified). The asymmetry-free
+    # discriminator is the INTENT-INFINITIVE: the anchored verb as
+    # a purpose infinitive ("planning to test", "opportunity to
+    # test") marks intention, not event. Retry once with those
+    # lines excluded per anchor; keep it only when the dates
+    # separate, else the honest abstain stands. Fires ONLY on
+    # same-date collapse, so the 16 banked between/before
+    # siblings (no collapse, probe byte-stable) never re-rank.
+    if ra and rb and ra[1] == rb[1]:
+        def _strip_stem(kw: str) -> str:
+            for suf in ("ing", "ed", "es", "s"):
+                if kw.endswith(suf) and len(kw) - len(suf) >= 3:
+                    return kw[:len(kw) - len(suf)]
+            return kw
+
+        def _intent_free(anchor: str) -> list:
+            stems = [_strip_stem(k) for k in _anchor_keywords(anchor)]
+            pat = (re.compile(r"\bto\s+(?:%s)" % "|".join(
+                re.escape(s) for s in stems), re.I)
+                if stems else None)
+            return [(ln, sd) for ln, sd in dated_lines
+                    if not (pat and pat.search(ln))]
+
+        ra2 = best_line(a, event_span=True, pool=_intent_free(a)) or ra
+        rb2 = best_line(b, event_span=True, pool=_intent_free(b)) or rb
+        if ra2[1] != rb2[1]:
+            ra, rb = ra2, rb2
     detail["anchors"] = [bool(ra), bool(rb)]
     if not ra or not rb:
         return None, detail
