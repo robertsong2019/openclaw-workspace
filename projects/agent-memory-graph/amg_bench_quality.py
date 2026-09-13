@@ -1111,10 +1111,13 @@ class LongMemEvalAdapter:
                      or pp_pure_tenure_form(question)
                      or pp_have_had_form(question)
                      or pp_finish_sum_form(question)
-                     or pp_activity_sum_form(question))):
+                     or pp_activity_sum_form(question)
+                     or pp_book_span_form(question)
+                     or pp_finish_when_form(question))):
             dated = [(self._session_dates.get(s["session_id"], ""),
                       s["turns"]) for s in self._counting_sessions()]
-            p_ans, p_detail = answer_pp_duration(question, dated)
+            p_ans, p_detail = answer_pp_duration(question, dated,
+                                                 question_date)
             meta["pp_duration"] = p_detail
             if p_ans is not None:
                 meta["gate"] = "pp_duration"
@@ -5253,6 +5256,46 @@ def pp_activity_sum_form(question: str) -> bool:
     return not re.search(r"\b(?:when|before)\b", q, re.I)
 
 
+# Book-span head (C570): "How many days did it take me to finish
+# 'X' …" — single-book duration whose facts are session-date
+# arithmetic (start-fact session → finish-fact session). Census
+# (all 500): exactly 1 row, unbanked (2ebe6c90). The receive-order
+# cousins (b3c15d39 "it take for me to receive") and the C565
+# finish-sum head ("how long … combined") stay out by construction.
+_PP_BOOK_SPAN_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+(?:days?|weeks?|months?|years?)\s+"
+    r"did\s+it\s+take\s+(?:me|us)\s+to\s+(?:finish|read)\b", re.I)
+
+# Reverse-finish head (C570): "Which book did I finish a week
+# ago?" — the ago-frame is PART of the head: the banked comparison
+# sibling (gpt4_2d58bcd6 "finish reading first, 'X' or 'Y'?")
+# carries no ago duration and stays out. Census (all 500):
+# exactly 1 row, unbanked (2ebe6c92).
+_PP_FINISH_WHEN_HEAD_RE = re.compile(
+    r"^\s*(?:which|what)\s+(?:book|novel)\s+did\s+(?:i|we)\s+"
+    r"finish\b.*?\b(?:a|an|one|two|three|four|five|six|seven|"
+    r"eight|nine|ten|\d+)\s+(?:day|week|month|year)s?\s+ago\b", re.I)
+_PP_AGO_FRAME_RE = re.compile(
+    r"\b(a|an|one|two|three|four|five|six|seven|eight|nine|ten|\d+)\s+"
+    r"(days?|weeks?|months?|years?)\s+ago\b", re.I)
+
+
+def pp_book_span_form(question: str) -> bool:
+    """Book-span form (C570): ``how many <unit> did it take (me|us)
+    to finish|read …`` — single-book session-date span. when/before
+    variants stay with route (b)."""
+    q = question.strip()
+    if not _PP_BOOK_SPAN_HEAD_RE.match(q):
+        return False
+    return not re.search(r"\b(?:when|before)\b", q, re.I)
+
+
+def pp_finish_when_form(question: str) -> bool:
+    """Reverse-finish form (C570): ``which|what book did (i|we)
+    finish … <n> <unit>s ago``."""
+    return bool(_PP_FINISH_WHEN_HEAD_RE.match(question.strip()))
+
+
 def _pp_dur_exprs(line: str):
     """Yield ``(kind, n, unit, raw)`` for every duration expression.
 
@@ -5667,9 +5710,158 @@ def _pp_activity_sum(
     return r, detail
 
 
+# Line-side title extraction (C570 route (i)): the first
+# double-quoted span is the title; single-quote fallback carries
+# apostrophe guards (``I'm``/``don't`` must not open or close a
+# quote — the C568 quote-theft lesson, line-side edition: the
+# naive ``'([^']+)'`` on the real anchor line steals
+# "m looking … today and I" out of the leading "I'm").
+_PP_TITLE_DQ_RE = re.compile(r'"([^"]+)"')
+_PP_TITLE_SQ_RE = re.compile(r"(?<![\w'])'([^']+)'(?![\w'])")
+
+
+def _pp_line_title(line: str) -> tuple[str | None, str | None]:
+    """First double-quoted span as ``(title, author-tail)``;
+    single-quoted fallback with apostrophe guards. Author tail is
+    the ``by X`` fragment immediately after the closing quote
+    (stopped at sentence punctuation — ``by Kristin Hannah, today``
+    → ``Kristin Hannah``)."""
+    m = _PP_TITLE_DQ_RE.search(line)
+    if not m:
+        m = _PP_TITLE_SQ_RE.search(line)
+        if not m:
+            return None, None
+    title = m.group(1).strip()
+    am = re.match(r'\s*by\s+([^,.;)\n"\']+)', line[m.end():], re.I)
+    return title, (am.group(1).strip() if am else None)
+
+
+def _pp_book_span(
+        question: str,
+        sessions: list[tuple[datetime, list[dict]]],
+) -> tuple[str | None, dict]:
+    """Route (h): single-book span (C570).
+
+    Census-1 head (``how many <unit> did it take (me|us) to
+    finish|read 'X'``): the span between the title's start fact
+    ("just started … today") and finish fact ("just finished …
+    today") IS the duration — session-date arithmetic, not
+    duration expressions. Single-titled sibling of route (g): a
+    sum would need an ``in total`` frame; a non-single title list
+    falls through honestly. A line marking both start and finish
+    (same-sitting read) renders ``0 days`` → fall-through.
+    """
+    detail: dict = {"form": "pp_duration", "route": "book_span"}
+    titles: list[str] = []
+    seen: set[str] = set()
+    for m in re.finditer(r"'([^']+)'|\"([^\"]+)\"", question):
+        t = (m.group(1) or m.group(2)).strip()
+        if t and t.lower() not in seen:
+            seen.add(t.lower())
+            titles.append(t)
+    if len(titles) != 1:
+        detail["missing"] = "titles"
+        return None, detail
+    qm = re.match(r"\s*how\s+many\s+(days?|weeks?|months?|years?)",
+                  question, re.I)
+    unit = qm.group(1).lower().rstrip("s") if qm else "day"
+    bind = re.compile(
+        r"[\"'“”]" + re.escape(titles[0]) + r"[\"'“”]", re.I)
+    starts: list[datetime] = []
+    finishes: list[datetime] = []
+    for dt, turns in sessions:
+        for turn in turns:
+            if turn.get("role") != "user":
+                continue
+            line = str(turn.get("content", ""))
+            if not _PP_ACTIVITY_TODAY_RE.search(line):
+                continue
+            if not bind.search(line):
+                continue
+            if _PP_ACTIVITY_START_RE.search(line):
+                starts.append(dt)
+            if _PP_ACTIVITY_FINISH_RE.search(line):
+                finishes.append(dt)
+    if not starts or not finishes:
+        detail["missing"] = "start" if not starts else "finish"
+        return None, detail
+    days = (max(finishes) - min(starts)).days
+    if days < 0:
+        detail["missing"] = "negative span"
+        return None, detail
+    detail["days"] = days
+    r = _pp_render(days, [unit])
+    if r is None or r == "0 days":
+        detail["missing"] = "render"
+        return None, detail
+    return r, detail
+
+
+def _pp_finish_when(
+        question: str,
+        sessions: list[tuple[datetime, list[dict]]],
+        question_date: str,
+) -> tuple[str | None, dict]:
+    """Route (i): reverse finish lookup (C570).
+
+    The ago-frame anchors to the QUESTION date (``a week ago`` =
+    question_date − 7d): the user finish-today line whose session
+    date equals that target IS the answer source — its quoted
+    title (plus ``by``-author tail when present) renders as the
+    book. Exactly one distinct title required: two books finished
+    the same day is not a guessable question. Assistant lines
+    carry no fact (user-role wall — C482 trust tiers).
+    """
+    detail: dict = {"form": "pp_duration", "route": "finish_when"}
+    qd = None
+    for fmt in ("%Y/%m/%d", "%Y-%m-%d"):
+        try:
+            qd = datetime.strptime((question_date or "")[:10], fmt)
+            break
+        except (ValueError, TypeError):
+            continue
+    if qd is None:
+        detail["missing"] = "qdate"
+        return None, detail
+    am = _PP_AGO_FRAME_RE.search(question)
+    if not am:
+        detail["missing"] = "ago frame"
+        return None, detail
+    n = _pp_num(am.group(1))
+    if not n:
+        detail["missing"] = "ago count"
+        return None, detail
+    unit = am.group(2).lower().rstrip("s")
+    target = (qd - timedelta(
+        days=int(round(n * _PP_UNIT_DAYS[unit])))).date()
+    detail["target"] = target.isoformat()
+    hits: list[tuple[str, str | None]] = []
+    hit_low: set[str] = set()
+    for dt, turns in sessions:
+        if dt.date() != target:
+            continue
+        for turn in turns:
+            if turn.get("role") != "user":
+                continue
+            line = str(turn.get("content", ""))
+            if not (_PP_ACTIVITY_FINISH_RE.search(line)
+                    and _PP_ACTIVITY_TODAY_RE.search(line)):
+                continue
+            title, author = _pp_line_title(line)
+            if title and title.lower() not in hit_low:
+                hit_low.add(title.lower())
+                hits.append((title, author))
+    if len(hits) != 1:
+        detail["missing"] = f"titles at target ({len(hits)})"
+        return None, detail
+    title, author = hits[0]
+    return (f"{title} by {author}" if author else title), detail
+
+
 def answer_pp_duration(
         question: str,
         dated_sessions: list[tuple[str, list[dict]]],
+        question_date: str = "",
 ) -> tuple[str | None, dict]:
     """Answer a past-perfect duration question (zero LLM).
 
@@ -5758,6 +5950,18 @@ def answer_pp_duration(
         # precede the expression-driven routes, which would find
         # no anchors here and fall through to garbage.
         return _pp_activity_sum(question, sessions)
+
+    if pp_book_span_form(question):
+        # route (h): single-book span (C570) — census-1 head;
+        # single-titled sibling of (g), same session-date
+        # arithmetic, minus the sum.
+        return _pp_book_span(question, sessions)
+
+    if pp_finish_when_form(question):
+        # route (i): reverse finish lookup (C570) — census-1 head;
+        # the ago-frame anchors to the QUESTION date (threaded in
+        # from answer_extractive), not to any session date.
+        return _pp_finish_when(question, sessions, question_date)
 
     if (_PP_FINISH_HEAD_RE.match(question)
             and not re.search(r"\b(?:when|before)\b", question,
