@@ -3108,6 +3108,33 @@ _TA_TAKEAFTER_RE = re.compile(
 _TA_RECEIVE_ORDER_RE = re.compile(
     r"\breceiv(?:e|es|ed|ing)\b|\bord(?:er|ers|ered|ering)\b", re.I)
 
+# Cycle 572: "how many days before I bought X did I attend Y" — a
+# before-frame whose two events are dated by a NAMED DAY plus a
+# relative offset, not by absolute dates (c8090214: purchase "got my
+# iPhone 13 Pro ... on Black Friday", event "attended the Holiday
+# Market ... a week before Black Friday"; the whole haystack shares
+# ONE session date, so calendar arithmetic has nothing to subtract
+# and the C482/C571 same-date guards correctly abstain). The strict
+# buy+attend shape is what keeps this off the Cycle-482 between
+# family: census over the full 500 = exactly 2 rows (c8090214 +
+# c8090214_abs), zero-kill by construction. Month offsets are NOT
+# converted (calendar-month ambiguity — honest fall-through).
+_TA_BEFORE_BUY_RE = re.compile(
+    r"how many (days?|weeks?|months?|years?)\s+before\s+(?:i|we)\s+"
+    r"(?:bought|purchased|got|picked up)\s+(.+?)\s+"
+    r"did\s+(?:i|we)\s+(?:attend|attended|go to|went to|visit)\s+"
+    r"(.+?)\s*[?.!]*$",
+    re.I | re.S)
+_TA_NAMED_OFFSET_RE = re.compile(
+    r"\b(a|one|two|three|four|five|six|seven|eight|nine|ten|\d+)\s+"
+    r"(day|week|month)s?\s+before\s+"
+    r"([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+){0,3})")
+_TA_NAMED_ON_RE = re.compile(
+    r"\bon\s+([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+){0,3})")
+_TA_OFFSET_WORDS = {"a": 1, "one": 1, "two": 2, "three": 3, "four": 4,
+                    "five": 5, "six": 6, "seven": 7, "eight": 8,
+                    "nine": 9, "ten": 10}
+
 # Cycle 482: in-text adverbial dates. The true event lines STATE
 # their dates ("attended the workshop on January 10th") while the
 # session dates collapse same-session events onto one day — the
@@ -4665,6 +4692,10 @@ def temporal_arith_form(question: str) -> tuple | None:
     pairwise C489 owns the family).
     """
     q = question.strip()
+    m = _TA_BEFORE_BUY_RE.match(q)
+    if m:      # named-day buy/attend before-frame (C572)
+        return ("before_buy", m.group(1).rstrip("s") or "day",
+                m.group(2).strip(), m.group(3).strip())
     m = _TA_BEFORE_RE.match(q)
     if m:      # "days before B did A" = between(A, B)
         return ("between", m.group(1).rstrip("s") or "day",
@@ -5119,6 +5150,60 @@ def answer_temporal_arith(question: str,
         detail["dates"] = [ra[1], rb[1]]
         detail["value"] = n
         detail["span"] = True
+        return f"{n} {unit}{'' if n == 1 else 's'}", detail
+
+    if kind == "before_buy":
+        # Cycle 572: named-day before-frame — the purchase side binds
+        # a named day ("got my iPhone 13 Pro ... on Black Friday"),
+        # the event side carries a relative offset to the SAME named
+        # day ("attended ... a week before Black Friday"); the answer
+        # is that offset. Pure relative evidence: the family's whole
+        # haystack shares one session date, so no calendar arithmetic
+        # exists — the offset IS the answer. Both sides bind on
+        # keyword hits over user lines only (user-role wall); s15's
+        # TV lines say "on Cyber Monday" but carry no iPhone keywords
+        # and never bind. Disagreement of any kind (2+ named days,
+        # 2+ distinct offsets, offset day ≠ purchase day, month
+        # offsets, non-exact week conversion) → honest fall-through.
+        ks_buy, ks_ev = _anchor_keywords(a), _anchor_keywords(b)
+        buy_days, ev_offs = set(), set()
+        for line, sdate in dated_lines:
+            if not line.startswith("[user]"):
+                continue
+            if ks_buy and _keyword_hits(line, ks_buy) > 0:
+                buy_days.update(nm.group(1).lower() for nm
+                                in _TA_NAMED_ON_RE.finditer(line))
+            if ks_ev and _keyword_hits(line, ks_ev) > 0:
+                ev_offs.update((om.group(1).lower(),
+                                om.group(2).lower(),
+                                om.group(3).lower())
+                               for om
+                               in _TA_NAMED_OFFSET_RE.finditer(line))
+        detail["anchors"] = [sorted(buy_days), sorted(ev_offs)]
+        if len(buy_days) != 1:
+            return None, detail
+        named = next(iter(buy_days))
+        vals = set()
+        for word, off_unit, day in ev_offs:
+            if day != named or off_unit == "month":
+                continue
+            n = _TA_OFFSET_WORDS.get(word)
+            if n is None:
+                try:
+                    n = int(word)
+                except ValueError:
+                    continue
+            vals.add(n * (7 if off_unit == "week" else 1))
+        if len(vals) != 1:
+            return None, detail
+        n = next(iter(vals))
+        if unit == "week":
+            if n % 7:
+                return None, detail
+            n //= 7
+        elif unit != "day":
+            return None, detail    # month/year asks: no clean math
+        detail["value"] = n
         return f"{n} {unit}{'' if n == 1 else 's'}", detail
 
     # between
