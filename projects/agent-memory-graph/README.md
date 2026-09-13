@@ -2,7 +2,7 @@
 
 > 基于 SQLite 的轻量知识图谱，模拟 AI Agent 的长期记忆管理
 
-[![Tests](https://img.shields.io/badge/tests-10491-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-10569-brightgreen)]()
 [![Python](https://img.shields.io/badge/python-3.10+-blue)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-success)]()
@@ -4489,6 +4489,26 @@ counting gate 新 form "pages"，两个 head 一族：(A) **read-so-far latest-w
 #### C569：education-span 链 — 完成年份链求和与 resolved negative existence (da12c08)
 
 "How many years in total did I spend in formal education from high school to the completion of my X's degree?"（gpt4_372c3eed GT '10 years' + _abs 兄弟，2 行一族）。counting 第 14 个 form `education_span`，head 带 'from high school' 锚（C518 旧 pin 碰撞的修法是收紧自己的 head，不动旧 pin）。证据链 = user 行完成年份链：HS 'Arcadia High School from 2010 to 2014'（4）→ PCC AA May 2016（gap 2）→ UCLA BS 2020 'took me four years'（**显式时长优先**于年份差）= 10 years。guards：user-role 墙、(degree, year) 去重（GPA 重提）、pre-HS 年份跳过、premise conflict → fall-through。**abs 兄弟行是本周期的判分课**：Master's 仅存在为 "I'm considering pursuing a Master's degree"（无年份 aspiration）——链显式 + target 缺失 = **resolved negative existence → 显式 ABSTAIN_ANSWER**（"I don't know"），而非 fall-through 让 answer gate 产垃圾 pred；"handler 返 None" 不等于 "行 abstain"。banked 304→305（0.610），1 救 0 杀，+15 tests test_education_span_face.py（10476→10491）。
+
+## Cycles 570-573: 0.610→0.622 — 书本跨度、ago 倒推、具名日偏移、旅程跨度
+
+> 官方口径轨迹：0.610（C569）→ **0.614（C570）** → **0.618（C571）** → 0.620（C572）→ **0.622（C573）**，banked 305→311，套件 10491→10569。本段主轴：session-date 跨度族收束——route (h) 单题书本跨度 + route (i) ago 倒推帧（问题日期穿门）、route (j) event-span dated-realized pool + route (k) between 同日重试、before-buy 具名日相对偏移（日历问题行内消解）、route (t) 出发/返回双 'today' 跨度。四个周期全部 census-first、零 kills、live replay tripwire 全 PASS。教程同步增补：[TUTORIAL-ANSWER-FACES.md](TUTORIAL-ANSWER-FACES.md) §5.21-§5.24。
+
+#### C570：book-span route (h) + finish-when route (i) — 单题跨度与 ago 倒推帧 (cbfec9c)
+
+两个 pp 邻居面一个周期全收。**Route (h) `_pp_book_span`**（gate form `pp_book_span_form`）："How many days did it take me to finish 'X'?" —— 单一引号书名的会话日期跨度：起点 'just started ... today' 终点 'just finished ... today'，锚族与 C566 activity sum 同源但**不求和**。0/2+ 书名、缺事实、负跨度、同场 0 天全部诚实 fall-through；receive-order 表亲（b3c15d39）、C565 求和头、route (g) 活动头、when/before 变体全部挡在 form 外。**Route (i) `_pp_finish_when`**（`pp_finish_when_form`）："Which book did I finish <n> <unit>s ago?" —— ago 帧锚定**提问日期**而非任何会话日期（answer_extractive 新穿第三参 question_date 经 pp gate），session date = qdate − N×unit 的 finish-today 行即答案源；行侧书名提取双引号优先（C568 quote-theft 教训的行侧版，行首 I'm 的 'm looking...today 会被朴素引号捕获吞走）；目标日恰一个书名，同日两本 honest fall-through；作者尾随渲染（'The Nightingale by Kristin Hannah' 连 exact_judge 都能过）。Census 修法示范：宽松 head B 原本 2 行含已 banked 的 gpt4_2d58bcd6，把 <n> <unit>s ago 帧烧进 form 后 recensus 恰 1 行、构造性零杀。banked 305→307（0.614），救 2ebe6c90（'21 days'，s17@01-10 起 → s20@01-31 止）+ 2ebe6c92（qdate 02/07 − 7d = 01/31），0 杀，套件 10491→10522（+31 tests test_book_span_finish_faces.py）。
+
+#### C571：event-span route (j) + between 同日重试 — 计划行污染的第三次解法 (f775259)
+
+**Route (j) `_TA_TAKEAFTER_RE`**："How many days did it take for me to X after Y?" —— 关键词命中行只留 **dated-realized**（past-marked + gate 通过）行入池，goal = 最新日期、onset = 最早日期，空池 honest fall-through；receive/order 表亲留给 counting gate（`_TA_RECEIVE_ORDER_RE` 排除）。**Route (k) between 同日重试**：两个 between 锚塌缩到同一日期时，把意图不定式计划行（剥锚动词词干）剔出池子重解；`_TA_TOMORROW_RE` 把 'testing ... tomorrow' 钉在 session_date+1。真实病灶：gpt4_4fc4f797 的真锚只存在于 assistant 复述/未来标记行，计划行 'planning to test ... next month' 以 4:3 压过实现行导致双锚塌缩 abstain——重试修复。banked 307→309（0.618）：2c63a862（'14 days'）+ gpt4_4fc4f797（'38 days'），0 杀，套件 10522→10530（+8 tests test_event_span_faces.py）。**两版"更聪明"的设计被探针否决回滚**：全局排除未来标记行会让 C471 ladder 冠军行漂移（它们常是 future-marked，6/16 兄弟漂移）；future_penalty 压错行（真锚根本不在候选里）。最终版构造性零漂移——16 个已 banked 兄弟无同日塌缩，重试路径永不触发。教训：**诚实弃权优于强行消解**。
+
+#### C572：before-buy named-day face — 相对偏移替代节日日历 (3fabd81)
+
+"How many days before I bought X did I attend Y?"（c8090214，GT '7 days'）——C571 曾因 "Black Friday 需要节日日历" 把它 defer。破法是**根本不需要日历**：`_TA_BEFORE_BUY_RE` 让购买行绑一个**具名日**（'got my iPhone 13 Pro ... on Black Friday'），事件行携带指向**同一天**的偏移（'attended the Holiday Market ... a week before Black Friday'），答案 = 偏移本身（7 天）。这一族 haystack 共享单一 session date 2023-12-10，C482/C571 的日历路径自然 abstain——外部知识依赖被消解成行内相对偏移。judge 经 exact-number face {7} ⊆ {7,8} 落地（GT '7 or 8 days'）；_abs 兄弟（无 iPad 购买行）fall-through 不变、pred 字节稳定。form 漂移探针恰 2/500，tripwire PASS 310/500。banked 309→310（0.620），套件 10530→10548（+18 tests test_before_buy_face.py）。
+
+#### C573：trip-span route (t) — 出发/返回双 'today' 跨度与 harness 纪律 (cd60d09)
+
+"How many days did I spend on my <desc> trip?"（gpt4_1d80365e，GT '2 days...'）——route (t)，route (h) 的姊妹：起点 'just started my solo camping trip ... today'（s14@2023-05-15）+ 返回 'just got back from an amazing solo camping trip ... today'（s33@2023-05-17）→ 跨度 2 天。**Census-first 完整示范**：shipped-regex 全 500 恰 1 行 + pp-gate claim diff（HEAD vs 工作树）恰 +{gpt4_1d80365e}、0 丢失，CAMP_ASPIRE 诱饵与 s6 噪声先定位后砌墙。TDD red-first：21 miniatures 先 14 红（全为正确的理由），实现后 21/21 一次过，含**真实 haystack 日期**的逐字复刻（kd-2 合成日期教训）。judge 复用 C572 先例：GT '2 days. 3 days (including the last day) is also acceptable.' → exact-number face {2} ⊆ {2,3}。**本周期 harness 纪律**：凭记忆重打的 replay 脚本抄错 exact_judge 参数个数 + 用了变体 banked 公式（bool(v or ex) vs canonical (v=='CORRECT') or (correct_exact and v!='WRONG')）——与 C572 canonical harness diff 后抓出；规则固化：**canonical 脚本逐字复制，永不重打**。banked 310→311（0.622），0 杀，套件 10548→10569（+21 tests test_trip_span_face.py）。
 
 ## 许可
 

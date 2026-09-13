@@ -295,6 +295,30 @@ counting gate 新 form "pages"：(A) **read-so-far latest-wins**——"How many 
 
 > 判分课：**resolved negative existence → 显式弃答**。abs 兄弟行里 Master's 仅存在为 "I'm considering pursuing..."（无年份 aspiration）——链显式 + target 缺失 = 可证明的"不存在"，应显式 ABSTAIN_ANSWER（"I don't know"），而非 handler 返 None 让 answer gate 产垃圾 pred。"handler 返 None" ≠ "行 abstain"——两种 silence 语义不同。
 
+### 5.21 C570 book-span + finish-when — 单题跨度与 ago 倒推帧
+
+两个新问法一个家族。(h) "How many days did it take me to finish 'X'?"：单一引号书名的**会话日期跨度**——起点 'just started ... today'、终点 'just finished ... today'，锚族与 §5.17 的 activity sum 同源，但只取一题的跨度、不求和。(i) "Which book did I finish <n> <unit>s ago?"：关键认知是 **ago 帧锚定的是提问日期，不是任何会话日期**——session date = 提问日 − N×unit 的 finish-today 行就是答案源。这要求把 question_date 从 answer_extractive 穿过 pp gate 传进 handler（新增第三参），门入口多穿一根线，route 内部零改动。
+
+> 提取课：**quote-theft 的行侧版**。朴素引号捕获会把行首 "I'm looking ... today and I" 里的 'm looking...today 吞成"书名"——行侧提取改双引号优先 + 词边界护栏，固化为永久回归 pin。作者尾（'The Nightingale by Kristin Hannah'）停止于句号：句子安全优先，author initials 会截尾（可接受，title-only 已够判分）。
+
+### 5.22 C571 event-span + between 同日重试 — 计划行污染的第三次解法
+
+"How many days did it take for me to X after Y?"（route j）：关键词命中行只留 **dated-realized**（past-marked + gate 通过）行入池，goal = 最新日期、onset = 最早日期。真正的难点在 between 类问题：**意图计划行**（'planning to test ... next month'）比实现行更密集（4:3），把两个锚塌缩到同一日期 → abstain。route (k) 的重试：塌缩时把意图不定式计划行（剥锚动词词干）剔出池子再解一次；'tomorrow' 行钉在 session_date+1。
+
+> 设计课：**两版"更聪明"的方案都被探针否决**——全局排除未来标记行会让 C471 ladder 冠军行漂移（它们常是 future-marked）；future_penalty 压错行（真锚根本不在候选里）。最终的重试是**构造性零漂移**的：16 个已 banked 兄弟没有同日塌缩，重试路径在它们身上永不触发。教训：诚实弃权优于强行消解——重试后仍塌缩就保持 abstain。
+
+### 5.23 C572 before-buy named-day — 相对偏移替代节日日历
+
+"How many days before I bought X did I attend Y?"（'7 days'）。C571 曾把它 defer，理由是 "Black Friday 需要节日日历"。C572 的破法：**根本不需要日历**。购买行绑一个具名日（'got my iPhone 13 Pro ... on Black Friday'），事件行携带指向同一天的偏移（'attended the Holiday Market ... a week before Black Friday'）——答案就是偏移本身。这一族 haystack 全部共享单一 session date，日历路径自然 abstain：外部知识依赖被消解成行内相对偏移。
+
+> 判分课：GT '7 or 8 days' 时 exact-number face {7} ⊆ {7,8} 判 CORRECT——这个先例下一周期（C573）立刻复用。
+
+### 5.24 C573 trip-span route (t) — 出发/返回双 'today' 的会话跨度
+
+"How many days did I spend on my <desc> trip?"（'2 days'）。route (h) 的姊妹：起点 'just started ... trip ... today'（s14@05-15）+ 返回 'just got back ... trip ... today'（s33@05-17）→ 跨度 2 天。census-first 的完整示范：shipped-regex 全 500 恰 1 行 + pp-gate claim diff（HEAD vs 工作树）恰 +目标行、0 丢失——实现前先把诱饵（CAMP_ASPIRE、s6 噪声）定位砌墙。TDD red-first：21 miniatures 先 14 红（全为正确的理由），实现后 21/21 一次过；含**真实 haystack 日期**的逐字复刻（吸取 kd-2 合成日期教训）。
+
+> Harness 纪律：**canonical 脚本逐字复制，永不凭记忆重打**。本周期 replay 脚本重打时抄错 exact_judge 参数个数、banked 公式写成变体——与 C572 canonical 版 diff 后才抓出。任何输出都不可信，直到脚本本身被验明正身。
+
 ## 6. 反面教材：枚举清单没有结构键（C536，RECORD-NEGATIVE）
 
 序数清单（"5. Absinthe"）看起来也能做个 face。实现后发现 **census 全负**：
