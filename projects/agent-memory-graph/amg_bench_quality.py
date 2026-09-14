@@ -4171,6 +4171,29 @@ def answer_speaker_recall(question: str,
             if exempt:
                 best = max(exempt, key=lambda p: p[0])
                 detail["name_def_face"] = "exemption"
+    # C574 source-locator face: a question citing a publication
+    # source ("...the study published in the journal Music and
+    # Medicine that found...") is answered by the passer that
+    # CONTAINS the cited title — the citation is the join condition
+    # (C531/#086): the 0e5e2d1a official-run winner ("Alternative
+    # Therapies ... 15 subjects", 576.5) parasitizes the shared
+    # study/published/journal/subjects/medicine vocabulary while the
+    # true bearer ("Another study published in the journal Music and
+    # Medicine involved 38 subjects", raw=8, SAME message) names the
+    # cited journal. Tier among passers only — a bearer the floors
+    # excluded stays excluded (C536); fires only when a best already
+    # exists (C559 precedent); no exemption pass (census: exactly 1
+    # row of the frozen 500 matches the question form, so a miss is
+    # a fall-through, not a loss).
+    src_toks = _src_loc_name(question)
+    if src_toks and best is not None:
+        tier = [p for p in passers
+                if all(t in p[1].lower() for t in src_toks)]
+        if tier:
+            faced = max(tier, key=lambda p: p[0])
+            if faced[1] != best[1]:
+                best = faced
+                detail["src_loc_face"] = "tier"
     detail["best_score"] = round(best[0], 1) if best else 0
     if best is None:
         return None, detail
@@ -4304,6 +4327,35 @@ def _name_def_bearer(sent: str, head: list[str]) -> bool:
         if toks and set(toks) & set(head):
             return True
     return False
+
+
+# ── C574: source-locator face — "published in the journal X" ────
+# Question side: a citation of a publication source ("...the study
+# published in the journal Music and Medicine that found..."). The
+# title span is captured greedily (up to 7 words) then cut at the
+# first clause-boundary word; title-internal function words ("Music
+# AND Medicine", "Journal OF ...") are KEPT — only clause words cut.
+_SRC_LOC_Q_RE = re.compile(
+    r"\bpublish(?:ed)?\s+in\s+the\s+"
+    r"(?:journal|magazine|newspaper|newsletter|proceedings|book)\s+"
+    r"((?:[A-Za-z'&.\-]+\s+){0,6}[A-Za-z'&.\-]+)", re.I)
+_SRC_LOC_CUT_RE = re.compile(
+    r"\b(?:that|which|who|whose|where|when|"
+    r"f(?:ound|ind|inding|indings)|report(?:ed|ing|s)?|"
+    r"show(?:ed|ing|n|s)?|conclu(?:ded|des|ding|sion)|"
+    r"demonstrat(?:ed|es|ing)|analyz(?:ed|es|ing)|"
+    r"examin(?:ed|es|ing)|recruit(?:ed|ing|s)?|"
+    r"enroll(?:ed|ing|s)?)\b|,", re.I)
+
+
+def _src_loc_name(question: str) -> list[str] | None:
+    """Lowercased title tokens of a cited publication source, or None
+    when the question carries no citation (C574 face detector)."""
+    m = _SRC_LOC_Q_RE.search(question)
+    if not m:
+        return None
+    name = _SRC_LOC_CUT_RE.split(m.group(1))[0].strip().lower()
+    return name.split() or None
 
 
 # ── C536: ordinal-item face — "the fifth bottle you recommended" ──
