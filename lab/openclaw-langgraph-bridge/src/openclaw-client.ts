@@ -16,6 +16,26 @@ export interface SpawnOptions {
   timeoutSeconds?: number;
 }
 
+export type HealthStatus = "ok" | "down";
+
+export interface HealthResult {
+  /** "ok" = reachable, 2xx, and gateway self-reports ok !== false */
+  status: HealthStatus;
+  /** HTTP status code when a response arrived (undefined when unreachable) */
+  httpStatus?: number;
+  /** gateway-reported `ok` flag, present when body parsed as JSON */
+  ok?: boolean;
+  /** gateway-reported `status` field, e.g. "live" / "degraded" */
+  gatewayStatus?: string;
+  /** why the check failed — present iff status === "down" */
+  reason?: string;
+}
+
+export interface HealthOptions {
+  /** abort budget for the whole check; default 2000ms. Never throws. */
+  timeoutMs?: number;
+}
+
 export class OpenClawClient {
   private baseUrl: string;
   private headers: Record<string, string>;
@@ -70,6 +90,53 @@ export class OpenClawClient {
       );
     }
     return typeof data === "string" ? data : JSON.stringify(data);
+  }
+
+  /**
+   * Probe the gateway (GET /healthz). Never throws — always returns a
+   * HealthResult so callers can gate spawn() on it without try/catch.
+   *
+   * Mirrors the real gateway contract: 200 {ok: true, status: "live"}.
+   */
+  async health(options?: HealthOptions): Promise<HealthResult> {
+    const timeoutMs = options?.timeoutMs ?? 2000;
+    let resp: Response;
+    try {
+      resp = await fetch(`${this.baseUrl}/healthz`, {
+        headers: this.headers,
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+    } catch (err) {
+      const isAbort =
+        err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
+      const reason = err instanceof Error ? err.message : String(err);
+      return {
+        status: "down",
+        reason: isAbort
+          ? `health check timed out after ${timeoutMs}ms`
+          : `cannot reach gateway at ${this.baseUrl} (${reason})`,
+      };
+    }
+
+    const text = await resp.text();
+    if (!resp.ok) {
+      return { status: "down", httpStatus: resp.status, reason: `${resp.status} ${text.slice(0, 120)}` };
+    }
+
+    try {
+      const data = JSON.parse(text) as { ok?: unknown; status?: unknown };
+      const gatewayStatus = typeof data.status === "string" ? data.status : undefined;
+      if (data.ok === false) {
+        return { status: "down", httpStatus: resp.status, ok: false, gatewayStatus, reason: `gateway self-reports not-ok (status: ${gatewayStatus ?? "unknown"})` };
+      }
+      return { status: "ok", httpStatus: resp.status, ok: data.ok === true, gatewayStatus };
+    } catch {
+      return {
+        status: "down",
+        httpStatus: resp.status,
+        reason: `invalid JSON response (status ${resp.status}): ${text.slice(0, 120)}`,
+      };
+    }
   }
 
   /**
