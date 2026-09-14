@@ -1,7 +1,7 @@
-# TUTORIAL: Answer Faces — 问题结构驱动的答案选择（Cycles 529-569）
+# TUTORIAL: Answer Faces — 问题结构驱动的答案选择（Cycles 529-576）
 
 > 本文解释 amg 评测管线里最反直觉的一个设计：**答案选哪个句子，不该由"分数阈值"决定，而该由"问题在问什么"决定**。
-> 覆盖 Cycle 529-554 的机制演进（banked 0.494 → 0.566），所有例子都是 LongMemEval s_cleaned full-500 里的真实题目。
+> 覆盖 Cycle 529-576 的机制演进（banked 0.494 → 0.630），所有例子都是 LongMemEval s_cleaned full-500 里的真实题目。
 
 ---
 
@@ -165,9 +165,9 @@ judge cascade（exact → semantic → LLM）里有一个 NEEDS_JUDGE 区间：e
 
 ---
 
-## 5. 值解析与锚点族 face：数字、日期、时长、锚点选择（C549-C569）
+## 5. 值解析与锚点族 face：数字、日期、时长、锚点选择（C549-C576）
 
-§3-§4 的 face 都长在"**选哪句话**"上；C549-C554 是第三波：答案本身是个数值/日期/时长，face 长在"**值解析**"上——不是从候选里挑句子，而是从通过 gate 的内容里提炼出**正确的值**。C555-C557 是第四波：值对了还不够，**锚点选择**本身也是信号源——锚是谁说的（角色）、跨度怎么定义（口径）、行内多个日期选哪个（临近度/连续对）。外加一次方法论升级（C549：census-negative 的第三种用法）。C561-C563 是值解析族的残留地带清扫：counting 的非金钱度量兄弟（距离/重量/时长）、item_total 的空清单分支（类别求和）、时长族最后两个病根（同句状态绑定 + 进行体问头/会话跨度）。C564-C569 是第五波：**期限/跨度/求和面**——pp_duration 三条新 route（晋职扣减、完成时长求和、活动跨度求和）与一个门入口（have-had），counting 三个新 gate entry（页码进度双面、成书页数求和、教育年限链）；附赠两次"队列注记被证据翻案"的方法论实录（C564 弃权→rescue、C565 现成→错面）。
+§3-§4 的 face 都长在"**选哪句话**"上；C549-C554 是第三波：答案本身是个数值/日期/时长，face 长在"**值解析**"上——不是从候选里挑句子，而是从通过 gate 的内容里提炼出**正确的值**。C555-C557 是第四波：值对了还不够，**锚点选择**本身也是信号源——锚是谁说的（角色）、跨度怎么定义（口径）、行内多个日期选哪个（临近度/连续对）。外加一次方法论升级（C549：census-negative 的第三种用法）。C561-C563 是值解析族的残留地带清扫：counting 的非金钱度量兄弟（距离/重量/时长）、item_total 的空清单分支（类别求和）、时长族最后两个病根（同句状态绑定 + 进行体问头/会话跨度）。C564-C569 是第五波：**期限/跨度/求和面**——pp_duration 三条新 route（晋职扣减、完成时长求和、活动跨度求和）与一个门入口（have-had），counting 三个新 gate entry（页码进度双面、成书页数求和、教育年限链）；附赠两次"队列注记被证据翻案"的方法论实录（C564 弃权→rescue、C565 现成→错面）。C570-C573 把第五波收束成 session-date 跨度族（书本/事件/旅程跨度、ago 倒推、具名日偏移）。C574-C576 是第六波：**结构回指族**——问题自身的引用结构（出版引证、bullet 列表体、回指提法）本身就是 bearer 的连接条件。
 
 ### 5.1 C549 松弛空间穷举 — census-negative 变成局部最优证书
 
@@ -319,6 +319,24 @@ counting gate 新 form "pages"：(A) **read-so-far latest-wins**——"How many 
 
 > Harness 纪律：**canonical 脚本逐字复制，永不凭记忆重打**。本周期 replay 脚本重打时抄错 exact_judge 参数个数、banked 公式写成变体——与 C572 canonical 版 diff 后才抓出。任何输出都不可信，直到脚本本身被验明正身。
 
+### 5.25 C574 source-locator — 引文即连接条件
+
+问题引用出版物来源（"...the study published in the journal Music and Medicine that found..."）时，**被引标题本身就是 join condition**（C531/#086 先例）：真 bearer 是提到被引标题的那条 passer。真实病例：官方 run 冠军 'Alternative Therapies' 15-subject 行（576.5）靠共享 study/journal/medicine 词汇登顶，而真 bearer（38-subject，同一消息）恰恰指名了被引期刊。face 的边界纪律全数继承：仅在 passer 池内分层（C536）、仅在已有 best 时开火（C559）、无豁免直通；census 显示 frozen 500 恰 1 行命中该形态——构造性零杀。
+
+> fixture 课：**迷你测试池会压垮 IDF**。N=2 的 fixture 池把 IDF 压到 weighted_floor 之下，诱饵质量必须手工补足；裸 token 'Can' 还能在没有 'can' 的迷你 haystack 里误触 neg_exist false fire。微缩测试不是缩小版现实——证据分布要重新校准。
+
+### 5.26 C575 list-body 双面 — bullet 列表是答案结构
+
+两个豁免面把 bullet 列表**当作答案结构来读**。**paren-count**：`* Mummies (4):` 这类 stat 行的括号计数就是 how-many 的值——C534 数字层上的营销寄生行退位（18dcd5a5）。**adjacent-name**：实体清单里，匹配到的描述行**上方相邻**的那行就是 who-is-the 的答案，名字直接从源行重组（`_list_row_full`），不靠词面重猜——LLNL 寄生行退位（e3fc4d6e）。census 先验证两个受保护池无 paren 行（零杀），replay 恰翻正两行：单周期双救，banked 312→314。
+
+> 结构课：**列表标记（`*`、括号计数、相邻行）是作者留下的答案定位信号**。与 §5.13 类别求和、§5.19 页数求和同读列表，但视角不同：那些面读"列表项的值"，这两个面读"列表行的结构"——paren-count 是值提取，adjacent-name 是 bearer 选择，一个家族的两侧。
+
+### 5.27 C576 mention-demand appositive — 回指问句的答案在定义句
+
+"The <head noun> you mentioned" 式回指问句的答案**不在回指行**——'The company also invests ...' 以 229.8 寄生——而在**定义该提法的同位语句**：'Patagonia, an outdoor clothing and gear company, is known ...'。病根：命中关键词全是中频词，distinctive 过滤反而把 bearer 藏了。face 作为 C559 豁免类的第二成员：同位语短语以 head noun 结尾 + frame-word 拒绝 + raw≥2 + weighted_floor 保留 + preface 罚分；复数/数词 demand 在提取层排除（多项 GT 不入，a40e080f 先例）。census：形态恰接受 1/500、目标池恰 1 bearer（169.8）。
+
+> 回指课：**"你提到的 X"这类问法把答案的形状写在了问题里**——要求 bearer 出现 head noun 的定义性展开，而不是任何提到同一实体的句子。与 §5.11（name-demand definitional-anaphora，定义式 bearer `<专名>: this <anaphor>`）合读：同位语是它的行中变体。
+
 ## 6. 反面教材：枚举清单没有结构键（C536，RECORD-NEGATIVE）
 
 序数清单（"5. Absinthe"）看起来也能做个 face。实现后发现 **census 全负**：
@@ -402,12 +420,16 @@ answer-face 家族的开发纪律（每个 face 都走了这套流程）：
 | "pages read so far" / "pages left" | pages-progress 双面（counting） | latest on-page 锚文档序末位；left = total（range+pace guard）− latest；双面共享锚族只分叉聚合步 | C567 |
 | "page count of the two novels I finished" | page-count sum（counting） | month-blind：just-finished 句内首个页数短语；distinct 求和、基数由题面 count word 钉死；🚫 懒惰通配符+回溯正则会啃捕获 | C568 |
 | "years in formal education from high school" | education-span 链（counting） | (degree, year) 完成年份链求和，显式时长 > 年份差；target 缺失 = resolved negative existence → 显式弃答 | C569 |
+| 问题引用出版物来源（"the study published in the journal X"） | source-locator | 引文即连接条件：提被引标题的行是 bearer；仅 passer 内分层、仅已有 best 时开火 | C574 |
+| how-many 的答案在 stat 列表行 | paren-count（list-body） | `* Mummies (4):` 括号计数即值；营销寄生行退位 | C575 |
+| who-is-the 且描述行在实体清单里 | adjacent-name（list-body） | 匹配描述行上方相邻的实体名行即答案；名字从源行重组 | C575 |
+| 问题回指 "the <head noun> you mentioned" | mention-demand appositive | 同位语定义句压过回指行寄生；C559 豁免类第二成员 | C576 |
 | kh-floor 想救 kh=0 GT | 🚫 census-negative，不接线 | 1 救 vs 14 杀，absence pin 钉死 | C543 |
 | kh-elite 准入救窗口死区 | 🚫 census-negative，不接线 | impostor 杀率 23.3% vs 4 救，admission-only 全族否决 | C546 |
 | 松弛 run 门想多救几行 | 🚫 census-negative = 局部最优证书 | 全部 kill 是 run-TIE impostor；absence pin 钉死 C548 配置 | C549 |
 | 嵌入 side-channel 重排 | 🚫 census-negative，默认 False | 离线增益被 gate+judge 吸收，pin 死默认值 | C545 |
 
-**九条带走的原则**：
+**十条带走的原则**：
 1. 答案选择读**问题结构**，不调阈值
 2. face 重排不越权翻地板；地板排除自有理由
 3. census-first：先数人口，先离线模拟，再接线；证伪的方向写进台账并用 absence pin 钉住
@@ -417,7 +439,8 @@ answer-face 家族的开发纪律（每个 face 都走了这套流程）：
 7. 证伪的尸体是矿：关闭方向后别扔 census 数据——杀面的分布里可能藏着让机制起死回生的门（C546 杀面全 assistant → C548 role=user 门）
 8. 值解析题（多少/多久/哪天）的 face 不选句子，选**值**——限定词收窄解析人口（C552）、单位即证据（C553）、模糊量诚实弃权（C550）；且"现配置是局部最优"也能被 census 证明（C549）
 9. 队列注记 ≠ 判决：弃权规划可被 census 翻案为 rescue（C564），"现成只需放宽"可被证据定位证伪为错面（C566）——规划是猜，census 是验
+10. 问题自身的引用结构是词面相似度之外的连接条件：出版引证指向被引标题行（C574）、回指 demand 指向定义句（C576）、bullet 结构指向列表行（C575）——问题怎么引用答案，答案就该长什么样
 
 ---
 
-*生成：documentation-morning cron，2026-09-02；Cycles 540-542 增补：2026-09-03；Cycles 543-545 增补：2026-09-04；Cycles 546-548 增补：2026-09-05；Cycles 549-554 增补：2026-09-07；Cycles 555-557 增补：2026-09-08；Cycles 558-559 增补：2026-09-09；Cycles 561-563 增补：2026-09-10；Cycles 564-569 增补：2026-09-13。数据口径：LongMemEval s_cleaned full-500，PYTHONHASHSEED=7，deterministic cascade banked。轨迹明细见 README Cycles 532-569 段。*
+*生成：documentation-morning cron，2026-09-02；Cycles 540-542 增补：2026-09-03；Cycles 543-545 增补：2026-09-04；Cycles 546-548 增补：2026-09-05；Cycles 549-554 增补：2026-09-07；Cycles 555-557 增补：2026-09-08；Cycles 558-559 增补：2026-09-09；Cycles 561-563 增补：2026-09-10；Cycles 564-569 增补：2026-09-13；Cycles 570-573 增补：2026-09-14；Cycles 574-576 增补：2026-09-15。数据口径：LongMemEval s_cleaned full-500，PYTHONHASHSEED=7，deterministic cascade banked。轨迹明细见 README Cycles 532-576 段。*

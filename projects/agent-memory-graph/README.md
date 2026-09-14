@@ -2,7 +2,7 @@
 
 > 基于 SQLite 的轻量知识图谱，模拟 AI Agent 的长期记忆管理
 
-[![Tests](https://img.shields.io/badge/tests-10569-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-10621-brightgreen)]()
 [![Python](https://img.shields.io/badge/python-3.10+-blue)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-success)]()
@@ -66,7 +66,7 @@
 - **拓扑快捷统计** — hub_nodes/peripheral_nodes/mean_degree 一键获取关键结构指标 (Cycle 339)
 - **图分类套件** — 8 种分类方法 + 基准评估 + 最大置信度元分类器 + 噪声鲁棒性测试 (Cycles 326-341)
 - **Temporal QA 家族 (5 路由)** — LongMemEval temporal-reasoning 零 LLM 解法：temporal_arith 日历算术 + pp_duration/pure_tenure 状态时长 + order 排序 + pairwise which-first，form gate + 最早-FRESH 锚定 + 负存在弃权，temporal-133 0.323→0.474 全程 zero-flip (Cycles 457-489)
-- **确定性语义判分级联** — judge_semantic 规范化阶梯（大小写/日期折叠/时间单位/守卫包含）零 LLM 可判面 + judge_cascade 仅 NEEDS_JUDGE 才降级 LLM；readonly 确定性召回让评估成为 dataset 纯函数，官方 LME_s cascade-500 破半后持续进化：0.494（Cycles 520-531）→ **0.610**（Cycles 548-569，答案面家族 + judge 侧 rescue faces + 计数/时序/时长值解析族 + 锚点选择三连（角色优先/事件跨度/多日期）+ 两跳日期合成、定义式指代 bearer、度量/类别/时长求和面 + 晋职扣减、持有期限、活动跨度、页码进度、成书页数与教育年限链 + judge 溯源指纹，见 [TUTORIAL-ANSWER-FACES.md](TUTORIAL-ANSWER-FACES.md)）
+- **确定性语义判分级联** — judge_semantic 规范化阶梯（大小写/日期折叠/时间单位/守卫包含）零 LLM 可判面 + judge_cascade 仅 NEEDS_JUDGE 才降级 LLM；readonly 确定性召回让评估成为 dataset 纯函数，官方 LME_s cascade-500 破半后持续进化：0.494（Cycles 520-531）→ **0.630**（Cycles 548-576，答案面家族 + judge 侧 rescue faces + 计数/时序/时长值解析族 + 锚点选择三连（角色优先/事件跨度/多日期）+ 两跳日期合成、定义式指代 bearer、度量/类别/时长求和面 + 晋职扣减、持有期限、活动跨度、页码进度、成书页数与教育年限链 + session-date 跨度族（书本/事件/旅程）、ago 倒推与具名日偏移 + judge 溯源指纹 + 引证溯源、列表体双面、同位语指代面，见 [TUTORIAL-ANSWER-FACES.md](TUTORIAL-ANSWER-FACES.md)）
 - **零依赖** — 仅用 Python 标准库（sqlite3 + json + math），sqlite-vec 为可选依赖
 - **传播激活家族 (5 API)** — ACT-R 认知模型: spreading_activation (基础) → activation_trace (可解释) → competitive_spreading (多种子竞争) → temporal_spreading (时间衰减) → activation_diff (对比分析) (Cycles 366-383)
 - **流式熵追踪** — FINGEREntropy O(Δ) 增量 von Neumann 熵 + StreamingGraph 实时异常检测 (Cycle 361)
@@ -4509,6 +4509,22 @@ counting gate 新 form "pages"，两个 head 一族：(A) **read-so-far latest-w
 #### C573：trip-span route (t) — 出发/返回双 'today' 跨度与 harness 纪律 (cd60d09)
 
 "How many days did I spend on my <desc> trip?"（gpt4_1d80365e，GT '2 days...'）——route (t)，route (h) 的姊妹：起点 'just started my solo camping trip ... today'（s14@2023-05-15）+ 返回 'just got back from an amazing solo camping trip ... today'（s33@2023-05-17）→ 跨度 2 天。**Census-first 完整示范**：shipped-regex 全 500 恰 1 行 + pp-gate claim diff（HEAD vs 工作树）恰 +{gpt4_1d80365e}、0 丢失，CAMP_ASPIRE 诱饵与 s6 噪声先定位后砌墙。TDD red-first：21 miniatures 先 14 红（全为正确的理由），实现后 21/21 一次过，含**真实 haystack 日期**的逐字复刻（kd-2 合成日期教训）。judge 复用 C572 先例：GT '2 days. 3 days (including the last day) is also acceptable.' → exact-number face {2} ⊆ {2,3}。**本周期 harness 纪律**：凭记忆重打的 replay 脚本抄错 exact_judge 参数个数 + 用了变体 banked 公式（bool(v or ex) vs canonical (v=='CORRECT') or (correct_exact and v!='WRONG')）——与 C572 canonical harness diff 后抓出；规则固化：**canonical 脚本逐字复制，永不重打**。banked 310→311（0.622），0 杀，套件 10548→10569（+21 tests test_trip_span_face.py）。
+
+## Cycles 574-576: 0.622→0.630 — 引证溯源、列表体双面、同位语指代
+
+> 官方口径轨迹：0.622（C573）→ **0.624（C574）** → **0.628（C575）** → **0.630（C576）**，banked 311→315，套件 10569→10621。本段主轴：bearer/结构族的三个新面——问题引用出版物来源时**引文即连接条件**（source-locator）、bullet 列表本身就是答案结构（paren-count + adjacent-name 双面）、回指问句 "the <head noun> you mentioned" 的答案在定义句（mention-demand appositive，C559 豁免类第二成员）。三个周期全部 census-first、零 kills、live replay tripwire 全 PASS。教程同步增补：[TUTORIAL-ANSWER-FACES.md](TUTORIAL-ANSWER-FACES.md) §5.25-§5.27。
+
+#### C574：source-locator face — 引文即连接条件 (3e673e7)
+
+问题引用出版物来源（"...the study published in the journal Music and Medicine that found..."）时，被引标题就是 join condition（C531/#086 先例）：答案行是提到被引标题的那条 passer。真实病例：官方 run 冠军 'Alternative Therapies' 15-subject 行（576.5）寄生共享 study/journal/medicine 词汇，而真 bearer（38-subject、同一消息、raw=8）恰恰指名了被引期刊。边界纪律全数继承：仅在 passer 池内分层（C536）、仅在已有 best 时开火（C559）、无豁免直通。Census：frozen 500 恰 1 行命中该形态——构造性零杀。live replay（逐字复用 C573 canonical harness）：pred 变化恰 {0e5e2d1a}、drift False→True，banked 311→312（0.624），abs_banked 18 frozen。+15 tests test_source_locator_face.py（red-first，真实行逐字复刻）；**fixture 课**：N=2 小池子把 IDF 压到 weighted_floor 之下——诱饵质量必须补足；裸 token 'Can' 在无 'can' 的迷你 haystack 里误触 neg_exist。套件 10569→10584。
+
+#### C575：list-body 双面 — bullet 列表是答案结构 (f81d6c5)
+
+两个豁免面把 bullet 列表当作答案结构来读：**paren-count** —— `* Mummies (4):` 这类 stat 行的括号计数就是 how-many 的值（18dcd5a5；C534 数字层上的营销寄生行退位）；**adjacent-name** —— 匹配到的描述行上方相邻的实体清单行回答 who-is-the（e3fc4d6e；LLNL 寄生退位），名字从源行重组（`_list_row_full`）。Census：who-is-the = 1/500、how-many routed = 3/500（两个受保护池均验证无 paren 行）。Replay tripwire PASS：pred 变化恰 {18dcd5a5, e3fc4d6e}、drift 2 False→True——单周期双救，banked 312→314（0.628），abs_banked 18。套件 10584→10601（+17 miniatures）。
+
+#### C576：mention-demand appositive face — 回指问句的答案在定义句 (ee183ff)
+
+"The <head noun> you mentioned" 式回指问句的答案不在回指行，而在定义该提法的同位语句——'Patagonia, an outdoor clothing and gear company, is known ...'（e48988bc；命中关键词全是中频词，distinctive 过滤把 bearer 藏掉，回指行 'The company also invests ...' 以 229.8 寄生）。**C559 豁免类新成员**：同位语短语以 head noun 结尾 + frame-word 拒绝 + raw≥2 + weighted_floor 保留 + preface 罚分；复数/数词 demand 在提取层排除（a40e080f 多项 GT 不入）。Census：形态恰接受 1/500 题、目标池恰 1 bearer（169.8）。Replay tripwire PASS：pred 变化恰 {e48988bc}，banked 314→315（0.630），abs_banked 18。套件 10601→10621（+20 miniatures）。
 
 ## 许可
 
