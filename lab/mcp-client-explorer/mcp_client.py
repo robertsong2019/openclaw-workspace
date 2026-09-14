@@ -257,13 +257,20 @@ class MCPClient:
 
             try:
                 response = json.loads(line.strip())
-                request_id = response.get("id")
-
-                if request_id in self.pending_requests:
-                    self.responses[request_id] = response
-                    self.pending_requests[request_id].set()
             except json.JSONDecodeError:
+                # server 调试 print 的纯文本 —— 不是响应，跳过但不杀线程
                 continue
+
+            if not isinstance(response, dict):
+                # 合法 JSON 但非 dict（调试打印数组/字符串/json 标量是真实世界常态）。
+                # 旧实现直接 response.get() → AttributeError 未捕获 → 监听线程
+                # 静默死亡 → 之后所有请求永久超时（silent-hang）。跳过即可。
+                continue
+
+            request_id = response.get("id")
+            if request_id in self.pending_requests:
+                self.responses[request_id] = response
+                self.pending_requests[request_id].set()
 
     # ========== 资源操作 ==========
 
