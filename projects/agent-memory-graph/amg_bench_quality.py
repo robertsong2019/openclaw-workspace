@@ -4033,11 +4033,13 @@ def answer_speaker_recall(question: str,
     # distinctive mode (Cycle 475)
     min_raw = 3
     pool: list[tuple[str, str | None]] = []
+    pool_nids: list[str] = []   # C575: node identity for bullet adjacency
     for nid, node in (nodes or {}).items():
         if node.get("role") != "assistant":
             continue
         for sent in _split_sentences(node.get("label", "")):
             pool.append((sent.strip(), node.get("session_id")))
+            pool_nids.append(nid)
     detail: dict = {"mode": "distinctive", "keywords": kws,
                     "pool": len(pool), "questions_skipped": 0}
     if not pool:
@@ -4194,6 +4196,87 @@ def answer_speaker_recall(question: str,
             if faced[1] != best[1]:
                 best = faced
                 detail["src_loc_face"] = "tier"
+    # C575 paren-count face: a "how many <noun>" question is answered
+    # by a bullet list row of the form "* <Noun> (N):" — the stat-block
+    # row IS the count fact (18dcd5a5 official-run casualty: the
+    # bearer matched=1 ("mummies") under the min_raw=3 floor while a
+    # 'user acquisition by 500%' marketing line parasitized the C534
+    # digit-demand tier at 109.2). C534's raw>=2 exemption cannot see
+    # a raw=1 bearer, so this is a NEW exemption class, not a loosened
+    # one: paren-row shape + a noun keyword match (>=1), distinctive-df
+    # and weighted_floor kept (C534 shape), fires only under the number
+    # demand and only when a best already exists (C559 precedent), and
+    # answers with the bare count (exact-number judge face).
+    if demand == "number" and best is not None:
+        pc: list[tuple[float, str, str | None, int]] = []
+        for s, sid in pool:
+            m_pc = _LIST_PAREN_ROW_RE.match(s)
+            if not m_pc:
+                continue
+            matched_pc = [kw for kw in kws
+                          if w[kw] and _keyword_hits(m_pc.group(1), [kw])]
+            if not matched_pc:
+                continue
+            if min(df[kw] for kw in matched_pc) > distinctive_df:
+                continue
+            score_pc = sum(w[kw] ** 2 for kw in matched_pc)
+            if score_pc >= weighted_floor:
+                pc.append((score_pc, m_pc.group(2), sid,
+                           len(matched_pc)))
+        if pc:
+            faced = max(pc, key=lambda p: p[0])
+            if faced[1] != best[1]:
+                best = faced
+                detail["paren_count_face"] = "exemption"
+    # C575 adjacent-name face: a "who is the <title>" question over an
+    # entity-extraction bullet list is answered by the list row ABOVE
+    # the description row (e3fc4d6e official-run casualty: the name row
+    # "* Dr. Arati Prabhakar" has raw=0 lexical evidence — the question
+    # names the TITLE one row below — while the "Lawrence Livermore
+    # National Laboratory (LLNL)" row parasitized 296.1 on shared
+    # lawrence/livermore/national/laboratory vocabulary). Join = a
+    # bullet description row matching >=2 question keywords with the
+    # distinctive condition and weighted_floor kept; the answer is the
+    # same-message neighbor row when it is a bare person-name fragment
+    # (shape regex + org-word rejection: "DOE's National Nuclear
+    # Security Administration" is an institution, "Arati Prabhakar" a
+    # person), reassembled from the source line because the <=10-char
+    # sentence filter drops leading pieces like "* Dr.". The name row
+    # can never be a passer (raw=0), so this is an exemption pass by
+    # construction; fires only when a best already exists (C559).
+    if _WHO_TITLE_Q_RE.search(question) and best is not None:
+        an: list[tuple[float, str, str | None, int, int]] = []
+        for i in range(1, len(pool)):
+            s_desc = pool[i][0]
+            if not s_desc.startswith("*"):
+                continue
+            matched_an = [kw for kw in kws
+                          if w[kw] and _keyword_hits(s_desc, [kw])]
+            if len(matched_an) < 2:
+                continue
+            if min(df[kw] for kw in matched_an) > distinctive_df:
+                continue
+            score_an = sum(w[kw] ** 2 for kw in matched_an)
+            if score_an < weighted_floor:
+                continue
+            if pool_nids[i - 1] != pool_nids[i]:
+                continue          # adjacency must live in ONE message
+            s_name = pool[i - 1][0]
+            if not _LIST_NAME_ROW_RE.match(s_name):
+                continue
+            if _LIST_ORG_WORD_RE.search(s_name):
+                continue
+            an.append((score_an, s_name, pool[i - 1][1],
+                       len(matched_an), i))
+        if an:
+            sc_an, s_name, sid_an, n_an, i_an = max(
+                an, key=lambda p: p[0])
+            full = _list_row_full(
+                nodes.get(pool_nids[i_an], {}).get("label", ""),
+                s_name)
+            if full != best[1]:
+                best = (sc_an, full, sid_an, n_an)
+                detail["adjacent_name_face"] = "exemption"
     detail["best_score"] = round(best[0], 1) if best else 0
     if best is None:
         return None, detail
@@ -4202,6 +4285,42 @@ def answer_speaker_recall(question: str,
     if best[0] < weighted_floor:
         return None, detail
     return best[1], detail
+
+
+# ── C575: list-body faces — bullet lists as answer structure ──
+# Two companions to the C574 source-locator face, both reading the
+# assistant's own bullet lists:
+#   * paren-count: "* Mummies (4):" rows carry a count fact under a
+#     parenthesized digit; the question side is the C534 number demand.
+#   * adjacent-name: entity-extraction lists split NAME and TITLE into
+#     consecutive rows; a who-is-the question names the TITLE, the
+#     answer lives one row up. The <=10-char sentence filter drops
+#     leading fragments ("* Dr."), so the name fragment is the bare
+#     capitalized run and _list_row_full reassembles the source line.
+_LIST_PAREN_ROW_RE = re.compile(
+    r"^\*\s*([A-Za-z][A-Za-z'’\- ]{0,48}?)\s*\((\d{1,3})\)\s*:?\s*$")
+_LIST_NAME_ROW_RE = re.compile(
+    r"^[A-Z][\w'’\-]*(?:\s+[A-Z][\w'’\-]*){1,3}$")
+_LIST_ORG_WORD_RE = re.compile(
+    r"\b(administration|laboratory|department|office|agency|facility|"
+    r"institute|university|program|project|committee|council|"
+    r"foundation|association|society|center|centre|school|college|"
+    r"bureau|commission|team|group|company|corp|inc)\b", re.I)
+_WHO_TITLE_Q_RE = re.compile(r"\bwho\s+(?:is|was)\s+the\b", re.I)
+
+
+def _list_row_full(label: str, frag: str) -> str:
+    """Source bullet line for a pool fragment (the <=10-char sentence
+    filter drops leading pieces like "* Dr."); returns the full row
+    minus the bullet marker and a trailing colon, or *frag* unchanged
+    when the source line is gone."""
+    for line in (label or "").split("\n"):
+        ln = line.strip()
+        if ln and ln.lower().endswith(frag.lower()):
+            if ln.startswith("*"):
+                ln = ln[1:].strip()
+            return ln.rstrip(":").strip()
+    return frag
 
 
 # ── C537: speech-act face — "you recommended" ⇒ first-person act ──
