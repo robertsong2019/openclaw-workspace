@@ -2590,15 +2590,19 @@ export class MemoryService {
     const allMemories = this.#store.all();
     const allIds = new Set(allMemories.map(m => m.id));
 
-    // Check orphan links
+    // Check orphan links (Link fields are `source`/`target` — `sourceId`/`targetId` do not exist)
     const allLinks = this.#links.all();
     for (const link of allLinks) {
-      if (!allIds.has(link.sourceId)) {
-        issues.push(`Orphan link ${link.id}: source ${link.sourceId} missing`);
-        if (opts.repair) { this.#links.delete(link.id); repaired++; }
+      const sourceMissing = !allIds.has(link.source);
+      const targetMissing = !allIds.has(link.target);
+      if (sourceMissing) {
+        issues.push(`Orphan link ${link.id}: source ${link.source} missing`);
       }
-      if (!allIds.has(link.targetId)) {
-        issues.push(`Orphan link ${link.id}: target ${link.targetId} missing`);
+      if (targetMissing) {
+        issues.push(`Orphan link ${link.id}: target ${link.target} missing`);
+      }
+      if (sourceMissing || targetMissing) {
+        // delete + count once per link even when both endpoints are gone
         if (opts.repair) { this.#links.delete(link.id); repaired++; }
       }
     }
