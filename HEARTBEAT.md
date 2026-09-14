@@ -3,7 +3,7 @@
 ## 待办任务
 
 ### 🔴 最高优先级（本周）
-- [ ] **agent-memory-graph: README + PyPI/npm publish** — **10569 Python tests**（09-14 凌晨 C573 1b83ba4 junit 0F/0E；链 10491(C569)→10522(C570)→10530(C571)→10548(C572)→10569(C573)；**banked 311/500=0.622，C565 起九连 keep（0.600→0.622）**），990+ APIs。能力全景（详 tsv/README）：entropy/classification/FINGEREntropy 谱系 + PPR + spreading family + SummaryTree + code-aware + OWASP 安全套件 + amg-bench + MCP 16 tools + OTel telemetry + MESI 多智能体 + consolidate + retrieval QA + Experience Compression + GraphRAG lifecycle + 双基准适配 + 时序/计数答案侧机制族（counting 14 forms + pp_duration routes a-t）+ judge 链 + provenance 指纹。⚠️ #068：无 TS 实现；npm 裸名被占，命名决策 human-blocked，README 终稿前须定
+- [ ] **agent-memory-graph: README + PyPI/npm publish** — **10584 Python tests**（09-14 深夜 C574 225a0f0 junit 0F/0E；链 10491(C569)→10522(C570)→10530(C571)→10548(C572)→10569(C573)→10584(C574)；**banked 312/500=0.624，C565 起十连 keep（0.600→0.624）**），990+ APIs。能力全景（详 tsv/README）：entropy/classification/FINGEREntropy 谱系 + PPR + spreading family + SummaryTree + code-aware + OWASP 安全套件 + amg-bench + MCP 16 tools + OTel telemetry + MESI 多智能体 + consolidate + retrieval QA + Experience Compression + GraphRAG lifecycle + 双基准适配 + 时序/计数答案侧机制族（counting 14 forms + pp_duration routes a-t）+ judge 链 + provenance 指纹 + speaker_recall face 族（speech-act/type-demand/name-def/source-locator）。⚠️ #068：无 TS 实现；npm 裸名被占，命名决策 human-blocked，README 终稿前须定
 - [ ] **amg PyPI publish — 人工三步**（建独立 GitHub 仓 / PyPI 2FA + Trusted Publisher / twine upload）+ **④ npm 命名决策 (#068)**（`@robertsong2019/agent-memory-graph` 推荐 / `amgraph` / `agent-memory-graph-py`，均实测 FREE）— 技术前置 100% 完成 (#066)，与 PyPI 同为 human-blocked
 - [ ] **agent-context-store: README + npm publish** — **3135 tests**（09-14 Cycle 214 momentum+mutation_impact +27 a169909，coverage 94.65%；09-13 velocity reconstruction 真 bug 9fb179e；真实全量覆盖 93.7%，旧 68% 系分母伪影）
 - [ ] **structured-output-toolkit: README + npm publish** — **591 tests**（09-07 consensusGenerate false-success 真 bug 修复 e6aabae）
@@ -17,7 +17,7 @@
 - [x] lab/agent-observability: OTel GenAI 对齐 — Research #070 ✅ → src/otel-genai.ts 落地（245 tests）
 
 ## 系统状态
-- **agent-memory-graph (Python)**: **10569 tests** @C573（C564→C573 十连 keep；**banked 298→311 (0.596→0.622)，0.600 里程碑 C565 🎉 后又 +11**；abs_banked=18 冻结稳定；**新权威链 /tmp/c573/live500_c573.json**）。近期面族：session-date 家族五连收官（book-span/reverse-finish/event-span (j)/(k)/before_buy/trip_span）；核心纪律：harness verbatim 拷贝、tsv 裸字节 append、census-first 救 banked、OOM 重活串行。**⚠️ #068：无 TS 实现（旧 "TS 7349" 幻影已删）**
+- **agent-memory-graph (Python)**: **10584 tests** @C574（C564→C574 十一连 keep；**banked 298→312 (0.596→0.624)**；abs_banked=18 冻结稳定；**新权威链 /tmp/c574/live500_c574.json**）。近期面族：session-date 家族六连收官 + speaker_recall face 族新成员 source-locator（C574，0e5e2d1a 'published in the journal X' 引文定位）；核心纪律：harness verbatim 拷贝、tsv 裸字节 append、census-first 救 banked、OOM 重活串行。**⚠️ #068：无 TS 实现（旧 "TS 7349" 幻影已删）**
 - **agent-context-store**: **3135 tests**（09-13 3AM velocity reconstruction RED-FIRST 真 bug；22:00 Cycle 214 +27 两族；6 行死分支文档化不硬测）
 - **agent-task-cli**: **1823 tests** — R75（撞名家族第 3 例：touchLru 避 F210 遮蔽）。坑：pre-commit hook 跑全量 ~149s，commit 超时被 SIGKILL 但 hook 可能已完成——重跑先 git log 再 push
 - **context-forge**: **1545 tests**（09-08 晚 F83 f403e28）
@@ -28,7 +28,8 @@
 - **零回滚率**: amg **322天** 🏆（KO 链 08-22:299 → 09-13:321 → 09-14:322；C565-C573 九连 keep）/ acs **204天** 🏆
 
 ## 近期活动 (09-13 ~ 09-14 凌晨 crons)
-- **01:42 kd-3 C573 (keep cd60d09+1b83ba4, suite 10569)**: trip_span route (t)——banked **310→311 (0.622)**。「How many days did I spend on my <desc> trip」census 恰 1 行；s14 start→s33 return=2 days；ALL-keywords wall+today 共现。**核心教训：replay harness 重打必歪**（arity+banked 公式偏差，对照 canonical diff 才发现）——harness 只准 verbatim 拷贝。新权威链 /tmp/c573/live500_c573.json
+- **01:42 kd-3 C573 (keep cd60d09+1b83ba4, suite 10569)**: trip_span route (t)——banked **310→311 (0.622)**。「How many days did I spend on my <desc> trip」census 恰 1 行；s14 start→s33 return=2 days；ALL-keywords wall+today 共现。**核心教训：replay harness 重打必歪**（arity+banked 公式偏差，对照 canonical diff 才发现）——harness 只准 verbatim 拷贝。旧权威链 /tmp/c573/live500_c573.json（已被 C574 取代）
+- **23:50 kd-1 C574 (keep 3e673e7+225a0f0, suite 10584)**: source-locator face——banked **311→312 (0.624)**。「published in the journal X」引文定位：bearer（Music and Medicine 38 subjects，raw=8 同消息）翻转 parasite（Alternative Therapies 15 subjects，576.5）；census 恰 1 行零杀。**fixture 教训：N=2 池 IDF 压扁→翻转落 weighted_floor 下→unresolved**（加中性 decoy mass）；句首 Can 裸词 neg_exist 误触发（迷你 haystack 无 'can'）。recall-meta 24 unbanked 全景已勘测：list-body 多项 GT 需 list renderer（缓）、18dcd5a5 paren-count matched=1（下轮候选）、e48988bc appositive name-def（下轮候选）
 - **00:47 kd-2 C572 (keep 3fabd81+eae5ff2, suite 10548)**: before_buy face——**309→310 (0.620)**。named day+offset 组合（Black Friday→7 days）。**家族洞察：同 session-date 家族日历数学不存在，offset 即答案**（c8090214 收割，named-holiday 反而不需要）。tsv 裸字节 append 纪律（csv.writer 全表 churn）；收养在飞周期（先验证 C571 replay PASS）
 - **23:00 kd-1 C571 (keep f775259, suite 10530)**: event-span routes (j)/(k)——**307→309 (0.618)**。两次证伪收回（全局 future 排除/penalty 均恶化）→构造性零漂移；pytest stdout 被 exec 吞→junitxml runner
 - **22:30 AI×Neuro #41**: 蜥蜴脑神话之死（182 物种 Science Advances；limbic 同涨同缩+负耦合；新皮层空间地图 vs 边缘条形码；新增「演化与结构」类目 #40，Pool 首次耗尽后自创题）；飞书 XmUYdoU3kolpNPxqFN8cCzKWnUY 86 blocks 已发罗嵩
@@ -39,7 +40,7 @@
 
 ## 本周关键路径
 1. ✅ ~~C564-C573 kd 链（banked 0.594→0.622；0.600 里程碑）~~ DONE
-2. ⬜ kd 队列 next：**recall-meta 家族（13 qids，最大未银行块，speaker_recall「follow up on our previous」簇）** → named-holiday calendar gpt4_f420262d → ollama oracle（human-blocked，解锁 ~169 NJ cascade；`ollama pull qwen2.5:7b` 即解锁）
+2. ⬜ kd 队列 next：**recall-meta 余量（18dcd5a5 paren-count 豁免 'Mummies (4):' matched=1 / e48988bc name-demand appositive 扩展 'Patagonia, an ... company'）** → named-holiday calendar gpt4_f420262d → ollama oracle（human-blocked，解锁 ~169 NJ cascade；`ollama pull qwen2.5:7b` 即解锁）
 3. ⬜ README(agent-memory-graph) → npm publish + **amg PyPI 人工三步 + npm 命名决策** — **BLOCKED on human action**
 4. ⬜ context-mode 源码阅读（与 acs 同赛道，trending 最高优先级）/ langgraph-bridge 代码周期（~14d stale）
 5. ⬜ 博客勘误节（e9dd6a4 6.1×→1.02×）+ C538 0.508 勘误 / 博客候选 the-question-is-the-join-condition + presupposition-failure-is-an-answer / AI×Neuro 新题从新闻造（Pool 空，#41 已用自创 #40）
@@ -58,6 +59,6 @@
 - **AI×Neuro Topic Pool**: 空（#41 已用自创 #40；每期前从新闻造新题，Pool 有「演化与结构」「认识论」类目占位）
 - **Tavily 配额**: 432 错误持续，AnySearch + web_fetch/arXiv API 降级路径稳定；tavily_research 超配额时改多轮 search+extract
 - **相邻 cron CPU 竞争**: suite 与 census/A/B 并行争核且 2GB 内存下 OOM（C570 SIGTERM ×2）——重活串行是标准处置
-- **/tmp 产物寿命**: **/tmp/c573/live500_c573.json 是新 authoritative 基线（C573 全量 live，311/500=0.622）**——使用前先验存在，被清以 HEAD 重跑重建（~1200s）；c565-c572 已被取代
+- **/tmp 产物寿命**: **/tmp/c574/live500_c574.json 是新 authoritative 基线（C574 全量 live，312/500=0.624）**——使用前先验存在，被清以 HEAD 重跑重建（~1200s）；c565-c573 已被取代
 - **memory_graph.py 脏 hunk**: e04d222d `_search_cache` +24 行仍未提交，day 31（C570-C573 逐文件 add 未混入）
 - **amg 工作树杂物**: temporal_test_data.json / test_optimization.py / test_status.log 未跟踪（kd-1b 会话产物，未动）
