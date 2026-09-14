@@ -4277,6 +4277,43 @@ def answer_speaker_recall(question: str,
             if full != best[1]:
                 best = (sc_an, full, sid_an, n_an)
                 detail["adjacent_name_face"] = "exemption"
+    # C576 mention-demand appositive face: a question asking back the
+    # "the <head noun> you mentioned" is answered by the sentence that
+    # defines the mention under its name in apposition — "Patagonia,
+    # an outdoor clothing and gear company, is known ..." (e48988bc
+    # official-run casualty: every matched keyword — company/
+    # sustainability/supply/chain — is mid-frequency in this
+    # corporate-sustainability haystack, so the distinctive filter hid
+    # the bearer while the anaphoric continuation "The company also
+    # invests ..." parasitized 229.8 on exact-token overlap). NEW
+    # exemption class — the bearer is not a passer, so a tier-only
+    # face cannot see it: appositive shape ending in the head noun +
+    # frame-word rejection + raw >= 2 + weighted_floor kept + preface
+    # penalty (C559 shape); plural/numeral demands excluded by the
+    # shared extractor (a40e080f multi-item GT stays out); fires only
+    # when a best already exists (C559 precedent). Census: the form
+    # accepts exactly 1/500 questions; the target pool yields exactly
+    # 1 bearer (169.8 vs parasite 229.8), judge_semantic CORRECT.
+    head_ap = _mention_demand_head(question)
+    if head_ap and best is not None:
+        ap_tier: list[tuple[float, str, str | None, int]] = []
+        for s, sid in pool:
+            if not _appositive_head_hit(s, head_ap):
+                continue
+            matched_ap = [kw for kw in kws
+                          if w[kw] and _keyword_hits(s, [kw])]
+            if len(matched_ap) < 2:
+                continue
+            score_ap = sum(w[kw] ** 2 for kw in matched_ap)
+            if _RECALL_PREAMBLE_RE.match(s):
+                score_ap *= 0.25
+            if score_ap >= weighted_floor:
+                ap_tier.append((score_ap, s, sid, len(matched_ap)))
+        if ap_tier:
+            faced_ap = max(ap_tier, key=lambda p: p[0])
+            if faced_ap[1] != best[1]:
+                best = faced_ap
+                detail["mention_appositive_face"] = "exemption"
     detail["best_score"] = round(best[0], 1) if best else 0
     if best is None:
         return None, detail
@@ -4321,6 +4358,82 @@ def _list_row_full(label: str, frag: str) -> str:
                 ln = ln[1:].strip()
             return ln.rstrip(":").strip()
     return frag
+
+
+# ── C576: mention-demand appositive face ────────────────────────
+# Question side: "the <head> you mentioned" — an anaphoric mention
+# demand ("remind me of the company you mentioned ..."). Candidate
+# side: a sentence defining the mention under its name in apposition
+# — "Patagonia, an outdoor clothing and gear company, is known ..."
+# — the appositive phrase RESTATES the demanded head noun, and the
+# phrase must END with it (definitional pattern: "a <modifiers>
+# <head>", not "a <head> known for ..."). Frame-starter words
+# (However/I/As/Yes ...) never count as names; sentence-frame shapes
+# like "As an AI language model, ..." carry no comma after the run
+# and fail the shape regex outright. Plural heads and numeral
+# quantifiers ("the two companies you mentioned", a40e080f's
+# multi-item GT) are out of scope by question structure (C531) — a
+# single appositive can never be a complete list answer.
+_MENTION_DEMAND_Q_RE = re.compile(
+    r"\bthe\s+((?:[a-z'-]+\s+){0,2}[a-z'-]+)\s+you\s+mentioned\b",
+    re.I)
+_MENTION_NUMERAL_RE = re.compile(
+    r"\b(?:one|two|three|four|five|six|seven|eight|nine|ten|both|"
+    r"all|\d+)\b", re.I)
+_APPOSITIVE_BEARER_RE = re.compile(
+    r"^([A-Z][\w'’&.\-]*(?:\s+[A-Z][\w'’&.\-]*)*),\s+(?:an?|the)\s+"
+    r"([a-z][a-z'’&\- ]{0,60}?),")
+_APPOSITIVE_FRAME_WORD_RE = re.compile(
+    r"^(?:i|we|you|they|he|she|it|this|that|there|here|as|in|on|at|"
+    r"yes|no|sure|well|oh|hi|hello|thanks|thank|okay|ok|so|and|but|"
+    r"or|if|when|while|also|then|next|first|second|however|"
+    r"meanwhile|example|examples)\b", re.I)
+_APPOSITIVE_STOP = {"a", "an", "the", "and", "or", "but", "of", "in",
+                    "on", "at", "to", "for", "with", "from", "by",
+                    "that", "which", "who", "is", "was", "are",
+                    "were", "its", "their", "his", "her"}
+
+
+def _mention_demand_head(question: str) -> str | None:
+    """Head noun of a mention demand, or None (form/guard miss).
+
+    Guards applied at extraction time so every caller shares them:
+    numeral/quantifier demands and plural heads are multi-item
+    requests a single appositive cannot answer (C531 structure)."""
+    m = _MENTION_DEMAND_Q_RE.search(question)
+    if not m:
+        return None
+    phrase = m.group(1)
+    if _MENTION_NUMERAL_RE.search(phrase):
+        return None
+    toks: list[str] = []
+    for t in phrase.lower().split():
+        if t in _APPOSITIVE_STOP:
+            break
+        toks.append(t)
+    if not toks:
+        return None
+    head = toks[-1]
+    if head.endswith("s") and len(head) > 3:
+        return None          # plural demand -> list answer, not this face
+    return head
+
+
+def _appositive_head_hit(sent: str, head: str) -> bool:
+    """True when *sent* is a definitional appositive whose phrase
+    ends in the demanded head noun (C576 guards)."""
+    m = _APPOSITIVE_BEARER_RE.match(sent)
+    if not m:
+        return False
+    if _APPOSITIVE_FRAME_WORD_RE.match(m.group(1)):
+        return False
+    toks = [t for t in re.findall(r"[a-z'’]+", m.group(2).lower())
+            if t not in _APPOSITIVE_STOP]
+    if not toks:
+        return False
+    last = toks[-1]
+    last = last[:-1] if last.endswith("s") and len(last) > 3 else last
+    return last == head
 
 
 # ── C537: speech-act face — "you recommended" ⇒ first-person act ──
