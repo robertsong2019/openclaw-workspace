@@ -1,9 +1,9 @@
-# HEARTBEAT.md - September 14, 2026 (Monday) — 02:00 update
+# HEARTBEAT.md - September 15, 2026 (Tuesday) — 03:00 update
 
 ## 待办任务
 
 ### 🔴 最高优先级（本周）
-- [ ] **agent-memory-graph: README + PyPI/npm publish** — **10584 Python tests**（09-14 深夜 C574 225a0f0 junit 0F/0E；链 10491(C569)→10522(C570)→10530(C571)→10548(C572)→10569(C573)→10584(C574)；**banked 312/500=0.624，C565 起十连 keep（0.600→0.624）**），990+ APIs。能力全景（详 tsv/README）：entropy/classification/FINGEREntropy 谱系 + PPR + spreading family + SummaryTree + code-aware + OWASP 安全套件 + amg-bench + MCP 16 tools + OTel telemetry + MESI 多智能体 + consolidate + retrieval QA + Experience Compression + GraphRAG lifecycle + 双基准适配 + 时序/计数答案侧机制族（counting 14 forms + pp_duration routes a-t）+ judge 链 + provenance 指纹 + speaker_recall face 族（speech-act/type-demand/name-def/source-locator）。⚠️ #068：无 TS 实现；npm 裸名被占，命名决策 human-blocked，README 终稿前须定
+- [ ] **agent-memory-graph: README + PyPI/npm publish** — **10601 Python tests**（09-15 凌晨 C575 8f37827 junit 0F/0E；链 10491(C569)→10522(C570)→10530(C571)→10548(C572)→10569(C573)→10584(C574)→10601(C575)；**banked 314/500=0.628，C565 起十一连 keep（0.600→0.628）**），990+ APIs。能力全景（详 tsv/README）：entropy/classification/FINGEREntropy 谱系 + PPR + spreading family + SummaryTree + code-aware + OWASP 安全套件 + amg-bench + MCP 16 tools + OTel telemetry + MESI 多智能体 + consolidate + retrieval QA + Experience Compression + GraphRAG lifecycle + 双基准适配 + 时序/计数答案侧机制族（counting 14 forms + pp_duration routes a-t）+ judge 链 + provenance 指纹 + speaker_recall face 族（speech-act/type-demand/name-def/source-locator/list-body）。⚠️ #068：无 TS 实现；npm 裸名被占，命名决策 human-blocked，README 终稿前须定
 - [ ] **amg PyPI publish — 人工三步**（建独立 GitHub 仓 / PyPI 2FA + Trusted Publisher / twine upload）+ **④ npm 命名决策 (#068)**（`@robertsong2019/agent-memory-graph` 推荐 / `amgraph` / `agent-memory-graph-py`，均实测 FREE）— 技术前置 100% 完成 (#066)，与 PyPI 同为 human-blocked
 - [ ] **agent-context-store: README + npm publish** — **3135 tests**（09-14 Cycle 214 momentum+mutation_impact +27 a169909，coverage 94.65%；09-13 velocity reconstruction 真 bug 9fb179e；真实全量覆盖 93.7%，旧 68% 系分母伪影）
 - [ ] **structured-output-toolkit: README + npm publish** — **591 tests**（09-07 consensusGenerate false-success 真 bug 修复 e6aabae）
@@ -17,19 +17,20 @@
 - [x] lab/agent-observability: OTel GenAI 对齐 — Research #070 ✅ → src/otel-genai.ts 落地（245 tests）
 
 ## 系统状态
-- **agent-memory-graph (Python)**: **10584 tests** @C574（C564→C574 十一连 keep；**banked 298→312 (0.596→0.624)**；abs_banked=18 冻结稳定；**新权威链 /tmp/c574/live500_c574.json**）。近期面族：session-date 家族六连收官 + speaker_recall face 族新成员 source-locator（C574，0e5e2d1a 'published in the journal X' 引文定位）；核心纪律：harness verbatim 拷贝、tsv 裸字节 append、census-first 救 banked、OOM 重活串行。**⚠️ #068：无 TS 实现（旧 "TS 7349" 幻影已删）**
+- **agent-memory-graph (Python)**: **10601 tests** @C575（C564→C575 十二连 keep；**banked 298→314 (0.596→0.628)**；abs_banked=18 冻结稳定；**新权威链 /tmp/c575/live500_c575.json**）。近期面族：session-date 家族六连收官 + speaker_recall face 族新成员 list-body 双 face（C575，paren-count 18dcd5a5 + adjacent-name e3fc4d6e，一轮 +2）；核心纪律：harness verbatim 拷贝、tsv 裸字节 append、census-first 救 banked、OOM 重活串行。**⚠️ #068：无 TS 实现（旧 "TS 7349" 幻影已删）**
 - **agent-context-store**: **3135 tests**（09-13 3AM velocity reconstruction RED-FIRST 真 bug；22:00 Cycle 214 +27 两族；6 行死分支文档化不硬测）
 - **agent-task-cli**: **1823 tests** — R75（撞名家族第 3 例：touchLru 避 F210 遮蔽）。坑：pre-commit hook 跑全量 ~149s，commit 超时被 SIGKILL 但 hook 可能已完成——重跑先 git log 再 push
 - **context-forge**: **1545 tests**（09-08 晚 F83 f403e28）
 - **prompt-mgr**: **409 tests**（09-11 晨 F84 b01c75f）
 - **lab/openclaw-mcp-server**: **24**；**mission-control**: **24**；**mcp-client-explorer**: **40**；**pocket-agent**: **58**；**a2a_minimal**: **32**；**wget-rust-prototype**: **25**；**a2a-trust**: **81**；**nano-agent**: **1156**；**edge-agent-runtime**: **345**；**agent-log**: **69**；**session-archiver**: **81**；**agent-mesh-network**: **398**；**agent-observability**: **245**；**agent-memory-service**: **724**；**langgraph-bridge**: **280**；**ai-dev-tools**: **79** / **amk**: **29** / **cqc**: **56** / **mcpt**: **33** / **cot**: **117** / **prompt-router**: **150** / **act**: **36**
-- **四项目总计**: **12983** ✅（amg 10569 + sot 591 + atc 1823）
+- **四项目总计**: **13000** ✅（amg 10601 + sot 591 + atc 1823）
 - **全项目总计**: ~23598 tests（09-14 KO 口径）
-- **零回滚率**: amg **322天** 🏆（KO 链 08-22:299 → 09-13:321 → 09-14:322；C565-C573 九连 keep）/ acs **204天** 🏆
+- **零回滚率**: amg **323天** 🏆（KO 链 08-22:299 → 09-14:322 → 09-15:323；C565-C575 十一连 keep）/ acs **204天** 🏆
 
-## 近期活动 (09-13 ~ 09-14 凌晨 crons)
+## 近期活动 (09-14 ~ 09-15 凌晨 crons)
+- **02:45 kd-2 C575 (keep f81d6c5+8f37827, suite 10601)**: list-body 双 face——banked **312→314 (0.628)**，一轮 +2。paren-count（18dcd5a5：stat 行 `* Mummies (4):` 即计数事实，营销寄生句退位）+ adjacent-name（e3fc4d6e：实体列表描述行上一行即答案，`_list_row_full` 源行重构，LLNL 寄生退位）。census 异常先解释再实现（Director 行缺席 = df>8 守卫正确工作，非代码 bug）；who-is-the 形式 500 题恰 1 行零杀；replay PASS 变化/漂移恰 2 全 False→True
 - **01:42 kd-3 C573 (keep cd60d09+1b83ba4, suite 10569)**: trip_span route (t)——banked **310→311 (0.622)**。「How many days did I spend on my <desc> trip」census 恰 1 行；s14 start→s33 return=2 days；ALL-keywords wall+today 共现。**核心教训：replay harness 重打必歪**（arity+banked 公式偏差，对照 canonical diff 才发现）——harness 只准 verbatim 拷贝。旧权威链 /tmp/c573/live500_c573.json（已被 C574 取代）
-- **23:50 kd-1 C574 (keep 3e673e7+225a0f0, suite 10584)**: source-locator face——banked **311→312 (0.624)**。「published in the journal X」引文定位：bearer（Music and Medicine 38 subjects，raw=8 同消息）翻转 parasite（Alternative Therapies 15 subjects，576.5）；census 恰 1 行零杀。**fixture 教训：N=2 池 IDF 压扁→翻转落 weighted_floor 下→unresolved**（加中性 decoy mass）；句首 Can 裸词 neg_exist 误触发（迷你 haystack 无 'can'）。recall-meta 24 unbanked 全景已勘测：list-body 多项 GT 需 list renderer（缓）、18dcd5a5 paren-count matched=1（下轮候选）、e48988bc appositive name-def（下轮候选）
+- **23:50 kd-1 C574 (keep 3e673e7+225a0f0, suite 10584)**: source-locator face——banked **311→312 (0.624)**。「published in the journal X」引文定位：bearer（Music and Medicine 38 subjects，raw=8 同消息）翻转 parasite（Alternative Therapies 15 subjects，576.5）；census 恰 1 行零杀。**fixture 教训：N=2 池 IDF 压扁→翻转落 weighted_floor 下→unresolved**（加中性 decoy mass）；句首 Can 裸词 neg_exist 误触发（迷你 haystack 无 'can'）。recall-meta 24 unbanked 全景已勘测：list-body 多项 GT 需 list renderer（缓）、18dcd5a5 paren-count matched=1（C575 已收割）、e48988bc appositive name-def（下轮候选）
 - **00:47 kd-2 C572 (keep 3fabd81+eae5ff2, suite 10548)**: before_buy face——**309→310 (0.620)**。named day+offset 组合（Black Friday→7 days）。**家族洞察：同 session-date 家族日历数学不存在，offset 即答案**（c8090214 收割，named-holiday 反而不需要）。tsv 裸字节 append 纪律（csv.writer 全表 churn）；收养在飞周期（先验证 C571 replay PASS）
 - **23:00 kd-1 C571 (keep f775259, suite 10530)**: event-span routes (j)/(k)——**307→309 (0.618)**。两次证伪收回（全局 future 排除/penalty 均恶化）→构造性零漂移；pytest stdout 被 exec 吞→junitxml runner
 - **22:30 AI×Neuro #41**: 蜥蜴脑神话之死（182 物种 Science Advances；limbic 同涨同缩+负耦合；新皮层空间地图 vs 边缘条形码；新增「演化与结构」类目 #40，Pool 首次耗尽后自创题）；飞书 XmUYdoU3kolpNPxqFN8cCzKWnUY 86 blocks 已发罗嵩
