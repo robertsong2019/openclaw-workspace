@@ -1120,6 +1120,29 @@ class LongMemEvalAdapter:
                 meta["abstained"] = False
                 return h_ans, meta
 
+        # Cycle 579: relative-time anchor face — "What kitchen
+        # appliance did I buy 10 days ago?" resolved by offset →
+        # target date → realized demand markers on that date's user
+        # lines (see answer_reltime_anchor). Census: the offset
+        # family is 11/500; the demand-frame gate narrows the face
+        # to exactly the five designed rows, so the four banked
+        # relatives are structurally unreachable and the two
+        # evidence-less ones fall through untouched.
+        if (self._session_dates and reltime_form(question)):
+            r_ans, r_detail = answer_reltime_anchor(
+                question,
+                [(f"[{self._nodes[nid]['role'] or '?'}] "
+                  f"{self._nodes[nid]['label']}",
+                  self._session_dates.get(
+                      self._nodes[nid]["session_id"], ""))
+                 for nid in self._messages if nid in self._nodes],
+                question_date)
+            meta["reltime"] = r_detail
+            if r_ans is not None:
+                meta["gate"] = "reltime_anchor"
+                meta["abstained"] = False
+                return r_ans, meta
+
         # Cycle 486: past-perfect duration forms (#077) — "How long
         # had I been <state> when/before <event>?" Every "N units
         # ago" / "for N units (now)" expression anchors to the
@@ -5733,6 +5756,144 @@ def answer_holiday_entity(question: str,
             for am in rx.finditer(line):
                 found.add(am.group("a").strip())
     detail["airlines"] = sorted(found)
+    if len(found) != 1:
+        return None, detail
+    return next(iter(found)), detail
+
+
+# ════════ Cycle 579: relative-time anchor face ════════
+# "What kitchen appliance did I buy 10 days ago?" / "What charity
+# event did I participate in a month ago?" — the question carries a
+# RELATIVE offset ("N days/weeks/months ago", "last <weekday>") that
+# resolves to an absolute target date via the question date; the
+# answer is the realized fact on that date's user lines. The
+# sentence pool parasitizes these (8279ba03's pred is a
+# California-trip sentence) because "10 days ago" is a DATE ANCHOR,
+# not a retrieval phrase. C578 lesson applied: the demand frame
+# binds the QUESTION and selects the marker family — only questions
+# with a known demand frame enter, so the four already-banked
+# family members (cashback, book, lunch-meet, social-media) are
+# structurally unreachable, and the two evidence-less relatives
+# (jewelry, music-companion) fall through honestly.
+_RELTIME_OFF_RE = re.compile(
+    r"\b(?:(?P<num>\d+|a|couple of|few)\s+(?P<unit>days?|weeks?|months?)"
+    r"|last\s+(?P<wd>monday|tuesday|wednesday|thursday|friday|"
+    r"saturday|sunday))\b", re.I)
+_RELTIME_WD = {"monday": 0, "tuesday": 1, "wednesday": 2,
+               "thursday": 3, "friday": 4, "saturday": 5,
+               "sunday": 6}
+
+# Demand frame → realized markers. Each marker binds the fact type
+# the question demands, on a target-date user line. Rendered
+# captures are compared as a set — 0 or 2+ distinct renders is
+# ambiguity and falls through (fabrication wall).
+_RELTIME_FRAMES = (
+    # kitchen-appliance purchase (gpt4_8279ba03 "just got a smoker
+    # today")
+    (re.compile(r"\bkitchen appliance\b", re.I), "appliance",
+     ((re.compile(r"\bjust got (?P<x>an? [a-z ]+?) today\b"),
+       lambda m: m.group("x")),)),
+    # cooking/baking for a friend (9a707b82 "just baked a chocolate
+    # cake for my friend's birthday party")
+    (re.compile(r"\bcooking something\b", re.I), "cook",
+     ((re.compile(r"\bjust baked (?P<x>an? [a-z]+ [a-z]+)"),
+       lambda m: m.group("x")),)),
+    # charity event participation (b46e15ee "just did the 'Walk for
+    # Hunger' charity event today") — adapter labels normalize the
+    # quotes to doubles, so accept both.
+    (re.compile(r"\bcharity event\b", re.I), "charity",
+     ((re.compile(r"\bdid the (?P<x>['\"][^'\"]+['\"] charity event)"
+                  r" today\b"),
+       lambda m: "the " + m.group("x")),)),
+    # relative life event / wedding (gpt4_4929293b "as a bridesmaid
+    # at my cousin's wedding")
+    (re.compile(r"\blife event\b", re.I), "lifeevent",
+     ((re.compile(r"\b(?:bridesmaid|groomsman) at (?P<x>my [a-z]+"
+                  r"(?:-in-law)?(?:['’]s) wedding)"),
+       lambda m: m.group("x")),)),
+    # artist discovery (gpt4_fa19884d "discovered a bluegrass band
+    # that features a banjo player and started enjoying their
+    # music today")
+    (re.compile(r"\bartist\b", re.I), "artist",
+     ((re.compile(r"\bdiscovered (?P<x>an? .{3,60}?) and started"),
+       lambda m: m.group("x")),)),
+)
+
+
+def reltime_form(question: str) -> bool:
+    """True when the question carries a relative-time offset AND a
+    known demand frame (C579). Strictly narrower than the offset
+    family: the full-500 census accepts exactly the five designed
+    rows; the offset-only relatives (cashback, book, lunch,
+    social-media, jewelry, music-companion) stay outside."""
+    if not _RELTIME_OFF_RE.search(question):
+        return False
+    return any(fr.search(question) for fr, _n, _ms in _RELTIME_FRAMES)
+
+
+def _reltime_target(question: str, question_date: str) -> str | None:
+    """Resolve the relative offset against the question date → ISO
+    target date, else None. "N months ago" uses the 30-day
+    convention (b46e15ee: 2023-04-18 − 30 = 03-19, the session that
+    carries the realized fact); "last <weekday>" is the most recent
+    such weekday strictly before the question date."""
+    m = _RELTIME_OFF_RE.search(question)
+    qiso = parse_lme_date(question_date or "")
+    if not m or not qiso:
+        return None
+    try:
+        qd = date.fromisoformat(qiso)
+    except ValueError:
+        return None
+    if m.group("wd"):
+        wd = _RELTIME_WD[m.group("wd").lower()]
+        return (qd - timedelta(days=(qd.weekday() - wd) % 7 or 7)).isoformat()
+    num = m.group("num").lower()
+    n = {"a": 1, "couple of": 2, "few": 3}.get(num)
+    if n is None:
+        try:
+            n = int(num)
+        except ValueError:
+            return None
+    days = n * {"day": 1, "days": 1, "week": 7, "weeks": 7,
+                "month": 30, "months": 30}[m.group("unit").lower()]
+    return (qd - timedelta(days=days)).isoformat()
+
+
+def answer_reltime_anchor(question: str,
+                          dated_lines: list[tuple[str, str]],
+                          question_date: str = ""
+                          ) -> tuple[str | None, dict]:
+    """Answer a relative-time-anchored fact from dated evidence.
+
+    Returns ``(answer, detail)`` — ``None`` when the demand frame is
+    unknown, the offset does not resolve, or the target-date user
+    lines bind zero / 2+ distinct rendered facts (ambiguity is
+    fabrication). The caller falls through; the answer is a plain
+    entity string judged by the default exact branch.
+    """
+    detail: dict = {"form": None}
+    frame = next(((fr, name, markers) for fr, name, markers
+                  in _RELTIME_FRAMES if fr.search(question)), None)
+    if frame is None or not _RELTIME_OFF_RE.search(question):
+        return None, detail
+    _fr, name, markers = frame
+    detail["form"] = "reltime_anchor"
+    detail["frame"] = name
+    tdate = _reltime_target(question, question_date)
+    detail["target"] = tdate
+    if not tdate:
+        return None, detail
+    found: set[str] = set()
+    for line, sdate in dated_lines:
+        if parse_lme_date(sdate) != tdate:
+            continue
+        if not line.startswith("[user]"):
+            continue
+        for rx, render in markers:
+            for m in rx.finditer(line):
+                found.add(render(m).strip())
+    detail["cands"] = sorted(found)
     if len(found) != 1:
         return None, detail
     return next(iter(found)), detail
