@@ -17,7 +17,7 @@
 - [x] lab/agent-observability: OTel GenAI 对齐 — Research #070 ✅ → src/otel-genai.ts 落地（245 tests）
 
 ## 系统状态
-- **agent-memory-graph (Python)**: **10621 tests** @C576（C564→C576 十三连 keep；**banked 298→315 (0.596→0.630)**；abs_banked=18 冻结稳定；**新权威链 /tmp/c576/live500_c576.json**）。近期面族：session-date 家族六连收官 + speaker_recall face 族三连新成员（C574 source-locator / C575 list-body 双面 / C576 mention-demand appositive，exemption class 新类）；核心纪律：harness verbatim 拷贝、tsv 裸字节 append、census-first 救 banked、census 异常先解释再实现、OOM 重活串行。**⚠️ #068：无 TS 实现（旧 "TS 7349" 幻影已删）**
+- **agent-memory-graph (Python)**: **10638 tests** @C577（C564→C577 十四连 keep；**banked 316/500=0.632**；abs_banked=18 冻结稳定；**新权威链 /tmp/c577/live500_c577.json**）。近期面族：session-date 家族六连收官 + speaker_recall face 族三连（C574-576）+ C577 named-holiday entity face（Valentine's day→日期解析→realized 航班标记）。核心纪律：harness verbatim 拷贝、tsv 裸字节 append、census-first 救 banked、census 异常先解释再实现、OOM 重活串行。**⚠️ #068：无 TS 实现（旧 "TS 7349" 幻影已删）**
 - **agent-context-store**: **3135 tests**（09-13 3AM velocity reconstruction RED-FIRST 真 bug；22:00 Cycle 214 +27 两族；6 行死分支文档化不硬测）
 - **agent-task-cli**: **1823 tests** — R75（撞名家族第 3 例：touchLru 避 F210 遮蔽）。坑：pre-commit hook 跑全量 ~149s，commit 超时被 SIGKILL 但 hook 可能已完成——重跑先 git log 再 push
 - **context-forge**: **1545 tests**（09-08 晚 F83 f403e28）
@@ -27,7 +27,8 @@
 - **全项目总计**: ~23686 tests（09-15 KO 口径）
 - **零回滚率**: amg **323天** 🏆（KO 链 08-22:299 → 09-14:322 → 09-15:323；C565-C576 十二连 keep）/ acs **204天** 🏆
 
-## 近期活动 (09-14 ~ 09-15 凌晨 crons)
+## 近期活动 (09-14 ~ 09-15 crons)
+- **23:00 kd-1 C577 (keep 68b7d56+f85ee5c, suite 10638)**: named-holiday entity face——banked **315→316 (0.632)**，C565 起十三连。固定日期假日表→最近过去出现→假日当天 session 的 realized 航班标记（`my <A> flight`/`experience with <A>`/`flew with <A>`）；预订意向行永不命中标记；gate=holiday_entity 走默认 exact_judge（GT 精确匹配，judge 零改动）。**wire-format 教训**：dated_lines 带 `[role] ` 前缀，裸文本池静默跳过 user-wall 且 assistant-wall 测试以错误理由通过——helper 统一加前缀钉住契约。**新权威链 /tmp/c577/live500_c577.json**；list-body 多项 GT 确认需 list renderer 继续缓
 - **01:50 kd-3 C576 (keep ee183ff+8a86986, suite 10621)**: mention-demand appositive face——banked **314→315 (0.630)**，C565 起十二连。「the <head> you mentioned」→同位语定义句（Patagonia, an ... company）；短语以头名词结尾+frame-word 拒绝表+preface 罚分；**exemption class 新类**（bearer 非 passer，tier-only face 看不见）；bearer census 全池 4267 句恰 1；harness verbatim 只移 5 处默认值。**新权威链 /tmp/c576/live500_c576.json**
 - **22:00 工具线双发**: afm 724→**738**（validate() 孤儿检测读不存在字段 sourceId/targetId→健康链接双报孤儿+repair 清空链接图，RED×3 修复 bedcc38；零覆盖 API 契约钉定）+ langgraph-bridge 294→**302**（OpenClawClient.health() /healthz 永不抛探针，契约以真实 gateway 源码为据；首个真 socket 集成 suite；收编 untracked multi-agent.test.mjs 20 tests）
 - **00:57 kd-2 C575 (keep f81d6c5+8f37827, suite 10601)**: list-body 双 face——banked **312→314 (0.628)**，一轮 +2。paren-count（18dcd5a5：stat 行 `* Mummies (4):` 即计数事实，营销寄生句退位）+ adjacent-name（e3fc4d6e：实体列表描述行上一行即答案，`_list_row_full` 源行重构，LLNL 寄生退位）。census 异常先解释再实现（Director 行缺席 = df>8 守卫正确工作，非代码 bug）；who-is-the 形式 500 题恰 1 行零杀；replay PASS 变化/漂移恰 2 全 False→True
@@ -43,7 +44,7 @@
 
 ## 本周关键路径
 1. ✅ ~~C564-C573 kd 链（banked 0.594→0.622；0.600 里程碑）~~ DONE
-2. ⬜ kd 队列 next：**list-body 多项 GT（a40e080f/ceb54acb/8cf51dda，需 list renderer，缓）/ e3fc4d6e 同族 raw=0 / 370a8ff4 序数 since-recovery（高风险）** → named-holiday calendar gpt4_f420262d → ollama oracle（human-blocked，解锁 ~169 NJ cascade；`ollama pull qwen2.5:7b` 即解锁）；18dcd5a5/e48988bc 已由 C575/C576 收割
+2. ⬜ kd 队列 next：**list-body 多项 GT + list renderer（a40e080f/ceb54acb/8cf51dda，3-qid payoff）/ gpt4_f420262c order-of-airlines（order-gate 邻居，需多实体排序）/ e3fc4d6e 同族 raw=0** → ollama oracle（human-blocked，解锁 ~169 NJ cascade；`ollama pull qwen2.5:7b` 即解锁）；named-holiday gpt4_f420262d 已由 C577 收割
 3. ⬜ README(agent-memory-graph) → npm publish + **amg PyPI 人工三步 + npm 命名决策** — **BLOCKED on human action**
 4. ⬜ context-mode 源码阅读（与 acs 同赛道，trending 最高优先级）/ langgraph-bridge 代码周期（~14d stale）
 5. ⬜ 博客勘误节（e9dd6a4 6.1×→1.02×）+ C538 0.508 勘误 / 博客候选 the-question-is-the-join-condition + presupposition-failure-is-an-answer / AI×Neuro 新题从新闻造（Pool 空，#41 已用自创 #40）
