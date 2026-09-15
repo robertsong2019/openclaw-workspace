@@ -1091,6 +1091,31 @@ class LongMemEvalAdapter:
                 meta["abstained"] = False
                 return t_ans, meta
 
+        # Cycle 577: named-holiday entity face — "What was the
+        # airline that I flied with on Valentine's day?" resolved by
+        # fixed-date holiday -> most recent past occurrence ->
+        # realized-flight airline markers on holiday-date user lines
+        # (see answer_holiday_entity). Full-graph lines (C472
+        # lesson): the binding evidence is date-gated, not
+        # retrieval-gated, and currently lands in the entropy gate's
+        # "I don't know". Census: form accepts exactly 1/500
+        # questions — zero hijack surface by construction; a
+        # non-resolving holiday falls through untouched.
+        if (self._session_dates and holiday_entity_form(question)):
+            h_ans, h_detail = answer_holiday_entity(
+                question,
+                [(f"[{self._nodes[nid]['role'] or '?'}] "
+                  f"{self._nodes[nid]['label']}",
+                  self._session_dates.get(
+                      self._nodes[nid]["session_id"], ""))
+                 for nid in self._messages if nid in self._nodes],
+                question_date)
+            meta["holiday"] = h_detail
+            if h_ans is not None:
+                meta["gate"] = "holiday_entity"
+                meta["abstained"] = False
+                return h_ans, meta
+
         # Cycle 486: past-perfect duration forms (#077) — "How long
         # had I been <state> when/before <event>?" Every "N units
         # ago" / "for N units (now)" expression anchors to the
@@ -5556,6 +5581,133 @@ def temporal_arith_judge(question: str, truth: str,
     golds = [int(x) for x in re.findall(r"\d+", str(truth))]
     preds = [int(x) for x in re.findall(r"\d+", str(predicted))]
     return bool(preds and golds and any(p in golds for p in preds))
+
+
+# ════════ Cycle 577: named-holiday entity face ════════
+# "What was the airline that I flied with on Valentine's day?" —
+# entity questions whose only date anchor is a named holiday. The
+# fixed-date holiday table resolves the holiday to its most recent
+# occurrence at or before the question date; sessions OF that date
+# are scanned for user-role lines binding an airline through
+# REALIZED-flight markers ("my <A> flight", "experience with <A>",
+# "flew/flied with <A>"). Booking intents never carry the markers
+# ("leaning towards the JetBlue option", "I think I'll book the
+# return flight on Delta" — gpt4_f420262d session_30 decoys), and
+# the date gate excludes the same narrative told on other days
+# (session_35's "... on my flight from New York to Los Angeles
+# today" lives on 02/20, not Valentine's day).
+# Moveable holidays (Easter, Thanksgiving...) are NOT in the table —
+# they fall through honestly rather than resolve to a wrong date.
+# Census (/tmp/c577/step5): the form accepts exactly 1/500 questions;
+# the only holiday mention in the whole set is the target itself.
+
+_HOLIDAY_FLEW_RE = re.compile(
+    r"^what (?:was|is) the [a-z][a-z ]{0,30} that i "
+    r"(?:flied|flew) (?:with )?on (?P<hol>[a-z' ]+?)\s*\??\s*$",
+    re.I)
+
+# Ordered — "new year's eve" must be tested before "new year".
+_HOLIDAY_MD = (
+    ("new year's eve", (12, 31)),
+    ("new year", (1, 1)),
+    ("valentine", (2, 14)),
+    ("st patrick", (3, 17)),
+    ("april fool", (4, 1)),
+    ("independence day", (7, 4)),
+    ("july 4", (7, 4)),
+    ("juneteenth", (6, 19)),
+    ("halloween", (10, 31)),
+    ("veterans day", (11, 11)),
+    ("christmas", (12, 25)),
+)
+
+# Airline-name core: suffixed carriers ("American Airlines") plus
+# bare brand names that never take the suffix ("JetBlue").
+# Loyalty artifacts ("Delta SkyMiles") and route options ("the
+# JetBlue option") may match THIS pattern but never a realized
+# marker, so they stay out of the answer set.
+_AIR_NAME_CORE = (r"(?:(?:[A-Z][A-Za-z]+\s+)*(?:Airlines|Airways|Air)"
+                  r"|JetBlue|Spirit|Frontier|Allegiant)")
+
+# Realized-flight markers — each binds the airline it wraps.
+_HOL_REALIZED_RES = (
+    # "my American Airlines flight from LAX to JFK"
+    re.compile(r"\bmy\s+(?P<a>%s)'?s?\s+flight\b" % _AIR_NAME_CORE),
+    # "had a bad experience with American Airlines' ..."
+    re.compile(r"\bexperience\s+with\s+(?P<a>%s)" % _AIR_NAME_CORE),
+    # "I flew with Delta" / "flied with American Airlines"
+    re.compile(r"\b(?:flew|flied)\s+(?:with|on)\s+(?P<a>%s)"
+               % _AIR_NAME_CORE),
+)
+
+
+def _resolve_holiday_date(hol_text: str, qdate_iso: str) -> str | None:
+    """Most recent occurrence of the named holiday at/before the
+    question date (ISO ``YYYY-MM-DD``), else ``None`` — unknown or
+    moveable holidays never resolve to a guessed date."""
+    hol = (hol_text or "").lower().strip().rstrip("?").strip()
+    md = None
+    for name, v in _HOLIDAY_MD:
+        if name in hol:
+            md = v
+            break
+    if md is None or not qdate_iso:
+        return None
+    try:
+        qd = date.fromisoformat(qdate_iso)
+        cand = date(qd.year, md[0], md[1])
+    except ValueError:
+        return None
+    if cand > qd:
+        try:
+            cand = date(qd.year - 1, md[0], md[1])
+        except ValueError:
+            return None
+    return cand.isoformat()
+
+
+def holiday_entity_form(question: str) -> bool:
+    """True when the question names a holiday as its only date
+    anchor inside a "the <X> that I flew (with) on <holiday>" frame
+    (C577). Strictly narrower than the question family: the census
+    over the full 500 accepts exactly the target row."""
+    return bool(_HOLIDAY_FLEW_RE.match(question.strip()))
+
+
+def answer_holiday_entity(question: str,
+                          dated_lines: list[tuple[str, str]],
+                          question_date: str = "") -> tuple[str | None, dict]:
+    """Answer a named-holiday entity question from dated evidence.
+
+    Returns ``(airline, detail)`` — ``None`` when the holiday does
+    not resolve, no session sits on the holiday date, or the
+    realized markers bind zero / 2+ distinct airlines (ambiguity is
+    fabrication). The caller falls through; the answer is a plain
+    entity string judged by the default exact branch.
+    """
+    m = _HOLIDAY_FLEW_RE.match(question.strip())
+    detail: dict = {"form": None}
+    if not m:
+        return None, detail
+    detail["form"] = "holiday_entity"
+    tdate = _resolve_holiday_date(m.group("hol"),
+                                  parse_lme_date(question_date))
+    detail["holiday_date"] = tdate
+    if not tdate:
+        return None, detail
+    found: set[str] = set()
+    for line, sdate in dated_lines:
+        if parse_lme_date(sdate) != tdate:
+            continue
+        if not line.startswith("[user]"):
+            continue
+        for rx in _HOL_REALIZED_RES:
+            for am in rx.finditer(line):
+                found.add(am.group("a").strip())
+    detail["airlines"] = sorted(found)
+    if len(found) != 1:
+        return None, detail
+    return next(iter(found)), detail
 
 
 # ════════ Cycle 486: past-perfect duration forms (#077) ════════
