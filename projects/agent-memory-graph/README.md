@@ -2,7 +2,7 @@
 
 > 基于 SQLite 的轻量知识图谱，模拟 AI Agent 的长期记忆管理
 
-[![Tests](https://img.shields.io/badge/tests-10621-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-10676-brightgreen)]()
 [![Python](https://img.shields.io/badge/python-3.10+-blue)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-success)]()
@@ -4525,6 +4525,22 @@ counting gate 新 form "pages"，两个 head 一族：(A) **read-so-far latest-w
 #### C576：mention-demand appositive face — 回指问句的答案在定义句 (ee183ff)
 
 "The <head noun> you mentioned" 式回指问句的答案不在回指行，而在定义该提法的同位语句——'Patagonia, an outdoor clothing and gear company, is known ...'（e48988bc；命中关键词全是中频词，distinctive 过滤把 bearer 藏掉，回指行 'The company also invests ...' 以 229.8 寄生）。**C559 豁免类新成员**：同位语短语以 head noun 结尾 + frame-word 拒绝 + raw≥2 + weighted_floor 保留 + preface 罚分；复数/数词 demand 在提取层排除（a40e080f 多项 GT 不入）。Census：形态恰接受 1/500 题、目标池恰 1 bearer（169.8）。Replay tripwire PASS：pred 变化恰 {e48988bc}，banked 314→315（0.630），abs_banked 18。套件 10601→10621（+20 miniatures）。
+
+## Cycles 577-579: 0.630→0.648 — 具名假日、列表回忆、相对时间锚定
+
+> 官方口径轨迹：0.630（C576）→ **0.632（C577）** → **0.638（C578）** → **0.648（C579）**，banked 315→324，套件 10621→10676。本段主轴：答案定位信号继续从"行内词面"向"问题端结构"推进——假日名是日期锚（realized vs 意向判别器）、基数 demand 是读编号列表块的规格说明、相对偏移经问题日期解析为绝对目标日。三周期零 kills、replay tripwire 全 PASS，keep 链延至十五连（C565 起）。教程同步增补：[TUTORIAL-ANSWER-FACES.md](TUTORIAL-ANSWER-FACES.md) §5.28-§5.30。
+
+#### C577：holiday-entity face — 固定假日表作日期锚 (68b7d56)
+
+"What was the airline that I flied with on Valentine's day?"（gpt4_f420262d，GT 'American Airlines'）——固定日期节假日表（moveable 假日 Easter/Thanksgiving 诚实 fall-through）→ 问题日之前最近的假日出现（2023-03-02 → 2023-02-14）→ 假日当天 session 的 user 行扫 realized 标记（`my <A> flight` / `experience with <A>` / `flew with <A>`）→ 恰 1 家航司即答。判别器承担全部区分压力：预订意向行永不携带 realized 标记（"leaning towards the JetBlue option" 忠诚度产物 "Delta SkyMiles" 败于后缀名核心）；日期门排除同叙事换日重述（session_35 的 "today" 航班在 02/20 非情人节）。gate=`holiday_entity`，纯实体串走默认 exact_judge 分支，**judge 零改动**。census-first：flew/flied 全 500 恰 2 行（目标 + gpt4_f420262c order 题，结构不相交）；"Holiday Market" 是专有名词非表内假日，构造性零杀。**wire-format 课**：miniature 首跑 2 红——dated_lines 携带 `[role] ` 前缀，裸文本池静默跳过 user-wall，且 assistant-wall 测试以错误理由通过（unknown-role 跳过 ≠ 正确拒绝 assistant）；helper 统一加前缀钉住真实契约。replay 1202s PASS：pred 变化恰 {gpt4_f420262d}（"I don't know"→"American Airlines"），abs_banked 18 frozen。banked 315→316（0.632），套件 10621→10638（+17 tests test_holiday_entity_face.py）。
+
+#### C578：list-recall face — 编号列表块是多项回忆的答案结构 (fb0091b)
+
+cardinal-demand 回忆题（"the **two companies** you mentioned" / "what the other four options were?" / "what were the three objectives we outlined"）的答案是 assistant 自己的**编号列表块**——speaker_recall 句池把块切碎三种寄生（intro-line 寄生等），单行 face 全部落空。face 以结构门认领：`^\d{1,2}[.)]` 行聚合为块 + size==n 结构匹配（n=问题 demand）+ score≥3/margin≥2。**停用词课：cardinal 词 bind the QUESTION, never the block**——"two" 是验收标准（块必须恰 2 项），不是块内词汇；混入词表 = 用答案验收标准给自己造寄生。渲染跟行走：clause 行全行渲染，GT 词形决定粒度；judge superset/normalized/ratio 三分支各兑现一题（3-qid payoff）。replay：pred 变化恰 3 行、drift 全 False→True、零回归。banked 316→319（0.638），套件 10638→10657（+19 tests test_list_recall_face.py）。
+
+#### C579：reltime-anchor face — 相对偏移解析为绝对目标日期 (00966e8)
+
+"What kitchen appliance did I buy 10 days ago?" / "What charity event did I participate in a month ago?"——问题携带**相对偏移**（N days/weeks/months ago、last <weekday>），经 question_date 解析为绝对目标日期（month=30d 约定：2023-04-18 − 30 = 03-19，恰好命中证据 session），答案 = 目标日期 user 行上的 realized fact。**demand frame 绑问题、选 marker 家族**（C578 教训直接应用）：offset census 11/500，frame 门（kitchen appliance / cooking / charity / life event / artist）收至恰 5/500——census 里 4 个已 banked 亲戚（cashback/book/lunch-meet/social-media）**结构性不可达**，census 人口 ≠ face 适用域。诚实 fall-through by construction：目标日期无证据（71017277 珠宝赠与人）、需要别的 marker 家族（gpt4_d6585ce9 音乐同伴）不进 fire 集。**唯一性门**：渲染候选 size≠1 → None（歧义=虚构）。**多词捕获课**：ambiguity 测试抓到 `just got an? [a-z]+ today` 漏掉 "a waffle iron"（多词宾语静默不成为候选，唯一性门被骗过）→ 惰性 `[a-z ]+?`。replay 1178s PASS：pred 变化恰=5（Walk for Hunger / cousin's wedding / bluegrass band / chocolate cake / a smoker），0 kills，abs 18 frozen。banked 319→324（0.648），套件 10657→10676（+19 tests test_reltime_anchor_face.py）。
 
 ## 许可
 

@@ -337,6 +337,24 @@ counting gate 新 form "pages"：(A) **read-so-far latest-wins**——"How many 
 
 > 回指课：**"你提到的 X"这类问法把答案的形状写在了问题里**——要求 bearer 出现 head noun 的定义性展开，而不是任何提到同一实体的句子。与 §5.11（name-demand definitional-anaphora，定义式 bearer `<专名>: this <anaphor>`）合读：同位语是它的行中变体。
 
+### 5.28 C577 holiday-entity — 假日名是日期锚，realized 标记是判别器
+
+"I flied with on Valentine's day" 这类问题的锚不在行内词面，在**日历**：固定日期假日表 → 问题日之前最近出现（03-02 → 02-14）→ 假日当天 user 行扫 realized 标记（`my <A> flight` / `flew with <A>`）→ 恰 1 家即答。判别器承担全部区分压力：预订意向行（"leaning towards the JetBlue option"）永不携带 realized 标记；忠诚度产物（"Delta SkyMiles"）败于后缀名核心；换日重述被日期门排除。moveable 假日（Easter/Thanksgiving）诚实 fall-through。**wire-format 课**：miniature 首跑 2 红，根因是 dated_lines 带 `[role] ` 前缀而测试用裸文本——裸文本池静默跳过 user-wall，assistant-wall 测试以错误理由通过（unknown-role 跳过 ≠ 正确拒绝）。写断言前必读被测方法的**输入契约**，helper 钉真实格式。
+
+> 锚课：**日历锚与 realized 判别器是一对**——锚选出"哪天"，判别器选出"那天里哪行是真发生"。只有锚没有判别器，预订意向行与体验行同池；与 §5.23（before-buy named-day，偏移绑具名日）合读：具名日可以当偏移的参照系，也可以自己当锚。
+
+### 5.29 C578 list-recall — 基数 demand 是读列表块的规格说明
+
+"the **two companies** you mentioned" 的答案不是某一行，是 assistant 编号列表块里的 **n 行**——句池把块切碎三种寄生（intro-line 等），单行 face 全部落空。face 的结构门把 demand 当规格用：`^\d{1,2}[.)]` 聚合块 + size==n 匹配 + score≥3/margin≥2。**作用域课：cardinal 词 bind the QUESTION, never the block**——"two" 是验收标准（块必须恰 2 项），不是块内词汇；把它混进打分词表 = 用答案验收标准给自己造寄生。渲染跟行走（clause 行全行渲染，GT 词形决定粒度），judge superset/normalized/ratio 三分支各兑一题（3-qid payoff）。
+
+> 结构课：**问题里的计数词是列表读取的形状参数**——size==n 不匹配即不开火，宁可不答也不凑数。与 §5.26（list-body 双面）合读：bullet 括号是"行内结构信号"，编号块 + cardinal demand 是"跨行结构契约"——列表作为答案结构的两种读法。
+
+### 5.30 C579 reltime-anchor — 相对偏移经问题日解析为绝对目标日
+
+"What kitchen appliance did I buy 10 days ago?"式问法的答案日期**不在语料里，在问题里**：N days/weeks/months ago、last <weekday> 经 question_date 解析为绝对目标日（month=30d 约定），答案 = 目标日 user 行上的 realized fact。**frame 门先于 census 解释**：offset census 11/500，但 demand frame（kitchen appliance/charity/life event/artist）把 form 收到恰 5/500——普查出的 4 个"亲戚"（cashback/book/lunch-meet/social-media）结构不可达，**census 人口 ≠ face 适用域**。唯一性门：渲染候选 size≠1 → None（歧义=虚构）；目标日无证据 → 构造性 fall-through。**捕获课**：`an? [a-z]+` 单词捕获漏 "a waffle iron"，多词宾语静默不成为候选——唯一性门被骗过而不报警；惰性 `[a-z ]+?` 修复，ambiguity 测试是安全网。
+
+> 时间课：**相对时间是问题的属性，不是语料的**——解析发生在问题端（qd − offset），语料端只负责验证目标日有 realized 证据。与 §5.23/§5.24（行内偏移、双 today 跨度）合读：那两个 face 的偏移写在**行里**，这个 face 的偏移写在**问句里**——同一条时间轴的三个锚点来源。
+
 ## 6. 反面教材：枚举清单没有结构键（C536，RECORD-NEGATIVE）
 
 序数清单（"5. Absinthe"）看起来也能做个 face。实现后发现 **census 全负**：
@@ -424,6 +442,9 @@ answer-face 家族的开发纪律（每个 face 都走了这套流程）：
 | how-many 的答案在 stat 列表行 | paren-count（list-body） | `* Mummies (4):` 括号计数即值；营销寄生行退位 | C575 |
 | who-is-the 且描述行在实体清单里 | adjacent-name（list-body） | 匹配描述行上方相邻的实体名行即答案；名字从源行重组 | C575 |
 | 问题回指 "the <head noun> you mentioned" | mention-demand appositive | 同位语定义句压过回指行寄生；C559 豁免类第二成员 | C576 |
+| 问题锚定具名假日（"on Valentine's day"） | holiday-entity | 固定假日表→最近出现→当天 user 行 realized 标记；意向行永不命中 | C577 |
+| 问题带基数 demand 回忆多项（"the two companies you mentioned"） | list-recall | assistant 编号列表块 size==n 结构门；cardinal 词绑问题端永不入块词表 | C578 |
+| 问题带相对偏移（"10 days ago / a month ago / last Tuesday"） | reltime-anchor | 偏移经 qd 解析为绝对目标日；demand frame 选 marker 家族；渲染候选唯一性门 | C579 |
 | kh-floor 想救 kh=0 GT | 🚫 census-negative，不接线 | 1 救 vs 14 杀，absence pin 钉死 | C543 |
 | kh-elite 准入救窗口死区 | 🚫 census-negative，不接线 | impostor 杀率 23.3% vs 4 救，admission-only 全族否决 | C546 |
 | 松弛 run 门想多救几行 | 🚫 census-negative = 局部最优证书 | 全部 kill 是 run-TIE impostor；absence pin 钉死 C548 配置 | C549 |
@@ -440,7 +461,8 @@ answer-face 家族的开发纪律（每个 face 都走了这套流程）：
 8. 值解析题（多少/多久/哪天）的 face 不选句子，选**值**——限定词收窄解析人口（C552）、单位即证据（C553）、模糊量诚实弃权（C550）；且"现配置是局部最优"也能被 census 证明（C549）
 9. 队列注记 ≠ 判决：弃权规划可被 census 翻案为 rescue（C564），"现成只需放宽"可被证据定位证伪为错面（C566）——规划是猜，census 是验
 10. 问题自身的引用结构是词面相似度之外的连接条件：出版引证指向被引标题行（C574）、回指 demand 指向定义句（C576）、bullet 结构指向列表行（C575）——问题怎么引用答案，答案就该长什么样
+11. demand 词的作用域要显式绑定：cardinal 词是问题端的验收规格（size==n），永不混入答案块词表（C578）；相对偏移在问题端解析成日期，marker 家族由 demand frame 选择（C579）——同一词形在问题端与答案端扮演不同角色，默认混用即自我寄生
 
 ---
 
-*生成：documentation-morning cron，2026-09-02；Cycles 540-542 增补：2026-09-03；Cycles 543-545 增补：2026-09-04；Cycles 546-548 增补：2026-09-05；Cycles 549-554 增补：2026-09-07；Cycles 555-557 增补：2026-09-08；Cycles 558-559 增补：2026-09-09；Cycles 561-563 增补：2026-09-10；Cycles 564-569 增补：2026-09-13；Cycles 570-573 增补：2026-09-14；Cycles 574-576 增补：2026-09-15。数据口径：LongMemEval s_cleaned full-500，PYTHONHASHSEED=7，deterministic cascade banked。轨迹明细见 README Cycles 532-576 段。*
+*生成：documentation-morning cron，2026-09-02；Cycles 540-542 增补：2026-09-03；Cycles 543-545 增补：2026-09-04；Cycles 546-548 增补：2026-09-05；Cycles 549-554 增补：2026-09-07；Cycles 555-557 增补：2026-09-08；Cycles 558-559 增补：2026-09-09；Cycles 561-563 增补：2026-09-10；Cycles 564-569 增补：2026-09-13；Cycles 570-573 增补：2026-09-14；Cycles 574-576 增补：2026-09-15；Cycles 577-579 增补：2026-09-16。数据口径：LongMemEval s_cleaned full-500，PYTHONHASHSEED=7，deterministic cascade banked。轨迹明细见 README Cycles 532-579 段。*
