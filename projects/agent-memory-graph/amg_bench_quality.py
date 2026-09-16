@@ -1143,6 +1143,34 @@ class LongMemEvalAdapter:
                 meta["abstained"] = False
                 return r_ans, meta
 
+        # Cycle 580: who-companion face — "Who did I go with to the
+        # music event last Saturday?" resolved by the same offset →
+        # target date → realized-marker scan, with the marker
+        # family anchored on relation words ("with my <relation>")
+        # so the PERFORMER named in the same sentence ("saw them
+        # live with Adam Lambert") can never bind (see
+        # answer_who_companion). Census: form accepts exactly 1/500
+        # question — zero hijack surface by construction; the
+        # wrong-date companion decoys (03-18 sister, 04-01
+        # Brooklyn group-of-friends — the chain's current parasitic
+        # pred) fall to the date gate. Runs after the C579
+        # reltime sibling (disjoint form censuses; adjacency for
+        # readability).
+        if (self._session_dates and who_companion_form(question)):
+            w_ans, w_detail = answer_who_companion(
+                question,
+                [(f"[{self._nodes[nid]['role'] or '?'}] "
+                  f"{self._nodes[nid]['label']}",
+                  self._session_dates.get(
+                      self._nodes[nid]["session_id"], ""))
+                 for nid in self._messages if nid in self._nodes],
+                question_date)
+            meta["who_companion"] = w_detail
+            if w_ans is not None:
+                meta["gate"] = "who_companion"
+                meta["abstained"] = False
+                return w_ans, meta
+
         # Cycle 486: past-perfect duration forms (#077) — "How long
         # had I been <state> when/before <event>?" Every "N units
         # ago" / "for N units (now)" expression anchors to the
@@ -5893,6 +5921,81 @@ def answer_reltime_anchor(question: str,
         for rx, render in markers:
             for m in rx.finditer(line):
                 found.add(render(m).strip())
+    detail["cands"] = sorted(found)
+    if len(found) != 1:
+        return None, detail
+    return next(iter(found)), detail
+
+
+# ════════ Cycle 580: who-companion face (companion demand) ════════
+# "Who did I go with to the music event last Saturday?" — the answer
+# is the COMPANION bound on the target date's user lines (C579's
+# reltime machinery, who-demand frame instead of the five what
+# frames). The sentence pool parasitizes with topic-similar but
+# wrong-date lines — the chain's current pred for the census row is
+# exactly the 04-01 Brooklyn "with a group of friends" festival
+# sentence — and the line that carries the fact ALSO names the
+# PERFORMER ("saw them live with Adam Lambert"), so the marker
+# family anchors the relation word ("with my <relation>"), which
+# performer names can never match; the possessive lookahead keeps
+# "my cousin's wedding" from rendering a companion. Census: the
+# form accepts exactly 1/500 question (gpt4_d6585ce9) — zero
+# hijack surface by construction (frame allows an object gap:
+# "who did I attend <X> with" — gap census still exactly 1/500;
+# the adjacent-only draft was ungrammatical for attend, RED-round
+# caught it); the giver sibling ("from whom",
+# 71017277) is evidence-absent on every line of its haystack, so
+# the face ships no dead frame — it falls through honestly (C579
+# jewelry lesson).
+_WHO_COMP_FRAME_RE = re.compile(
+    r"\bwho did i (?:go|come|attend)\b[^?.!]{0,40}?\bwith\b", re.I)
+_WHO_COMP_RE = re.compile(
+    r"\bwith my (?P<x>parents|parent|sister|brother|mother|father|"
+    r"mom|dad|cousins?|family|girlfriend|boyfriend|wife|husband|"
+    r"partner|roommate|aunt|uncle|grandparents|daughter|son|"
+    r"kids?|friends?)\b(?!\s*['\u2019])", re.I)
+
+
+def who_companion_form(question: str) -> bool:
+    """True when the question demands a companion ("who did I go
+    with") AND carries a relative-time offset (C580). Strictly
+    narrower than the who-family: the full-500 census accepts
+    exactly one row; the meet-with lunch sibling is banked via
+    another route and the from-whom giver row is evidence-absent,
+    so both stay outside."""
+    return (bool(_RELTIME_OFF_RE.search(question))
+            and bool(_WHO_COMP_FRAME_RE.search(question)))
+
+
+def answer_who_companion(question: str,
+                         dated_lines: list[tuple[str, str]],
+                         question_date: str = ""
+                         ) -> tuple[str | None, dict]:
+    """Answer a who-was-I-with question from dated evidence.
+
+    Same contract as answer_reltime_anchor: ``(None, detail)``
+    unless the offset resolves and the target-date user lines bind
+    exactly one rendered companion (0 or 2+ distinct renders is
+    ambiguity and falls through — fabrication wall). The answer is
+    a plain entity string judged by the default exact branch.
+    """
+    detail: dict = {"form": None}
+    if not (who_companion_form(question)
+            and _WHO_COMP_FRAME_RE.search(question)):
+        return None, detail
+    detail["form"] = "who_companion"
+    tdate = _reltime_target(question, question_date)
+    detail["target"] = tdate
+    if not tdate:
+        return None, detail
+    found: set[str] = set()
+    for line, sdate in dated_lines:
+        if parse_lme_date(sdate) != tdate:
+            continue
+        if not line.startswith("[user]"):
+            continue
+        for m in _WHO_COMP_RE.finditer(line):
+            found.add(("my " + m.group("x")).strip())
     detail["cands"] = sorted(found)
     if len(found) != 1:
         return None, detail
