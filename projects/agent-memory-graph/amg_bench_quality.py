@@ -466,6 +466,7 @@ class LongMemEvalAdapter:
                  opener_floor: bool = True,
                  ordinal_face: bool = True,
                  list_recall: bool = True,
+                 sectioned_recall: bool = True,
                  assistant_recall: bool = True,
                  recall_min_score: int = 5,
                  recall_mode: str = "distinctive",
@@ -569,6 +570,7 @@ class LongMemEvalAdapter:
         # Cycle 578: list-recall face — numbered-list blocks as the
         # answer structure for cardinal-demand recall questions.
         self.list_recall = list_recall
+        self.sectioned_recall = sectioned_recall
         # Cycle 501: role-aware answer face (echo pathology fix) —
         # see _user_fact_form. role_margin: how many keyword hits a
         # user line may trail the top assistant line by and still
@@ -1328,6 +1330,35 @@ class LongMemEvalAdapter:
                 meta["gate"] = "list_recall"
                 meta["abstained"] = False
                 return l_ans, meta
+
+        # Cycle 581: sectioned-recall face — "what kind of processes
+        # are used at the Lake Charles Refinery?" is answered by the
+        # assistant's own SECTIONED list: the question names a
+        # "N. <Header>:" block, the face harvests that section's
+        # bullet rows and renders their name spans (see
+        # answer_sectioned_recall). Full-graph stream (C472 lesson).
+        # Census: frame + named-demand accepts exactly 1/500
+        # question — zero hijack surface by construction; the header
+        # match must be unique (two headers containing the entity =
+        # ambiguous = fall-through) and header-only matching keeps
+        # the sibling sections' row-text mentions of "Lake Charles"
+        # ("As with the Lake Charles Refinery, ...") from binding.
+        # Runs after the C578 sibling (disjoint form censuses,
+        # interlock pinned both sides) and before speaker_recall —
+        # the parasitic pred it fixes IS a speaker_recall output
+        # (the three-location intro sentence).
+        if (self.sectioned_recall
+                and sectioned_recall_form(question)):
+            sec_ans, sec_detail = answer_sectioned_recall(
+                question,
+                [(self._nodes[nid].get("role") or "",
+                  self._nodes[nid].get("label") or "")
+                 for nid in self._messages if nid in self._nodes])
+            meta["sectioned_recall"] = sec_detail
+            if sec_ans is not None:
+                meta["gate"] = "sectioned_recall"
+                meta["abstained"] = False
+                return sec_ans, meta
 
         # Cycle 468: speaker-recall path — you-addressed "remind me
         # what you recommended" forms. Assistant answers are multi-
@@ -6201,6 +6232,129 @@ def rx_search_dash(row: str) -> bool:
     exist', not which separator."""
     t = _LIST_BOLD_RE.sub(r"\1", row)
     return bool(re.search(r" - | — |: ", t))
+
+
+# ════════ Cycle 581: sectioned-recall face ════════
+# "...Can you remind me what kind of processes are used at the Lake
+# Charles Refinery?" — the question recalls a SECTION of a list the
+# assistant already gave, addressed by the section header's name.
+# The evidence is the assistant's own sectioned answer (numbered
+# "N. <Header>:" blocks with bullet rows); the demanded section is
+# the unique header containing the question's named entity, and its
+# rows render as name spans. Census: frame + named-demand accepts
+# exactly 1/500 question (zero hijack surface by construction).
+
+_SECTIONED_FRAME_RE = re.compile(r"remind me|you told me|i remember",
+                                 re.I)
+_SECTIONED_DEMAND_RE = re.compile(
+    r"what (?:kind of )?([a-z ]+?) "
+    r"(?:are|were|is|was) (?:used|carried out|performed) "
+    r"at the ([A-Z][A-Za-z]*(?: [A-Z][A-Za-z]*)+)")
+_SECTIONED_HDR_RE = re.compile(r"^\s*\d{1,2}[.)]\s+(.+?):\s*$")
+_SECTIONED_ROW_RE = re.compile(r"^\s*[*-]\s+(.+)$")
+
+
+def sectioned_recall_form(question: str) -> tuple | None:
+    """(noun, entity) when a recall-frame question demands the
+    <noun> used at a named capitalized facility ("what kind of
+    processes are used at the Lake Charles Refinery?"). The entity
+    needs >=2 capitalized words (a real proper name). Census over
+    the full 500: exactly 6ae235be — the C578 cardinal face's
+    standing exclusion, now claimed by its own face."""
+    q = (question or "").strip()
+    if not _SECTIONED_FRAME_RE.search(q):
+        return None
+    m = _SECTIONED_DEMAND_RE.search(q)
+    if m:
+        return (m.group(1).strip(), m.group(2).strip())
+    return None
+
+
+def _sectioned_blocks(content: str) -> list[tuple[str, list[str]]]:
+    """[(header, [row_texts])] — numbered "N. <Name>:" section
+    headers with bullet "* row" bodies; a prose line closes the
+    section. Header numbering must NOT be assumed increasing (GPT-4
+    restarts at "1." per section in the wild)."""
+    out: list[tuple[str, list[str]]] = []
+    hdr: str | None = None
+    rows: list[str] = []
+    for ln in (content or "").split("\n"):
+        hm = _SECTIONED_HDR_RE.match(ln)
+        rm = _SECTIONED_ROW_RE.match(ln)
+        if hm:
+            if hdr and rows:
+                out.append((hdr, rows))
+            hdr = _LIST_BOLD_RE.sub(r"\1", hm.group(1)).strip()
+            rows = []
+        elif rm and hdr is not None:
+            rows.append(rm.group(1).strip())
+        elif ln.strip() and hdr is not None:
+            if rows:
+                out.append((hdr, rows))
+            hdr, rows = None, []
+    if hdr and rows:
+        out.append((hdr, rows))
+    return out
+
+
+def _sectioned_span(row: str) -> str:
+    """Name span of a row: bold stripped, cut at the first colon
+    ('Atmospheric distillation: ...' -> 'Atmospheric distillation';
+    'Fluid catalytic cracking (FCC): ...' keeps the paren)."""
+    t = _LIST_BOLD_RE.sub(r"\1", row).strip()
+    c = t.find(":")
+    if c != -1:
+        t = t[:c]
+    return t.strip(" .,;:")
+
+
+def answer_sectioned_recall(question: str,
+                            messages: list[tuple[str, str]],
+                            ) -> tuple[str | None, dict]:
+    """Answer a named-section demand from a sectioned list block.
+
+    ``messages`` is the full-graph [(role, content)] stream (dates
+    play no role). The question's entity must match EXACTLY ONE
+    section header across the graph (zero = no_section, two+ =
+    ambiguous — ambiguity is fabrication) and that section needs
+    >=2 rows (a single bullet is not a list section). Rows render
+    as their name spans, joined in evidence order.
+    """
+    form = sectioned_recall_form(question)
+    detail: dict = {"form": None, "sections": 0}
+    if not form:
+        return None, detail
+    noun, entity = form
+    detail["form"] = "sectioned_recall"
+    detail["demand"] = {"noun": noun, "entity": entity}
+    ent = entity.lower()
+    scored: list[tuple[str, list[str]]] = []
+    for role, content in messages:
+        if role != "assistant":
+            continue                      # user-role wall
+        for hdr, rows in _sectioned_blocks(content or ""):
+            if ent in hdr.lower():        # header-only match
+                scored.append((hdr, rows))
+    detail["sections"] = len(scored)
+    if not scored:
+        detail["reason"] = "no_section"
+        return None, detail
+    if len(scored) > 1:
+        detail["reason"] = "ambiguous"
+        return None, detail
+    hdr, rows = scored[0]
+    if len(rows) < 2:
+        detail["reason"] = "single_row"
+        return None, detail
+    spans = [_sectioned_span(r) for r in rows]
+    if len(spans) == 2:
+        body = " and ".join(spans)
+    else:
+        body = ", ".join(spans[:-1]) + ", and " + spans[-1]
+    ans = body if body.endswith(".") else body + "."
+    detail["header"] = hdr
+    detail["spans"] = spans
+    return ans, detail
 
 
 # ════════ Cycle 486: past-perfect duration forms (#077) ════════
