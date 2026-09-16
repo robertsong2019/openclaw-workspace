@@ -26,7 +26,11 @@ die() { echo -e "${RED}Error:${RESET} $*" >&2; exit 1; }
 # ── Helper: escape a string for embedding in JSON output ──
 esc_json() {
   local s="$1"
-  s="${s//\\\\/\\\\\\\\}"
+  # 反斜杠必须最先转义（后续替换插入的 \ 才不会被二次翻倍）。
+  # 注意：双引号内直接写 ${s//\\/...} 的反斜杠替换不生效（bash 解析坑），
+  # 必须用单引号变量中转 —— 实证见 F27 red 测试。
+  local bs='\' esc_bs='\\'
+  s="${s//"$bs"/"$esc_bs"}"
   s="${s//\"/\\\"}"
   s="${s//$'\n'/\\n}"
   s="${s//$'\t'/\\t}"
@@ -505,16 +509,18 @@ cmd_stats() {
   local ws_size; ws_size=$(du -sh "$WORKSPACE" 2>/dev/null | cut -f1)
 
   local latest_file="" latest_time=0
-  for f in "$MEMORY_DIR"/*.md; do
+  # 与 mem_count 同一文件集（递归）：只 glob 顶层会让子目录最新笔记
+  # 永远当不了 latest；sort -z 保证同 mtime 时胜者确定。
+  while IFS= read -r -d '' f; do
     [[ -f "$f" ]] || continue
     local t; t=$(stat -c %Y "$f" 2>/dev/null || echo 0)
     (( t > latest_time )) && { latest_time=$t; latest_file="$f"; }
-  done
+  done < <(find "$MEMORY_DIR" -name '*.md' -print0 2>/dev/null | sort -z)
   local latest_name=""; [[ -n "$latest_file" ]] && latest_name=$(basename "$latest_file")
 
   if [[ $JSON_OUTPUT -eq 1 ]]; then
     printf '{"command":"stats","memory_files":%d,"session_files":%d,"workspace_size":"%s","latest_note":"%s"}\n' \
-      "$mem_count" "$sess_count" "$ws_size" "$latest_name"
+      "$mem_count" "$sess_count" "$ws_size" "$(esc_json "$latest_name")"
   else
     echo -e "${CYAN}📈 Workspace stats${RESET}"
     echo
