@@ -4937,6 +4937,16 @@ _WHERE_FP_RE = re.compile(r"\b(?:I|I'm|I've|I'll|we|my|me)\b")
 # scan falsified by census: d52b4f67 banked winner demoted via tangent clause
 # "want to get her something", e01b8e2f via trailing "thinking of planning").
 _WHERE_DID_RE = re.compile(r"\bwhere\s+did\s+(?:i|we|you)\b", re.I)
+# C582 R2: do-form habitual interrogation ("Where do I take yoga classes?")
+# asks the user's CURRENT reality, so intention-shaped lines are the same
+# mismatch C541 fixes for did-form (6ade9755: "planning to visit Emily ... "
+# beat the Serenity Yoga evidence on a rank tie). am-form planning questions
+# ("Where am I planning to stay...") intentionally NOT matched — their
+# winners ARE the plan (eace081b banked). Examined and rejected: a
+# realized-past carve-out ("thinking of going back to Hawaii, ... when I
+# went ...") — the only affected lines live in UNRETRIEVED sessions
+# (e01b8e2f/9ea5eabc forensics), zero measured effect on the full-500.
+_WHERE_DO_RE = re.compile(r"\bwhere\s+do\s+i\b", re.I)
 _WHERE_INTENT_RE = re.compile(
     r"\b(?:considering|pursuing|planning|thinking\s+(?:of|about)|narrowed\s+down|"
     r"hoping|would\s+like|want\s+to|applying|intend|going\s+to|plan\s+to|"
@@ -4951,6 +4961,12 @@ def _where_intent_in_loc_clauses(sent: str) -> bool:
         if _where_loc_candidates(clause) and _WHERE_INTENT_RE.search(clause):
             return True
     return False
+
+
+def _where_interrogates_user(question: str) -> bool:
+    """did/do first-person interrogation (C541 did-form + C582 do-form)."""
+    return bool(_WHERE_DID_RE.search(question)
+                or _WHERE_DO_RE.search(question))
 
 
 def where_form(question: str) -> bool:
@@ -5045,16 +5061,18 @@ def answer_where(question: str, sessions: list[dict],
                               "intent": _where_intent_in_loc_clauses(sent)})
     if not cands:
         return None, {"sessions": len(sess_rank), "cands": 0}
-    # C541: past-act interrogation demotes future-intention winners.
-    # "Where did I <V>" asks about a COMPLETED act; a candidate whose
-    # locative clause is intention-shaped ("considering pursuing...",
-    # "narrowed down my options to...") asserts a plan, not a memory
-    # (25e5aa4f: the Master's-plan line beat "completed my undergrad
-    # in CS from UCLA" on kh priors). Band restriction (C533 floor
-    # shape): demote only when a clean candidate exists; all-marked
-    # populations are untouched. Question-conditioned (strict did-form
-    # — present-tense where questions keep the untouched ranking).
-    if _WHERE_DID_RE.search(question):
+    # C541+C582: first-person interrogation (did/do form) demotes
+    # non-memory candidates. R3: assistant turns are advice/echoes,
+    # not the user's memory — when user-voiced candidates exist they
+    # are dropped outright (51a45a95: assistant coupon-advice line
+    # tied the user's Target line and won on append order). R2:
+    # demotion gate widened to do-form habituals (6ade9755).
+    # Band restriction (C533 floor shape): demote only when a clean
+    # candidate exists; all-marked populations are untouched.
+    if _where_interrogates_user(question):
+        users = [c for c in cands if c["role"] == "user"]
+        if users:
+            cands = users
         marked = [c for c in cands if c["intent"]]
         clean = [c for c in cands if not c["intent"]]
         if marked and clean:
