@@ -130,7 +130,20 @@ class A2AHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         """JSON-RPC 2.0 端点"""
-        length = int(self.headers.get("Content-Length", 0))
+        # Content-Length 头本身也可能是垃圾（非整数/负数）：int() 裸抛会让
+        # handler 崩溃断连（客户端只见 RemoteDisconnected），负数则触发
+        # read(-1) 阻塞到对端关连接。与畸形 JSON 同族，必须显式回错。
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+        except (TypeError, ValueError):
+            length = -1
+        if length < 0:
+            self._send_json({
+                "jsonrpc": "2.0",
+                "error": {"code": -32600, "message": "Invalid Request: malformed Content-Length header"},
+                "id": None,
+            })
+            return
         raw = self.rfile.read(length)
         # 垃圾输入防御：畸形 JSON / 非 object 体必须回 JSON-RPC 错误，
         # 而不是让 handler 抛异常断连（客户端只见 RemoteDisconnected）。
@@ -159,7 +172,16 @@ class A2AHandler(BaseHTTPRequestHandler):
         if method == "message/send":
             # 发送消息给 Agent，创建或继续 Task
             task_id = params.get("taskId") or str(uuid.uuid4())
-            task = self.store.get(task_id) or self.store.create(task_id)
+            task = self.store.get(task_id)
+            if task and task["status"] == "cancelled":
+                # 取消即终结：拒绝静默复活（completed 仍可多轮续聊）
+                self._send_json({
+                    "jsonrpc": "2.0",
+                    "error": {"code": -32602, "message": f"Task {task_id} is cancelled and cannot accept new messages"},
+                    "id": req_id,
+                })
+                return
+            task = task or self.store.create(task_id)
             message = params.get("message", {})
             task["messages"].append(message)
 
@@ -188,15 +210,23 @@ class A2AHandler(BaseHTTPRequestHandler):
 
         elif method == "tasks/cancel":
             task_id = params.get("id")
-            task = self.store.update_status(task_id, "cancelled")
-            if task:
-                self._send_json({"jsonrpc": "2.0", "result": task, "id": req_id})
-            else:
+            task = self.store.get(task_id)
+            if task is None:
                 self._send_json({
                     "jsonrpc": "2.0",
                     "error": {"code": -32602, "message": "Task not found"},
                     "id": req_id,
                 })
+            elif task["status"] in ("completed", "cancelled", "failed"):
+                # 终态不可取消：盲改写会把 completed 报成取消成功（假成功）
+                self._send_json({
+                    "jsonrpc": "2.0",
+                    "error": {"code": -32602, "message": f"Task {task_id} not cancelable: status is '{task['status']}'"},
+                    "id": req_id,
+                })
+            else:
+                task = self.store.update_status(task_id, "cancelled")
+                self._send_json({"jsonrpc": "2.0", "result": task, "id": req_id})
 
         else:
             self._send_json({

@@ -8,6 +8,7 @@ message/send 多轮、tasks/get、tasks/cancel、错误路径）+ 健壮性
 """
 
 import json
+import socket
 import threading
 import unittest
 from http.server import HTTPServer
@@ -163,7 +164,11 @@ class ServerE2ETest(unittest.TestCase):
         self.assertEqual(resp["id"], 7)
 
     def test_cancel_task(self):
-        self.client.send_message("x", task_id="task-c")
+        # cancel 的真实使用场景是打断 in-flight 任务：直接 seed 一个
+        # working 状态任务（同步 executor 下走 HTTP 的任务发出即完成，
+        # 无法从外部观察到 working 窗口）。
+        task = A2AHandler.store.create("task-c")
+        task["status"] = "working"
         resp = self.client.cancel_task("task-c")
         self.assertEqual(resp["result"]["status"], "cancelled")
         got = self.client.get_task("task-c")["result"]
@@ -214,6 +219,93 @@ class MalformedRequestTest(ServerE2ETest):
         resp = self.rpc("tasks/get", {"id": "ghost"}, req_id=10)
         self.assertEqual(resp["error"]["code"], -32602)
         self.assertEqual(resp["id"], 10)
+
+    # ---- Content-Length 头本身的垃圾（非整数/负数）----
+
+    def send_raw_socket(self, payload: bytes, timeout=3.0) -> bytes:
+        """绕过 http.client 自动补头，原样发送字节，收齐响应（连接关/超时/完整）。"""
+        with socket.create_connection(("127.0.0.1", self.port), timeout=timeout) as s:
+            s.sendall(payload)
+            chunks = []
+            while True:
+                try:
+                    data = s.recv(65536)
+                except socket.timeout:
+                    break
+                if not data:
+                    break
+                chunks.append(data)
+        return b"".join(chunks)
+
+    def raw_post(self, headers: str, body: bytes = b"") -> dict:
+        raw = self.send_raw_socket(
+            f"POST / HTTP/1.1\r\nHost: t\r\nContent-Type: application/json\r\n"
+            f"{headers}\r\n".encode() + body
+        )
+        self.assertTrue(raw, "服务器无响应（handler 崩溃断连或挂起）")
+        head, _, body_raw = raw.partition(b"\r\n\r\n")
+        self.assertIn(b"200 OK", head, head)
+        return json.loads(body_raw)
+
+    def test_content_length_non_integer_gets_error(self):
+        resp = self.raw_post("Content-Length: abc\r\n")
+        self.assertEqual(resp["error"]["code"], -32600)
+        self.assertIsNone(resp["id"])
+
+    def test_content_length_negative_gets_error_not_hang(self):
+        resp = self.raw_post("Content-Length: -5\r\n")
+        self.assertEqual(resp["error"]["code"], -32600)
+
+    def test_server_alive_after_bad_header(self):
+        self.raw_post("Content-Length: abc\r\n")
+        resp = self.rpc("tasks/get", {"id": "ghost"}, req_id=11)
+        self.assertEqual(resp["error"]["code"], -32602)
+        self.assertEqual(resp["id"], 11)
+
+
+# ============================================================
+# 终态语义 — cancel 不得改写终态、cancelled 任务不得被复活
+# （red-verified: 修复前 cancel 已完成任务"成功"改写状态、
+#   已取消任务再收消息被静默复活为 completed）
+# ============================================================
+
+
+class TerminalStateTest(ServerE2ETest):
+    def seed_working(self, tid):
+        task = A2AHandler.store.create(tid)
+        task["status"] = "working"
+        return task
+
+    def test_cancel_completed_task_rejected(self):
+        self.client.send_message("done work", task_id="t-done")  # 同步执行 → completed
+        resp = self.client.cancel_task("t-done")
+        self.assertEqual(resp["error"]["code"], -32602)
+        self.assertIn("completed", resp["error"]["message"])
+        got = self.client.get_task("t-done")["result"]
+        self.assertEqual(got["status"], "completed")  # 状态未被改写
+
+    def test_double_cancel_rejected(self):
+        self.seed_working("t-c")
+        first = self.client.cancel_task("t-c")
+        self.assertEqual(first["result"]["status"], "cancelled")
+        second = self.client.cancel_task("t-c")
+        self.assertEqual(second["error"]["code"], -32602)
+
+    def test_cancelled_task_rejects_send_no_resurrection(self):
+        self.seed_working("t-x")
+        self.client.cancel_task("t-x")
+        resp = self.client.send_message("sneak back", task_id="t-x")
+        self.assertEqual(resp["error"]["code"], -32602)
+        got = self.client.get_task("t-x")["result"]
+        self.assertEqual(got["status"], "cancelled")
+        self.assertEqual(len(got["messages"]), 0)  # 消息未入历史
+        self.assertEqual(got["artifacts"], [])  # 未产生新产物
+
+    def test_completed_task_still_accepts_multiturn(self):
+        # completed 非终态封锁面：多轮续聊是已 pin 的行为，保持不变
+        self.client.send_message("one", task_id="t-m")
+        resp = self.client.send_message("two", task_id="t-m")
+        self.assertEqual(resp["result"]["status"], "completed")
 
 
 if __name__ == "__main__":
