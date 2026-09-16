@@ -1,4 +1,4 @@
-# TUTORIAL: Answer Faces — 问题结构驱动的答案选择（Cycles 529-576）
+# TUTORIAL: Answer Faces — 问题结构驱动的答案选择（Cycles 529-582）
 
 > 本文解释 amg 评测管线里最反直觉的一个设计：**答案选哪个句子，不该由"分数阈值"决定，而该由"问题在问什么"决定**。
 > 覆盖 Cycle 529-576 的机制演进（banked 0.494 → 0.630），所有例子都是 LongMemEval s_cleaned full-500 里的真实题目。
@@ -165,7 +165,7 @@ judge cascade（exact → semantic → LLM）里有一个 NEEDS_JUDGE 区间：e
 
 ---
 
-## 5. 值解析与锚点族 face：数字、日期、时长、锚点选择（C549-C576）
+## 5. 值解析与锚点族 face：数字、日期、时长、锚点选择（C549-C582）
 
 §3-§4 的 face 都长在"**选哪句话**"上；C549-C554 是第三波：答案本身是个数值/日期/时长，face 长在"**值解析**"上——不是从候选里挑句子，而是从通过 gate 的内容里提炼出**正确的值**。C555-C557 是第四波：值对了还不够，**锚点选择**本身也是信号源——锚是谁说的（角色）、跨度怎么定义（口径）、行内多个日期选哪个（临近度/连续对）。外加一次方法论升级（C549：census-negative 的第三种用法）。C561-C563 是值解析族的残留地带清扫：counting 的非金钱度量兄弟（距离/重量/时长）、item_total 的空清单分支（类别求和）、时长族最后两个病根（同句状态绑定 + 进行体问头/会话跨度）。C564-C569 是第五波：**期限/跨度/求和面**——pp_duration 三条新 route（晋职扣减、完成时长求和、活动跨度求和）与一个门入口（have-had），counting 三个新 gate entry（页码进度双面、成书页数求和、教育年限链）；附赠两次"队列注记被证据翻案"的方法论实录（C564 弃权→rescue、C565 现成→错面）。C570-C573 把第五波收束成 session-date 跨度族（书本/事件/旅程跨度、ago 倒推、具名日偏移）。C574-C576 是第六波：**结构回指族**——问题自身的引用结构（出版引证、bullet 列表体、回指提法）本身就是 bearer 的连接条件。
 
@@ -355,6 +355,24 @@ counting gate 新 form "pages"：(A) **read-so-far latest-wins**——"How many 
 
 > 时间课：**相对时间是问题的属性，不是语料的**——解析发生在问题端（qd − offset），语料端只负责验证目标日有 realized 证据。与 §5.23/§5.24（行内偏移、双 today 跨度）合读：那两个 face 的偏移写在**行里**，这个 face 的偏移写在**问句里**——同一条时间轴的三个锚点来源。
 
+### 5.31 C580 who-companion — 同伴绑在目标日期的 user 行上
+
+"Who did I go with to the music event last Saturday?" 的答案不是事件行，是目标日期 user 行上的 **companion 标记**。一行两种 with：表演者（"saw them live with Adam Lambert"）与同伴（"with my parents"）同句共存——marker 绑**亲属词** `with my <relation>` + 所有格守卫，表演者结构性排除（艺人不是 <relation>）；日期门排除同叙事换日重述。census-first：who-demand 全 500 恰 1 题；evidence-absent 队列项（71017277 "from whom" 赠与人，13 命中全假阳性）永久关闭而非写死代码。
+
+> 角色课：**"who did I go with" 的答案由「谁有权作答」决定**——user 行的第一人称记忆是唯一证人，表演者只是同句里另一个 with。与 §5.28 合读：假日锚配 realized 标记、日期锚配亲属词标记——判别器永远承担「同句多候选谁是真答案」的压力，锚只负责圈定哪天。
+
+### 5.32 C581 sectioned-recall — 点名 section 只认 header 行
+
+"what kind of processes are used at the Lake Charles Refinery?" 按名字点名 assistant 自己给过的分节清单的一个 section。face 的答案单元是 "N. <Header>:" + bullet rows 的**整块**：实体匹配只在 header 上做（兄弟 section 的行文本也提到 "Lake Charles"——"As with the Lake Charles Refinery, ..."）；header 不假设递增编号（GPT-4 每个 section 从 "1." 重新编号）；≥2 行才算 section（单 bullet 不成清单）；实体命中 ≥2 headers = ambiguous = fall-through。渲染 bare span join，GT 本身就是 bare span list modulo case——judge normalized 相等是最强分支。
+
+> 边界课：**最宽草案 census 就已恰 1/500 = zero-kill by construction**；但同轮更要紧的是给 pref 族（29 qids）下的判决——GT 是元句式（"The user would prefer responses that..."），诚实 render 永远无法与之词法收敛，**judge-unbankable offline**。做不了的题写明「为什么做不了」并关闭 lane，比留在队列里假装有机会更诚实。
+
+### 5.33 C582 where-face 精度 — 降级门扩到 do-form，assistant 让位 user
+
+"Where do I take yoga classes?" 与 "Where did I buy the Target gift card?" 同属 C508 where 面，精度靠两条降级规则：**R2**——C541 意图降级门从 did-form 扩到 do-form 习惯式（问的是当前现实；"planning to visit Emily" 是同一错位）；am-form 刻意不匹配（问句本身就是计划，banked 守卫 eace081b）。**R3**——did/do-form 下只要存在 user 候选就丢弃 assistant 候选：assistant 轮是建议/回声（"you could get a Target gift card"），不是第一人称记忆。R2 救 Serenity Yoga、R3 救 Target（superset judge 吸收冠词差异）。
+
+> 取证课（本节最重要）：**R1 首次 replay FAIL 得对**——初始的 realized-past carve-out 零 pred 变化，取证发现目标证据根本不在检索返回集（retrieval-miss，不是排序问题）→ 回退并在代码注释留 "examined and rejected"。且取证自身有陷阱：harness 的 session_N 是枚举序号，与 answer_session_ids 索引**不对应**——「证据在 session_X」必须用 ID 字段逐题核对，否则规则修的是幻觉问题。
+
 ## 6. 反面教材：枚举清单没有结构键（C536，RECORD-NEGATIVE）
 
 序数清单（"5. Absinthe"）看起来也能做个 face。实现后发现 **census 全负**：
@@ -445,6 +463,9 @@ answer-face 家族的开发纪律（每个 face 都走了这套流程）：
 | 问题锚定具名假日（"on Valentine's day"） | holiday-entity | 固定假日表→最近出现→当天 user 行 realized 标记；意向行永不命中 | C577 |
 | 问题带基数 demand 回忆多项（"the two companies you mentioned"） | list-recall | assistant 编号列表块 size==n 结构门；cardinal 词绑问题端永不入块词表 | C578 |
 | 问题带相对偏移（"10 days ago / a month ago / last Tuesday"） | reltime-anchor | 偏移经 qd 解析为绝对目标日；demand frame 选 marker 家族；渲染候选唯一性门 | C579 |
+| 问题问 "who did I go with"（同伴 + 日期锚） | who-companion | 目标日期 user 行亲属词 marker；表演者结构性排除；evidence-absent 项关闭不写死代码 | C580 |
+| 问题按名点名分节清单的一个 section | sectioned-recall | 实体匹配只在 header；≥2 行成块；唯一性门；pref 族 judge-unbankable 关闭 | C581 |
+| did/do-form where 问当前现实 | where 精度降级（R2/R3） | do-form 入意图降级门（am-form 保留）；user 候选在场时 assistant 退位 | C582 |
 | kh-floor 想救 kh=0 GT | 🚫 census-negative，不接线 | 1 救 vs 14 杀，absence pin 钉死 | C543 |
 | kh-elite 准入救窗口死区 | 🚫 census-negative，不接线 | impostor 杀率 23.3% vs 4 救，admission-only 全族否决 | C546 |
 | 松弛 run 门想多救几行 | 🚫 census-negative = 局部最优证书 | 全部 kill 是 run-TIE impostor；absence pin 钉死 C548 配置 | C549 |
@@ -462,7 +483,8 @@ answer-face 家族的开发纪律（每个 face 都走了这套流程）：
 9. 队列注记 ≠ 判决：弃权规划可被 census 翻案为 rescue（C564），"现成只需放宽"可被证据定位证伪为错面（C566）——规划是猜，census 是验
 10. 问题自身的引用结构是词面相似度之外的连接条件：出版引证指向被引标题行（C574）、回指 demand 指向定义句（C576）、bullet 结构指向列表行（C575）——问题怎么引用答案，答案就该长什么样
 11. demand 词的作用域要显式绑定：cardinal 词是问题端的验收规格（size==n），永不混入答案块词表（C578）；相对偏移在问题端解析成日期，marker 家族由 demand frame 选择（C579）——同一词形在问题端与答案端扮演不同角色，默认混用即自我寄生
+12. 证据可达性先于答案选择：replay 零变化不一定是 face 太窄——证据可能根本不在检索返回集里（C582 retrieval-miss）；且定位证据时枚举序号 ≠ ID 索引（session_N ≠ answer_session_ids），任何「证据在 session_X」必须用 ID 字段逐题核对，否则修的是幻觉；证伪的规则也要留痕（examined and rejected 注释）
 
 ---
 
-*生成：documentation-morning cron，2026-09-02；Cycles 540-542 增补：2026-09-03；Cycles 543-545 增补：2026-09-04；Cycles 546-548 增补：2026-09-05；Cycles 549-554 增补：2026-09-07；Cycles 555-557 增补：2026-09-08；Cycles 558-559 增补：2026-09-09；Cycles 561-563 增补：2026-09-10；Cycles 564-569 增补：2026-09-13；Cycles 570-573 增补：2026-09-14；Cycles 574-576 增补：2026-09-15；Cycles 577-579 增补：2026-09-16。数据口径：LongMemEval s_cleaned full-500，PYTHONHASHSEED=7，deterministic cascade banked。轨迹明细见 README Cycles 532-579 段。*
+*生成：documentation-morning cron，2026-09-02；Cycles 540-542 增补：2026-09-03；Cycles 543-545 增补：2026-09-04；Cycles 546-548 增补：2026-09-05；Cycles 549-554 增补：2026-09-07；Cycles 555-557 增补：2026-09-08；Cycles 558-559 增补：2026-09-09；Cycles 561-563 增补：2026-09-10；Cycles 564-569 增补：2026-09-13；Cycles 570-573 增补：2026-09-14；Cycles 574-576 增补：2026-09-15；Cycles 577-579 增补：2026-09-16；Cycles 580-582 增补：2026-09-17。数据口径：LongMemEval s_cleaned full-500，PYTHONHASHSEED=7，deterministic cascade banked。轨迹明细见 README Cycles 532-582 段。*

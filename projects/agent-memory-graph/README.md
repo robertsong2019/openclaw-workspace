@@ -2,7 +2,7 @@
 
 > 基于 SQLite 的轻量知识图谱，模拟 AI Agent 的长期记忆管理
 
-[![Tests](https://img.shields.io/badge/tests-10676-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-10710-brightgreen)]()
 [![Python](https://img.shields.io/badge/python-3.10+-blue)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-success)]()
@@ -4541,6 +4541,22 @@ cardinal-demand 回忆题（"the **two companies** you mentioned" / "what the ot
 #### C579：reltime-anchor face — 相对偏移解析为绝对目标日期 (00966e8)
 
 "What kitchen appliance did I buy 10 days ago?" / "What charity event did I participate in a month ago?"——问题携带**相对偏移**（N days/weeks/months ago、last <weekday>），经 question_date 解析为绝对目标日期（month=30d 约定：2023-04-18 − 30 = 03-19，恰好命中证据 session），答案 = 目标日期 user 行上的 realized fact。**demand frame 绑问题、选 marker 家族**（C578 教训直接应用）：offset census 11/500，frame 门（kitchen appliance / cooking / charity / life event / artist）收至恰 5/500——census 里 4 个已 banked 亲戚（cashback/book/lunch-meet/social-media）**结构性不可达**，census 人口 ≠ face 适用域。诚实 fall-through by construction：目标日期无证据（71017277 珠宝赠与人）、需要别的 marker 家族（gpt4_d6585ce9 音乐同伴）不进 fire 集。**唯一性门**：渲染候选 size≠1 → None（歧义=虚构）。**多词捕获课**：ambiguity 测试抓到 `just got an? [a-z]+ today` 漏掉 "a waffle iron"（多词宾语静默不成为候选，唯一性门被骗过）→ 惰性 `[a-z ]+?`。replay 1178s PASS：pred 变化恰=5（Walk for Hunger / cousin's wedding / bluegrass band / chocolate cake / a smoker），0 kills，abs 18 frozen。banked 319→324（0.648），套件 10657→10676（+19 tests test_reltime_anchor_face.py）。
+
+## Cycles 580-582: 0.648→0.656 — 同伴绑定、分节回忆、where 精度
+
+> 官方口径轨迹：0.648（C579）→ **0.650（C580）** → **0.652（C581）** → **0.656（C582）**，banked 324→328，套件 10676→10710。本段主轴：定位信号从「选哪行」推进到「**谁有权作答**」——同伴问句的答案绑在目标日期 user 行的亲属标记上、点名 section 的题只认 header 行、did/do-form 问句下 assistant 行（建议/回声）让位 user 行（第一人称记忆）。三周期零 kills、replay tripwire 全 PASS，keep 链延至十八连（C565 起）。教程同步增补：[TUTORIAL-ANSWER-FACES.md](TUTORIAL-ANSWER-FACES.md) §5.31-§5.33。
+
+#### C580：who-companion face — 同伴绑在目标日期的 user 行上 (ccf70d5)
+
+"Who did I go with to the music event last Saturday?"（gpt4_d6585ce9，GT 'my parents'）——同伴问题的答案不在事件行本身，在目标日期 user 行的 companion 标记上。census-first：who-demand 全 500 恰 1 题；71017277（"from whom" 赠与人）13 命中全假阳性 → evidence-absent 永久关闭，不做死代码 frame。证据侧一行两种 with："saw them live **with Adam Lambert**（表演者）... **with my parents**（同伴）"——marker 绑**亲属词** `with my <relation>` + 所有格守卫，表演者结构性排除；日期门顺手杀掉旧寄生 pred 本尊（04-01 Brooklyn "group of friends" 句）。RED-round 真收获：attend 变体 pin 抓到 frame regex 死代码（`attend with` 相邻不合法）→ object-gap 版重 census 仍恰 1/500。replay 1216s PASS：pred 变化恰 {gpt4_d6585ce9}（Brooklyn 句→'my parents'），drift 1 False→True，0 kills，abs 18 frozen。banked 324→325（0.650），套件 10676→10689（+13 tests test_who_companion_face.py）。
+
+#### C581：sectioned-recall face — 点名 section 只认 header 行 (509063b)
+
+"what kind of processes are used at the **Lake Charles Refinery**?"——问题按名字点名 assistant 自己给过的分节清单的一个 section，答案在 "N. <Header>:" + bullet rows 的整块里。**实体匹配只在 header 上做**，两个证据陷阱被 fixture 钉死：① GPT-4 每个 section 都从 "1." 重新编号（header 正则不假设递增）；② 兄弟 section 的行文本也提到 "Lake Charles"（"As with the Lake Charles Refinery, ..."）。门控：实体命中 ≥2 headers = ambiguous = fall-through、0 = no_section；≥2 rows（单 bullet 不是 section）；user-role wall。渲染 bare span join——GT 本身就是 bare span list modulo case，judge normalized 相等（最强分支）。form gate 最宽草案 census 恰 1/500，zero-kill by construction。**同轮给 pref 族（29 qids）下判决**：GT 是元句式（"The user would prefer responses that..."），诚实 render 永远无法与之词法收敛——**judge-unbankable offline**，只有官方 LLM-judge 能给分；记录为 closed lane 而非留在队列里。replay 1192s PASS：pred 变化恰 {6ae235be}，drift False→True。banked 325→326（0.652），套件 →10705（+16 test defs test_sectioned_recall_face.py，静态计数口径）。
+
+#### C582：where-face 精度 — 两条降级规则 + 一次正确的 FAIL (bc109c2)
+
+C508 locative-selection face 的精度轮，answer_where 两条规则落地：**R2 do-form 降级门**——C541 意图降级门从 did-form 扩到 do-form 习惯式问句（"Where **do** I take yoga classes?" 问的是当前现实；"planning to visit Emily" 是同一错位）；am-form 刻意不匹配（eace081b banked 守卫——问句本身就是计划）。**R3 assistant 角色降级**——did/do-form 下只要存在 user 候选就丢弃 assistant 候选（assistant 轮是建议/回声，不是第一人称记忆）；51a45a95 的 assistant 优惠建议行与 user Target 行 9-9 平分，靠角色让位解决。R2 救 6ade9755（Serenity Yoga），R3 救 51a45a95（Target，superset judge 吸收冠词/语境差异）。**R1 事件（本 cycle 最重要的方法论时刻）**：初始设计的 realized-past carve-out 首次 replay **FAIL 得对**——取证发现 e01b8e2f 的证据句根本不在检索返回的 session 集里（retrieval-miss，不是降级问题），R1 全 500 零可观测效果 → Simplicity-First 回退，代码注释留 "examined and rejected" 记录。**取证陷阱**：harness 的 session_N 是 haystack_sessions 枚举序号，与 answer_session_ids 索引**不对应**——任何"证据在 session_X"的结论必须用 ID 字段逐题核对。横向翻转 gpt4_b5700ca0 wrong→wrong（banked 冻结，expect 门改 3 qid）。replay PASS：banked 326→328（0.656），套件 10710（junitxml 口径，+6 miniatures test_where_c582.py）。where 族剩余失败模式已成图移交下一棒：检索缺失 ×3（f8c5f88b / e01b8e2f / gpt4_b5700ca0）、搬迁 lane ×1（830ce83f）、anaphora judging ×1（07741c45）、superlative recency ×1（9ea5eabc）。
 
 ## 许可
 
