@@ -51,6 +51,11 @@ function contentAllowed(opts: AlignOptions): boolean {
 
 type Attrs = Record<string, unknown>;
 
+/** gen_ai.memory.record.count is an int per spec — arrays ("the items themselves") collapse to their count. */
+function toCount(v: unknown): unknown {
+  return Array.isArray(v) ? v.length : v;
+}
+
 export interface MappedSpan {
   name: string;
   kind: string;
@@ -125,7 +130,7 @@ export function mapSpan(s: AdapterSpan, opts: AlignOptions = {}): MappedSpan {
       name = 'upsert_memory';
       kind = 'SPAN_KIND_INTERNAL'; // in-process memory system: spec allows INTERNAL
       if (a.namespace !== undefined) conv['gen_ai.memory.store.id'] = a.namespace;
-      if (a.items !== undefined) conv['gen_ai.memory.record.count'] = a.items;
+      if (a.items !== undefined) conv['gen_ai.memory.record.count'] = toCount(a.items);
       break;
     }
     case 'memory.read': {
@@ -134,7 +139,7 @@ export function mapSpan(s: AdapterSpan, opts: AlignOptions = {}): MappedSpan {
       kind = 'SPAN_KIND_INTERNAL';
       if (a.namespace !== undefined) conv['gen_ai.memory.store.id'] = a.namespace;
       if (a.results !== undefined || a.items !== undefined) {
-        conv['gen_ai.memory.record.count'] = a.results ?? a.items;
+        conv['gen_ai.memory.record.count'] = toCount(a.results ?? a.items);
       }
       if (a.query !== undefined && capture) conv['gen_ai.memory.query.text'] = a.query; // Opt-In
       break;
@@ -158,6 +163,18 @@ export function evaluationEventAttributes(dimension: string, score: number, reas
 }
 
 const hex = (s: string, n: number) => s.replace(/-/g, '').padEnd(n, '0').slice(0, n);
+
+/** OTLP-JSON AnyValue: arrays → arrayValue, objects → kvlistValue (recursive, spec-shaped). */
+function toOtlpValue(v: unknown): Record<string, unknown> {
+  if (typeof v === 'number') return Number.isInteger(v) ? { intValue: v } : { doubleValue: v };
+  if (typeof v === 'boolean') return { boolValue: v };
+  if (typeof v === 'string') return { stringValue: v };
+  if (Array.isArray(v)) return { arrayValue: { values: v.map(toOtlpValue) } };
+  if (v !== null && typeof v === 'object') {
+    return { kvlistValue: { values: Object.entries(v as Attrs).map(([k, val]) => ({ key: k, value: toOtlpValue(val) })) } };
+  }
+  return { stringValue: String(v) }; // null/undefined fallthrough
+}
 
 /** Full trace -> OTLP-JSON shape (resourceSpans). Times anchored to wall clock. */
 export function exportGenAiOtlp(spans: AdapterSpan[], opts: AlignOptions = {}, epochAnchorMs = Date.now() - performance.now()) {
@@ -184,9 +201,7 @@ export function exportGenAiOtlp(spans: AdapterSpan[], opts: AlignOptions = {}, e
         timeUnixNano: String(Math.round((epochAnchorMs + e.timestamp) * 1e6)),
         attributes: Object.entries(e.attributes).map(([k, v]) => ({
           key: k,
-          value: typeof v === 'object' && v !== null
-            ? { kvlistValue: { values: [] }, __raw: v }
-            : { stringValue: String(v) },
+          value: toOtlpValue(v),
         })),
       })),
     };
@@ -225,8 +240,8 @@ export function lintGenAiSpans(spans: AdapterSpan[], opts: AlignOptions = {}): L
       if (m.events.some(e => e.name === 'gen_ai.client.inference.operation.details'))
         fail('inference details event present without opt-in');
     }
-    // 5. usage attributes should be ints
-    for (const t of ['gen_ai.usage.input_tokens', 'gen_ai.usage.output_tokens']) {
+    // 5. int-typed convention attributes must actually be integers
+    for (const t of ['gen_ai.usage.input_tokens', 'gen_ai.usage.output_tokens', 'gen_ai.memory.record.count']) {
       if (t in m.attributes && !Number.isInteger(m.attributes[t])) fail(`${t} not integer`);
     }
   }

@@ -328,3 +328,81 @@ describe('PolicyEngine', () => {
     assert.ok(engine.isRuleEnabled('cost_control', 'cost'));
   });
 });
+
+describe('merge() — characterization 0918 (0-coverage public API)', () => {
+  const mk = (name: string, allow: boolean) => ({
+    name, description: `rule ${name}`, category: 'cat', evaluate: () => ({ allow, reason: allow ? undefined : `denied by ${name}` }),
+  });
+
+  it('adds rules from other engine, returns count, source untouched', () => {
+    const dst = new PolicyEngine();
+    const src = new PolicyEngine();
+    src.addPolicy('cat', mk('r1', true));
+    src.addPolicy('cat', mk('r2', true));
+    const added = dst.merge(src);
+    assert.equal(added, 2);
+    assert.equal(src.ruleCount('cat'), 2, 'source not mutated');
+    assert.deepEqual(dst.ruleNames().sort(), ['r1', 'r2']);
+  });
+
+  it('same category+name deduped (not duplicated); different category same name added', () => {
+    const dst = new PolicyEngine();
+    const src = new PolicyEngine();
+    dst.addPolicy('cat', mk('r1', true));
+    src.addPolicy('cat', mk('r1', false)); // same name, conflicting behavior
+    assert.equal(dst.merge(src), 0, 'dup skipped');
+    assert.equal(dst.getRule('cat', 'r1')!.evaluate({}).allow, true, 'original kept, not overwritten');
+    src.addPolicy('other', mk('r1', true));
+    assert.equal(dst.merge(src), 1, 'same name in DIFFERENT category is added');
+  });
+
+  it('merge is idempotent (second merge adds 0) and existing rules keep order (existing first, new appended)', () => {
+    const dst = new PolicyEngine();
+    const src = new PolicyEngine();
+    dst.addPolicy('cat', mk('old', true));
+    src.addPolicy('cat', mk('new', true));
+    assert.equal(dst.merge(src), 1);
+    assert.equal(dst.merge(src), 0, 'idempotent');
+    assert.deepEqual(dst.getRulesByCategory('cat').map((r: { name: string }) => r.name), ['old', 'new']);
+  });
+
+  it('merged rule is functional in evaluate; disable-state of THIS engine applies to merged rule', () => {
+    const dst = new PolicyEngine();
+    const src = new PolicyEngine();
+    src.addPolicy('guard', mk('deny_all', false));
+    assert.equal(dst.merge(src), 1);
+    assert.equal(dst.evaluate('guard', {}).allowed, false);
+    dst.disableRule('guard', 'deny_all');
+    assert.equal(dst.evaluate('guard', {}).allowed, true, 'pre-existing disable flag governs merged rule');
+    assert.equal(dst.enabledCount(), 0);
+  });
+
+  it('merging from an empty engine returns 0', () => {
+    const dst = new PolicyEngine();
+    dst.addPolicy('cat', mk('r', true));
+    assert.equal(dst.merge(new PolicyEngine()), 0);
+    assert.equal(dst.ruleCount('cat'), 1);
+  });
+});
+
+describe('removeCategory/renameCategory — characterization 0918', () => {
+  const mk = (name: string) => ({ name, description: name, category: 'c', evaluate: () => ({ allow: true }) });
+
+  it('renameCategory moves rules to new key, old key gone, missing → false', () => {
+    const e = new PolicyEngine();
+    e.addPolicy('old', mk('r1'));
+    assert.equal(e.renameCategory('old', 'new'), true);
+    assert.equal(e.hasCategory('old'), false);
+    assert.equal(e.ruleCount('new'), 1);
+    assert.equal(e.getRule('new', 'r1')!.name, 'r1');
+    assert.equal(e.renameCategory('ghost', 'x'), false);
+  });
+
+  it('removeCategory true when present, false when missing', () => {
+    const e = new PolicyEngine();
+    e.addPolicy('c', mk('r'));
+    assert.equal(e.removeCategory('c'), true);
+    assert.equal(e.hasCategory('c'), false);
+    assert.equal(e.removeCategory('c'), false);
+  });
+});

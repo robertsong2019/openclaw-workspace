@@ -268,3 +268,37 @@ describe('integration — real Tracer spans feed the adapter unmodified', () => 
     assert.equal(lintGenAiSpans(t.getSpans()).ok, true);
   });
 });
+
+describe('red-first 0918 — OTLP event payload fidelity + record.count int contract', () => {
+  it('capture event carries REAL message content through OTLP (no empty kvlist / __raw)', () => {
+    const spans = exportGenAiOtlp(demoSpans(), { captureContent: true }, 1e6).resourceSpans[0].scopeSpans[0].spans;
+    const chat = spans.find((s: { name: string }) => s.name.startsWith('chat'))!;
+    const ev = chat.events.find((e: { name: string }) => e.name === 'gen_ai.client.inference.operation.details')!;
+    assert.ok(ev, 'details event present');
+    const wire = JSON.stringify(ev);
+    // the whole point of the opt-in event is the content — it must survive the export boundary
+    assert.ok(wire.includes('"stringValue":"hi"'), `user prompt content lost on the wire: ${wire.slice(0, 200)}`);
+    assert.ok(wire.includes('"stringValue":"hello"'), `assistant completion content lost on the wire: ${wire.slice(0, 200)}`);
+    assert.ok(!wire.includes('__raw'), 'nonstandard __raw sidecar leaked into OTLP payload');
+    assert.ok(!wire.includes('"values":[]'), 'empty kvlistValue = silent content drop');
+  });
+
+  it('memory.write items array → record.count = length (not garbage String(array))', () => {
+    const m = mapSpan(span('memory.write', { items: ['fact-a', 'fact-b', 'fact-c'] }));
+    assert.equal(m.attributes['gen_ai.memory.record.count'], 3);
+  });
+
+  it('memory.read results array → record.count = length; items array fallback same', () => {
+    const r = mapSpan(span('memory.read', { results: [{ doc: 1 }, { doc: 2 }] }));
+    assert.equal(r.attributes['gen_ai.memory.record.count'], 2);
+    const i = mapSpan(span('memory.read', { items: ['x', 'y'] }));
+    assert.equal(i.attributes['gen_ai.memory.record.count'], 2);
+  });
+
+  it('lint: non-integer gen_ai.memory.record.count is a violation', () => {
+    const s = span('memory.write', { items: 'three' }); // string sneaks through mapping
+    const r = lintGenAiSpans([s]);
+    assert.equal(r.ok, false);
+    assert.ok(r.violations.some(v => v.includes('record.count not integer')));
+  });
+});
