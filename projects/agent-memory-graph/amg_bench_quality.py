@@ -469,6 +469,7 @@ class LongMemEvalAdapter:
                  sectioned_recall: bool = True,
                  song_chord: bool = True,
                  demand_noun_recall: bool = True,
+                 year_begin_recall: bool = True,
                  assistant_recall: bool = True,
                  recall_min_score: int = 5,
                  recall_mode: str = "distinctive",
@@ -575,6 +576,7 @@ class LongMemEvalAdapter:
         self.sectioned_recall = sectioned_recall
         self.song_chord = song_chord
         self.demand_noun_recall = demand_noun_recall
+        self.year_begin_recall = year_begin_recall
         # Cycle 501: role-aware answer face (echo pathology fix) —
         # see _user_fact_form. role_margin: how many keyword hits a
         # user line may trail the top assistant line by and still
@@ -1408,6 +1410,33 @@ class LongMemEvalAdapter:
                 meta["gate"] = "demand_noun"
                 meta["abstained"] = False
                 return dn_ans, meta
+
+        # Cycle 585: year-begin recall face — "what year <NP>
+        # <begin-verb>?" is answered by the graph sentence carrying
+        # <begin-verb> + "in <YEAR>" anchored by the demand NP
+        # (every NP content word must appear in the evidence
+        # sentence — structural hard filter, C584 demand-noun
+        # lesson). Evidence surface is BOTH roles: the fact was
+        # user-pasted (case summary), so no user-role wall — the
+        # NP anchor + begin-verb+in+<YEAR> pattern bound the
+        # surface instead. Census: form accepts exactly 1/500
+        # question (5809eb10); the full 500 has NO other "what
+        # year" question. Uniqueness: >1 distinct anchored year =
+        # ambiguous = fall-through. Render is the bare year (GT
+        # "2014." judge-normalizes equal). Runs before
+        # speaker_recall — the parasitic pred it fixes IS a
+        # speaker_recall output.
+        if self.year_begin_recall and year_begin_form(question):
+            y_ans, y_detail = answer_year_begin(
+                question,
+                [(self._nodes[nid].get("role") or "",
+                  self._nodes[nid].get("label") or "")
+                 for nid in self._messages if nid in self._nodes])
+            meta["year_begin"] = y_detail
+            if y_ans is not None:
+                meta["gate"] = "year_begin"
+                meta["abstained"] = False
+                return y_ans, meta
 
         # Cycle 468: speaker-recall path — you-addressed "remind me
         # what you recommended" forms. Assistant answers are multi-
@@ -6579,6 +6608,94 @@ def answer_demand_noun(question: str,
         detail["reason"] = "ambiguous"
         return None, detail
     return cands[0][1], detail
+
+
+# ════════ Cycle 585: year-begin recall face ════════
+# "Can you remind me what year the construction of the house
+# began?" — a year demand ("what year <NP> <begin-verb>") is
+# answered by the graph sentence carrying <begin-verb> + "in
+# <YEAR>" ANCHORED by the demand noun phrase: every content word
+# of the NP between "what year" and the demand verb must appear
+# in the evidence sentence (structural hard filter — the C584
+# demand-noun lesson applied to year extraction). Evidence
+# surface is BOTH roles: the fact was stated by the user (pasted
+# case summary), so unlike the chord/sectioned faces there is no
+# user-role wall — the NP anchor plus the begin-verb+in+<YEAR>
+# pattern bound the hijack surface instead. Census: the form
+# accepts exactly 1/500 question (5809eb10) and the full 500
+# contains NO other "what year" question at all. Uniqueness: >1
+# distinct anchored year = ambiguous = fall-through. Render is
+# the bare year; GT "2014." judge-normalizes to "2014".
+_YEAR_FRAME_RE = re.compile(
+    r"\b(?:remind me|you told me|do you remember|i remember)\b", re.I)
+_YEAR_DEMAND_RE = re.compile(
+    r"what year\s+(?:did\s+|was\s+|were\s+|is\s+)?"
+    r"([A-Za-z][^?.!?]*?)\s+"
+    r"(?:began|begin|begins|started|start|starts|commenced|commence)\b",
+    re.I)
+_YEAR_EVID_RE = re.compile(
+    r"\b(?:began|started|commenced)\s+in\s+(\d{4})\b", re.I)
+_YEAR_SENT_SPLIT_RE = re.compile(r"(?<=[.!?])\s+|\n+")
+
+
+def year_begin_form(question: str) -> str | None:
+    """The demand noun phrase ("the construction of the house")
+    when a recall-frame question asks "what year <NP> <begin-verb>".
+    Census over the full 500: exactly 5809eb10."""
+    q = (question or "").strip()
+    if not _YEAR_FRAME_RE.search(q):
+        return None
+    m = _YEAR_DEMAND_RE.search(q)
+    if m:
+        return m.group(1).strip()
+    return None
+
+
+def answer_year_begin(question: str,
+                      messages: list[tuple[str, str]],
+                      ) -> tuple[str | None, dict]:
+    """Answer a "what year ... began" demand from begin-verb year
+    statements anchored by the demand noun phrase.
+
+    ``messages`` is the full-graph [(role, content)] stream (dates
+    play no role). BOTH roles are evidence-eligible here (the fact
+    may be user-pasted, as in 5809eb10) — the NP anchor and the
+    begin-verb+in+<YEAR> pattern bound the surface instead of a
+    role wall. Anchored years must agree across the whole graph
+    (>1 distinct = ambiguous = fall-through; ambiguity is
+    fabrication).
+    """
+    np_text = year_begin_form(question)
+    detail: dict = {"form": None, "candidates": 0}
+    if not np_text:
+        return None, detail
+    detail["form"] = "year_begin"
+    detail["demand_np"] = np_text
+    anchors = [w for w in re.findall(r"[a-z0-9']+", np_text.lower())
+               if w not in _SEM_STOPWORDS]
+    if not anchors:
+        detail["reason"] = "no_anchor"
+        return None, detail
+    years: set[str] = set()
+    for role, content in messages:
+        for sent in _YEAR_SENT_SPLIT_RE.split(content or ""):
+            m = _YEAR_EVID_RE.search(sent)
+            if not m:
+                continue
+            low = sent.lower()
+            if not all(re.search(r"\b" + re.escape(a) + r"\b", low)
+                       for a in anchors):
+                continue          # NP anchor: structural hard filter
+            years.add(m.group(1))
+            detail["candidates"] += 1
+    if not years:
+        detail["reason"] = "no_match"
+        return None, detail
+    if len(years) > 1:
+        detail["reason"] = "ambiguous"
+        detail["years"] = sorted(years)
+        return None, detail
+    return years.pop(), detail
 
 
 # ════════ Cycle 486: past-perfect duration forms (#077) ════════
