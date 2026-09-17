@@ -2,7 +2,7 @@
 
 > 基于 SQLite 的轻量知识图谱，模拟 AI Agent 的长期记忆管理
 
-[![Tests](https://img.shields.io/badge/tests-10710-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-10765-brightgreen)]()
 [![Python](https://img.shields.io/badge/python-3.10+-blue)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-success)]()
@@ -4557,6 +4557,22 @@ cardinal-demand 回忆题（"the **two companies** you mentioned" / "what the ot
 #### C582：where-face 精度 — 两条降级规则 + 一次正确的 FAIL (bc109c2)
 
 C508 locative-selection face 的精度轮，answer_where 两条规则落地：**R2 do-form 降级门**——C541 意图降级门从 did-form 扩到 do-form 习惯式问句（"Where **do** I take yoga classes?" 问的是当前现实；"planning to visit Emily" 是同一错位）；am-form 刻意不匹配（eace081b banked 守卫——问句本身就是计划）。**R3 assistant 角色降级**——did/do-form 下只要存在 user 候选就丢弃 assistant 候选（assistant 轮是建议/回声，不是第一人称记忆）；51a45a95 的 assistant 优惠建议行与 user Target 行 9-9 平分，靠角色让位解决。R2 救 6ade9755（Serenity Yoga），R3 救 51a45a95（Target，superset judge 吸收冠词/语境差异）。**R1 事件（本 cycle 最重要的方法论时刻）**：初始设计的 realized-past carve-out 首次 replay **FAIL 得对**——取证发现 e01b8e2f 的证据句根本不在检索返回的 session 集里（retrieval-miss，不是降级问题），R1 全 500 零可观测效果 → Simplicity-First 回退，代码注释留 "examined and rejected" 记录。**取证陷阱**：harness 的 session_N 是 haystack_sessions 枚举序号，与 answer_session_ids 索引**不对应**——任何"证据在 session_X"的结论必须用 ID 字段逐题核对。横向翻转 gpt4_b5700ca0 wrong→wrong（banked 冻结，expect 门改 3 qid）。replay PASS：banked 326→328（0.656），套件 10710（junitxml 口径，+6 miniatures test_where_c582.py）。where 族剩余失败模式已成图移交下一棒：检索缺失 ×3（f8c5f88b / e01b8e2f / gpt4_b5700ca0）、搬迁 lane ×1（830ce83f）、anaphora judging ×1（07741c45）、superlative recency ×1（9ea5eabc）。
+
+## Cycles 583-585: 0.656→0.664 — 序数守卫、结构性判别、用户证据面
+
+> 官方口径轨迹：0.656（C582）→ **0.658（C583）** → **0.662（C584）** → **0.664（C585）**，banked 328→332，套件 10710→10765。本段主轴：判别信号完成从「调分数」到「**结构性硬约束**」的转向——需求名词是过滤不是权重（答案必须在结构上包含问题 demand 的名词，C584）、C584 的判别式下一个周期就迁移成年份面的 NP 全实词锚（C585）、序数后缀守卫数量锚的词干邻接（C583）。证据面也第一次对 user 角色开放（user 粘贴的案情摘要作证据，结构锚代替角色墙）。三周期零 kills、replay tripwire 全 PASS，keep 链延至二十一连（C565 起）。教程同步增补：[TUTORIAL-ANSWER-FACES.md](TUTORIAL-ANSWER-FACES.md) §5.34-§5.36。
+
+#### C583：counting ordinal-quantity — 序数后缀是数量锚的邻接守卫 (ae1065d)
+
+"How many projects have I done, my 4th or my 5th?"（06db6396）——`_cnt_qty_stated` 的数字→词干前向邻接被 "my **5th** project" 的 'th' 挡住，s32 最新陈述（'5'）对管线不可见，latest-wins 落到 s4 的 '4'。修复一行：数字捕获加可选序数后缀 `(?:st|nd|rd|th)?`。**关键弯路（已回退，记录在案）**：为救 a2f3aa27（"close to 1300 now"，词干在数字前，前向窗结构性盲）设计的 relaxed bare-quantity 分支（词干+now/current cue+恰 1 数字）在 step4 census 跑出 9 diffs，step5 逐行验尸发现 **2 个 banked kill**（46a3abf7 '3'→'20'——数字绑定到 20-gallon/6 months；4b24c848 junk-CORRECT→'6'）。**毒理图谱：子句里的数字通常绑定到另一个名词**（6 months / 2,000 miles / 500 words / 80D 型号），裸数字松弛的默认语义就是错的。回退到 ordinal-only 后 drift gate 可满足（恰 1 diff）——census-first 的两轮构建对比（relaxed=9 vs ordinal=1）就是回退决策的全部依据，2 个 banked 行是硬门。replay PASS 1192s：pred 变化恰 {06db6396}，drift 恰 1 False→True，abs_banked 18 frozen。banked 328→329（0.658），套件 10710→10714（+4 test_counting_c583.py）。
+
+#### C584：chord + demand-noun — 结构性判别 > 分数调整 (5473b9d)
+
+双 face 周期，其中 demand-noun 是本季度最重要的架构教训。**chord face（eaca4986）**：问题按序数召回助手自己生成的结构化工件（"what are the chords to the <ordinal> song"）——枚举带 "Chorus:" 头的 assistant 消息（每头紧跟纯 A-G 音名行 ≥3 音），序数选中歌曲，渲染副歌音名串原文；**所选歌曲内全部 Chorus 重复必须一致**，不一致 = ambiguous fall-through（歧义即编造）。**demand-noun face（8aef76bc）**："what sealant you recommended" 的答案必须**包含** sealant 这个词——不含者结构上非答案。这条是硬过滤不是分数：即使做 floor 豁免，答案句 141.8 vs 垃圾 opener 210.4 仍然输——**分数调整在这个病例上无解，结构过滤是唯一出路**（候选必须含名词、复数容忍，按 raw keyword hits 排序）；已 banked 的 "what <noun> you said" 形（fea54f57）结构性排除在外，interlock 双侧钉死。两 face census 各恰 1/500。测试课：30/30 GREEN 前的那 1 红是**测试 bug 不是 face bug**（inconsistent-chorus 变异打在交错音名行而非 header 跟随行）——RED 不是实现错误的证据，先分清谁错。`_split_sentences` 的 10 字符下限被确认为**隐性证据边界**（"-2-3 eggs" 永远进不了句池，e8a79c70 据此移交下一棒）。replay PASS 1213s：pred 变化恰 {eaca4986, 8aef76bc}，drift 恰 2 全 False→True。banked 329→331（0.662），套件 10714→10749（+35：test_chord_progression_face.py + test_demand_noun_face.py）。
+
+#### C585：year-begin — user 证据面开放，NP 全实词锚代替角色墙 (ce0678c)
+
+"What year did the construction of the house begin?"（5809eb10，GT '2014.'）——证据在 **user 粘贴的案情摘要**里（"The construction of the house began in 2014"），当前 pred 是 speaker_recall 的寄生输出（assistant 改写段落行）。这是证据面第一次对双角色开放：chord/sectioned 靠 assistant-wall 防劫持，但这里事实是 user 说的，角色墙不可用。替代方案是**结构锚**：`<begin-verb> + in <YEAR>` 窄证据模式（began|started|commenced）+ **demand-NP 全实词锚**（NP "construction of the house" 的全部实词必须出现在证据句里）——C584 的 "demand noun = hard filter" 教训直接迁移成年份面的锚设计。census 双保险：form gate 恰 1/500，且全基准 500 题再无任何其他 "what year" 问句——零劫持 by construction。唯一门：全图锚定年份 >1 个不同值 = ambiguous = fall-through。渲染裸年份，GT "2014." 归一化相等，judge 零改动。审计课：diff 审计脚本第一版误报自身（新 docstring 合法含 "331 chain"）——**修审计而非掩盖**。replay PASS 1198s：pred 变化恰 {5809eb10}（寄生段落行→'2014'），drift 恰 1 False→True。banked 331→332（0.664），套件 10749→10765（+16 test_year_begin_face.py）。
 
 ## 许可
 

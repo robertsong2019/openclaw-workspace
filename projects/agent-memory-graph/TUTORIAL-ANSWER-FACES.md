@@ -1,7 +1,7 @@
-# TUTORIAL: Answer Faces — 问题结构驱动的答案选择（Cycles 529-582）
+# TUTORIAL: Answer Faces — 问题结构驱动的答案选择（Cycles 529-585）
 
 > 本文解释 amg 评测管线里最反直觉的一个设计：**答案选哪个句子，不该由"分数阈值"决定，而该由"问题在问什么"决定**。
-> 覆盖 Cycle 529-576 的机制演进（banked 0.494 → 0.630），所有例子都是 LongMemEval s_cleaned full-500 里的真实题目。
+> 覆盖 Cycle 529-585 的机制演进（banked 0.494 → 0.664），所有例子都是 LongMemEval s_cleaned full-500 里的真实题目。
 
 ---
 
@@ -165,9 +165,9 @@ judge cascade（exact → semantic → LLM）里有一个 NEEDS_JUDGE 区间：e
 
 ---
 
-## 5. 值解析与锚点族 face：数字、日期、时长、锚点选择（C549-C582）
+## 5. 值解析与锚点族 face：数字、日期、时长、锚点选择（C549-C585）
 
-§3-§4 的 face 都长在"**选哪句话**"上；C549-C554 是第三波：答案本身是个数值/日期/时长，face 长在"**值解析**"上——不是从候选里挑句子，而是从通过 gate 的内容里提炼出**正确的值**。C555-C557 是第四波：值对了还不够，**锚点选择**本身也是信号源——锚是谁说的（角色）、跨度怎么定义（口径）、行内多个日期选哪个（临近度/连续对）。外加一次方法论升级（C549：census-negative 的第三种用法）。C561-C563 是值解析族的残留地带清扫：counting 的非金钱度量兄弟（距离/重量/时长）、item_total 的空清单分支（类别求和）、时长族最后两个病根（同句状态绑定 + 进行体问头/会话跨度）。C564-C569 是第五波：**期限/跨度/求和面**——pp_duration 三条新 route（晋职扣减、完成时长求和、活动跨度求和）与一个门入口（have-had），counting 三个新 gate entry（页码进度双面、成书页数求和、教育年限链）；附赠两次"队列注记被证据翻案"的方法论实录（C564 弃权→rescue、C565 现成→错面）。C570-C573 把第五波收束成 session-date 跨度族（书本/事件/旅程跨度、ago 倒推、具名日偏移）。C574-C576 是第六波：**结构回指族**——问题自身的引用结构（出版引证、bullet 列表体、回指提法）本身就是 bearer 的连接条件。
+§3-§4 的 face 都长在"**选哪句话**"上；C549-C554 是第三波：答案本身是个数值/日期/时长，face 长在"**值解析**"上——不是从候选里挑句子，而是从通过 gate 的内容里提炼出**正确的值**。C555-C557 是第四波：值对了还不够，**锚点选择**本身也是信号源——锚是谁说的（角色）、跨度怎么定义（口径）、行内多个日期选哪个（临近度/连续对）。外加一次方法论升级（C549：census-negative 的第三种用法）。C561-C563 是值解析族的残留地带清扫：counting 的非金钱度量兄弟（距离/重量/时长）、item_total 的空清单分支（类别求和）、时长族最后两个病根（同句状态绑定 + 进行体问头/会话跨度）。C564-C569 是第五波：**期限/跨度/求和面**——pp_duration 三条新 route（晋职扣减、完成时长求和、活动跨度求和）与一个门入口（have-had），counting 三个新 gate entry（页码进度双面、成书页数求和、教育年限链）；附赠两次"队列注记被证据翻案"的方法论实录（C564 弃权→rescue、C565 现成→错面）。C570-C573 把第五波收束成 session-date 跨度族（书本/事件/旅程跨度、ago 倒推、具名日偏移）。C574-C576 是第六波：**结构回指族**——问题自身的引用结构（出版引证、bullet 列表体、回指提法）本身就是 bearer 的连接条件。C580-C582 把「谁有权作答」（角色墙、header 行、让位规则）推到前台。C583-C585 是第七波：**结构性判别族**——判别信号完成从调分数到结构性硬约束的转向：需求名词是过滤不是权重（答案必须含问题 demand 的名词，C584）、判别式跨域迁移成 NP 全实词锚（C585）、序数后缀守卫数量锚的邻接（C583）；证据面也第一次对 user 角色开放，用结构锚代替角色墙。
 
 ### 5.1 C549 松弛空间穷举 — census-negative 变成局部最优证书
 
@@ -373,6 +373,24 @@ counting gate 新 form "pages"：(A) **read-so-far latest-wins**——"How many 
 
 > 取证课（本节最重要）：**R1 首次 replay FAIL 得对**——初始的 realized-past carve-out 零 pred 变化，取证发现目标证据根本不在检索返回集（retrieval-miss，不是排序问题）→ 回退并在代码注释留 "examined and rejected"。且取证自身有陷阱：harness 的 session_N 是枚举序号，与 answer_session_ids 索引**不对应**——「证据在 session_X」必须用 ID 字段逐题核对，否则规则修的是幻觉问题。
 
+### 5.34 C583 counting ordinal — 序数后缀是数量锚的邻接守卫，裸数字松弛是毒药
+
+"my **5th** project" 的 'th' 挡住了 `_cnt_qty_stated` 的数字→词干前向邻接：最新陈述（'5'）对管线不可见，latest-wins 落到旧会话的 '4'。修复一行：数字捕获加可选序数后缀 `(?:st|nd|rd|th)?`。真正的教训在**被回退的弯路**：为救 "close to 1300 now"（词干在数字前）设计的 relaxed bare-quantity 分支，census 跑出 9 diffs，验尸发现 2 个 banked kill——46a3abf7 的 '3'→'20'（数字绑定到 20-gallon/6 months）、4b24c848 junk-CORRECT→'6'。**毒理图谱：子句里的数字通常绑定到另一个名词**（6 months / 2,000 miles / 500 words / 80D 型号），裸数字的默认语义就是错的。回退到 ordinal-only 后 drift 恰 1——两轮构建对比（relaxed=9 vs ordinal=1）就是回退决策的全部依据。
+
+> census 课：**kill 风险不是接线后才发现的，是接线前对比出来的**。同一轮里两个候选构建（宽松 vs 收紧）各跑一遍 census，diffs 数量与逐行归因直接告诉你哪个构建可交付。想救的行（a2f3aa27）救不成没关系，banked 行（46a3abf7）一个都不能杀——不对称性就是裁决。
+
+### 5.35 C584 chord + demand-noun — 需求名词是硬过滤，不是分数
+
+两个新面，一个架构教训。**chord face**：问题按序数召回助手自己生成的结构化工件（第 n 首歌的副歌音名）——枚举带 "Chorus:" 头的 assistant 消息，序数选中，渲染音名串；所选歌曲内全部 Chorus 重复必须一致，否则 ambiguous fall-through。**demand-noun face 是本季最重要的一课**："what sealant you recommended" 的答案必须**包含** sealant 这个词——这不是排序偏好，是存在性条件。分数路径被实测证伪：即使做 floor 豁免，答案句 141.8 vs 垃圾 opener 210.4 仍然输。唯一出路是把名词从分数变成**硬过滤**（候选必须含名词、复数容忍，按 raw hits 排序）；已 banked 的 "what <noun> you said" 形（fea54f57）结构性排除，interlock 双侧钉死。附赠两课：30/30 GREEN 前的那 1 红是**测试 bug 不是 face bug**（变异打在交错音名行而非 header 跟随行）——RED 不是实现错误的证据；`_split_sentences` 的 10 字符下限是**隐性证据边界**（"-2-3 eggs" 永远进不了句池）。
+
+> 架构课：**当问题是 "what X did you recommend" 时，答案必须含 X——这是硬约束不是权重**。分数补丁在 floor 豁免后依然失败的实测数字（141.8 < 210.4）把「调分数」这条路彻底关死：需求名词不是给排序加分的信号，是候选的准入条件。判别式的可迁移性下一个周期立刻验证（§5.36）。
+
+### 5.36 C585 year-begin — 证据面双角色开放时，用结构锚代替角色墙
+
+"What year did the construction of the house begin?" 的证据在 **user 粘贴的案情摘要**里（"The construction of the house began in 2014"），当前 pred 是 speaker_recall 的寄生输出（assistant 改写段落行）。难题：此前的面靠 assistant-wall 防劫持（chord/sectioned 的证据都在助手行），但这里事实是 user 说的——角色墙不可用。替代方案：`<begin-verb> + in <YEAR>` 窄证据模式（began|started|commenced）+ **demand-NP 全实词锚**（NP 的全部实词必须出现在证据句里）——C584 的 "demand noun = hard filter" 直接迁移成年份面的锚设计。census 双保险：form gate 恰 1/500，且全基准再无任何其他 "what year" 问句——零劫持 by construction。唯一门：全图锚定年份 >1 个不同值 = ambiguous fall-through。审计课：diff 审计脚本第一版误报自身（新 docstring 合法含 "331 chain"）——修审计而非掩盖。
+
+> 角色课：**证据面从「谁有权作答」推进到「事实在谁嘴里」**——user 说的证据不能被角色墙挡在门外，但开放角色不等于放弃判别：NP 全实词锚 + 窄证据模式接管了角色墙的防劫持职责，且 census 的全 500 near-miss 全查是零劫持结论的实证。与 §5.31（who-companion 的亲属词 marker）、§5.33（where 的角色让位）合读：同一条「谁有权作答」轴上的三个不同解法。
+
 ## 6. 反面教材：枚举清单没有结构键（C536，RECORD-NEGATIVE）
 
 序数清单（"5. Absinthe"）看起来也能做个 face。实现后发现 **census 全负**：
@@ -466,12 +484,16 @@ answer-face 家族的开发纪律（每个 face 都走了这套流程）：
 | 问题问 "who did I go with"（同伴 + 日期锚） | who-companion | 目标日期 user 行亲属词 marker；表演者结构性排除；evidence-absent 项关闭不写死代码 | C580 |
 | 问题按名点名分节清单的一个 section | sectioned-recall | 实体匹配只在 header；≥2 行成块；唯一性门；pref 族 judge-unbankable 关闭 | C581 |
 | did/do-form where 问当前现实 | where 精度降级（R2/R3） | do-form 入意图降级门（am-form 保留）；user 候选在场时 assistant 退位 | C582 |
+| 序数后缀挡住数量锚的词干邻接（"my 5th project"） | counting ordinal-quantity | 数字捕获加可选序数后缀；裸数字松弛被 census 否决（子句数字绑另一名词，2 banked kill 硬门） | C583 |
+| 问题按序数问助手生成的结构化工件（"chords to the 2nd song"） | chord face | 枚举 "Chorus:" 头的 assistant 消息，序数选中；全部重复必须一致否则弃权 | C584 |
+| 问题 demand 你推荐/说过的 <名词 X>（"what sealant you recommended"） | demand-noun 硬过滤 | 答案必须含 X（复数容忍）——结构性判别 > 分数调整（floor 豁免后 141.8 仍 < 210.4） | C584 |
+| 问题问 "what year <NP> <begin-verb>" | year-begin | 证据面双角色开放（user 粘贴案情）；NP 全实词锚 + begin-verb+in+年份 窄模式代替角色墙；多值歧义弃权 | C585 |
 | kh-floor 想救 kh=0 GT | 🚫 census-negative，不接线 | 1 救 vs 14 杀，absence pin 钉死 | C543 |
 | kh-elite 准入救窗口死区 | 🚫 census-negative，不接线 | impostor 杀率 23.3% vs 4 救，admission-only 全族否决 | C546 |
 | 松弛 run 门想多救几行 | 🚫 census-negative = 局部最优证书 | 全部 kill 是 run-TIE impostor；absence pin 钉死 C548 配置 | C549 |
 | 嵌入 side-channel 重排 | 🚫 census-negative，默认 False | 离线增益被 gate+judge 吸收，pin 死默认值 | C545 |
 
-**十条带走的原则**：
+**十四条带走的原则**：
 1. 答案选择读**问题结构**，不调阈值
 2. face 重排不越权翻地板；地板排除自有理由
 3. census-first：先数人口，先离线模拟，再接线；证伪的方向写进台账并用 absence pin 钉住
@@ -484,7 +506,9 @@ answer-face 家族的开发纪律（每个 face 都走了这套流程）：
 10. 问题自身的引用结构是词面相似度之外的连接条件：出版引证指向被引标题行（C574）、回指 demand 指向定义句（C576）、bullet 结构指向列表行（C575）——问题怎么引用答案，答案就该长什么样
 11. demand 词的作用域要显式绑定：cardinal 词是问题端的验收规格（size==n），永不混入答案块词表（C578）；相对偏移在问题端解析成日期，marker 家族由 demand frame 选择（C579）——同一词形在问题端与答案端扮演不同角色，默认混用即自我寄生
 12. 证据可达性先于答案选择：replay 零变化不一定是 face 太窄——证据可能根本不在检索返回集里（C582 retrieval-miss）；且定位证据时枚举序号 ≠ ID 索引（session_N ≠ answer_session_ids），任何「证据在 session_X」必须用 ID 字段逐题核对，否则修的是幻觉；证伪的规则也要留痕（examined and rejected 注释）
+13. 结构性判别 > 分数调整：当问题 demand 一个名词时，答案在结构上必须包含它——需求名词是候选的准入条件（硬过滤），不是排序的加分项（C584，floor 豁免后 141.8 仍输 210.4 的实测）；且判别式可迁移：同一条「结构必须含需求」原则下个周期就变成年份面的 NP 全实词锚（C585）
+14. 证据面角色开放时用结构锚代替角色墙：证据在 user 嘴里（user 粘贴的案情）时 assistant-wall 不可用，但开放角色 ≠ 放弃判别——NP 全实词锚 + 窄证据模式接管防劫持职责，零劫持结论靠 census near-miss 全查实证（C585）；裸数字这类「默认语义就是错的」松弛，宁可回退留账，不可带着已知 banked kill 接线（C583）
 
 ---
 
-*生成：documentation-morning cron，2026-09-02；Cycles 540-542 增补：2026-09-03；Cycles 543-545 增补：2026-09-04；Cycles 546-548 增补：2026-09-05；Cycles 549-554 增补：2026-09-07；Cycles 555-557 增补：2026-09-08；Cycles 558-559 增补：2026-09-09；Cycles 561-563 增补：2026-09-10；Cycles 564-569 增补：2026-09-13；Cycles 570-573 增补：2026-09-14；Cycles 574-576 增补：2026-09-15；Cycles 577-579 增补：2026-09-16；Cycles 580-582 增补：2026-09-17。数据口径：LongMemEval s_cleaned full-500，PYTHONHASHSEED=7，deterministic cascade banked。轨迹明细见 README Cycles 532-582 段。*
+*生成：documentation-morning cron，2026-09-02；Cycles 540-542 增补：2026-09-03；Cycles 543-545 增补：2026-09-04；Cycles 546-548 增补：2026-09-05；Cycles 549-554 增补：2026-09-07；Cycles 555-557 增补：2026-09-08；Cycles 558-559 增补：2026-09-09；Cycles 561-563 增补：2026-09-10；Cycles 564-569 增补：2026-09-13；Cycles 570-573 增补：2026-09-14；Cycles 574-576 增补：2026-09-15；Cycles 577-579 增补：2026-09-16；Cycles 580-582 增补：2026-09-17；Cycles 583-585 增补：2026-09-18。数据口径：LongMemEval s_cleaned full-500，PYTHONHASHSEED=7，deterministic cascade banked。轨迹明细见 README Cycles 532-585 段。*
