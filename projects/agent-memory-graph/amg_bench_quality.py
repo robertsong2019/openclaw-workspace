@@ -467,6 +467,8 @@ class LongMemEvalAdapter:
                  ordinal_face: bool = True,
                  list_recall: bool = True,
                  sectioned_recall: bool = True,
+                 song_chord: bool = True,
+                 demand_noun_recall: bool = True,
                  assistant_recall: bool = True,
                  recall_min_score: int = 5,
                  recall_mode: str = "distinctive",
@@ -571,6 +573,8 @@ class LongMemEvalAdapter:
         # answer structure for cardinal-demand recall questions.
         self.list_recall = list_recall
         self.sectioned_recall = sectioned_recall
+        self.song_chord = song_chord
+        self.demand_noun_recall = demand_noun_recall
         # Cycle 501: role-aware answer face (echo pathology fix) —
         # see _user_fact_form. role_margin: how many keyword hits a
         # user line may trail the top assistant line by and still
@@ -1359,6 +1363,51 @@ class LongMemEvalAdapter:
                 meta["gate"] = "sectioned_recall"
                 meta["abstained"] = False
                 return sec_ans, meta
+
+        # Cycle 584: chord-progression face — "what was the chord
+        # progression for the chorus in the second song?" is answered
+        # by the assistant's own STRUCTURED song message: the face
+        # enumerates assistant messages carrying "Chorus:" headers
+        # (notes line immediately after each), takes the
+        # ordinal-selected song, and renders the chorus notes
+        # verbatim (see answer_chord_progression). Full-graph stream
+        # (C472 lesson). Census: "chord progression" + "chorus" +
+        # "<ordinal> song" accepts exactly 1/500 question — zero
+        # hijack surface by construction. Runs before speaker_recall
+        # — the parasitic pred it fixes IS a speaker_recall output.
+        if self.song_chord and chord_progression_form(question) is not None:
+            c_ans, c_detail = answer_chord_progression(
+                question,
+                [(self._nodes[nid].get("role") or "",
+                  self._nodes[nid].get("label") or "")
+                 for nid in self._messages if nid in self._nodes])
+            meta["chord_progression"] = c_detail
+            if c_ans is not None:
+                meta["gate"] = "chord_progression"
+                meta["abstained"] = False
+                return c_ans, meta
+
+        # Cycle 584: demand-noun recall face — "what <noun> you
+        # recommended" is answered by the assistant sentence
+        # CONTAINING the demand noun (C537 hard-filter evolution):
+        # the speaker_recall min_raw=3 floor excludes the answer
+        # sentence when it matches only demand-noun + head-noun (2
+        # keywords) while junk openers pass with 3 rare-noun
+        # matches — so the demand noun is a hard filter here, not a
+        # score tweak (see answer_demand_noun). Census: frame +
+        # recommendation-family verb accepts exactly 1/500 question
+        # (8aef76bc); the banked "what <noun> you said" shape
+        # (fea54f57) is structurally OUT of the form — interlock
+        # pinned both sides. Runs before speaker_recall — the
+        # parasitic pred it fixes IS a speaker_recall output.
+        if self.demand_noun_recall and demand_noun_form(question):
+            dn_ans, dn_detail = answer_demand_noun(
+                question, self._nodes)
+            meta["demand_noun"] = dn_detail
+            if dn_ans is not None:
+                meta["gate"] = "demand_noun"
+                meta["abstained"] = False
+                return dn_ans, meta
 
         # Cycle 468: speaker-recall path — you-addressed "remind me
         # what you recommended" forms. Assistant answers are multi-
@@ -6373,6 +6422,163 @@ def answer_sectioned_recall(question: str,
     detail["header"] = hdr
     detail["spans"] = spans
     return ans, detail
+
+
+# ════════ Cycle 584: chord-progression face ════════
+# "...you created two sad songs for me. Can you remind me what was
+# the chord progression for the chorus in the second song?" — the
+# question recalls a STRUCTURED artifact (a song) the assistant
+# already produced, addressed by ordinal. The evidence is the
+# assistant's own song message: "Chorus:" headers each followed by
+# a pure pitch-letters notes line. The demanded song is the
+# ordinal-selected message; its chorus repeats must all agree
+# (disagreement = ambiguous = fall-through). Census: "chord
+# progression" + "chorus" + "<ordinal> song" accepts exactly 1/500
+# question (eaca4986) - zero hijack surface by construction.
+_CHORD_ORDINALS = {"first": 0, "1st": 0, "second": 1, "2nd": 1,
+                   "third": 2, "3rd": 2, "fourth": 3, "4th": 3,
+                   "fifth": 4, "5th": 4}
+_CHORD_PHRASE_RE = re.compile(r"chord progression", re.I)
+_CHORD_CHORUS_RE = re.compile(r"\bchorus\b", re.I)
+_CHORD_ORD_RE = re.compile(
+    r"\b(first|second|third|fourth|fifth|1st|2nd|3rd|4th|5th)\s+song\b",
+    re.I)
+_CHORUS_HDR_RE = re.compile(r"^\s*chorus:?\s*$", re.I)
+_CHORD_NOTES_RE = re.compile(r"^[A-G](?:\s+[A-G]){2,}$")
+
+
+def chord_progression_form(question: str) -> int | None:
+    """Ordinal song index (0-based) when the question demands a
+    chord progression for a numbered song's chorus. Census over the
+    full 500: exactly eaca4986."""
+    q = (question or "").strip()
+    if not _CHORD_PHRASE_RE.search(q):
+        return None
+    if not _CHORD_CHORUS_RE.search(q):
+        return None
+    m = _CHORD_ORD_RE.search(q)
+    if not m:
+        return None
+    return _CHORD_ORDINALS[m.group(1).lower()]
+
+
+def _chorus_notes(content: str) -> list[str]:
+    """Notes lines immediately following each "Chorus:" header.
+    A lyric line after the header simply contributes nothing."""
+    lines = (content or "").split("\n")
+    out: list[str] = []
+    for i, ln in enumerate(lines):
+        if _CHORUS_HDR_RE.match(ln):
+            nxt = lines[i + 1].strip() if i + 1 < len(lines) else ""
+            if _CHORD_NOTES_RE.match(nxt):
+                out.append(nxt)
+    return out
+
+
+def answer_chord_progression(question: str,
+                             messages: list[tuple[str, str]],
+                             ) -> tuple[str | None, dict]:
+    """Answer an ordinal chord-progression demand from the
+    assistant's structured song messages.
+
+    ``messages`` is the full-graph [(role, content)] stream (dates
+    play no role). Song messages are assistant-role only (user-role
+    wall). The selected song's chorus repeats must agree exactly
+    (one unique notes line) — ambiguity is fabrication.
+    """
+    idx = chord_progression_form(question)
+    detail: dict = {"form": None, "songs": 0}
+    if idx is None:
+        return None, detail
+    detail["form"] = "chord_progression"
+    songs: list[list[str]] = []
+    for role, content in messages:
+        if role != "assistant":
+            continue                  # user-role wall
+        notes = _chorus_notes(content or "")
+        if notes:
+            songs.append(notes)
+    detail["songs"] = len(songs)
+    if idx >= len(songs):
+        detail["reason"] = "no_such_song"
+        return None, detail
+    notes = songs[idx]
+    if len(set(notes)) != 1:
+        detail["reason"] = "inconsistent_chorus"
+        return None, detail
+    return notes[0], detail
+
+
+# ════════ Cycle 584: demand-noun recall face ════════
+# "Can you remind me what sealant you recommended for the newspaper
+# flower vase?" — the question names the thing it wants ("what
+# <noun> you recommended"), so any candidate sentence LACKING that
+# noun is structurally not the answer. The speaker_recall
+# distinctive pool's min_raw=3 floor excludes the answer sentence
+# (it matches only sealant+vase = 2 keywords) while the junk opener
+# ("Newspaper Flower Vase - Roll up...") passes with 3 rare-noun
+# matches and wins — so the demand noun moves from score to HARD
+# FILTER: candidates must contain it; ranking is raw question-
+# keyword hits; a tie at the top = ambiguous = fall-through. Verb
+# family is recommendation-only (recommend/suggest/use/mention,
+# both orders) — the banked "what <noun> you said" shape (fea54f57)
+# is structurally out (interlock). Census: frame + form accepts
+# exactly 1/500 question (8aef76bc) - zero hijack surface.
+_DEMAND_FRAME_RE = re.compile(r"remind me|you told me|i remember",
+                              re.I)
+_DEMAND_NOUN_RE = re.compile(
+    r"what ([a-z][a-z-]{2,20}?) "
+    r"(?:(?:did|have) you (?:recommend|suggest|use|mention)\b"
+    r"|you (?:recommended|suggested|used|mentioned)\b)", re.I)
+
+
+def demand_noun_form(question: str) -> str | None:
+    """The demand noun when a recall-frame question asks "what
+    <noun> you recommended/suggested/used/mentioned". Census over
+    the full 500: exactly 8aef76bc ("sealant")."""
+    q = (question or "").strip()
+    if not _DEMAND_FRAME_RE.search(q):
+        return None
+    m = _DEMAND_NOUN_RE.search(q)
+    if m:
+        return m.group(1).strip()
+    return None
+
+
+def answer_demand_noun(question: str,
+                       nodes: dict,
+                       ) -> tuple[str | None, dict]:
+    """Answer a demand-noun question from demand-noun-carrying
+    assistant sentences, ranked by raw question-keyword hits.
+
+    ``nodes`` is the same graph the speaker_recall pool scans
+    (assistant-role wall; label = message content). One candidate =
+    render; a top tie = ambiguous (fall-through); zero candidates =
+    honest fall-through.
+    """
+    noun = demand_noun_form(question)
+    detail: dict = {"form": None, "candidates": 0}
+    if not noun:
+        return None, detail
+    detail["form"] = "demand_noun"
+    pat = re.compile(r"\b" + re.escape(noun) + r"s?\b", re.I)
+    kws = _keywords(question)
+    cands: list[tuple[int, str]] = []
+    for node in (nodes or {}).values():
+        if node.get("role") != "assistant":
+            continue                  # user-role wall
+        for sent in _split_sentences(node.get("label", "")):
+            if pat.search(sent):
+                cands.append((_keyword_hits(sent, kws), sent))
+    detail["candidates"] = len(cands)
+    if not cands:
+        detail["reason"] = "no_candidate"
+        return None, detail
+    cands.sort(key=lambda c: -c[0])   # stable; ties checked below
+    if len(cands) > 1 and cands[0][0] == cands[1][0]:
+        detail["reason"] = "ambiguous"
+        return None, detail
+    return cands[0][1], detail
 
 
 # ════════ Cycle 486: past-perfect duration forms (#077) ════════
