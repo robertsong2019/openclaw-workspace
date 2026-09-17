@@ -150,6 +150,96 @@ describe("OpenClawClient.spawn request shape", () => {
   });
 });
 
+// ── spawn(): client-side hang guard (silent-hang family) ──
+
+/** Server that accepts the request and never responds (request-phase hang). */
+function startHangingServer() {
+  const server = http.createServer((req, res) => {
+    // deliberately never respond
+  });
+  return new Promise((resolve) => {
+    server.listen(0, "127.0.0.1", () =>
+      resolve({ server, port: server.address().port })
+    );
+  });
+}
+
+/** Server that sends headers + partial body, then stalls (body-phase hang). */
+function startBodyStallServer() {
+  const server = http.createServer((req, res) => {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.write('{"ok":'); // partial JSON, never finished
+  });
+  return new Promise((resolve) => {
+    server.listen(0, "127.0.0.1", () =>
+      resolve({ server, port: server.address().port })
+    );
+  });
+}
+
+describe("OpenClawClient.spawn clientTimeoutMs", () => {
+  it("aborts a request-phase hang with a timeout-distinguishable error", async () => {
+    const { server, port } = await startHangingServer();
+    try {
+      const client = new OpenClawClient({ baseUrl: `http://127.0.0.1:${port}` });
+      const t0 = Date.now();
+      await assert.rejects(
+        client.spawn("task", { clientTimeoutMs: 100 }),
+        /timed out after 100ms/
+      );
+      const elapsed = Date.now() - t0;
+      assert.ok(elapsed < 2000, `abort fired client-side, got ${elapsed}ms`);
+    } finally {
+      server.close();
+    }
+  });
+
+  it("aborts a body-phase stall (headers sent, body never completes)", async () => {
+    const { server, port } = await startBodyStallServer();
+    try {
+      const client = new OpenClawClient({ baseUrl: `http://127.0.0.1:${port}` });
+      await assert.rejects(
+        client.spawn("task", { clientTimeoutMs: 100 }),
+        /timed out after 100ms/
+      );
+    } finally {
+      server.close();
+    }
+  });
+
+  it("does not pass an abort signal when clientTimeoutMs is omitted", async () => {
+    const realFetch = globalThis.fetch;
+    try {
+      let capturedInit;
+      globalThis.fetch = async (url, init) => {
+        capturedInit = init;
+        return new Response(JSON.stringify("ok"), { status: 200 });
+      };
+      const client = new OpenClawClient({ baseUrl: "http://gateway.local" });
+      await client.spawn("task");
+      assert.equal(capturedInit.signal, undefined);
+    } finally {
+      globalThis.fetch = realFetch;
+    }
+  });
+
+  it("clientTimeoutMs: 0 is a valid no-abort value, not dropped (falsy-zero family)", async () => {
+    const realFetch = globalThis.fetch;
+    try {
+      let capturedInit;
+      globalThis.fetch = async (url, init) => {
+        capturedInit = init;
+        return new Response(JSON.stringify("ok"), { status: 200 });
+      };
+      const client = new OpenClawClient({ baseUrl: "http://gateway.local" });
+      await client.spawn("task", { clientTimeoutMs: 0 });
+      assert.equal(capturedInit.signal, undefined);
+    } finally {
+      globalThis.fetch = realFetch;
+    }
+  });
+});
+
 describe("OpenClawClient.executor", () => {
   it("prepends systemPrompt separated by a blank line", async () => {
     const { server, port, requests } = await startCaptureServer((req, res) =>
@@ -162,6 +252,22 @@ describe("OpenClawClient.executor", () => {
 
       await client.executor()("plain task");
       assert.equal(JSON.parse(requests[1].body).task, "plain task");
+    } finally {
+      server.close();
+    }
+  });
+
+  it("passes spawn options through as second argument (session/acp reach the wire)", async () => {
+    const { server, port, requests } = await startCaptureServer((req, res) =>
+      jsonResponse(res, 200, {})
+    );
+    try {
+      const client = new OpenClawClient({ baseUrl: `http://127.0.0.1:${port}` });
+      await client.executor()("task text", { mode: "session", runtime: "acp", timeoutSeconds: 900 });
+      const body = JSON.parse(requests[0].body);
+      assert.equal(body.mode, "session");
+      assert.equal(body.runtime, "acp");
+      assert.equal(body.timeoutSeconds, 900);
     } finally {
       server.close();
     }

@@ -14,6 +14,12 @@ export interface SpawnOptions {
   mode?: "run" | "session";
   runtime?: "subagent" | "acp";
   timeoutSeconds?: number;
+  /**
+   * Client-side abort budget for the whole spawn call (request + response
+   * body). Guards against a gateway that accepts the connection but never
+   * responds (silent-hang family). 0 = no abort; undefined = no abort.
+   */
+  clientTimeoutMs?: number;
 }
 
 export type HealthStatus = "ok" | "down";
@@ -52,6 +58,11 @@ export class OpenClawClient {
    * Spawn an OpenClaw agent and return its result.
    */
   async spawn(task: string, options?: SpawnOptions): Promise<string> {
+    // 0 is a valid "no client-side abort" value, not a timeout of zero
+    const clientTimeoutMs =
+      options?.clientTimeoutMs !== undefined && options.clientTimeoutMs > 0
+        ? options.clientTimeoutMs
+        : undefined;
     let resp: Response;
     try {
       resp = await fetch(`${this.baseUrl}/api/sessions/spawn`, {
@@ -66,11 +77,18 @@ export class OpenClawClient {
             ? { timeoutSeconds: options.timeoutSeconds }
             : {}),
         }),
+        ...(clientTimeoutMs !== undefined
+          ? { signal: AbortSignal.timeout(clientTimeoutMs) }
+          : {}),
       });
     } catch (err) {
+      const isAbort =
+        err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
       const reason = err instanceof Error ? err.message : String(err);
       throw new Error(
-        `OpenClaw spawn failed: cannot reach gateway at ${this.baseUrl} (${reason})`
+        isAbort
+          ? `OpenClaw spawn failed: timed out after ${clientTimeoutMs}ms waiting for gateway at ${this.baseUrl}`
+          : `OpenClaw spawn failed: cannot reach gateway at ${this.baseUrl} (${reason})`
       );
     }
 
@@ -80,7 +98,21 @@ export class OpenClawClient {
 
     // Read as text first: resp.json() consumes the body, leaving nothing to
     // include in the diagnostic if parsing fails (proxies may answer 2xx HTML).
-    const text = await resp.text();
+    let text: string;
+    try {
+      text = await resp.text();
+    } catch (err) {
+      // abort can also fire mid-body (headers sent, body stalls) — surface it
+      // with the same timeout message as the request phase
+      const isAbort =
+        err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
+      if (isAbort) {
+        throw new Error(
+          `OpenClaw spawn failed: timed out after ${clientTimeoutMs}ms waiting for gateway at ${this.baseUrl}`
+        );
+      }
+      throw err;
+    }
     let data: unknown;
     try {
       data = JSON.parse(text);
@@ -141,11 +173,13 @@ export class OpenClawClient {
 
   /**
    * Create an executor function suitable for createOpenClawNode().
+   * The returned function forwards optional spawn options (mode/runtime/
+   * timeouts), so callers can spawn in "session" mode or cap client time.
    */
-  executor(systemPrompt?: string): (task: string) => Promise<string> {
-    return async (task: string) => {
+  executor(systemPrompt?: string): (task: string, options?: SpawnOptions) => Promise<string> {
+    return async (task, options) => {
       const fullTask = systemPrompt ? `${systemPrompt}\n\n${task}` : task;
-      return this.spawn(fullTask);
+      return this.spawn(fullTask, options);
     };
   }
 }
