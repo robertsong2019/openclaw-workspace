@@ -12388,6 +12388,15 @@ _BEFORE_DATE_Q = re.compile(
     r'\b(?:before|prior to)\s+(?:the\s+)?(\d{1,2}/\d{1,2})\b')
 _FIRST_DUR_Q = re.compile(
     r'\bfirst\s+([a-z]+|\d+)\s+(months?|weeks?|years?|days?)\b')
+# C583 REVERTED VARIANT (census /tmp/c583 step4/5): a relaxed bare-
+# quantity branch (stem + now/current cue + single digit in clause)
+# was tried for "close to 1300 now"-shaped statements and pulled 7
+# new fires of which 2 KILLED banked rows (46a3abf7 '3'->'20',
+# 4b24c848 junk-CORRECT->'6') — the digit is usually bound to a
+# DIFFERENT noun in the clause ('6 months', '2,000 miles',
+# '500 words', '80D' model numbers). A future attempt needs a
+# free-standing-digit discriminator (digit not followed by any
+# noun) verified against the full fire atlas. Ordinal-only ships:
 
 
 def _cnt_qty_stated(question: str, sessions: list[dict]) -> str | None:
@@ -12422,7 +12431,11 @@ def _cnt_qty_stated(question: str, sessions: list[dict]) -> str | None:
         return None
     stems = [_enum_stem(w) for w in np_words]
     hstem = _enum_stem(np_words[-1])
-    pat = re.compile(r'(\d+(?:,\d{3})*)(?=(?:\s+\w+){0,3}?\s+'
+    # C583: ordinal suffixes optional — "my 5th project" must capture
+    # the same way "5 projects" does (the suffix blocked the digit-to-
+    # stem adjacency: '5th' has no whitespace before the stem).
+    pat = re.compile(r'(\d+(?:,\d{3})*)(?:st|nd|rd|th)?'
+                     r'(?=(?:\s+\w+){0,3}?\s+'
                      + re.escape(hstem) + r'\w*)')
     # lookahead (non-consuming) so multiple values ahead of one head
     # noun are all seen — "40 or 50 followers" must abstain, not
