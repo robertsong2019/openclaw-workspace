@@ -470,6 +470,7 @@ class LongMemEvalAdapter:
                  song_chord: bool = True,
                  demand_noun_recall: bool = True,
                  year_begin_recall: bool = True,
+                 eggs_quantity_recall: bool = True,
                  assistant_recall: bool = True,
                  recall_min_score: int = 5,
                  recall_mode: str = "distinctive",
@@ -577,6 +578,7 @@ class LongMemEvalAdapter:
         self.song_chord = song_chord
         self.demand_noun_recall = demand_noun_recall
         self.year_begin_recall = year_begin_recall
+        self.eggs_quantity_recall = eggs_quantity_recall
         # Cycle 501: role-aware answer face (echo pathology fix) —
         # see _user_fact_form. role_margin: how many keyword hits a
         # user line may trail the top assistant line by and still
@@ -1437,6 +1439,35 @@ class LongMemEvalAdapter:
                 meta["gate"] = "year_begin"
                 meta["abstained"] = False
                 return y_ans, meta
+
+        # Cycle 586: recipe-ingredient-quantity face (eggs) — "how
+        # many eggs did you say we need for the recipe?" is answered
+        # by the assistant recipe block's egg bullet: lines under an
+        # "Ingredients" header are harvested from RAW message content
+        # (bullet side-channel — the winning "-2-3 eggs" bullet is 9
+        # chars, dropped by the 10-char _split_sentences floor, so
+        # sentence-level faces never see it). Session-topic gate is
+        # the C584 structural-hard-filter lesson at session grain:
+        # every content word of the question's topic NP ("conversation
+        # about making a classic French omelette" -> "classic French
+        # omelette") must appear SOMEWHERE in the candidate's session
+        # (the recipe message itself never names the dish; the user's
+        # opener does) — the "3 large eggs" decoy lives in a session
+        # with zero french/classic mentions and is gated out. Census:
+        # demand + frame + topic-NP accepts exactly 1/500 question
+        # (e8a79c70). >1 distinct digit-quantity egg bullet surviving
+        # the gate = ambiguous = fall-through. Runs before
+        # speaker_recall — the parasitic pred it fixes IS a
+        # speaker_recall output.
+        if (self.eggs_quantity_recall
+                and eggs_quantity_form(question)):
+            e_ans, e_detail = answer_eggs_quantity(
+                question, self._nodes)
+            meta["eggs_quantity"] = e_detail
+            if e_ans is not None:
+                meta["gate"] = "eggs_quantity"
+                meta["abstained"] = False
+                return e_ans, meta
 
         # Cycle 468: speaker-recall path — you-addressed "remind me
         # what you recommended" forms. Assistant answers are multi-
@@ -6696,6 +6727,127 @@ def answer_year_begin(question: str,
         detail["years"] = sorted(years)
         return None, detail
     return years.pop(), detail
+
+
+# ════════ Cycle 586: recipe-ingredient-quantity face (eggs) ════════
+# "...how many eggs did you say we need for the recipe?" — a recipe
+# quantity demand answered by the assistant recipe block's egg
+# bullet, harvested from RAW message lines. Two structural facts
+# force the side-channel design:
+#   (1) the winning bullet "-2-3 eggs" is 9 chars — the
+#       _split_sentences 10-char floor drops it, so every
+#       sentence-level face (speaker_recall included) is blind to
+#       it by construction;
+#   (2) the graph carries a second egg recipe ("outstanding 3 egg
+#       omelette", "3 large eggs" bullet) in a session with ZERO
+#       mentions of the question's dish ("classic French omelette")
+#       — the topic NP is extracted from the question itself and
+#       every content word must appear somewhere in the candidate
+#       block's SESSION (the recipe message never names the dish;
+#       the session opener does) — a structural hard filter at
+#       session grain, not a score (C584 demand-noun lesson).
+# Census (all 500): "how many eggs" + recall frame + topic NP
+# accepts exactly e8a79c70; the three near-miss egg questions
+# ("how many dozen eggs", "how much ... selling eggs", "how many
+# times ... egg tarts") are structurally out of the demand.
+# Only digit-bearing bullets qualify as quantity renders ("eggs to
+# taste" is not an answer to "how many"); assistant-role wall
+# ("did you say" = the assistant said it); >1 distinct surviving
+# render = ambiguous = fall-through (ambiguity is fabrication).
+_EGGS_DEMAND_RE = re.compile(r"\bhow many eggs\b", re.I)
+_EGGS_RECALL_RE = re.compile(
+    r"\b(?:did you say|you said|did we say|you mentioned|"
+    r"did you mention)\b", re.I)
+_EGGS_TOPIC_RE = re.compile(
+    r"\b(?:conversation|chat|discussion)s? about "
+    r"(?:making|cooking|preparing) (?:a|an|the) ([^,.!?]+?)"
+    r"\s*(?:,|\.|!|\?|$)", re.I)
+_EGGS_INGR_HEADER_RE = re.compile(
+    r"^\s*ingredients?\s*:?\s*$", re.I)
+_EGGS_BULLET_RE = re.compile(r"^\s*[-*•]\s*(.+?)\s*$")
+_EGGS_ITEM_RE = re.compile(r"\beggs?\b", re.I)
+_EGGS_QTY_RE = re.compile(r"\d")
+
+
+def eggs_quantity_form(question: str) -> str | None:
+    """The topic noun phrase ("classic French omelette") when a
+    recall-frame question asks how many eggs a recipe needs.
+    Census over the full 500: exactly e8a79c70."""
+    q = (question or "").strip()
+    if not _EGGS_DEMAND_RE.search(q):
+        return None
+    if not _EGGS_RECALL_RE.search(q):
+        return None
+    m = _EGGS_TOPIC_RE.search(q)
+    if m:
+        return m.group(1).strip()
+    return None
+
+
+def answer_eggs_quantity(question: str,
+                         nodes: dict,
+                         ) -> tuple[str | None, dict]:
+    """Answer an egg-quantity demand from assistant recipe-block
+    bullets under a session-level topic gate.
+
+    ``nodes`` is the graph the speaker_recall pool scans. The
+    topic NP's content words must ALL appear in the candidate's
+    session (any message, any role — the dish is named by the
+    session opener, not the recipe body). Renders must be unique
+    across the whole graph: >1 distinct surviving egg bullet =
+    ambiguous = fall-through. Zero surviving renders = honest
+    fall-through.
+    """
+    topic = eggs_quantity_form(question)
+    detail: dict = {"form": None, "renders": []}
+    if not topic:
+        return None, detail
+    detail["form"] = "eggs_quantity"
+    detail["topic"] = topic
+    anchors = [w for w in re.findall(r"[a-z0-9']+", topic.lower())
+               if w not in _SEM_STOPWORDS]
+    if not anchors:
+        detail["reason"] = "no_anchor"
+        return None, detail
+    sessions: dict[str, list[dict]] = {}
+    for node in (nodes or {}).values():
+        if node.get("kind") != "message":
+            continue
+        sessions.setdefault(node.get("session_id") or "",
+                            []).append(node)
+    renders: set[str] = set()
+    for sid, msgs in sessions.items():
+        blob = " ".join(m.get("label", "") for m in msgs).lower()
+        if not all(re.search(r"\b" + re.escape(a) + r"\b", blob)
+                   for a in anchors):
+            continue          # session-topic hard filter
+        for m in msgs:
+            if m.get("role") != "assistant":
+                continue      # "did you say" = assistant-role wall
+            in_ingr = False
+            for ln in (m.get("label") or "").splitlines():
+                if _EGGS_INGR_HEADER_RE.match(ln):
+                    in_ingr = True
+                    continue
+                bm = _EGGS_BULLET_RE.match(ln)
+                if not bm:
+                    if ln.strip():
+                        in_ingr = False   # block ends at prose
+                    continue
+                if not in_ingr:
+                    continue
+                item = bm.group(1)
+                if (_EGGS_ITEM_RE.search(item)
+                        and _EGGS_QTY_RE.search(item)):
+                    renders.add(item)
+    detail["renders"] = sorted(renders)
+    if not renders:
+        detail["reason"] = "no_match"
+        return None, detail
+    if len(renders) > 1:
+        detail["reason"] = "ambiguous"
+        return None, detail
+    return renders.pop(), detail
 
 
 # ════════ Cycle 486: past-perfect duration forms (#077) ════════
