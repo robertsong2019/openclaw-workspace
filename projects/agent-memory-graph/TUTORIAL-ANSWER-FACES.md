@@ -1,7 +1,7 @@
-# TUTORIAL: Answer Faces — 问题结构驱动的答案选择（Cycles 529-585）
+# TUTORIAL: Answer Faces — 问题结构驱动的答案选择（Cycles 529-588）
 
 > 本文解释 amg 评测管线里最反直觉的一个设计：**答案选哪个句子，不该由"分数阈值"决定，而该由"问题在问什么"决定**。
-> 覆盖 Cycle 529-585 的机制演进（banked 0.494 → 0.664），所有例子都是 LongMemEval s_cleaned full-500 里的真实题目。
+> 覆盖 Cycle 529-588 的机制演进（banked 0.494 → 0.672），所有例子都是 LongMemEval s_cleaned full-500 里的真实题目。
 
 ---
 
@@ -165,7 +165,7 @@ judge cascade（exact → semantic → LLM）里有一个 NEEDS_JUDGE 区间：e
 
 ---
 
-## 5. 值解析与锚点族 face：数字、日期、时长、锚点选择（C549-C585）
+## 5. 值解析与锚点族 face：数字、日期、时长、锚点选择（C549-C588）
 
 §3-§4 的 face 都长在"**选哪句话**"上；C549-C554 是第三波：答案本身是个数值/日期/时长，face 长在"**值解析**"上——不是从候选里挑句子，而是从通过 gate 的内容里提炼出**正确的值**。C555-C557 是第四波：值对了还不够，**锚点选择**本身也是信号源——锚是谁说的（角色）、跨度怎么定义（口径）、行内多个日期选哪个（临近度/连续对）。外加一次方法论升级（C549：census-negative 的第三种用法）。C561-C563 是值解析族的残留地带清扫：counting 的非金钱度量兄弟（距离/重量/时长）、item_total 的空清单分支（类别求和）、时长族最后两个病根（同句状态绑定 + 进行体问头/会话跨度）。C564-C569 是第五波：**期限/跨度/求和面**——pp_duration 三条新 route（晋职扣减、完成时长求和、活动跨度求和）与一个门入口（have-had），counting 三个新 gate entry（页码进度双面、成书页数求和、教育年限链）；附赠两次"队列注记被证据翻案"的方法论实录（C564 弃权→rescue、C565 现成→错面）。C570-C573 把第五波收束成 session-date 跨度族（书本/事件/旅程跨度、ago 倒推、具名日偏移）。C574-C576 是第六波：**结构回指族**——问题自身的引用结构（出版引证、bullet 列表体、回指提法）本身就是 bearer 的连接条件。C580-C582 把「谁有权作答」（角色墙、header 行、让位规则）推到前台。C583-C585 是第七波：**结构性判别族**——判别信号完成从调分数到结构性硬约束的转向：需求名词是过滤不是权重（答案必须含问题 demand 的名词，C584）、判别式跨域迁移成 NP 全实词锚（C585）、序数后缀守卫数量锚的邻接（C583）；证据面也第一次对 user 角色开放，用结构锚代替角色墙。
 
@@ -391,6 +391,24 @@ counting gate 新 form "pages"：(A) **read-so-far latest-wins**——"How many 
 
 > 角色课：**证据面从「谁有权作答」推进到「事实在谁嘴里」**——user 说的证据不能被角色墙挡在门外，但开放角色不等于放弃判别：NP 全实词锚 + 窄证据模式接管了角色墙的防劫持职责，且 census 的全 500 near-miss 全查是零劫持结论的实证。与 §5.31（who-companion 的亲属词 marker）、§5.33（where 的角色让位）合读：同一条「谁有权作答」轴上的三个不同解法。
 
+### 5.37 C586 eggs-quantity — 证据进不了句池时，开侧信道从源头收割
+
+"How many eggs does the recipe call for?" 的 GT 证据 "-2-3 eggs" 只有 9 字符，被 `_split_sentences` 的 10 字符下限永久丢弃（§5.35 确认的隐性证据边界，C584/C585 连续两轮 deferred 的 lane）。修复不是调下限（动共享组件 = 全局回归风险），是**侧信道**：Ingredients 头 + bullet 行直接从 RAW 消息收割。判别靠 **session-topic gate**：C584 demand-noun 硬过滤升到 session 粒度——topic NP（问题问的那道菜）的实词必须出现在候选 session 的**任意**消息里（recipe 消息本身不点菜名，session opener 点），诱饵 session 的 "3 large eggs" 零菜名提及被结构性挡出。仅含数字的 bullet 才算数量 render；>1 render = ambiguous fall-through。
+
+> 边界课：**句池是选择性证据面，不是证据全集**。长度下限这类共享过滤器造成的不可达，解法是给该 face 开只读侧信道，而不是全局调参。deferred ≠ 放弃——连续两轮 deferred 的 lane，在「侧信道 + topic gate」双机制凑齐的那一轮一次关闭；每次 deferred 留下的病根注记（"10 字符下限丢弃"）就是下一棒的施工图。
+
+### 5.38 C587 knowledge-update — GT 是最新状态时，判别发生在时间轴上
+
+"Where did Rachel move to?" / "Where do I currently keep my old sneakers?" 的 GT 都是**知识的最新状态**，而链上 pred 引用旧版本（Rachel s32 旧住址 vs s45 "the suburbs"；sneakers s3 "under my bed" vs s32 "in a shoe rack in my closet"）。解法是 **latest-session-wins 状态召回**：取最近 session 的状态陈述，不是全图分数最高句。诚实约束：代词句零贡献（face 看不见 pronoun 句与主题的关联，假装看得见就是编造——miniature 阶段改的是测试期望不是代码）；赢家 session 内 >1 目的地 = ambiguous fall-through。ku_storage 的接受条件是存储动词 **OR 现时状态标记词**（currently/right now）——GT 承重句根本没有 keep 动词，靠 "currently" 承重。**census 阶段最有价值的拦截**：孪生题 "Where do I **initially** keep…?" 已 banked（GT=旧状态）——recency 词若做成可选修饰词会杀掉它；裁决：现时标记词是 form 硬要求，"initially" 结构性出局。
+
+> 状态课：**GT 问的是「现在怎样」时，face 的职责从「找证据」变成「在时间轴上判别新旧」**——latest-wins 是结构化的 recency，不是分数加权。form gate = banked protection：census 不只回答「能救几行」，还把「会不会杀已对的行」直接铸进 form 硬门（initially ≠ currently）。判分缺口先探渲染侧：C582 判决 "需要 anaphora-aware judging"（动 judge，爆炸半径大），实测先行词与 "in it" 同句——渲染侧做句内物主先行词展开，现有 containment judge 直接通过，判决撤回。
+
+### 5.39 C588 most-recent-trip — "risky lane" 可能只是没做 census 的 lane
+
+9ea5eabc "Where did I go on my most recent family trip?" 被 C587 归类为 "recency priors (scoring change, risky)"。census 深探 30 分钟后正名：form 恰 1/500 + latest-session-wins + 硬过滤，纯结构性 face，**零打分改动**。证据在 session_7（早期状态 "family trip to Hawaii"）与 session_46（当前状态，三句 Paris 陈述）之间的时间轴上；结构闸门把三类劫持全部挡死：trip-type 硬过滤挡 solo 诱饵（Yosemite）、时态门仅认过去时/recency 标记（赢家 session 里 Tokyo **未来** solo 计划永远 render 不出来）、user 角色墙挡 assistant 散文。near-miss 3 题中 2 题已 banked——form gate 即 banked 保护。
+
+> 方法论课：**lane 的风险评级是 census 的函数，不是直觉的函数**。"risky" 的判断只说明没做深探——上一个 cycle 的队列注记（"scoring change, 风险大"）被本 cycle 的 census 翻案为 "structural-zero-risk"。这与 §7 的「队列注记 ≠ 判决」同源：规划是猜，census 是验，lane 分类也不例外。时态/词形是免费判别器：过去时门（went to / got back from）把「未来计划」与「过去事实」分开，不需要任何负分惩罚。
+
 ## 6. 反面教材：枚举清单没有结构键（C536，RECORD-NEGATIVE）
 
 序数清单（"5. Absinthe"）看起来也能做个 face。实现后发现 **census 全负**：
@@ -488,12 +506,15 @@ answer-face 家族的开发纪律（每个 face 都走了这套流程）：
 | 问题按序数问助手生成的结构化工件（"chords to the 2nd song"） | chord face | 枚举 "Chorus:" 头的 assistant 消息，序数选中；全部重复必须一致否则弃权 | C584 |
 | 问题 demand 你推荐/说过的 <名词 X>（"what sealant you recommended"） | demand-noun 硬过滤 | 答案必须含 X（复数容忍）——结构性判别 > 分数调整（floor 豁免后 141.8 仍 < 210.4） | C584 |
 | 问题问 "what year <NP> <begin-verb>" | year-begin | 证据面双角色开放（user 粘贴案情）；NP 全实词锚 + begin-verb+in+年份 窄模式代替角色墙；多值歧义弃权 | C585 |
+| 问题要食材数量，证据是 bullet 行（句池不可达） | eggs-quantity（bullet 侧信道） | RAW 消息收割 Ingredients bullets 绕句池下限；session-topic gate 挡无菜名诱饵 session | C586 |
+| GT 是知识的最新状态，链上 pred 是旧版本 | ku_reloc / ku_storage（latest-session-wins） | 最近 session 状态压过旧状态；代词句零贡献；现时标记词 form 硬门挡 "initially" 孪生题；判分缺口渲染侧展开绕过 judge | C587 |
+| 问题问 most recent / latest / last trip 的目的地 | trip_recent | recency form + latest-wins 复用；时态门分过去事实与未来计划；trip-type 硬过滤挡 solo 诱饵 | C588 |
 | kh-floor 想救 kh=0 GT | 🚫 census-negative，不接线 | 1 救 vs 14 杀，absence pin 钉死 | C543 |
 | kh-elite 准入救窗口死区 | 🚫 census-negative，不接线 | impostor 杀率 23.3% vs 4 救，admission-only 全族否决 | C546 |
 | 松弛 run 门想多救几行 | 🚫 census-negative = 局部最优证书 | 全部 kill 是 run-TIE impostor；absence pin 钉死 C548 配置 | C549 |
 | 嵌入 side-channel 重排 | 🚫 census-negative，默认 False | 离线增益被 gate+judge 吸收，pin 死默认值 | C545 |
 
-**十四条带走的原则**：
+**十六条带走的原则**：
 1. 答案选择读**问题结构**，不调阈值
 2. face 重排不越权翻地板；地板排除自有理由
 3. census-first：先数人口，先离线模拟，再接线；证伪的方向写进台账并用 absence pin 钉住
@@ -508,7 +529,9 @@ answer-face 家族的开发纪律（每个 face 都走了这套流程）：
 12. 证据可达性先于答案选择：replay 零变化不一定是 face 太窄——证据可能根本不在检索返回集里（C582 retrieval-miss）；且定位证据时枚举序号 ≠ ID 索引（session_N ≠ answer_session_ids），任何「证据在 session_X」必须用 ID 字段逐题核对，否则修的是幻觉；证伪的规则也要留痕（examined and rejected 注释）
 13. 结构性判别 > 分数调整：当问题 demand 一个名词时，答案在结构上必须包含它——需求名词是候选的准入条件（硬过滤），不是排序的加分项（C584，floor 豁免后 141.8 仍输 210.4 的实测）；且判别式可迁移：同一条「结构必须含需求」原则下个周期就变成年份面的 NP 全实词锚（C585）
 14. 证据面角色开放时用结构锚代替角色墙：证据在 user 嘴里（user 粘贴的案情）时 assistant-wall 不可用，但开放角色 ≠ 放弃判别——NP 全实词锚 + 窄证据模式接管防劫持职责，零劫持结论靠 census near-miss 全查实证（C585）；裸数字这类「默认语义就是错的」松弛，宁可回退留账，不可带着已知 banked kill 接线（C583）
+15. 判分缺口先探渲染侧，再动共享组件：C582 判决 "需要 anaphora-aware judging"（动 judge 语义，爆炸半径大），实测先行词与 "in it" 同句——渲染侧做句内物主先行词展开，现有 containment judge 直接通过，判决撤回（C587）。改判分器前先问：这个缺口是判分不懂，还是渲染没说清？
+16. lane 的风险评级是 census 的函数，不是直觉的函数："risky scoring lane" 可能只是没做 census 的 lane（C588 把 C587 归类 "risky" 的 9ea5eabc 正名为零分结构 face）；deferred ≠ 放弃——两轮 deferred 的 eggs lane 在双机制凑齐的那一轮一次关闭（C586），每次 deferred 的病根注记就是下一棒的施工图
 
 ---
 
-*生成：documentation-morning cron，2026-09-02；Cycles 540-542 增补：2026-09-03；Cycles 543-545 增补：2026-09-04；Cycles 546-548 增补：2026-09-05；Cycles 549-554 增补：2026-09-07；Cycles 555-557 增补：2026-09-08；Cycles 558-559 增补：2026-09-09；Cycles 561-563 增补：2026-09-10；Cycles 564-569 增补：2026-09-13；Cycles 570-573 增补：2026-09-14；Cycles 574-576 增补：2026-09-15；Cycles 577-579 增补：2026-09-16；Cycles 580-582 增补：2026-09-17；Cycles 583-585 增补：2026-09-18。数据口径：LongMemEval s_cleaned full-500，PYTHONHASHSEED=7，deterministic cascade banked。轨迹明细见 README Cycles 532-585 段。*
+*生成：documentation-morning cron，2026-09-02；Cycles 540-542 增补：2026-09-03；Cycles 543-545 增补：2026-09-04；Cycles 546-548 增补：2026-09-05；Cycles 549-554 增补：2026-09-07；Cycles 555-557 增补：2026-09-08；Cycles 558-559 增补：2026-09-09；Cycles 561-563 增补：2026-09-10；Cycles 564-569 增补：2026-09-13；Cycles 570-573 增补：2026-09-14；Cycles 574-576 增补：2026-09-15；Cycles 577-579 增补：2026-09-16；Cycles 580-582 增补：2026-09-17；Cycles 583-585 增补：2026-09-18；Cycles 586-588 增补：2026-09-19。数据口径：LongMemEval s_cleaned full-500，PYTHONHASHSEED=7，deterministic cascade banked。轨迹明细见 README Cycles 532-588 段。*

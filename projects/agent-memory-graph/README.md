@@ -2,7 +2,7 @@
 
 > 基于 SQLite 的轻量知识图谱，模拟 AI Agent 的长期记忆管理
 
-[![Tests](https://img.shields.io/badge/tests-10765-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-10813-brightgreen)]()
 [![Python](https://img.shields.io/badge/python-3.10+-blue)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-success)]()
@@ -4573,6 +4573,22 @@ C508 locative-selection face 的精度轮，answer_where 两条规则落地：**
 #### C585：year-begin — user 证据面开放，NP 全实词锚代替角色墙 (ce0678c)
 
 "What year did the construction of the house begin?"（5809eb10，GT '2014.'）——证据在 **user 粘贴的案情摘要**里（"The construction of the house began in 2014"），当前 pred 是 speaker_recall 的寄生输出（assistant 改写段落行）。这是证据面第一次对双角色开放：chord/sectioned 靠 assistant-wall 防劫持，但这里事实是 user 说的，角色墙不可用。替代方案是**结构锚**：`<begin-verb> + in <YEAR>` 窄证据模式（began|started|commenced）+ **demand-NP 全实词锚**（NP "construction of the house" 的全部实词必须出现在证据句里）——C584 的 "demand noun = hard filter" 教训直接迁移成年份面的锚设计。census 双保险：form gate 恰 1/500，且全基准 500 题再无任何其他 "what year" 问句——零劫持 by construction。唯一门：全图锚定年份 >1 个不同值 = ambiguous = fall-through。渲染裸年份，GT "2014." 归一化相等，judge 零改动。审计课：diff 审计脚本第一版误报自身（新 docstring 合法含 "331 chain"）——**修审计而非掩盖**。replay PASS 1198s：pred 变化恰 {5809eb10}（寄生段落行→'2014'），drift 恰 1 False→True。banked 331→332（0.664），套件 10749→10765（+16 test_year_begin_face.py）。
+
+## Cycles 586-588: 0.664→0.672 — 侧信道收割、状态召回、recency 正名
+
+> 官方口径轨迹：0.664（C585）→ **0.666（C586）** → **0.670（C587）** → **0.672（C588）**，banked 332→336，套件 10765→10813。本段主轴：答案判别从「找哪句话」推进到「**时间轴上的最新状态**」——食材数量藏在 raw bullet 里需要侧信道绕句池边界（C586）、Rachel 的最新住处与鞋架的当前位置要求 latest-session-wins 状态召回（C587）、最近旅行的目的地把 recency 词结构化成 form（C588）。C582 移交的三个失败模式（搬迁 lane 830ce83f / anaphora judging 07741c45 / superlative recency 9ea5eabc）在本段全部结构化收编——其中 9ea5eabc 被 C587 归类为 "risky scoring change"，census 深探后正名为零分结构 face。三周期零 kills、replay tripwire 全 PASS，keep 链延至二十四连（C565 起）。教程同步增补：[TUTORIAL-ANSWER-FACES.md](TUTORIAL-ANSWER-FACES.md) §5.37-§5.39。
+
+#### C586：eggs-quantity — bullet 侧信道绕过句池的隐性边界 (f9d261a)
+
+"How many eggs does the recipe call for?"（e8a79c70）——GT 证据 "-2-3 eggs" 只有 9 字符，被 `_split_sentences` 的 10 字符下限永久丢弃（C585 确认的隐性证据边界，两轮 deferred 的 lane）。修复不是调下限（动共享组件 = 全局回归风险），是**侧信道**：Ingredients 头 + bullet 行从 RAW 消息收割，不经过句池。判别靠 **session-topic gate**——C584 demand-noun 硬过滤升到 session 粒度（topic NP 实词须出现在同 session 任意消息；recipe 消息本身不点菜名，session opener 点），诱饵 session_14（"3 large eggs"）零 french/classic 提及被结构性挡出。仅含数字的 bullet 才算数量 render；assistant 角色墙；>1 render = ambiguous fall-through。census 恰 1/500，3 个 near-miss egg 题结构性出局。red-first 12 miniatures → replay PASS 1147s：pred 变化恰 {e8a79c70}，drift 恰 1 False→True，5 邻居 banked 行逐字复现。banked 332→333（0.666），套件 10765→10777（+12 test_eggs_quantity_face.py）。流程课：台账 tail 无尾换行，append 前补 \n——git diff 呈 2+/1- 属预期形态（C585 教训的正面执行）。
+
+#### C587：knowledge-update 双 face — latest-session-wins 状态召回 (4d5d47c)
+
+C582 移交的两个 lane 双双收编：830ce83f "Where did Rachel move to?"（链上 pred 引 s32 旧状态 "new apartment in the city"，GT 是 s45 最新 "the suburbs"）、07741c45 "Where do I currently keep my old sneakers?"（s3 "under my bed" → s32 "in a shoe rack in my closet"）。**ku_reloc**：名字锚定 user 句 + moved/relocated (back) to 提取；代词句零贡献（无诚实信号可链回主题，禁止跨句代词链）；赢家 session 内 >1 目的地 = ambiguous。**ku_storage**：接受条件 = 存储动词 **OR 现时状态标记词**（currently/right now——GT 承重句没有 keep 动词，靠 "currently" 承重）；loc NP 必须在对象 NP 之后；"…in it" 尾部做句内物主先行词展开（解析不了就原样渲染，不编造）；subsumption 去重留长；从句截断。**本周期最有价值的拦截在 census 阶段**：孪生题 07741c44 "Where do I **initially** keep…?" 已 banked（GT=旧状态）——若 recency 词做成可选修饰词会杀掉这条 banked 行；裁决 currently/right now/at the moment/these days 是 form 硬要求，"initially" 结构性出局——**form gate = banked protection**。C582 判决降级：当年判 "需要 anaphora-aware judging"（爆炸半径大），实测先行词 "my closet" 与 "in it" 同句，渲染侧展开后现有 containment judge 直接通过——**无需动 judge**。三个实现 bug 全被 miniature 抓住（状态标记缺失 / 期望过度指定→改测试不是改代码 / 锚词 `\bmy\b` 中毒 obj_end）。replay PASS 1161s：pred 变化恰 2 目标，drift 恰 2 全 False→True，abs_banked 18 frozen。banked 333→335（0.670），套件 10777→10798（+21 test_knowledge_update_state_faces.py）。
+
+#### C588：most-recent-trip — "risky scoring lane" 被 census 正名为零分结构 face (16623bf)
+
+9ea5eabc 被 C587 归类为 "recency priors (scoring change, risky)"——本周期 census 深探发现根本不需要打分改动：form `where did I go on my (most recent|latest|last) <TYPE> trip` 恰 1/500（TYPE=family）+ latest-session-wins + 硬过滤，纯结构性 face，**lane 从 scoring-risky 升级为 structural-zero-risk**。证据：session_7 "my recent family trip to **Hawaii**"（早期状态）vs session_46 三句 Paris family-trip 陈述（当前状态，dedup 归一）——latest-wins 复用 C587 `_ku_latest_unique` 原样。结构闸门：trip-type 词硬过滤（句粒度，Yosemite solo 诱饵出局）；dest 模式仅过去时/recency 标记（went/traveled to、(recent|last)…trip to、got back from）+ **大小写敏感专有名词守卫**——赢家 session 里 Tokyo **未来** solo 计划（"planning a solo trip"）永远 render 不出来；user 角色墙（assistant "Family Trip to Paris" 散文不 render）；>1 dest 在赢家 session = ambiguous fall-through。near-miss 3 题结构性出局，其中 2 题已 banked——form gate 即 banked 保护。测试课：ambiguous 微型 1 红是**测试构造错误不是 face 错**——歧义必须构造在 latest session 内部，跨 session 的"歧义"会被 latest-wins 正确吞掉（机制不是 bug）。live probe：真实 53-session 图 ans='Paris'，7 个邻居 banked 行 pred 逐字复现。replay PASS 1150s：pred 变化恰 {9ea5eabc}（Yosemite 净水器寄生行→'Paris'），drift 恰 1 False→True。banked 335→336（0.672），套件 10798→10813（+15 test_trip_recent_face.py）。并发课：窗口打开时 C587 in-flight——静默期只读探查，等对方 tsv+memory+push 三件套齐才动工作区；**并发第 4 查要对比两次 git log**（单次快照发现不了 HEAD 移动）。
 
 ## 许可
 
