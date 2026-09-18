@@ -103,6 +103,14 @@ const SESSION_TTL_MS = (() => {
 
 const sessions = new Map<string, Session>();
 
+// Session cap: bounds concurrent sessions. An initialize flood otherwise mints
+// unbounded McpServer+transport pairs — real memory pressure on a small box.
+// Env-gated like SESSION_TTL_MS; default (unset) stays unlimited.
+const MAX_SESSIONS = (() => {
+  const v = process.env.MAX_SESSIONS ? parseInt(process.env.MAX_SESSIONS, 10) : NaN;
+  return Number.isFinite(v) && v > 0 ? v : Infinity;
+})();
+
 const reapInterval = Math.max(50, Math.min(SESSION_TTL_MS / 2, 60_000));
 setInterval(() => {
   const now = Date.now();
@@ -171,6 +179,17 @@ async function handleRequest(req: import("node:http").IncomingMessage, res: impo
   if (session) session.lastSeen = Date.now();
 
   if (!session && parsed && !Array.isArray(parsed) && isInitializeRequest(parsed)) {
+    if (sessions.size >= MAX_SESSIONS) {
+      // Reject at HTTP layer (503) before minting any server/transport pair.
+      // No session id header: the client never had a session.
+      res.writeHead(503, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({
+        jsonrpc: "2.0",
+        error: { code: -32000, message: "Server at capacity (MAX_SESSIONS)" },
+        id: null,
+      }));
+      return;
+    }
     const server = createMcpServer();
     let newSessionId: string | undefined;
     const transport = new StreamableHTTPServerTransport({
