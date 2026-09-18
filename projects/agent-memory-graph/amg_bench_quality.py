@@ -473,6 +473,7 @@ class LongMemEvalAdapter:
                  eggs_quantity_recall: bool = True,
                  reloc_state_recall: bool = True,
                  storage_loc_recall: bool = True,
+                 trip_recent_recall: bool = True,
                  assistant_recall: bool = True,
                  recall_min_score: int = 5,
                  recall_mode: str = "distinctive",
@@ -583,6 +584,7 @@ class LongMemEvalAdapter:
         self.eggs_quantity_recall = eggs_quantity_recall
         self.reloc_state_recall = reloc_state_recall
         self.storage_loc_recall = storage_loc_recall
+        self.trip_recent_recall = trip_recent_recall
         # Cycle 501: role-aware answer face (echo pathology fix) —
         # see _user_fact_form. role_margin: how many keyword hits a
         # user line may trail the top assistant line by and still
@@ -1496,6 +1498,23 @@ class LongMemEvalAdapter:
                 meta["gate"] = "ku_storage"
                 meta["abstained"] = False
                 return ks_ans, meta
+
+        # Cycle 588: most-recent-trip destination face — the gold
+        # answer is the destination of the LATEST trip of the
+        # demanded type while the chain pred is a C508 where-gate
+        # parasitic line about an unrelated solo camping trip.
+        # C587 latest-session-wins at trip grain; census 1/500
+        # (9ea5eabc); see the block comment at the form/answer
+        # definitions. Runs before speaker_recall / the where path
+        # (the parasitic pred it fixes IS a where output).
+        if self.trip_recent_recall and trip_recent_form(question):
+            tr_ans, tr_detail = answer_trip_recent(
+                question, self._nodes)
+            meta["trip_recent"] = tr_detail
+            if tr_ans is not None:
+                meta["gate"] = "trip_recent"
+                meta["abstained"] = False
+                return tr_ans, meta
 
         # Cycle 468: speaker-recall path — you-addressed "remind me
         # what you recommended" forms. Assistant answers are multi-
@@ -7120,6 +7139,95 @@ def answer_ku_storage(question: str,
                 pairs.append((sess_rank[sid], loc))
                 detail["statements"].append(
                     {"session": sid, "loc": loc})
+    return _ku_latest_unique(pairs, detail)
+
+
+# ════════ Cycle 588: most-recent-trip destination face ════════
+# "Where did I go on my most recent family trip?" (9ea5eabc) —
+# knowledge-update state recall at trip grain (C587 latest-session-
+# wins mechanism): the gold answer is the destination of the MOST
+# RECENT trip of the demanded type, while the chain pred is a C508
+# where-gate parasitic line about an unrelated SOLO camping trip.
+#
+#   - form "where did I go on my (most recent|latest|last) <TYPE>
+#     trip": census over the full 500 accepts exactly 1/500;
+#     near-misses are structurally out (no-recency e01b8e2f,
+#     future-stay eace081b and percentage e6041065 — the latter
+#     two already banked and form-protected).
+#   - statements are USER-role sentences ("where did I go" = the
+#     user's own trips) containing the demanded trip-type word —
+#     C584 hard-filter lesson at sentence grain: "family" is a
+#     requirement, not a score contribution.
+#   - destinations render from PAST-tense / recency-marked patterns
+#     only (went to / traveled to / (recent|last) ... trip to /
+#     got back from [my|our] [trip to]) with a case-SENSITIVE
+#     proper-noun guard — "planning a solo trip to Tokyo" and
+#     "thinking of going to Paris" (future) can never render.
+#   - latest session wins (C587); >1 distinct destination in the
+#     winning session = ambiguous = fall-through.
+_C588_TRIP_FORM_RE = re.compile(
+    r"\bwhere\s+did\s+i\s+go\s+on\s+my\s+"
+    r"(?:most\s+recent|latest|last)\s+([a-z]+(?:\s+[a-z]+)*)\s+trip\b",
+    re.I)
+_C588_TRIP_DEST_RE = re.compile(
+    r"\b(?:"
+    r"(?:went|traveled|travelled)\s+to|"
+    r"(?:recent|last)\s+(?:\w+\s+)?trip\s+to|"
+    r"got\s+back\s+from\s+(?:my\s+|our\s+)?(?:trip\s+to)?"
+    r")\s+"
+    r"([A-Z][a-z']+(?:\s+[A-Z][a-z']+)*)")
+
+
+def trip_recent_form(question: str) -> str | None:
+    """The trip-type NP ("family") of a most-recent-trip demand.
+    Census over the full 500: exactly 9ea5eabc."""
+    m = _C588_TRIP_FORM_RE.search(question or "")
+    return m.group(1).lower() if m else None
+
+
+def answer_trip_recent(question: str,
+                       nodes: dict,
+                       ) -> tuple[str | None, dict]:
+    """Destination of the most recent <type> trip.
+
+    USER-role sentences only; every content word of the trip-type
+    NP must appear in the sentence (hard filter). Past-tense /
+    recency-marked destination patterns only (proper-noun guard).
+    Latest session wins; >1 distinct destination in the winning
+    session = ambiguous = fall-through; zero renders = honest
+    fall-through.
+    """
+    topic = trip_recent_form(question)
+    detail: dict = {"form": None, "renders": [], "statements": []}
+    if not topic:
+        return None, detail
+    detail["form"] = "trip_recent"
+    detail["topic"] = topic
+    anchors = [w for w in re.findall(r"[a-z0-9']+", topic)
+               if w not in _SEM_STOPWORDS]
+    if not anchors:
+        detail["reason"] = "no_anchor"
+        return None, detail
+    sess_rank: dict[str, int] = {}
+    pairs: list[tuple[int, str]] = []
+    for node in (nodes or {}).values():
+        if node.get("kind") != "message":
+            continue
+        if node.get("role") != "user":
+            continue      # "where did I go" = the user's own trips
+        sid = node.get("session_id") or ""
+        if sid not in sess_rank:
+            sess_rank[sid] = len(sess_rank)
+        for sent in _ku_split_sentences(node.get("label") or ""):
+            low = sent.lower()
+            if not all(re.search(r"\b" + re.escape(a) + r"\b", low)
+                       for a in anchors):
+                continue  # trip-type hard filter
+            for dm in _C588_TRIP_DEST_RE.finditer(sent):
+                dest = dm.group(1).strip()
+                pairs.append((sess_rank[sid], dest))
+                detail["statements"].append(
+                    {"session": sid, "dest": dest})
     return _ku_latest_unique(pairs, detail)
 
 
