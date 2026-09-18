@@ -184,7 +184,10 @@ export function exportGenAiOtlp(spans: AdapterSpan[], opts: AlignOptions = {}, e
     const endNs = s.endTime !== null ? String(Math.round((epochAnchorMs + s.endTime) * 1e6)) : startNs;
     const attrs = Object.entries(m.attributes).map(([k, v]) => ({
       key: k,
-      value: typeof v === 'number' ? { intValue: v } : { stringValue: String(v) },
+      // 与事件属性同源：都走 toOtlpValue（规范 AnyValue 形状）。
+      // 旧退化编码的坑：布尔→stringValue "true"、数组→"a,b" 拼接串、
+      // 对象→"[object Object]"、浮点→fractional intValue（非法 int64）
+      value: toOtlpValue(v),
     }));
     return {
       traceId: hex(s.traceId, 32),
