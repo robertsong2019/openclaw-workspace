@@ -170,6 +170,57 @@ class SelfEvolvingAgent:
             lines.append(f"  - {name} (gen {t.generation})")
         return "\n".join(lines)
 
+    # ── 状态持久化：code as identity 的存续层 ─────────────────
+
+    def export_state(self) -> dict:
+        """导出全部演化产物为 JSON 可序列化 dict（工具代码 + generation）"""
+        return {
+            "tools": {
+                name: {
+                    "code": t.code,
+                    "description": t.description,
+                    "generation": t.generation,
+                }
+                for name, t in self.tools.items()
+            }
+        }
+
+    def import_state(self, state: dict) -> dict:
+        """从 export_state 产物重建工具箱。
+
+        每条 code 先 compile() 验证再 exec —— 绝不执行未编译验证的生成代码。
+        损坏/缺字段条目跳过并报告，不阻断其余导入。返回
+        {"imported": [names], "skipped": {name: reason}}。
+        """
+        if not isinstance(state, dict):
+            raise TypeError(f"state must be a dict, got {type(state).__name__}")
+
+        report: dict = {"imported": [], "skipped": {}}
+        for name, entry in state.get("tools", {}).items():
+            if not isinstance(entry, dict) or "code" not in entry:
+                report["skipped"][name] = "missing code field"
+                continue
+            code = entry["code"]
+            try:
+                compile(code, f"<tool:{name}>", "exec")
+                namespace = {"json": json}
+                exec(code, namespace)
+                func = namespace[name]
+            except SyntaxError as e:
+                report["skipped"][name] = f"syntax error: {e.msg}"
+                continue
+            except KeyError:
+                report["skipped"][name] = f"code does not define '{name}'"
+                continue
+
+            self.tools[name] = EvolvingTool(
+                name=name, code=code, func=func,
+                description=entry.get("description", ""),
+                generation=entry.get("generation", 0),
+            )
+            report["imported"].append(name)
+        return report
+
 # ── Demo ─────────────────────────────────────────────────────
 
 def main():
