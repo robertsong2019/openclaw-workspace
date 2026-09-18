@@ -105,7 +105,21 @@ class MCPClient:
         self.pending_requests: Dict[str, threading.Event] = {}
         self.responses: Dict[str, Any] = {}
         self._initialized = False
+        # server 主动请求（ping / sampling/createMessage / roots/list …）的分发表。
+        # 未注册方法回 -32601；ping 内置空 result（规范 MUST）。
+        self.server_request_handlers: Dict[str, Callable] = {}
         self._stderr_tail: deque = deque(maxlen=50)
+
+    def on_server_request(self, method: str,
+                          handler: Callable[[Dict[str, Any]], Dict[str, Any]]) -> None:
+        """注册 server 主动请求的处理器。
+
+        handler(params) -> result dict，在监听线程上执行（必须快速返回，阻塞
+        会卡住所有响应处理）；抛异常则向 server 回 -32603。未注册的方法回
+        -32601 Method not found。ping 无需注册（内置空 result，规范接收方 MUST
+        尽快响应），注册同名 handler 可覆盖内置行为。
+        """
+        self.server_request_handlers[method] = handler
 
     def start(self) -> bool:
         """启动 MCP 服务器进程；initialize 无应答/出错时回收进程并返回 False"""
@@ -268,9 +282,48 @@ class MCPClient:
                 continue
 
             request_id = response.get("id")
+            method = response.get("method")
+            if method is not None and request_id is not None:
+                # server 主动请求（非响应）：必须回包，否则 server 侧超时/永久等待。
+                # 分发判定用 is not None —— JSON-RPC 允许 id=0，truthiness 会吞掉它。
+                self._handle_server_request(method, request_id,
+                                            response.get("params") or {})
+                continue
             if request_id in self.pending_requests:
                 self.responses[request_id] = response
                 self.pending_requests[request_id].set()
+
+    def _handle_server_request(self, method: str, request_id: Any,
+                               params: Dict[str, Any]):
+        """处理 server 主动请求并回包：内置 ping → 空 result，
+        未注册 → -32601，handler 异常 → -32603（绝不静默丢弃）"""
+        handler = self.server_request_handlers.get(method)
+        if handler is None:
+            if method == "ping":
+                self._send_response(request_id, result={})
+            else:
+                self._send_response(request_id, error={
+                    "code": -32601,
+                    "message": f"Method not found: {method}",
+                })
+            return
+        try:
+            self._send_response(request_id, result=handler(params) or {})
+        except Exception as e:
+            self._send_response(request_id, error={
+                "code": -32603,
+                "message": f"Internal error: {e}",
+            })
+
+    def _send_response(self, request_id: Any, result: Optional[Dict[str, Any]] = None,
+                       error: Optional[Dict[str, Any]] = None):
+        """向 server 回复一个 JSON-RPC 响应（写入失败与通知同契约：吞掉不炸）"""
+        payload: Dict[str, Any] = {"jsonrpc": "2.0", "id": request_id}
+        if error is not None:
+            payload["error"] = error
+        else:
+            payload["result"] = result if result is not None else {}
+        self._send_notification(payload)
 
     # ========== 资源操作 ==========
 
