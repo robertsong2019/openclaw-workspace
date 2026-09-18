@@ -471,6 +471,8 @@ class LongMemEvalAdapter:
                  demand_noun_recall: bool = True,
                  year_begin_recall: bool = True,
                  eggs_quantity_recall: bool = True,
+                 reloc_state_recall: bool = True,
+                 storage_loc_recall: bool = True,
                  assistant_recall: bool = True,
                  recall_min_score: int = 5,
                  recall_mode: str = "distinctive",
@@ -579,6 +581,8 @@ class LongMemEvalAdapter:
         self.demand_noun_recall = demand_noun_recall
         self.year_begin_recall = year_begin_recall
         self.eggs_quantity_recall = eggs_quantity_recall
+        self.reloc_state_recall = reloc_state_recall
+        self.storage_loc_recall = storage_loc_recall
         # Cycle 501: role-aware answer face (echo pathology fix) —
         # see _user_fact_form. role_margin: how many keyword hits a
         # user line may trail the top assistant line by and still
@@ -1468,6 +1472,30 @@ class LongMemEvalAdapter:
                 meta["gate"] = "eggs_quantity"
                 meta["abstained"] = False
                 return e_ans, meta
+
+        # Cycle 587 (kd-2): knowledge-update state faces — see the
+        # block comment at the form/answer definitions. Both target
+        # rows' gold answers are the LATEST state of a fact the
+        # chain pred quotes in an EARLIER revision (C582 residual);
+        # their parasitic preds are C508 where-gate outputs, so
+        # these run before speaker_recall / the where path.
+        if self.reloc_state_recall and ku_reloc_form(question):
+            kr_ans, kr_detail = answer_ku_reloc(
+                question, self._nodes)
+            meta["ku_reloc"] = kr_detail
+            if kr_ans is not None:
+                meta["gate"] = "ku_reloc"
+                meta["abstained"] = False
+                return kr_ans, meta
+
+        if self.storage_loc_recall and ku_storage_form(question):
+            ks_ans, ks_detail = answer_ku_storage(
+                question, self._nodes)
+            meta["ku_storage"] = ks_detail
+            if ks_ans is not None:
+                meta["gate"] = "ku_storage"
+                meta["abstained"] = False
+                return ks_ans, meta
 
         # Cycle 468: speaker-recall path — you-addressed "remind me
         # what you recommended" forms. Assistant answers are multi-
@@ -6848,6 +6876,251 @@ def answer_eggs_quantity(question: str,
         detail["reason"] = "ambiguous"
         return None, detail
     return renders.pop(), detail
+
+
+# ════════ Cycle 587 (kd-2): knowledge-update state faces ════════
+# Two heads, one mechanism — LATEST-SESSION-WINS state recall for
+# knowledge-update questions whose gold answer is the CURRENT state
+# while the chain pred quotes an EARLIER state (C582 residual:
+# both target rows arrive at the where-gate via C508 locative
+# selection, which has no recency model):
+#
+#   ku_reloc   "Where did <NAME> move to ..." — the friend's
+#              relocation destination; statements are name-anchored
+#              (pronoun-only sentences excluded — no cross-sentence
+#              pronoun chains), latest session wins, >1 distinct
+#              destination in the winning session = ambiguous =
+#              fall-through. Census over the full 500: form accepts
+#              exactly 1/500 (830ce83f).
+#
+#   ku_storage "Where do I <RECENCY> keep/store X?" — the recency
+#              word (currently/right now/at the moment/these days)
+#              is a HARD requirement, not an optional modifier: the
+#              'initially' twin (07741c44, GT 'under my bed',
+#              banked=True in the C586 chain) must be structurally
+#              OUT of the form — form gate = banked protection
+#              (twin-kill risk found at census, 2026-09-19). Latest
+#              session wins; user-role wall ("where do I keep" =
+#              the user's own storage statements, not assistant
+#              advice); intra-sentence possessive-antecedent
+#              resolution expands "...in it" tails using the nearest
+#              "my <noun>" before the phrase (object words filtered
+#              from antecedent candidates); subsumption dedup keeps
+#              the longest render when one is a normalized substring
+#              of another (same fact stated at two granularities:
+#              "in a shoe rack" ⊂ "in a shoe rack in my closet").
+#              Census over the full 500: form accepts exactly 1/500
+#              (07741c45).
+#
+# Renders are prefix phrases, not whole sentences — containment
+# judging (exact_judge: normalized GT ⊆ pred) is designed to pass on
+# the destination/location phrase itself. Runs before speaker_recall
+# — the parasitic preds these faces fix are C508/speaker_recall
+# outputs.
+
+_KU_RELOC_FORM_RE = re.compile(
+    r"\bwhere\s+did\s+([a-z]+)\s+(?:recently\s+)?move\s+to\b", re.I)
+_KU_RELOC_STMT_RE = re.compile(
+    r"\b(?:moved|moving|relocat(?:ed|ing)?)\s+(?:back\s+)?to\s+"
+    r"([^,.!?;]+)", re.I)
+_KU_STORAGE_FORM_RE = re.compile(
+    r"\bwhere\s+do\s+i\s+(?:currently|right\s+now|at\s+the\s+moment|"
+    r"these\s+days)\s+(?:keep|store|put)\s+(.+?)\s*\?\s*$", re.I)
+_KU_STORAGE_STMT_RE = re.compile(
+    r"\b(?:keep|keeping|kept|store|stored|storing|stash(?:ed|ing)?|"
+    r"put|putting|puts)\b", re.I)
+# present-state marker — the mirror of the question's recency word:
+# a CURRENT-state demand may be answered from a statement marked as
+# describing the present even without a storage verb ("...my old
+# sneakers in a shoe rack in it, they're CURRENTLY taking up space").
+_KU_STATE_MARKER_RE = re.compile(
+    r"\b(?:currently|right\s+now|at\s+the\s+moment|these\s+days|"
+    r"nowadays)\b", re.I)
+# location NP: prep + NP, cut at commas/clause starters/purpose
+# phrases ("for storage") and trailing time adverbs ("now") — render
+# the bare location, not the whole tail of the sentence.
+_KU_LOC_RE = re.compile(
+    r"\b(?:in|inside|under|on|at)\s+([^,.!?;]*?)"
+    r"(?=\s+(?:for|because|so|and|but|when|while|since|this|that|"
+    r"next|last|now|then|already|still|again)\b|[,.!?;]|$)", re.I)
+_KU_PRON_TAIL_RE = re.compile(
+    r"\s*\b(?:in|inside|at|on|under)\s+it$", re.I)
+_KU_POSS_RE = re.compile(r"\bmy\s+([a-z]+)\b", re.I)
+# possessive/demonstrative determiners are NOT object content words —
+# keeping "my" as an anchor would let the "my" inside a LOCATION
+# phrase ("under my bed") extend obj_end past the object itself and
+# reject every locative that follows the true object NP.
+_KU_DET = {"my", "your", "his", "her", "their", "our", "its",
+           "this", "that", "these", "those"}
+
+
+def _ku_split_sentences(text: str) -> list[str]:
+    return [s for s in re.split(r"(?<=[.!?])\s+|\n+", text or "")
+            if s.strip()]
+
+
+def ku_reloc_form(question: str) -> str | None:
+    """The mover's name when the question demands a relocation
+    destination. Census: exactly 830ce83f in the full 500."""
+    m = _KU_RELOC_FORM_RE.search(question or "")
+    return m.group(1).lower() if m else None
+
+
+def ku_storage_form(question: str) -> str | None:
+    """The object NP when a RECENCY-worded keep/store demand is
+    present. Census: exactly 07741c45 in the full 500; the
+    'initially' twin (07741c44) is out by construction."""
+    m = _KU_STORAGE_FORM_RE.search(question or "")
+    return m.group(1).lower() if m else None
+
+
+def _ku_anchor_patterns(np: str) -> list[str]:
+    """Word-boundary regexes for an NP's content words, plural-
+    folded (sneakers → sneaker s?)."""
+    pats = []
+    for w in re.findall(r"[a-z0-9']+", (np or "").lower()):
+        if w in _SEM_STOPWORDS or w in _KU_DET:
+            continue
+        if len(w) > 3 and w.endswith("s"):
+            pats.append(r"\b" + re.escape(w[:-1]) + r"s?\b")
+        else:
+            pats.append(r"\b" + re.escape(w) + r"\b")
+    return pats
+
+
+def _ku_latest_unique(pairs: list[tuple[int, str]],
+                      detail: dict) -> tuple[str | None, dict]:
+    """Shared tail of both faces: keep only the latest session's
+    renders, subsumption-dedup (longest wins when one render is a
+    normalized substring of another), unique render or fall-through.
+    ``pairs`` = (session_rank, render)."""
+    if not pairs:
+        detail["reason"] = "no_match"
+        return None, detail
+    top = max(r for r, _ in pairs)
+    uniq: dict[str, str] = {}
+    for r, render in pairs:
+        if r != top:
+            continue
+        key = re.sub(r"\s+", " ", render.lower()).strip()
+        uniq.setdefault(key, render)
+    keys = sorted(uniq, key=len, reverse=True)
+    keep = [k for k in keys
+            if not any(k != o and k in o for o in keys)]
+    renders = [uniq[k] for k in keep]
+    detail["renders"] = renders
+    if len(renders) != 1:
+        detail["reason"] = "ambiguous" if renders else "no_match"
+        return None, detail
+    return renders[0], detail
+
+
+def answer_ku_reloc(question: str,
+                    nodes: dict,
+                    ) -> tuple[str | None, dict]:
+    """Latest relocation destination for a named mover.
+
+    Statements are USER-role sentences that (a) name the mover and
+    (b) match ``moved/moving/relocated (back) to <dest>``. Latest
+    session wins; >1 distinct destination there = ambiguous =
+    fall-through (refinements mid-chain are fine — the winning
+    session must be internally consistent).
+    """
+    topic = ku_reloc_form(question)
+    detail: dict = {"form": None, "renders": [], "statements": []}
+    if not topic:
+        return None, detail
+    detail["form"] = "ku_reloc"
+    detail["topic"] = topic
+    sess_rank: dict[str, int] = {}
+    pairs: list[tuple[int, str]] = []
+    for node in (nodes or {}).values():
+        if node.get("kind") != "message":
+            continue
+        if node.get("role") != "user":
+            continue      # first-person recall of a friend's move
+        sid = node.get("session_id") or ""
+        if sid not in sess_rank:
+            sess_rank[sid] = len(sess_rank)
+        for sent in _ku_split_sentences(
+                (node.get("label") or "").lower()):
+            if topic not in sent:
+                continue  # name-anchored; pronoun-only excluded
+            m = _KU_RELOC_STMT_RE.search(sent)
+            if not m or not m.group(1).strip():
+                continue
+            dest = m.group(1).strip()
+            pairs.append((sess_rank[sid], dest))
+            detail["statements"].append(
+                {"session": sid, "dest": dest})
+    return _ku_latest_unique(pairs, detail)
+
+
+def answer_ku_storage(question: str,
+                      nodes: dict,
+                      ) -> tuple[str | None, dict]:
+    """Latest storage location for the demanded object NP.
+
+    USER-role sentences only ("where do I keep" = the user's own
+    statements): object anchors + storage verb + leading preposition
+    phrase render. "...in it" tails expand against the nearest
+    antecedent "my <noun>" in the same sentence (object words are
+    filtered from antecedent candidates; unresolvable renders
+    verbatim — no fabrication). Subsumption dedup merges
+    different-granularity statements of the same fact.
+    """
+    obj = ku_storage_form(question)
+    detail: dict = {"form": None, "renders": [], "statements": []}
+    if not obj:
+        return None, detail
+    detail["form"] = "ku_storage"
+    detail["object"] = obj
+    pats = _ku_anchor_patterns(obj)
+    obj_stems = {w[:-1] if len(w) > 3 and w.endswith("s") else w
+                 for w in re.findall(r"[a-z0-9']+", obj.lower())
+                 if w not in _SEM_STOPWORDS}
+    sess_rank: dict[str, int] = {}
+    pairs: list[tuple[int, str]] = []
+    for node in (nodes or {}).values():
+        if node.get("kind") != "message":
+            continue
+        if node.get("role") != "user":
+            continue      # user-role wall: assistant advice ≠ state
+        sid = node.get("session_id") or ""
+        if sid not in sess_rank:
+            sess_rank[sid] = len(sess_rank)
+        for sent in _ku_split_sentences(
+                (node.get("label") or "").lower()):
+            if not all(re.search(p, sent) for p in pats):
+                continue
+            if not (_KU_STORAGE_STMT_RE.search(sent)
+                    or _KU_STATE_MARKER_RE.search(sent)):
+                continue
+            obj_end = max((m.end() for p in pats
+                           for m in re.finditer(p, sent)),
+                          default=-1)
+            for m in _KU_LOC_RE.finditer(sent):
+                if m.start() <= obj_end:
+                    continue    # loc must FOLLOW the object NP
+                loc = m.group(0).strip()
+                pm = _KU_PRON_TAIL_RE.search(loc)
+                if pm:
+                    loc_start = sent.find(loc)
+                    ante = None
+                    for am in _KU_POSS_RE.finditer(sent):
+                        noun = am.group(1)
+                        stem = (noun[:-1] if len(noun) > 3
+                                and noun.endswith("s") else noun)
+                        if stem in obj_stems:
+                            continue    # skip the object's own "my old"
+                        if am.end() < loc_start:
+                            ante = "my " + noun
+                    if ante:
+                        loc = loc[:pm.start()] + " in " + ante
+                pairs.append((sess_rank[sid], loc))
+                detail["statements"].append(
+                    {"session": sid, "loc": loc})
+    return _ku_latest_unique(pairs, detail)
 
 
 # ════════ Cycle 486: past-perfect duration forms (#077) ════════
