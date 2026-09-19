@@ -180,3 +180,10 @@
 - **修正：** 渲染改纯词形 'three'/'four'（_sem_norm 数词折叠天然覆盖 digit GT '4'）；face/replay 通过
 - **规则：** 新 face 的 pred/GT 对在 replay 前必须双 judge 探针：`judge_semantic(q,pred,gt)` 与 `exact_judge(q,gt,pred)` 都要跑，且要知道目标行 frozen correct_exact 的值
 - **出现次数：** 1
+
+### [2026-09-20] staging 顺序失误：多逻辑单元已 staged 后无 pathspec commit
+- **场景：** doc cron 收尾提交，计划 amg docs 与 memory 分两笔 commit
+- **错误：** 第一笔 commit 未带 pathspec，把已 staged 的 memory 文件一并收进 amg commit；第二笔空提交 exit 1，链上的 push 未执行
+- **根因：** 验尸 staged diff 时只 add 了 2 文件，验完后又 add 第 3 个逻辑单元，然后才 commit——staged 集合在验尸之后变了
+- **修正：** 本次无损失（3 文件全是自己的编辑，76d3387 内容正确，补 push 即可）；规则升级——**多逻辑单元待提交时，每笔 commit 必须带 pathspec**（`git commit -m ... -- <paths>`），验尸针对"即将提交的 pathspec 集合"而非"当前 staged 集合"
+- **出现次数：** 1
