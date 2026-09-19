@@ -2,12 +2,12 @@
 
 > 基于 SQLite 的轻量知识图谱，模拟 AI Agent 的长期记忆管理
 
-[![Tests](https://img.shields.io/badge/tests-10813-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-10870-brightgreen)]()
 [![Python](https://img.shields.io/badge/python-3.10+-blue)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-success)]()
 
-> 📚 教程：[基础入门](TUTORIAL.md) · [GraphRAG 端到端（Cycles 425-440）](TUTORIAL-GRAPHRAG.md) · [Temporal QA 零 LLM 时间推理（Cycles 456-489）](TUTORIAL-TEMPORAL-QA.md) · [Abstention 弃权语义（Cycles 448-516）](TUTORIAL-ABSTENTION.md) · [Answer Faces 问题结构驱动的答案选择（Cycles 529-539）](TUTORIAL-ANSWER-FACES.md)
+> 📚 教程：[基础入门](TUTORIAL.md) · [GraphRAG 端到端（Cycles 425-440）](TUTORIAL-GRAPHRAG.md) · [Temporal QA 零 LLM 时间推理（Cycles 456-489）](TUTORIAL-TEMPORAL-QA.md) · [Abstention 弃权语义（Cycles 448-516）](TUTORIAL-ABSTENTION.md) · [Answer Faces 问题结构驱动的答案选择（Cycles 529-591）](TUTORIAL-ANSWER-FACES.md)
 
 ## 🎯 概述
 
@@ -4589,6 +4589,22 @@ C582 移交的两个 lane 双双收编：830ce83f "Where did Rachel move to?"（
 #### C588：most-recent-trip — "risky scoring lane" 被 census 正名为零分结构 face (16623bf)
 
 9ea5eabc 被 C587 归类为 "recency priors (scoring change, risky)"——本周期 census 深探发现根本不需要打分改动：form `where did I go on my (most recent|latest|last) <TYPE> trip` 恰 1/500（TYPE=family）+ latest-session-wins + 硬过滤，纯结构性 face，**lane 从 scoring-risky 升级为 structural-zero-risk**。证据：session_7 "my recent family trip to **Hawaii**"（早期状态）vs session_46 三句 Paris family-trip 陈述（当前状态，dedup 归一）——latest-wins 复用 C587 `_ku_latest_unique` 原样。结构闸门：trip-type 词硬过滤（句粒度，Yosemite solo 诱饵出局）；dest 模式仅过去时/recency 标记（went/traveled to、(recent|last)…trip to、got back from）+ **大小写敏感专有名词守卫**——赢家 session 里 Tokyo **未来** solo 计划（"planning a solo trip"）永远 render 不出来；user 角色墙（assistant "Family Trip to Paris" 散文不 render）；>1 dest 在赢家 session = ambiguous fall-through。near-miss 3 题结构性出局，其中 2 题已 banked——form gate 即 banked 保护。测试课：ambiguous 微型 1 红是**测试构造错误不是 face 错**——歧义必须构造在 latest session 内部，跨 session 的"歧义"会被 latest-wins 正确吞掉（机制不是 bug）。live probe：真实 53-session 图 ans='Paris'，7 个邻居 banked 行 pred 逐字复现。replay PASS 1150s：pred 变化恰 {9ea5eabc}（Yosemite 净水器寄生行→'Paris'），drift 恰 1 False→True。banked 335→336（0.672），套件 10798→10813（+15 test_trip_recent_face.py）。并发课：窗口打开时 C587 in-flight——静默期只读探查，等对方 tsv+memory+push 三件套齐才动工作区；**并发第 4 查要对比两次 git log**（单次快照发现不了 HEAD 移动）。
+
+## Cycles 589-591: 0.672→0.682 — 孪生闭包、协调总和、时间有界计数
+
+> 官方口径轨迹：0.672（C588）→ **0.674（C589）** → **0.678（C590）** → **0.682（C591）**，banked 336→341，套件 10813→10870。本段主轴：counting 族的三个盲区在一夜之间连续收编——C588 目的地面的 no-recency 孪生用属性唯一性代替 latest-wins（C589）、答案散在多 session 的协调总和开新 form `coord_sum`（C590）、enum_count 数不了的参与计数靠时间窗与 before 锚双双结构化（C591）。C591 顺带产出一条管线级规则：**渲染形式由判分公式决定**——'three (3)' 被 judge_semantic 归一化折叠成 '3 3'，replay 前双 judge 探针入 error-patterns。三周期零 kills、replay tripwire 全 PASS，keep 链延至二十七连（C565 起）。教程同步增补：[TUTORIAL-ANSWER-FACES.md](TUTORIAL-ANSWER-FACES.md) §5.40-§5.42。
+
+#### C589：trip-with 孪生 — 属性唯一性代替 latest-wins (4b632c9)
+
+C588 队列移交的 no-recency 孪生：e01b8e2f "Where did I go on a week-long trip with my family?"（无 recency 词，pred 是 NYC 寄生行）。form `where did I go on a <TYPE> trip with my <WHO>` 恰 1/500；真实 53-session 图 sentence-grain 收割恰好 1 个渲染面——Hawaii 证据行的 dest 与 "went with my" 过去伴随从句同句；NYC 寄生行在 8acfa731（无 family 词，结构出局）。判别靠**属性唯一性而非 latest-wins**：伴随者与时长都是 C584 式硬过滤（generic "long" 修饰词剔除）；dest 仅从 "going back to <专有名词>" 渲染且同句须有过去伴随从句（纯未来计划永不渲染）；user 角色墙；>1 distinct dest = ambiguous fall-through。测试课再现：中 cycle 1 红是测试构造 bug（第二渲染面句子缺自己的 going-back-to，修测试不改 face——C588 同款教训第 2 次）。replay PASS 1144s：pred 变化恰 {e01b8e2f}（NYC 寄生行→'Hawaii'），drift 1 False→True，abs_banked 18 frozen。banked 336→337（0.674），套件 10813→10828（+15 test_trip_with_face.py）。
+
+#### C590：coordinated-sum — 答案散在多 session 时，协调失败即弃权 (17f2883)
+
+双题一机制：e3038f8c "How many rare books do I own?"（旧 pred '69' = 57+12 部分和——完整总数只在末个 session 陈述）、60036106 "How many people did my petition reach?"（旧 pred '2050' = clicks 尾巴污染，GT '12,000' 来自 promoted-to 句）。新 form `coord_sum`（gate 仍 counting）：**rare-items head** 按品类直采 + 同句配对（"rare books … collection of 5 books"），57×2 一致合并，12+57+25+5=99；**reach head** `reached … <num> people` + 动词锚定 `promoted … to <num> followers` → '12,000'（逗号渲染），名词锚定结构性排除 clicks 陷阱。接线前全 haystack 收割扫（45/44 sessions）：verbatim 数值行 + 两族 assistant 回声诱饵（user 墙杀）+ 干扰 session（无品类-数字对，天然无害）全部入册。**协调纪律**：单侧缺失、同锚冲突值、单品类 → None fall-through（number_total 原车道零侵犯）。replay PASS 1146s：pred 变化恰 {e3038f8c: '69'→'99', 60036106: '2050'→'12,000'}，drift 恰 2 全 False→True，abs_banked 18 frozen。banked 337→339（0.678），套件 10828→10847（+19 test_coord_sum_face.py）。
+
+#### C591：event-count — 时间窗与 before 锚，外加一条判分公式规则 (ad3d6b1)
+
+enum_count 数得了清单、数不了参与：60159905 "How many dinner parties have I attended in the past month?"（旧 pred '1'，GT 'three'）、a3838d2b "How many charity events did I participate in before the 'Run for the Cure' event?"（旧 pred '1'，GT 'four'）。一机制两约束面。**Head A（时间窗）**：user 行 attended/had ... at <Name>'s place + 同句有界过去标记（yesterday=1 / last week=13 / **two weeks ago=14 拼写数词** / N days|weeks ago），窗口 ≤31 天；session-topic 门（session 的 user 行须含 dinner-party 词，杀 David 生日会诱饵）；host 去重 → 3。**Head B（before 锚）**：问题引号事件解析为时序锚（Run for the Cure，Oct 15 ×2 一致，冲突即 None），实例 = 过去时参与动词 + charity 信号（charity/gala/fundraiser NP **或 volunteered 动词**——Walk for Wildlife 无 charity 名词），月粒度键 (month, day)，strictly-before 排除 November Bike-a-Thon 陷阱，锚名句永不计数 → 4。**渲染课（replay #2 FAIL 339≠341 的根因）**：'three (3)' 过 exact_judge containment 但 _sem_norm 把它折叠成 '3 3'（重复 token）→ NEEDS_JUDGE——这两行 frozen correct_exact=False，判分完全由 judge_semantic 决定，改纯词形渲染 'three'/'four' 后 PASS；**replay 前双 judge 探针**入 error-patterns。拼写数词课：数据集表面是 'two weeks ago' 不是 '2 weeks ago'，marker 只匹配数字时 Mike 的 BBQ 静默丢失（n=2≠3，_CNT_WORD2NUM 接管）。4 个红全是测试构造 bug（修测试不改 face）。exec 课：timeout 从启动算起，长 replay 一律 background + 轮询日志。replay PASS 1160s：pred 变化恰 {60159905, a3838d2b}，drift 恰 2 全 False→True。banked 339→341（0.682），套件 10847→10870（junitxml，+23 test_event_count_face.py）。
 
 ## 许可
 
