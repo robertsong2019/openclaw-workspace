@@ -164,3 +164,19 @@
 - **修正：** `git show 65b7ee4:README.md` 恢复全角基底 → Python 脚本字节级重放 3 处内容编辑（assert count==1）→ fd71bf8 已 push；净效果 = 只有内容编辑 + 排版还原
 - **规则：** TOOLS.md 新增「git add 前必查 staged diff」——commit 前 `git diff --cached --stat` 与预期规模核对，超预期 = 逐块过目；恢复时勿再用 edit 工具（同会被模糊匹配坑）
 - **出现次数：** 1
+
+### [2026-09-18] 博客选题/文件名与既有博文撞车（晚间研究 cron）
+- **场景：** 晚间深度研究 cron：选「自进化 Agent」主题 + 文件名 self-evolving-agents-2026-09.html
+- **错误：** write 直接覆盖了 09-10 已发布同名博文（e154c1d），index 插入重复卡片
+- **根因：** 幂等检查只查当日笔记 + 近 8 条 commit；同月同主题旧文在窗口外。且 09-13~17 笔记目录里没有 09-10 的探索笔记（该日笔记缺失），目录线索也失灵
+- **修正：** staged diff 验尸（TOOLS.md 既有规则）拦下——新文件显示 M 而非 ??；checkout HEAD 恢复，重构为独立文件名续篇发布
+- **出现次数：** 1
+- **预防：** 选题前 `ls posts/*.html | grep -i <关键词>` + `grep -i <关键词> index.html`；撞车即换文件名并续篇化；新文件 add 前确认 diff 是 create（A）不是 modify（M）
+
+### [2026-09-20] C591: 渲染表面只对 exact_judge 验证，漏了 judge_semantic
+- **场景：** C591 event-count face（60159905/a3838d2b），渲染设计成 'three (3)' 双形式
+- **错误：** 只用 exact_judge（containment）验证渲染会入账；replay 实跑 banked 不涨（339≠341）
+- **根因：** live500 harness 的 ok 公式 = `judge_semantic CORRECT or (frozen correct_exact AND v≠WRONG)`；目标行 frozen correct_exact=False 时 ok 完全由 judge_semantic 决定。'three (3)' 经 _sem_norm 变 '3 3'（重复 token），词法梯子 → NEEDS_JUDGE → fail。exact_judge 是另一套 normalize（无数词折叠），两 judge 不等价
+- **修正：** 渲染改纯词形 'three'/'four'（_sem_norm 数词折叠天然覆盖 digit GT '4'）；face/replay 通过
+- **规则：** 新 face 的 pred/GT 对在 replay 前必须双 judge 探针：`judge_semantic(q,pred,gt)` 与 `exact_judge(q,gt,pred)` 都要跑，且要知道目标行 frozen correct_exact 的值
+- **出现次数：** 1
