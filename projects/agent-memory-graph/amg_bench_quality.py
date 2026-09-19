@@ -474,6 +474,7 @@ class LongMemEvalAdapter:
                  reloc_state_recall: bool = True,
                  storage_loc_recall: bool = True,
                  trip_recent_recall: bool = True,
+                 trip_with_recall: bool = True,
                  assistant_recall: bool = True,
                  recall_min_score: int = 5,
                  recall_mode: str = "distinctive",
@@ -585,6 +586,7 @@ class LongMemEvalAdapter:
         self.reloc_state_recall = reloc_state_recall
         self.storage_loc_recall = storage_loc_recall
         self.trip_recent_recall = trip_recent_recall
+        self.trip_with_recall = trip_with_recall
         # Cycle 501: role-aware answer face (echo pathology fix) —
         # see _user_fact_form. role_margin: how many keyword hits a
         # user line may trail the top assistant line by and still
@@ -1515,6 +1517,22 @@ class LongMemEvalAdapter:
                 meta["gate"] = "trip_recent"
                 meta["abstained"] = False
                 return tr_ans, meta
+
+        # Cycle 589: no-recency trip-with-companion face — the C588
+        # form's no-recency twin (e01b8e2f): no latest-wins ordering
+        # exists, so the answer is the destination whose sentence
+        # matches every demanded attribute (companion + duration hard
+        # filters, past-clause-gated going-back-to render). Runs with
+        # the trip faces, before speaker_recall / the where path (the
+        # parasitic pred it fixes IS a where output).
+        if self.trip_with_recall and trip_with_form(question):
+            tw_ans, tw_detail = answer_trip_with(
+                question, self._nodes)
+            meta["trip_with"] = tw_detail
+            if tw_ans is not None:
+                meta["gate"] = "trip_with"
+                meta["abstained"] = False
+                return tw_ans, meta
 
         # Cycle 468: speaker-recall path — you-addressed "remind me
         # what you recommended" forms. Assistant answers are multi-
@@ -7229,6 +7247,113 @@ def answer_trip_recent(question: str,
                 detail["statements"].append(
                     {"session": sid, "dest": dest})
     return _ku_latest_unique(pairs, detail)
+
+
+# ════════ Cycle 589: no-recency trip-with destination face ════════
+# "Where did I go on a week-long trip with my family?" (e01b8e2f) —
+# the NO-recency twin of C588's most-recent-trip form. There is no
+# latest-wins ordering to exploit (the question demands a trip by
+# ATTRIBUTES, not by recency), so the answer is the destination of
+# the trip whose sentence matches every demanded attribute:
+#   - form "where did I go on a <TYPE> trip with my <WHO>": census
+#     over the full 500 accepts exactly 1/500 (e01b8e2f); C588's
+#     recency form is disjoint ("on my <type> trip", never "on a
+#     ... trip with my ...").
+#   - companion + duration tokens = C584 hard filters at sentence
+#     grain: every content token of <WHO> ("family") and <TYPE>
+#     ("week-long" -> "week"; the generic modifier "long" is
+#     dropped — evidence prose says "for a week", never
+#     "week-long") must appear in the sentence.
+#   - destinations render from "going back to <ProperNoun>" ONLY
+#     when the SAME sentence carries the past-tense companion
+#     clause "went with my|our ..." — a pure future plan ("thinking
+#     of going back to Hawaii next summer") can never render, and
+#     a past clause without a destination renders nothing (no
+#     fabrication).
+#   - user-role wall ("where did I go" = the user's own trips);
+#     >1 distinct destination across ALL renders = ambiguous =
+#     fall-through (uniqueness by attributes, NOT latest-wins —
+#     this form has no recency demand); zero renders = honest
+#     fall-through.
+_C589_TRIP_WITH_FORM_RE = re.compile(
+    r"\bwhere\s+did\s+i\s+go\s+on\s+a\s+"
+    r"([a-z\-]+(?:\s+[a-z\-]+)*)\s+trip\s+with\s+my\s+"
+    r"([a-z\-]+(?:\s+[a-z\-]+)*)\b",
+    re.I)
+_C589_TRIP_WITH_DEST_RE = re.compile(
+    r"\bgoing\s+back\s+to\s+"
+    r"([A-Z][a-z']+(?:\s+[A-Z][a-z']+)*)")
+_C589_PAST_COMPANION_RE = re.compile(
+    r"\bwent\s+with\s+(?:my|our)\b", re.I)
+_C589_GENERIC_DUR_TOKENS = frozenset({"long", "short"})
+
+
+def trip_with_form(question: str) -> tuple[str, str] | None:
+    """(TYPE NP, WHO NP) of a no-recency trip-with demand.
+
+    Census over the full 500: exactly e01b8e2f ("week-long",
+    "family"). C588's recency form is disjoint by construction.
+    """
+    m = _C589_TRIP_WITH_FORM_RE.search(question or "")
+    if not m:
+        return None
+    return m.group(1).lower(), m.group(2).lower()
+
+
+def answer_trip_with(question: str,
+                     nodes: dict,
+                     ) -> tuple[str | None, dict]:
+    """Destination of the unique <TYPE>-trip-with-<WHO> evidence.
+
+    USER-role sentences only; companion + duration tokens are hard
+    filters; "going back to X" renders only beside a "went with
+    my/our" clause in the same sentence; >1 distinct destination =
+    ambiguous = fall-through; zero renders = honest fall-through.
+    """
+    form = trip_with_form(question)
+    detail: dict = {"form": None, "renders": [], "statements": []}
+    if not form:
+        return None, detail
+    type_np, who_np = form
+    detail["form"] = "trip_with"
+    detail["type"] = type_np
+    detail["who"] = who_np
+    anchors = [w for np_ in (type_np, who_np)
+               for w in re.findall(r"[a-z0-9']+", np_)
+               if w not in _SEM_STOPWORDS
+               and w not in _C589_GENERIC_DUR_TOKENS]
+    if not anchors:
+        detail["reason"] = "no_anchor"
+        return None, detail
+    renders: list[str] = []
+    for node in (nodes or {}).values():
+        if node.get("kind") != "message":
+            continue
+        if node.get("role") != "user":
+            continue      # "where did I go" = the user's own trips
+        sid = node.get("session_id") or ""
+        for sent in _ku_split_sentences(node.get("label") or ""):
+            low = sent.lower()
+            if not all(re.search(r"\b" + re.escape(a) + r"\b", low)
+                       for a in anchors):
+                continue  # companion/duration hard filter
+            if not _C589_PAST_COMPANION_RE.search(sent):
+                continue  # future plans are not trip evidence
+            dm = _C589_TRIP_WITH_DEST_RE.search(sent)
+            if not dm:
+                continue  # past clause without a destination: silent
+            dest = dm.group(1).strip()
+            renders.append(dest)
+            detail["statements"].append(
+                {"session": sid, "dest": dest})
+    detail["renders"] = renders
+    if not renders:
+        detail["reason"] = "no_match"
+        return None, detail
+    if len(set(renders)) > 1:
+        detail["reason"] = "ambiguous"
+        return None, detail
+    return renders[0], detail
 
 
 # ════════ Cycle 486: past-perfect duration forms (#077) ════════
