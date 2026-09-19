@@ -38,6 +38,18 @@ function buildIndex(history) {
   return tokens;
 }
 
+/** Validate an archive id: non-empty string, no path separators, no traversal. */
+function assertValidId(id) {
+  if (
+    typeof id !== "string" ||
+    id.length === 0 ||
+    /[/\\]/.test(id) ||
+    id.includes("..")
+  ) {
+    throw new Error(`Invalid archive id: ${JSON.stringify(id)}`);
+  }
+}
+
 /**
  * Archive a session to disk.
  */
@@ -55,6 +67,7 @@ function archiveSession({ id, label, history, meta }) {
     history: messages,
     index: buildIndex(messages),
   };
+  assertValidId(record.id);
 
   const filePath = path.join(ARCHIVE_DIR, `${record.id}.json`);
   fs.writeFileSync(filePath, JSON.stringify(record, null, 2), "utf-8");
@@ -162,6 +175,7 @@ function searchArchives(query, { limit = 10 } = {}) {
  */
 function exportSession(id, format = "markdown") {
   ensureDir();
+  assertValidId(id);
   const filePath = path.join(ARCHIVE_DIR, `${id}.json`);
   if (!fs.existsSync(filePath)) {
     // Try partial match
@@ -343,9 +357,19 @@ function searchByTag(tag, { limit = 50 } = {}) {
   return results.sort((a, b) => new Date(b.archivedAt) - new Date(a.archivedAt)).slice(0, limit);
 }
 
+/** Delete a single archive by id. */
+function deleteArchive(id) {
+  assertValidId(id);
+  const filePath = path.join(ARCHIVE_DIR, `${id}.json`);
+  if (!fs.existsSync(filePath)) throw new Error(`Archive not found: ${id}`);
+  fs.unlinkSync(filePath);
+  return { id, deleted: true };
+}
+
 /** Read a single archive by id. */
 function _readArchive(id) {
   ensureDir();
+  assertValidId(id);
   const filePath = path.join(ARCHIVE_DIR, `${id}.json`);
   if (!fs.existsSync(filePath)) return null;
   return JSON.parse(fs.readFileSync(filePath, "utf-8"));
@@ -444,4 +468,5 @@ module.exports = {
   searchByTag,
   mergeArchives,
   diffArchives,
+  deleteArchive,
 };

@@ -23,6 +23,7 @@ const {
   searchByTag,
   mergeArchives,
   diffArchives,
+  deleteArchive,
 } = require("./archive");
 
 // Clean slate
@@ -435,4 +436,31 @@ test("mergeArchives orders sources chronologically by archivedAt", async () => {
   assert.equal(json.history[1]._source, "merge-second");
   assert.equal(json.meta.sources[0].id, "merge-first");
   assert.equal(result.totalMessages, 2);
+});
+
+// --- 2026-09-19: path traversal guard + deleteArchive ---
+
+test("archiveSession rejects path traversal in id", () => {
+  assert.throws(() => archiveSession({ id: "../evil", label: "x", history: [] }), /invalid archive id/i);
+  assert.throws(() => archiveSession({ id: "sub/dir", label: "x", history: [] }), /invalid archive id/i);
+  assert.throws(() => archiveSession({ id: "..\\evil", label: "x", history: [] }), /invalid archive id/i);
+});
+
+test("exportSession rejects traversal and empty ids", () => {
+  assert.throws(() => exportSession("../evil"), /invalid archive id/i);
+  // empty id previously fell through partial-match and exported an arbitrary archive
+  assert.throws(() => exportSession(""), /invalid archive id/i);
+});
+
+test("deleteArchive removes an archive", () => {
+  archiveSession({ id: "del-me", label: "Delete me", history: [{ role: "user", content: "bye" }] });
+  const res = deleteArchive("del-me");
+  assert.equal(res.id, "del-me");
+  assert.equal(res.deleted, true);
+  assert.throws(() => exportSession("del-me"), /not found/i);
+});
+
+test("deleteArchive throws for missing or invalid id", () => {
+  assert.throws(() => deleteArchive("never-existed"), /not found/i);
+  assert.throws(() => deleteArchive("../traversal"), /invalid archive id/i);
 });
