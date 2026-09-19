@@ -72,6 +72,7 @@ export function validateConfig(config) {
   if (config.resources !== undefined && !Array.isArray(config.resources)) {
     push('resources', 'resources 必须是数组');
   }
+  const resourceUris = new Map();
   for (const [i, res] of resources.entries()) {
     const p = `resources[${i}]`;
     if (!res || typeof res !== 'object') {
@@ -82,6 +83,10 @@ export function validateConfig(config) {
       push(`${p}.uri`, '缺少必填字段 uri');
     } else if (!/^[\w-]+:\/\//.test(res.uri) && !res.uri.startsWith('/')) {
       push(`${p}.uri`, `无效 URI "${res.uri}"：应以 scheme:// 或 / 开头`);
+    } else if (resourceUris.has(res.uri)) {
+      push(`${p}.uri`, `重复的资源 URI "${res.uri}"（首次出现在 resources[${resourceUris.get(res.uri)}]）`);
+    } else {
+      resourceUris.set(res.uri, i);
     }
   }
 
@@ -103,6 +108,20 @@ export function validateConfig(config) {
       push(`${p}.name`, `重复的提示模板名 "${prompt.name}"（首次出现在 prompts[${promptNames.get(prompt.name)}]）`);
     } else {
       promptNames.set(prompt.name, i);
+    }
+    if (prompt.arguments !== undefined) {
+      // generate() 只在 Array.isArray 时带上 arguments —— 非数组会在代码生成边界被静默丢弃，必须在校验层拦截
+      if (!Array.isArray(prompt.arguments)) {
+        push(`${p}.arguments`, 'arguments 必须是数组（非数组会被生成器静默丢弃）');
+      } else {
+        for (const [j, arg] of prompt.arguments.entries()) {
+          if (!arg || typeof arg !== 'object' || Array.isArray(arg)) {
+            push(`${p}.arguments[${j}]`, 'argument 必须是对象');
+          } else if (!arg.name) {
+            push(`${p}.arguments[${j}].name`, '缺少必填字段 name');
+          }
+        }
+      }
     }
   }
 

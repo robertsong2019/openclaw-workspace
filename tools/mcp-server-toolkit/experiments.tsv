@@ -1,0 +1,2 @@
+timestamp	commit	metric	value	status	description
+2026-09-19T21:30	918762a	test_pass_rate	100% (37/37)	keep	resource duplicate-URI check (family parity with tools/prompts) + prompt.arguments boundary guard (silent-drop family); baseline 33/33

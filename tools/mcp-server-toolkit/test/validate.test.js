@@ -154,3 +154,42 @@ test('validate: multiple errors counted', () => {
   assert.equal(r.status, 1);
   assert.match(r.stdout, /3 处错误/); // name + version + transport
 });
+
+// --- 2026-09-19: resource dup-uri + prompt.arguments boundary ---
+
+test('validate: duplicate resource URIs detected with first index', () => {
+  const dir = tmp();
+  const cfg = { ...VALID, resources: [{ uri: 'file:///dup', name: 'a' }, { uri: 'file:///dup', name: 'b' }] };
+  write(dir, 'mcp-server.json', cfg);
+  const r = mcpt(['validate'], dir);
+  assert.equal(r.status, 1);
+  assert.ok(r.stdout.includes('重复的资源 URI'), r.stdout);
+  assert.ok(r.stdout.includes('resources[0]'), 'should cite first occurrence index');
+});
+
+test('validate: prompt arguments must be an array (silent-drop guard)', () => {
+  const dir = tmp();
+  const cfg = { ...VALID, prompts: [{ name: 'greet', arguments: { name: 'topic' } }] };
+  write(dir, 'mcp-server.json', cfg);
+  const r = mcpt(['validate'], dir);
+  assert.equal(r.status, 1);
+  assert.ok(r.stdout.includes('arguments 必须是数组'), r.stdout);
+});
+
+test('validate: prompt argument entries require name', () => {
+  const dir = tmp();
+  const cfg = { ...VALID, prompts: [{ name: 'greet', arguments: [{ description: 'no name here' }] }] };
+  write(dir, 'mcp-server.json', cfg);
+  const r = mcpt(['validate'], dir);
+  assert.equal(r.status, 1);
+  assert.ok(r.stdout.includes('arguments[0].name'), r.stdout);
+});
+
+test('validate: valid prompt arguments pass', () => {
+  const dir = tmp();
+  const cfg = { ...VALID, prompts: [{ name: 'greet', arguments: [{ name: 'topic', description: 'topic to greet about' }] }] };
+  write(dir, 'mcp-server.json', cfg);
+  const r = mcpt(['validate'], dir);
+  assert.equal(r.status, 0, r.stdout);
+  assert.ok(r.stdout.includes('配置有效'));
+});
