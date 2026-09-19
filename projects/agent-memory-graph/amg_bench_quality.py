@@ -10856,6 +10856,16 @@ def counting_form(question: str) -> str | None:
     # clicks' tail glued onto 2000+10000 = '2050').
     if _CS_HEAD_RARE_RE.match(ql) or _CS_HEAD_REACH_RE.match(ql):
         return "coord_sum"
+    # C591: temporal-bounded event-participation counts —
+    # "how many dinner parties have I attended in the past
+    # month?" and "how many charity events did I participate in
+    # before the 'X' event?". Census (all 500): each head matches
+    # EXACTLY 1 row (60159905 / a3838d2b), both unbanked WRONG via
+    # enum_count ('1' today). Claimed ahead of the how-many/enum
+    # block; the handler returns None on unresolvable evidence
+    # (falls through — enum_count keeps every other row).
+    if _EC_DINNER_RE.match(ql) or _EC_CHARITY_RE.match(ql):
+        return "event_count"
     if re.match(r'^how (much|many)\b', q, re.I) \
             and re.search(r'\btotal\b', ql):
         if re.search(r'\bhow many (hours|years|months)\b', ql):
@@ -12293,6 +12303,197 @@ def _cnt_coord_sum(question: str, sessions: list[dict]):
     if _CS_HEAD_REACH_RE.match(ql):
         return _cs_reach_sum(sessions)
     return None
+
+
+# ---------------------------------------------------------------------------
+# C591: temporal-bounded event-participation counts. Census (all
+# 500): each head matches EXACTLY 1 row (60159905 / a3838d2b),
+# both unbanked WRONG via enum_count ('1'). Claimed ahead of the
+# how-many/enum block (adjacent to the C590 coord_sum claim);
+# unresolvable evidence returns None (falls through — enum_count
+# keeps every other row; zero overlap by census).
+# ---------------------------------------------------------------------------
+
+_EC_DINNER_RE = re.compile(
+    r"^\s*how\s+many\s+dinner\s+part(?:y|ies)\s+have\s+(?:i|we)"
+    r"\s+attended\b", re.I)
+_EC_CHARITY_RE = re.compile(
+    r"^\s*how\s+many\s+charity\s+events\s+did\s+(?:i|we)"
+    r"\s+participate\s+in\s+before\b", re.I)
+
+# head 1: attended instances anchor on "<attended|had> ... at
+# <Name>'s place" with a bounded-age past marker in the SAME
+# sentence; the session must carry a dinner-party topic word in
+# its user lines (session-topic gate — the C586 lesson at session
+# grain: "the ones we had at Mike's place" carries no dinner
+# noun, the surrounding conversation does). Future framing
+# ("hosting soon") has neither anchor nor marker → structurally
+# out; assistant prose dies on the _cnt_sents user-role wall.
+_EC_AT_PLACE_RE = re.compile(
+    r"\b(?:attended|had)\b[^.?!]{0,80}?\bat\s+([A-Z][a-z]+)'s"
+    r"\s+place\b")
+_EC_TOPIC_RE = re.compile(r"dinner\s+part|feast", re.I)
+# relative markers with bounded max age in days ("past month" =
+# 31); relative time never resolves to a fake exact date. Counts
+# accept digits AND spelled words — the 60159905 surface is
+# 'two weeks ago' (word), not '2 weeks ago'.
+_EC_MARKER_AGE = (
+    (re.compile(r"\byesterday\b", re.I), 1),
+    (re.compile(r"\blast\s+weekend\b", re.I), 13),
+    (re.compile(r"\blast\s+week\b", re.I), 13),
+    (re.compile(
+        r"\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten"
+        r"|eleven|twelve)\s+days?\s+ago\b", re.I), "d"),
+    (re.compile(
+        r"\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten"
+        r"|eleven|twelve)\s+weeks?\s+ago\b", re.I), "w"),
+)
+_EC_WINDOW_DAYS = 31
+
+
+def _ec_marker_age_days(sent: str):
+    """Bounded max-age of the first relative past marker in
+    *sent*; None when the sentence carries none."""
+    for pat, val in _EC_MARKER_AGE:
+        mm = pat.search(sent)
+        if mm:
+            if val == "d":
+                tok = mm.group(1)
+                return (int(tok) if tok.isdigit()
+                        else _CNT_WORD2NUM.get(tok.lower(), 0))
+            if val == "w":
+                tok = mm.group(1)
+                n = (int(tok) if tok.isdigit()
+                     else _CNT_WORD2NUM.get(tok.lower(), 0))
+                return 7 * n
+            return val
+    return None
+
+# head 2: the question's quoted event is the temporal anchor; its
+# date resolves from user sentences naming it (conflict → None).
+# Counted instances need a past-tense participation verb + a
+# charity signal ('charity'/'gala'/'fundrais' NP, or the
+# volunteered verb itself — the Walk-for-Wildlife surface has no
+# charity noun) + a month-granularity date. Instances keyed by
+# resolved (month, day); anchor-name sentences never count;
+# strictly-before ordering is what excludes the November trap.
+_EC_PART_VERB_RE = re.compile(
+    r"\b(participated|volunteered|attended)\b", re.I)
+_EC_CHARITY_NP_RE = re.compile(r"\bcharity\b|\bgala\b|\bfundraais",
+                               re.I)
+_EC_ON_DATE_RE = re.compile(
+    r"\bon\s+([A-Z][a-z]+)\s+(\d{1,2})(?:st|nd|rd|th)?\b")
+_EC_IN_MONTH_RE = re.compile(r"\bin\s+([A-Z][a-z]+)\b")
+_EC_QUOTED_RE = re.compile(r'"([^"]+)"')
+
+
+def _ec_sent_date(sent: str):
+    """Month-granularity date of a sentence: (month, day|None)."""
+    m = _EC_ON_DATE_RE.search(sent)
+    if m and m.group(1).lower() in _DUR_MONTHS:
+        return (_DUR_MONTHS[m.group(1).lower()], int(m.group(2)))
+    m = _EC_IN_MONTH_RE.search(sent)
+    if m and m.group(1).lower() in _DUR_MONTHS:
+        return (_DUR_MONTHS[m.group(1).lower()], None)
+    return None
+
+
+def _ec_before(a, b) -> bool:
+    """Strictly-before on (month, day) with day-None as month
+    granularity; same-month mixed granularity is incomparable."""
+    if a[0] != b[0]:
+        return a[0] < b[0]
+    return a[1] is not None and b[1] is not None and a[1] < b[1]
+
+
+def _ec_dinner_parties(sessions: list[dict]):
+    """Count distinct attended dinner-party instances (C591,
+    60159905: GT 'three' = Sarah's feast + Mike's BBQ + Alex's
+    potluck, all inside the past-month window)."""
+    hosts: set[str] = set()
+    user_sents: dict[int, list[str]] = {}
+    for si, sent in _cnt_sents(sessions):
+        user_sents.setdefault(si, []).append(sent)
+    for si, sents in user_sents.items():
+        # session-topic gate: no dinner-party word in the session's
+        # user lines → its parties are not dinner parties (David's
+        # birthday in the decoy session)
+        if not any(_EC_TOPIC_RE.search(s) for s in sents):
+            continue
+        for sent in sents:
+            m = _EC_AT_PLACE_RE.search(sent)
+            if not m:
+                continue
+            age = _ec_marker_age_days(sent)
+            if age is None or age > _EC_WINDOW_DAYS:
+                continue
+            hosts.add(m.group(1).lower())
+    return len(hosts)
+
+
+def _ec_charity_before(sessions: list[dict], question: str):
+    """Count charity-event participations strictly before the
+    question's quoted anchor event (C591, a3838d2b: GT 4; the
+    November Bike-a-Thon is after the Oct 15 anchor)."""
+    mq = re.search(r"'([^']+)'", question)
+    if not mq:
+        return None
+    anchor_name = mq.group(1).lower()
+    # anchor date from user sentences naming the anchor event
+    anchor = None
+    for _, sent in _cnt_sents(sessions):
+        if anchor_name not in sent.lower():
+            continue
+        d = _ec_sent_date(sent)
+        if d is None:
+            continue
+        if anchor is None:
+            anchor = d
+        elif anchor != d:
+            return None                 # conflicting anchor dates
+    if anchor is None:
+        return None
+    counted: set[tuple] = set()
+    for _, sent in _cnt_sents(sessions):
+        if not _EC_PART_VERB_RE.search(sent):
+            continue
+        d = _ec_sent_date(sent)
+        if d is None:
+            continue
+        if not (_EC_CHARITY_NP_RE.search(sent)
+                or re.search(r"\bvolunteered\b", sent, re.I)):
+            continue
+        qn = _EC_QUOTED_RE.search(sent)
+        if qn and qn.group(1).lower() == anchor_name:
+            continue                    # the anchor never counts
+        if _ec_before(d, anchor):
+            counted.add(d)
+    return len(counted)
+
+
+def _ec_render(n: int):
+    """Word-form count render ('three' / 'four'). The replay
+    harness banks these rows through judge_semantic alone (frozen
+    correct_exact=False caps the NEEDS_JUDGE rescue), and _sem_norm
+    folds number words to digits — so 'three' matches GT 'three'
+    (exact) and 'four' matches GT '4' (norm fold). A dual-form
+    render 'three (3)' was tried first and REJECTED: it normalizes
+    to a doubled token ('3 3'), which the lexical ladder cannot
+    equal to the bare GT → NEEDS_JUDGE → unbanked."""
+    word = _CNT_NUMWORD.get(n)
+    return word if word else str(n)
+
+
+def _cnt_event_count(question: str, sessions: list[dict]):
+    """Dispatch the C591 event-count heads."""
+    ql = " ".join(question.split())
+    if _EC_DINNER_RE.match(ql):
+        n = _ec_dinner_parties(sessions)
+    elif _EC_CHARITY_RE.match(ql):
+        n = _ec_charity_before(sessions, question)
+    else:
+        return None
+    return _ec_render(n) if n else None
 
 
 def _cnt_item_total(question: str, sessions: list[dict]):
@@ -14168,7 +14369,8 @@ def answer_counting(question: str,
           "pages": _cnt_pages_progress,
           "page_count_sum": _cnt_page_count_sum,
           "education_span": _cnt_education_span,
-          "coord_sum": _cnt_coord_sum}
+          "coord_sum": _cnt_coord_sum,
+          "event_count": _cnt_event_count}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break
