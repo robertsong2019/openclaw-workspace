@@ -10849,6 +10849,13 @@ def counting_form(question: str) -> str | None:
     # sibling resolves to an explicit abstain).
     if _EDU_SPAN_HEAD_RE.match(ql):
         return "education_span"
+    # C590: coordinated-sum heads — noun-anchored cross-session
+    # totals the generic how-many-total block can't do.
+    # Census (all 500): each matches EXACTLY 1 row, both unbanked
+    # WRONG via number_total (57-dup arithmetic noise / '50
+    # clicks' tail glued onto 2000+10000 = '2050').
+    if _CS_HEAD_RARE_RE.match(ql) or _CS_HEAD_REACH_RE.match(ql):
+        return "coord_sum"
     if re.match(r'^how (much|many)\b', q, re.I) \
             and re.search(r'\btotal\b', ql):
         if re.search(r'\bhow many (hours|years|months)\b', ql):
@@ -12175,6 +12182,116 @@ def _cnt_education_span(question: str, sessions: list[dict]):
         # explicit in the haystack and the target degree is not in
         # it — the Master's is only ever an aspiration line
         return ABSTAIN_ANSWER
+    return None
+
+
+# ---------------------------------------------------------------------------
+# C590: coordinated-sum faces — e3038f8c + 60036106 (one mechanism,
+# two noun-anchored heads).
+#
+# Head 1: "How many rare items do I have in total?" Census (all
+# 500): matches EXACTLY e3038f8c, unbanked WRONG (gate=counting
+# via number_total today). Evidence (user lines only, verbatim):
+# per-category rare-collection counts scattered across answer
+# sessions — '12 rare figurines' (s2), 'collection of 57 rare
+# records' (s1 + s2, consistent duplicate), '25 rare coins' (s3),
+# 'rare books ... collection of 5 books' (s4, same-sentence
+# pairing) — 12+57+25+5 = 99 = GT.
+#
+# Head 2: "What was the total number of people reached by my
+# Facebook ad campaign and Instagram influencer collaboration?"
+# Census (all 500): matches EXACTLY 60036106, unbanked WRONG
+# (number_total glued the '50 clicks' tail onto the sum →
+# '2050'). Evidence (user lines only): 'reached around 2,000
+# people' (s1 + s2, consistent duplicate) + 'promoted my product
+# to her 10,000 followers' (s2) → 2,000+10,000 = '12,000' = GT.
+# Noun anchoring ('people' / verb-anchored 'followers') is what
+# excludes the clicks trap; assistant prose dies on the user-role
+# wall.
+#
+# Coordination discipline: every side/category must resolve
+# unambiguously (conflicting values for one anchor → None — the
+# gates own abstention); a single resolved category is NOT the
+# coordinated form (falls through, number_total untouched).
+# ---------------------------------------------------------------------------
+
+_CS_HEAD_RARE_RE = re.compile(
+    r"^\s*how\s+many\s+rare\s+items\s+do\s+(?:i|we)\s+have"
+    r"(?:\s+in\s+total)?\?\s*$", re.I)
+_CS_HEAD_REACH_RE = re.compile(
+    r"^\s*what\s+(?:is|was)\s+the\s+total\s+number\s+of\s+people"
+    r"\s+reached\b", re.I)
+_CS_RARE_QTY_RE = re.compile(
+    r"\b(\d[\d,]*)\s+rare\s+([a-z]+)", re.I)
+_CS_RARE_MENTION_RE = re.compile(r"\brare\s+([a-z]+)", re.I)
+_CS_RARE_NUM_RE = re.compile(r"\b(\d[\d,]*)\s+([a-z]+)", re.I)
+_CS_REACH_RE = re.compile(
+    r"\breached\s+(?:around\s+|about\s+|over\s+|some\s+)?"
+    r"(\d[\d,]*)\s+people\b", re.I)
+_CS_FOLL_RE = re.compile(
+    r"\b(?:promoted|shared|showed|presented|advertised)\b"
+    r"[^.?!]{0,120}?\b(\d[\d,]*)\s+followers\b", re.I)
+
+
+def _cs_rare_items_sum(sessions: list[dict]):
+    """Sum per-category rare-collection counts (C590, e3038f8c).
+
+    Two harvest faces over user lines only: direct
+    ``<num> rare <cat>`` and, when the sentence has no direct
+    pair, same-sentence ``rare <cat>`` + ``<num> <cat>`` (the
+    'rare books ... collection of 5 books' surface). Categories
+    dedupe by value; a category with conflicting values or fewer
+    than two resolved categories → ``None`` (a lone category is
+    number_total's lane; the gates own abstention)."""
+    by_cat: dict[str, set[int]] = {}
+    for _, sent in _cnt_sents(sessions):
+        cats_here = {m.group(1).lower().rstrip("s")
+                     for m in _CS_RARE_MENTION_RE.finditer(sent)}
+        direct = list(_CS_RARE_QTY_RE.finditer(sent))
+        for m in direct:
+            by_cat.setdefault(
+                m.group(2).lower().rstrip("s"), set()).add(
+                    int(m.group(1).replace(",", "")))
+        if not direct:
+            for m in _CS_RARE_NUM_RE.finditer(sent):
+                cat = m.group(2).lower().rstrip("s")
+                if cat in cats_here:
+                    by_cat.setdefault(cat, set()).add(
+                        int(m.group(1).replace(",", "")))
+    if len(by_cat) < 2:
+        return None                    # not a coordinated total
+    if any(len(v) != 1 for v in by_cat.values()):
+        return None                    # conflicting category count
+    return str(sum(next(iter(v)) for v in by_cat.values()))
+
+
+def _cs_reach_sum(sessions: list[dict]):
+    """Ad-campaign reach + influencer followers total (C590).
+
+    Both coordination sides must resolve to exactly one value
+    each over user lines: ``reached ... <num> people`` and the
+    verb-anchored follower count (``promoted ... to <num>
+    followers``). Noun anchoring keeps click/CTR tails out of the
+    sum; missing or conflicting side → ``None``."""
+    reach: set[int] = set()
+    foll: set[int] = set()
+    for _, sent in _cnt_sents(sessions):
+        for m in _CS_REACH_RE.finditer(sent):
+            reach.add(int(m.group(1).replace(",", "")))
+        for m in _CS_FOLL_RE.finditer(sent):
+            foll.add(int(m.group(1).replace(",", "")))
+    if len(reach) != 1 or len(foll) != 1:
+        return None                    # both sides, unambiguous
+    return f"{sum(reach) + sum(foll):,}"
+
+
+def _cnt_coord_sum(question: str, sessions: list[dict]):
+    """Dispatch the C590 coordinated-sum heads."""
+    ql = " ".join(question.split())
+    if _CS_HEAD_RARE_RE.match(ql):
+        return _cs_rare_items_sum(sessions)
+    if _CS_HEAD_REACH_RE.match(ql):
+        return _cs_reach_sum(sessions)
     return None
 
 
@@ -14050,7 +14167,8 @@ def answer_counting(question: str,
           "argmax": _cnt_argmax_entity,
           "pages": _cnt_pages_progress,
           "page_count_sum": _cnt_page_count_sum,
-          "education_span": _cnt_education_span}
+          "education_span": _cnt_education_span,
+          "coord_sum": _cnt_coord_sum}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break
