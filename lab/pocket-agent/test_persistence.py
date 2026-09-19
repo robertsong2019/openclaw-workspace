@@ -75,6 +75,30 @@ def test_import_nonexistent_entry_format():
     assert report["imported"] == []
 
 
+def test_import_skips_code_that_does_not_define_its_own_name():
+    """KeyError 路径：code 编译+执行都成功，但定义的是别的名字。"""
+    state = {"tools": {"ghost": {"code": "def other(): pass", "generation": 0}}}
+    report = SelfEvolvingAgent().import_state(state)
+    assert report["skipped"] == {"ghost": "code does not define 'ghost'"}
+    assert report["imported"] == []
+    assert "ghost" not in SelfEvolvingAgent().tools
+
+
+def test_import_skips_non_callable_definition():
+    """RED-first：定义了同名但非 callable（如 `bad = 123`）的损坏条目必须跳过并报告，
+    而不是静默导入成一个每次 use() 都失败的死工具（违反 docstring
+    「损坏条目跳过并报告」承诺 + EvolvingTool.func: Callable 类型契约）。"""
+    state = {"tools": {"bad": {"code": "bad = 123", "generation": 0}}}
+    agent = SelfEvolvingAgent()
+    agent.evolve("fibonacci")
+    report = agent.import_state(state)
+    assert report["skipped"] == {"bad": "not callable"}
+    assert report["imported"] == []
+    assert "bad" not in agent.tools          # 死工具不得进工具箱
+    assert list(agent.tools.keys()) == ["fibonacci"]  # 其余导入不受影响
+    assert agent.status().count("Tools: 1")   # status 不再虚报
+
+
 def test_import_state_rejects_non_dict():
     with pytest.raises(TypeError):
         SelfEvolvingAgent().import_state(["not", "a", "dict"])

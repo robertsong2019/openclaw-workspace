@@ -213,6 +213,10 @@ class SelfEvolvingAgent:
                 report["skipped"][name] = f"code does not define '{name}'"
                 continue
 
+            if not callable(func):
+                report["skipped"][name] = "not callable"
+                continue
+
             self.tools[name] = EvolvingTool(
                 name=name, code=code, func=func,
                 description=entry.get("description", ""),
