@@ -16,6 +16,6 @@
 
 ## Planned
 - [x] **`--fail-on` / `--min-score`** — CI 门控退出码（error|warning 两级 + 分数阈值，skipped 不触发门控，非法值 exit 1） ✅ 2026-08-25
-- [ ] 安全问题附行号
+- [x] **安全问题附行号** — analyzeSecurity 每条 issue 附 1-based lines[]（lineStarts 索引+二分），count===lines.length 恒成立 ✅ 2026-09-19
 - [ ] `.securityrc.json` 也接入读取（blockedPatterns/allowedPatterns）
 - [ ] 模板字符串告警降噪（当前所有 `${}` 插值都报 SQL 注入风险，噪声大）

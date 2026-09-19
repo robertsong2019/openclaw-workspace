@@ -244,6 +244,40 @@ describe('analyzeSecurity extended', () => {
     assert.equal(setTimeoutIssue, undefined);
     await cleanup();
   });
+
+  it('attaches 1-based line numbers to issues', async () => {
+    const code = 'const a = 1;\nconst b = 2;\neval("x");';
+    const { tmpFile, cleanup } = await withTempFile(code);
+    const issues = await analyzeSecurity(tmpFile);
+    const evalIssue = issues.find(i => i.message.includes('eval'));
+    assert.deepEqual(evalIssue.lines, [3]);
+    assert.equal(evalIssue.count, evalIssue.lines.length);
+    await cleanup();
+  });
+
+  it('reports multiple lines across the file', async () => {
+    const code = 'eval("1");\n\ndocument.write("x");\neval("2");';
+    const { tmpFile, cleanup } = await withTempFile(code);
+    const issues = await analyzeSecurity(tmpFile);
+    const evalIssue = issues.find(i => i.message.includes('eval'));
+    assert.deepEqual(evalIssue.lines, [1, 4]);
+    const dwIssue = issues.find(i => i.message.includes('document.write'));
+    assert.deepEqual(dwIssue.lines, [3]);
+    await cleanup();
+  });
+
+  it('count matches lines length for every pattern', async () => {
+    const code = 'const s = `${a}`;\nconst t = `${b}`;\ninnerHTML = html;';
+    const { tmpFile, cleanup } = await withTempFile(code);
+    const issues = await analyzeSecurity(tmpFile);
+    for (const issue of issues) {
+      assert.equal(issue.count, issue.lines.length, issue.message);
+      assert.ok(issue.lines.every(n => Number.isInteger(n) && n >= 1));
+    }
+    const tpl = issues.find(i => i.message.includes('模板字符串'));
+    assert.deepEqual(tpl.lines, [1, 2]);
+    await cleanup();
+  });
 });
 
 describe('analyzeComplexity extended', () => {

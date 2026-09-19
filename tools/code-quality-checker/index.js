@@ -528,6 +528,20 @@ async function analyzeSecurity(filePath) {
   const content = fs.readFileSync(filePath, 'utf8');
   const securityIssues = [];
 
+  // 预计算每行起始偏移，用于把匹配位置换算为 1-based 行号
+  const lineStarts = [0];
+  for (let i = 0; i < content.length; i++) {
+    if (content[i] === '\n') lineStarts.push(i + 1);
+  }
+  const lineAt = (idx) => {
+    let lo = 0, hi = lineStarts.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (lineStarts[mid] <= idx) lo = mid; else hi = mid - 1;
+    }
+    return lo + 1;
+  };
+
   // 检查常见的安全问题
   const patterns = [
     { regex: /eval\s*\(/g, issue: '使用eval函数,存在安全风险' },
@@ -539,12 +553,19 @@ async function analyzeSecurity(filePath) {
   ];
 
   for (const pattern of patterns) {
-    const matches = content.match(pattern.regex);
-    if (matches) {
+    const re = new RegExp(pattern.regex.source, pattern.regex.flags.includes('g') ? pattern.regex.flags : pattern.regex.flags + 'g');
+    const lines = [];
+    let m;
+    while ((m = re.exec(content)) !== null) {
+      lines.push(lineAt(m.index));
+      if (m.index === re.lastIndex) re.lastIndex++; // 零宽匹配防死循环
+    }
+    if (lines.length > 0) {
       securityIssues.push({
         type: 'security',
         message: pattern.issue,
-        count: matches.length
+        count: lines.length,
+        lines
       });
     }
   }
