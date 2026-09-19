@@ -24,6 +24,7 @@
 - [x] clear --before <date>（删旧数据并报告条数）F2
 
 ## Bug 修复记录
+- 2026-09-19: exportToCSV 仅对 note 做逗号替换（丢真），model/session 含逗号/引号直接撑破列结构 → RFC 4180 全字段转义 + 公式注入防护（=+-@ 开头非数字前置 '）；note 逗号保真不再替换
 - 2026-08-21: bin/act.js `fileURLToPath` 从 'path' 导入 → SyntaxError，CLI 入口完全无法启动（25 个 lib 测试全绿但 bin 从未被测过）→ 改从 'url' 导入
 - 2026-08-21: clearLogs(before) 返回剩余条数而非删除条数 → 语义反转，改为返回 ids.length
 - 2026-08-21: estimate/clear 在 CLI 声明但 lib/commands/ 下模块不存在（ERR_MODULE_NOT_FOUND）→ 补实现

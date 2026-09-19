@@ -82,6 +82,15 @@ export function exportToJSON(logs) {
   }, null, 2);
 }
 
+// RFC 4180：含逗号/双引号/换行的字段加引号，内部双引号翻倍；
+// 公式注入防护：以 = + - @ 开头的非数字文本前置单引号（Excel/WPS 打开时不执行）
+function csvCell(value) {
+  let s = String(value);
+  if (Number.isNaN(Number(s)) && /^[=+\-@]/.test(s)) s = "'" + s;
+  if (/[",\n\r]/.test(s)) s = `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
 export function exportToCSV(logs) {
   const headers = ['ID', 'Timestamp', 'Model', 'Prompt Tokens', 'Completion Tokens', 'Total Tokens', 'Cost', 'Session', 'Note'];
 
@@ -94,8 +103,8 @@ export function exportToCSV(logs) {
     (log.promptTokens || 0) + (log.completionTokens || 0),
     calculateCost(log).toFixed(6),
     log.session || '',
-    (log.note || '').replace(/,/g, '；')
-  ]);
+    log.note || ''
+  ].map(csvCell));
 
   return [headers, ...rows]
     .map(row => row.join(','))

@@ -14,6 +14,25 @@ const assert = require("node:assert/strict");
   const exportMod = await import("../lib/commands/export.js");
   const storage = await import("../lib/storage.js");
 
+  // Minimal RFC 4180 row parser for asserting quoted CSV fields
+  function parseCsvRow(line) {
+    const out = [];
+    let cur = "";
+    let inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (inQ) {
+        if (c === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+        else if (c === '"') inQ = false;
+        else cur += c;
+      } else if (c === '"') inQ = true;
+      else if (c === ",") { out.push(cur); cur = ""; }
+      else cur += c;
+    }
+    out.push(cur);
+    return out;
+  }
+
   const logs = [
     {
       id: "a1",
@@ -86,13 +105,13 @@ const assert = require("node:assert/strict");
       assert.match(costField, /^\d+\.\d{6}$/);
     });
 
-    it("replaces commas in notes to keep CSV well-formed", () => {
+    it("quotes fields containing commas per RFC 4180 (fidelity kept)", () => {
       const csv = exportMod.exportToCSV([
         { id: "n1", timestamp: "2026-08-14T10:00:00.000Z", model: "gpt-4", promptTokens: 1, completionTokens: 1, cost: 1, note: "a,b,c" }
       ]);
       const dataRow = csv.split("\n")[1];
-      assert.equal(dataRow.split(",").length, 9);
-      assert.ok(dataRow.includes("a；b；c"));
+      assert.equal(parseCsvRow(dataRow).length, 9);
+      assert.ok(parseCsvRow(dataRow).includes("a,b,c"));
     });
 
     it("defaults missing tokens/session to 0/empty", () => {
@@ -103,6 +122,35 @@ const assert = require("node:assert/strict");
       assert.equal(row[4], "0"); // completion
       assert.equal(row[5], "0"); // total
       assert.equal(row[7], "");  // session
+    });
+
+    // --- 2026-09-19: RFC 4180 escaping + formula-injection guard ---
+
+    it("escapes commas in model/session columns (column-shift corruption guard)", () => {
+      const row = parseCsvRow(exportMod.exportToCSV([
+        { id: "m1", timestamp: "2026-08-14T10:00:00.000Z", model: "custom,model", promptTokens: 1, completionTokens: 1, session: "s,1" }
+      ]).split("\n")[1]);
+      assert.equal(row[2], "custom,model");
+      assert.equal(row[7], "s,1");
+      assert.equal(row.length, 9);
+    });
+
+    it("doubles embedded double quotes", () => {
+      const row = parseCsvRow(exportMod.exportToCSV([
+        { id: "q1", timestamp: "2026-08-14T10:00:00.000Z", model: 'gpt"4' }
+      ]).split("\n")[1]);
+      assert.equal(row[2], 'gpt"4');
+    });
+
+    it("neutralizes formula injection in text fields", () => {
+      const row = parseCsvRow(exportMod.exportToCSV([
+        { id: "f1", timestamp: "2026-08-14T10:00:00.000Z", model: "gpt-4", note: "=cmd|'/c calc'!A1" }
+      ]).split("\n")[1]);
+      assert.equal(row[8], "'=cmd|'/c calc'!A1");
+      const neg = parseCsvRow(exportMod.exportToCSV([
+        { id: "f2", timestamp: "2026-08-14T10:00:00.000Z", model: "gpt-4", session: "-2c" }
+      ]).split("\n")[1]);
+      assert.equal(neg[7], "'-2c"); // 非数字文本仍防护
     });
   });
 

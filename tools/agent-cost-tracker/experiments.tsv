@@ -1,0 +1,2 @@
+timestamp	commit	metric	value	status	description
+2026-09-19T21:40	6b6319b	test_pass_rate	100% (39/39)	keep	exportToCSV RFC 4180 escaping (model/session column-shift corruption) + formula-injection guard; note fidelity restored; baseline 36/36
