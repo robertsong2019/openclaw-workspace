@@ -2603,7 +2603,14 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`🔨 context-forge — Analyzing ${basename(root)}...\n`);
+  // Export modes (--json/--format=) must keep stdout machine-readable:
+  // the progress banner goes to stderr there, stdout stays pure payload.
+  const exportFormat = options.format || (options.json ? 'json' : null);
+  if (exportFormat) {
+    console.error(`🔨 context-forge — Analyzing ${basename(root)}...`);
+  } else {
+    console.log(`🔨 context-forge — Analyzing ${basename(root)}...\n`);
+  }
 
   // parseGitignore must complete first: the analyzers below take `gitignore`
   // as an argument, and referencing it inside this same destructuring's
@@ -2620,7 +2627,6 @@ async function main() {
   info.configData = configData;
 
   // Handle structured export formats: --json, --format=toml, --format=yaml
-  const exportFormat = options.format || (options.json ? 'json' : null);
   if (exportFormat) {
     const exportData = buildExportData(info, langs, importData, apiSurface, configData, null);
     if (exportFormat === 'json') {
@@ -2655,6 +2661,13 @@ async function main() {
     claude: { file: ".claude/CLAUDE.md", gen: () => generateClaudeMd(info, langs, structure) },
   };
 
+  // Fail fast on an unknown --only value: building { [bogus]: undefined }
+  // and destructuring it in the loop below crashed with an internal
+  // "Cannot read properties of undefined" instead of this diagnostic.
+  if (options.only && !generators[options.only]) {
+    console.error(`❌ Unknown type: ${options.only}. Use: agents, cursor, copilot, claude`);
+    process.exit(1);
+  }
   const targets = options.only
     ? { [options.only]: generators[options.only] }
     : generators;
@@ -4989,6 +5002,12 @@ async function runAnalysis(root, options) {
     claude: { file: '.claude/CLAUDE.md', gen: () => generateClaudeMd(info, langs, structure) },
   };
 
+  // Fail fast on an unknown --only value (same pre-guard as main(): the
+  // loop destructure used to crash with an internal TypeError instead).
+  if (options.only && !generators[options.only]) {
+    console.error(`❌ Unknown type: ${options.only}. Use: agents, cursor, copilot, claude`);
+    throw new Error(`Unknown generator type: ${options.only}`);
+  }
   const targets = options.only
     ? { [options.only]: generators[options.only] }
     : generators;
