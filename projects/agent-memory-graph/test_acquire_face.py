@@ -143,10 +143,11 @@ class TestAcquireFace(unittest.TestCase):
         self.assertEqual(counting_form(Q_JEWEL), "acquire")
 
     def test_form_does_not_steal_antique_head(self):
-        # 4f54b7c9 has no 'in the last <period>' window — it must
-        # stay with enum_count (census: distinct row, unbanked,
-        # future cycle)
-        self.assertEqual(counting_form(Q_ANTIQUE), "enum_count")
+        # 4f54b7c9 — C592 left it with enum_count for a future
+        # cycle; C593 IS that cycle: the unbounded family-source
+        # antique head now claims it (still NOT 'acquire' — no
+        # 'in the last' window exists on this row)
+        self.assertEqual(counting_form(Q_ANTIQUE), "antique_inherit")
 
     def test_form_non_window_variants_unclaimed(self):
         # behavior-neutral: without the 'in the last <period>'

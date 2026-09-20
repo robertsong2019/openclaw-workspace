@@ -10875,6 +10875,18 @@ def counting_form(question: str) -> str | None:
     # through; zero overlap by census).
     if _ACQ_HEAD_RE.match(ql):
         return "acquire"
+    # C593: unbounded family-source antique counts — "how many
+    # antique items did I inherit or acquire from my family
+    # members?". Census (all 500): the head matches EXACTLY 1 row
+    # (4f54b7c9), unbanked (gate=answer / chit-chat today). No
+    # time window exists — the family-SOURCE constraint replaces
+    # it (the C592 acquire heads keep their 'in the last <period>'
+    # rows — claimed above, and _ANT_HEAD_RE requires 'antique'
+    # + 'famil' so it cannot steal them). The handler returns
+    # None when no family-sourced item resolves (falls through;
+    # zero overlap by census).
+    if _ANT_HEAD_RE.match(ql):
+        return "antique_inherit"
     if re.match(r'^how (much|many)\b', q, re.I) \
             and re.search(r'\btotal\b', ql):
         if re.search(r'\bhow many (hours|years|months)\b', ql):
@@ -12662,6 +12674,135 @@ def _cnt_acquire(question: str, sessions: list[dict]):
             if age is None or age > window:
                 continue
             items.update(harvest(sent))
+    return _ec_render(len(items)) if items else None
+
+
+# ---------------------------------------------------------------------------
+# C593: unbounded family-source antique counts — "how many antique
+# items did I inherit or acquire from my family members?". Census
+# (all 500): the head matches EXACTLY 1 row (4f54b7c9), unbanked
+# (gate=answer / chit-chat today). No time window — the family
+# SOURCE constraint replaces it. Evidence shape (s21+s42, 9 user
+# lines): 5 distinct antique-signal items, each tied to a family
+# member, re-mentioned across turns — dedup by item key collapses
+# them. Source faces:
+#   S1 — signal adjective ('antique'|'vintage'|'depression-era')
+#        + item NP + family marker AFTER the NP, same sentence
+#        ('from my cousin Rachel' / 'came from my cousin' /
+#        'belonged to my dad'); the marker must sit INSIDE the
+#        item's own window (before the next signal adjective) so
+#        'an antique music box and a vintage necklace from my
+#        mom' counts only the necklace
+#   S2 — family possessive BEFORE the signal-NP ("my
+#        grandmother's vintage diamond necklace")
+# Unresolvable evidence = None (falls through; census zero
+# overlap). Word-only render 'five' banks via judge_semantic
+# (_sem_norm folds to GT '5' — C591/C592 discipline).
+# ---------------------------------------------------------------------------
+
+_ANT_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+antique\s+items?\s+did\s+(?:i|we)\s+"
+    r"(?:inherit|acquire|receive|get)\b.*\bfamil", re.I)
+
+# antique-signal adjectives that license an item NP (bare
+# 'old'/'family heirlooms' do not — the signal is what makes the
+# item an antique for this question)
+_ANT_SIGNAL_RE = re.compile(
+    r"\b(?:antique|vintage|depression-era)\s+", re.I)
+
+# S1 family-source markers AFTER the item NP ('from my cousin
+# Rachel' / 'came from my cousin' / 'belonged to my dad' / 'that
+# belonged to my dad')
+_ANT_SOURCE_RE = re.compile(
+    r"\b(?:from|came\s+from|received\s+from|gifted\s+by|given\s+by"
+    r"|that\s+belonged\s+to|belonged\s+to)\s+(?:my\s+)?"
+    r"(?:great-)?(?:aunt|uncle|cousin|grandmother|grandfather"
+    r"|grandma|grandpa|mom|mother|dad|father|sister|brother"
+    r"|niece|nephew|wife|husband|son|daughter)s?\b", re.I)
+
+# S2 family-possessive source BEFORE the item NP ("my
+# grandmother's vintage diamond necklace")
+_ANT_POSS_SOURCE_RE = re.compile(
+    r"\b(?:my\s+|the\s+)?(?:great-)?(?:aunt|uncle|cousin"
+    r"|grandmother|grandfather|grandma|grandpa|mom|mother|dad"
+    r"|father|sister|brother|niece|nephew|wife|husband|son"
+    r"|daughter)'s\s+", re.I)
+
+# NP capture stops: prepositions/relativizers/verbs that end an
+# item NP — plus the participle wall (any word ending in 'ed',
+# e.g. 'insured' in 'diamond necklace insured')
+_ANT_STOP_RE = re.compile(
+    r"^(?:from|of|that|which|who|and|or|but|came|belonged|received"
+    r"|gifted|given|inherited|with|i|do|to|in|on|at)$", re.I)
+
+
+def _ant_item_key(fragment: str) -> str | None:
+    """Item key for the words after a signal adjective: capture
+    up to 3 NP words, stopping at prepositions/relativizers/verbs
+    (participle wall); the tail is singularized for dedup
+    ('tea sets' and 'tea set' collapse). Returns None when no NP
+    word precedes the boundary."""
+    words: list[str] = []
+    for raw in fragment.split():
+        tok = re.sub(r"[^a-z-]", "", raw.lower())
+        if not tok or _ANT_STOP_RE.match(tok) or \
+                (tok.endswith("ed") and len(tok) > 4):
+            break
+        words.append(tok)
+        if len(words) == 3:
+            break
+    if not words:
+        return None
+    words[-1] = _cnt_sing(words[-1])
+    return " ".join(words)
+
+
+def _ant_harvest_sent(sent: str) -> set[str]:
+    """Distinct family-sourced antique-item keys in *sent* (S1
+    source-window discipline + S2 possessive face)."""
+    out: set[str] = set()
+    # S1: each signal adjective opens a window that runs to the
+    # next signal adjective (or sentence end); the item counts
+    # only when a family marker sits inside ITS OWN window
+    signals = list(_ANT_SIGNAL_RE.finditer(sent))
+    for i, m in enumerate(signals):
+        end = signals[i + 1].start() if i + 1 < len(signals) \
+            else len(sent)
+        window = sent[m.end():end]
+        if not _ANT_SOURCE_RE.search(window):
+            continue
+        key = _ant_item_key(window)
+        if key:
+            out.add(key)
+    # S2: family possessive + signal adjective + item NP
+    for pm in _ANT_POSS_SOURCE_RE.finditer(sent):
+        tail = sent[pm.end():]
+        sm = _ANT_SIGNAL_RE.match(tail)
+        if sm:
+            key = _ant_item_key(tail[sm.end():])
+            if key:
+                out.add(key)
+    return out
+
+
+def _cnt_antique_inherit(question: str, sessions: list[dict]):
+    """Count DISTINCT antique-signal items acquired from family
+    members (C593, 4f54b7c9: tea set + typewriter + necklace +
+    music box + glassware = 5, across 9 re-mention user lines).
+    Unbounded window — no time marker is required or consulted;
+    the family-source constraint (S1 post-NP marker or S2
+    possessive, same sentence) replaces it. A question carrying
+    'in the last <period>' falls through (window semantics belong
+    to the C592 acquire heads). Returns None when nothing
+    resolves (falls through — enum_count keeps its rows)."""
+    ql = " ".join(question.split())
+    if not _ANT_HEAD_RE.match(ql):
+        return None
+    if re.search(r"\bin the last\b", ql):
+        return None
+    items: set[str] = set()
+    for _si, sent in _cnt_sents(sessions, "user"):
+        items |= _ant_harvest_sent(sent)
     return _ec_render(len(items)) if items else None
 
 
@@ -14540,7 +14681,8 @@ def answer_counting(question: str,
           "education_span": _cnt_education_span,
           "coord_sum": _cnt_coord_sum,
           "event_count": _cnt_event_count,
-          "acquire": _cnt_acquire}
+          "acquire": _cnt_acquire,
+          "antique_inherit": _cnt_antique_inherit}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break
