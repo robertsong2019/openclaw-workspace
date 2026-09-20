@@ -187,3 +187,11 @@
 - **根因：** 验尸 staged diff 时只 add 了 2 文件，验完后又 add 第 3 个逻辑单元，然后才 commit——staged 集合在验尸之后变了
 - **修正：** 本次无损失（3 文件全是自己的编辑，76d3387 内容正确，补 push 即可）；规则升级——**多逻辑单元待提交时，每笔 commit 必须带 pathspec**（`git commit -m ... -- <paths>`），验尸针对"即将提交的 pathspec 集合"而非"当前 staged 集合"
 - **出现次数：** 1
+
+### [2026-09-21] 并发检测假阴性：把存活的 cron 会话当孤儿，险些双写台账（near-miss）
+- **场景：** kd-2 00:00 cron 启动，kd-1（23:00 cron）会话看似已死：无 commit/tsv/memory，但工作树有完整 acquire face + /tmp/c592 工件（replay 已 PASS）
+- **错误：** sessions_list activeMinutes=120 只返回自己 → 判定 kd-1 死亡 → 决定接管并代写 tsv/memory/commit；00:19 我的 tsv_append.py 与 kd-1 苏醒后的同名文件写入竞争（我的 edit 落在它的版本上产生语法碎片）
+- **根因：** sessions_list 对 exec 长轮询中的会话不可见（或活跃语义不同）；工件 mtime 仅 1-4 min 新鲜——本该是"可能存活"信号却被读成"刚死"；kd-1 此前被 exec timeout 坑过一次（C591 教训 3）且确实还在跑
+- **修正：** 语法错误阻止了我的脚本执行 + 我的 add 链因 py_compile 失败中止（staged 区干净）+ kd-1 脚本行内幂等断言（C592 存在/703 行）三重挡板，零损失；kd-1 自行完成 commit 6f6c781/f856f94 + memory + TOOLS.md + push
+- **规则：** 幂等三查加第四查——transcript mtime 或 /tmp 任务工件 <15 min 新鲜 = 假定作者存活，接管前先复查进程表/等一个轮询周期，或把接管意图写进共享工件让作者可见；绝不与疑似存活的会话竞争同一写路径
+- **出现次数：** 1
