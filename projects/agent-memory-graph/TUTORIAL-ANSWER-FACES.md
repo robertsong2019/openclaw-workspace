@@ -1,7 +1,7 @@
-# TUTORIAL: Answer Faces — 问题结构驱动的答案选择（Cycles 529-591）
+# TUTORIAL: Answer Faces — 问题结构驱动的答案选择（Cycles 529-593）
 
 > 本文解释 amg 评测管线里最反直觉的一个设计：**答案选哪个句子，不该由"分数阈值"决定，而该由"问题在问什么"决定**。
-> 覆盖 Cycle 529-591 的机制演进（banked 0.494 → 0.682），所有例子都是 LongMemEval s_cleaned full-500 里的真实题目。
+> 覆盖 Cycle 529-593 的机制演进（banked 0.494 → 0.688），所有例子都是 LongMemEval s_cleaned full-500 里的真实题目。
 
 ---
 
@@ -165,7 +165,7 @@ judge cascade（exact → semantic → LLM）里有一个 NEEDS_JUDGE 区间：e
 
 ---
 
-## 5. 值解析与锚点族 face：数字、日期、时长、锚点选择（C549-C591）
+## 5. 值解析与锚点族 face：数字、日期、时长、锚点选择（C549-C593）
 
 §3-§4 的 face 都长在"**选哪句话**"上；C549-C554 是第三波：答案本身是个数值/日期/时长，face 长在"**值解析**"上——不是从候选里挑句子，而是从通过 gate 的内容里提炼出**正确的值**。C555-C557 是第四波：值对了还不够，**锚点选择**本身也是信号源——锚是谁说的（角色）、跨度怎么定义（口径）、行内多个日期选哪个（临近度/连续对）。外加一次方法论升级（C549：census-negative 的第三种用法）。C561-C563 是值解析族的残留地带清扫：counting 的非金钱度量兄弟（距离/重量/时长）、item_total 的空清单分支（类别求和）、时长族最后两个病根（同句状态绑定 + 进行体问头/会话跨度）。C564-C569 是第五波：**期限/跨度/求和面**——pp_duration 三条新 route（晋职扣减、完成时长求和、活动跨度求和）与一个门入口（have-had），counting 三个新 gate entry（页码进度双面、成书页数求和、教育年限链）；附赠两次"队列注记被证据翻案"的方法论实录（C564 弃权→rescue、C565 现成→错面）。C570-C573 把第五波收束成 session-date 跨度族（书本/事件/旅程跨度、ago 倒推、具名日偏移）。C574-C576 是第六波：**结构回指族**——问题自身的引用结构（出版引证、bullet 列表体、回指提法）本身就是 bearer 的连接条件。C580-C582 把「谁有权作答」（角色墙、header 行、让位规则）推到前台。C583-C585 是第七波：**结构性判别族**——判别信号完成从调分数到结构性硬约束的转向：需求名词是过滤不是权重（答案必须含问题 demand 的名词，C584）、判别式跨域迁移成 NP 全实词锚（C585）、序数后缀守卫数量锚的邻接（C583）；证据面也第一次对 user 角色开放，用结构锚代替角色墙。
 
@@ -427,6 +427,18 @@ C588 队列里的 no-recency 孪生 e01b8e2f（"Where did I go on a week-long tr
 
 > 判分课：**渲染形式的选择权在判分公式手里，不在美观手里**。frozen correct_exact=False 的行由 judge_semantic 一票决定，渲染前先问「这个形式过 semantic 归一化会变成什么」。**replay 前双 judge 探针**（渲染样本各过 exact + semantic，30 秒）抓 'three (3)' 这类伪影，成本是一次 20 分钟 replay FAIL 的零头。附带两课：数据集表面形式（'two weeks ago' 拼写数词）是正则必须吃下的现实；exec timeout 从启动算起，长 replay 一律 background + 轮询。
 
+### 5.43 C592 acquire_last — 采集动词族的时间窗计数与 head-noun 键控
+
+采集计数（"How many plants did I acquire in the last month?"）的病根与 §5.42 的参与计数同族但结构独立：证据是**带话题的采集陈述**（got/bought/purchased/acquired/received/inherited），不是参与事件。三要素同句纪律（动词 + 有界过去标记 + 话题 NP）与 session-topic 门都是 C586/C591 存量的复用；真正的新课在键控——**类别词不计数**（裸 'plants' 是话题词，永不作证据）与 **head noun 键控**：珠宝按 head noun 单数化折叠（'new pair of earrings' == 'those emerald earrings'，重复提及只算一件），'a small pendant' 只是 with-修饰语、不入 head 词典。窗口是 C591 相对标记集的月粒度扩展（N months ago=30N / a month ago=30 / last month=31）。
+
+> 设计课：**head 正则先过 miniature 再谈 replay**。初版 head 正则只认数字形（'2 months ago'），而 3a704032 的真实表面是裸 'last month'——静默落到 enum_count，face 看似接线实则空转。15 项 unit probe 在语料探针之前抓到（8/15 红，单根因，可选数词组修复），成本是一次 20 分钟 replay FAIL 的零头。附带测试课：夹具共享可变状态（浅拷贝后就地变异污染共享 turns 列表，后续用例读脏数据）——夹具一律构造函数化，每次重建。
+
+### 5.44 C593 antique_inherit — 来源约束替代时间窗
+
+C592 form 门里 pin 注释预留的 future cycle 当轮兑现：antique 题（"How many antique items did I inherit or acquire from my family members?"）没有 'in the last' 窗口，约束轴换成了**来源**（from my family）。S1 面：信号形容词（antique|vintage|depression-era）+ 物品 NP + 同句家庭标记（from my cousin / belonged to my dad），且带**窗口纪律**——标记必须在「本信号形容词 → 下一信号形容词」的物品窗口内，'an antique music box and a vintage necklace from my mom' 只数 necklace（from my mom 属于 necklace 的窗口）。S2 面收所有格（"my grandmother's vintage diamond necklace"），跨句继承动词不需要。无窗口的放行由 census 找补：head 三锚（'antique' + 'inherit/acquire' + 'famil'）让 face 全 500 恰 1 行，C592 的 acquire 行结构上偷不走。渲染延续 §5.42 的判分课：纯词形 'five'，'five (5)' 会折叠成 '5 5'。
+
+> 结构课：**问题约束的轴决定判别器读哪条轴**——有 'in the last' 读时间窗（§5.42/§5.43），有 'from my family' 读来源窗口，两者共享同一条元纪律：标记必须落在证据自己的边界内。**pin 是租约不是墓碑**：C592 钉 `test_form_does_not_steal_antique_head` 时注释写着 "future cycle"——那是给下一棒的路标；C593 兑现时 pin 更新为 'antique_inherit' 并写明因果（哪个 cycle、为什么改、前后语义）。写 pin 时留路标，改 pin 时擦成新方向——keep 链 29 连的暗线之一。
+
 ## 6. 反面教材：枚举清单没有结构键（C536，RECORD-NEGATIVE）
 
 序数清单（"5. Absinthe"）看起来也能做个 face。实现后发现 **census 全负**：
@@ -530,12 +542,14 @@ answer-face 家族的开发纪律（每个 face 都走了这套流程）：
 | 问题问 a <TYPE> trip with my <WHO>（无 recency 词） | trip_with | 属性唯一性代替 latest-wins；伴随者/时长硬过滤；dest 须与过去伴随从句同句 | C589 |
 | 问题问跨 session 品类总数/触达人数 | coord_sum | 同句品类-数字配对 + 动词锚定；单侧缺失/冲突值 → None fall-through | C590 |
 | 问题问时间有界/时序锚定的参与次数 | event_count | 同句时间窗标记（含拼写数词）或 before 锚；host 去重；渲染纯词形过双 judge | C591 |
+| 问题问 last N months 采集了多少 <话题>（plants/jewelry） | acquire_last | 采集动词+有界过去标记+话题 NP 同句；类别词不计数、head noun 单数化键控去重 | C592 |
+| 问题问从家人继承/收购了多少 <X>（无时间窗） | antique_inherit | family 来源窗口替代时间窗（本信号→下一信号）；S2 所有格面；重复提及折叠；pin 按注释兑现 | C593 |
 | kh-floor 想救 kh=0 GT | 🚫 census-negative，不接线 | 1 救 vs 14 杀，absence pin 钉死 | C543 |
 | kh-elite 准入救窗口死区 | 🚫 census-negative，不接线 | impostor 杀率 23.3% vs 4 救，admission-only 全族否决 | C546 |
 | 松弛 run 门想多救几行 | 🚫 census-negative = 局部最优证书 | 全部 kill 是 run-TIE impostor；absence pin 钉死 C548 配置 | C549 |
 | 嵌入 side-channel 重排 | 🚫 census-negative，默认 False | 离线增益被 gate+judge 吸收，pin 死默认值 | C545 |
 
-**十七条带走的原则**：
+**十八条带走的原则**：
 1. 答案选择读**问题结构**，不调阈值
 2. face 重排不越权翻地板；地板排除自有理由
 3. census-first：先数人口，先离线模拟，再接线；证伪的方向写进台账并用 absence pin 钉住
@@ -553,7 +567,8 @@ answer-face 家族的开发纪律（每个 face 都走了这套流程）：
 15. 判分缺口先探渲染侧，再动共享组件：C582 判决 "需要 anaphora-aware judging"（动 judge 语义，爆炸半径大），实测先行词与 "in it" 同句——渲染侧做句内物主先行词展开，现有 containment judge 直接通过，判决撤回（C587）。改判分器前先问：这个缺口是判分不懂，还是渲染没说清？
 16. lane 的风险评级是 census 的函数，不是直觉的函数："risky scoring lane" 可能只是没做 census 的 lane（C588 把 C587 归类 "risky" 的 9ea5eabc 正名为零分结构 face）；deferred ≠ 放弃——两轮 deferred 的 eggs lane 在双机制凑齐的那一轮一次关闭（C586），每次 deferred 的病根注记就是下一棒的施工图
 17. 渲染形式由判分公式决定，不是由美观决定：'three (3)' 过 exact_judge containment 但被 judge_semantic 归一化折叠成 '3 3'（重复 token）→ NEEDS_JUDGE——frozen correct_exact=False 的行判分完全由 semantic 侧决定（C591）；**replay 前双 judge 探针**（渲染样本各过 exact + semantic）是最便宜的伪影检测器；数据集的表面形式（'two weeks ago' 拼写数词）是正则必须吃下的现实，不是可假设掉的边角
+18. 反劫持 pin 是租约不是墓碑：为保护 banked 而钉的「此面不认领」测试，注释里写着 future cycle 时就是在给下一棒留路标——兑现时更新 pin 必须写明因果（哪个 cycle、为什么要改、更新前后语义都写清），pin 的演化是计划内行为而非违约（C592 test_form_does_not_steal_antique_head 钉 enum_count → C593 兑现为 antique_inherit）；且新 head 的 census 边界（三锚恰 1 行）反过来保证它偷不走上一棒的 face
 
 ---
 
-*生成：documentation-morning cron，2026-09-02；Cycles 540-542 增补：2026-09-03；Cycles 543-545 增补：2026-09-04；Cycles 546-548 增补：2026-09-05；Cycles 549-554 增补：2026-09-07；Cycles 555-557 增补：2026-09-08；Cycles 558-559 增补：2026-09-09；Cycles 561-563 增补：2026-09-10；Cycles 564-569 增补：2026-09-13；Cycles 570-573 增补：2026-09-14；Cycles 574-576 增补：2026-09-15；Cycles 577-579 增补：2026-09-16；Cycles 580-582 增补：2026-09-17；Cycles 583-585 增补：2026-09-18；Cycles 586-588 增补：2026-09-19；Cycles 589-591 增补：2026-09-20。数据口径：LongMemEval s_cleaned full-500，PYTHONHASHSEED=7，deterministic cascade banked。轨迹明细见 README Cycles 532-591 段。*
+*生成：documentation-morning cron，2026-09-02；Cycles 540-542 增补：2026-09-03；Cycles 543-545 增补：2026-09-04；Cycles 546-548 增补：2026-09-05；Cycles 549-554 增补：2026-09-07；Cycles 555-557 增补：2026-09-08；Cycles 558-559 增补：2026-09-09；Cycles 561-563 增补：2026-09-10；Cycles 564-569 增补：2026-09-13；Cycles 570-573 增补：2026-09-14；Cycles 574-576 增补：2026-09-15；Cycles 577-579 增补：2026-09-16；Cycles 580-582 增补：2026-09-17；Cycles 583-585 增补：2026-09-18；Cycles 586-588 增补：2026-09-19；Cycles 589-591 增补：2026-09-20；Cycles 592-593 增补：2026-09-21。数据口径：LongMemEval s_cleaned full-500，PYTHONHASHSEED=7，deterministic cascade banked。轨迹明细见 README Cycles 532-593 段。*

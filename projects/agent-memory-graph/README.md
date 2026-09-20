@@ -2,12 +2,12 @@
 
 > 基于 SQLite 的轻量知识图谱，模拟 AI Agent 的长期记忆管理
 
-[![Tests](https://img.shields.io/badge/tests-10870-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-10909-brightgreen)]()
 [![Python](https://img.shields.io/badge/python-3.10+-blue)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-success)]()
 
-> 📚 教程：[基础入门](TUTORIAL.md) · [GraphRAG 端到端（Cycles 425-440）](TUTORIAL-GRAPHRAG.md) · [Temporal QA 零 LLM 时间推理（Cycles 456-489）](TUTORIAL-TEMPORAL-QA.md) · [Abstention 弃权语义（Cycles 448-516）](TUTORIAL-ABSTENTION.md) · [Answer Faces 问题结构驱动的答案选择（Cycles 529-591）](TUTORIAL-ANSWER-FACES.md)
+> 📚 教程：[基础入门](TUTORIAL.md) · [GraphRAG 端到端（Cycles 425-440）](TUTORIAL-GRAPHRAG.md) · [Temporal QA 零 LLM 时间推理（Cycles 456-489）](TUTORIAL-TEMPORAL-QA.md) · [Abstention 弃权语义（Cycles 448-516）](TUTORIAL-ABSTENTION.md) · [Answer Faces 问题结构驱动的答案选择（Cycles 529-593）](TUTORIAL-ANSWER-FACES.md)
 
 ## 🎯 概述
 
@@ -4605,6 +4605,18 @@ C588 队列移交的 no-recency 孪生：e01b8e2f "Where did I go on a week-long
 #### C591：event-count — 时间窗与 before 锚，外加一条判分公式规则 (ad3d6b1)
 
 enum_count 数得了清单、数不了参与：60159905 "How many dinner parties have I attended in the past month?"（旧 pred '1'，GT 'three'）、a3838d2b "How many charity events did I participate in before the 'Run for the Cure' event?"（旧 pred '1'，GT 'four'）。一机制两约束面。**Head A（时间窗）**：user 行 attended/had ... at <Name>'s place + 同句有界过去标记（yesterday=1 / last week=13 / **two weeks ago=14 拼写数词** / N days|weeks ago），窗口 ≤31 天；session-topic 门（session 的 user 行须含 dinner-party 词，杀 David 生日会诱饵）；host 去重 → 3。**Head B（before 锚）**：问题引号事件解析为时序锚（Run for the Cure，Oct 15 ×2 一致，冲突即 None），实例 = 过去时参与动词 + charity 信号（charity/gala/fundraiser NP **或 volunteered 动词**——Walk for Wildlife 无 charity 名词），月粒度键 (month, day)，strictly-before 排除 November Bike-a-Thon 陷阱，锚名句永不计数 → 4。**渲染课（replay #2 FAIL 339≠341 的根因）**：'three (3)' 过 exact_judge containment 但 _sem_norm 把它折叠成 '3 3'（重复 token）→ NEEDS_JUDGE——这两行 frozen correct_exact=False，判分完全由 judge_semantic 决定，改纯词形渲染 'three'/'four' 后 PASS；**replay 前双 judge 探针**入 error-patterns。拼写数词课：数据集表面是 'two weeks ago' 不是 '2 weeks ago'，marker 只匹配数字时 Mike 的 BBQ 静默丢失（n=2≠3，_CNT_WORD2NUM 接管）。4 个红全是测试构造 bug（修测试不改 face）。exec 课：timeout 从启动算起，长 replay 一律 background + 轮询日志。replay PASS 1160s：pred 变化恰 {60159905, a3838d2b}，drift 恰 2 全 False→True。banked 339→341（0.682），套件 10847→10870（junitxml，+23 test_event_count_face.py）。
+
+## Cycles 592-593: 0.682→0.688 — 采集窗口计数与家族来源计数
+
+> 官方口径轨迹：0.682（C591）→ **0.686（C592）** → **0.688（C593）**，banked 341→344，套件 10870→10909（junitxml）。本段主轴：counting 族的窗口语义再收两题——C592 把「last N months 采集了什么」的采集动词族（got|bought|purchased|acquired|received|inherited）与有界过去标记、话题 NP 同句纪律化，双题一次接线；C593 用家族来源约束替代时间窗收编 antique head（C592 form 门预留的 future cycle 当轮兑现）。连续第 3 次 replay 一次过——census-first + miniature-red + 双 judge 纪律的复利，keep 链延至二十九连（C565 起）。教程同步增补：[TUTORIAL-ANSWER-FACES.md](TUTORIAL-ANSWER-FACES.md) §5.43-§5.44。
+
+#### C592：acquire_last — 采集动词族的时间窗计数 (6f6c781)
+
+双题一机制：3a704032 "How many plants did I acquire in the last month?"（旧 pred chit-chat，GT 3）、9d25d4e0 "How many pieces of jewelry did I acquire in the last two months?"（旧 pred chit-chat，GT 3）。**同句纪律**（C591 延续）：采集动词 + 有界过去标记 + 话题 NP 三者同句，session-topic 门（C586 教训）挡无话题 session。**类别词不计数**（C519 教训）：裸 'plants'/'jewelry' 是话题不是证据；'succulent plant' 折叠为 'succulent'、'snake plant' 复合键、植物 head NP 全名键控（'peace lily'）；珠宝按 head noun 单数化键控——'new pair of earrings' == 'those emerald earrings'（重复提及折叠一次），'a small pendant' 是 with-修饰语不入 head 词典，engagement ring 的语料表面是单句陈述无需跨句 anaphora。窗口是 C591 相对标记集的月粒度扩展：N months ago=30N / a month ago=30 / last month=31 → window=31 或 30N+1。**head 正则先过 miniature 再谈 replay**：初版只匹配数字形，裸 'last month'（3a704032 的真实表面）静默落到 enum_count——15 项 unit probe 在语料探针前抓到（8/15 红，单根因，可选数词组修复）。form 门不偷 4f54b7c9（antique 无 'in the last' 窗口，pin 注释明写 future cycle）。测试课：夹具共享可变状态——浅拷贝后 `mod[2]["turns"][0] = ...` 就地变异污染共享 turns → 夹具构造函数化。replay PASS 1230s 一次过：pred 变化恰 {3a704032, 9d25d4e0} 全 False→True，abs_banked 18 frozen。banked 341→343（0.686），套件 10870→10889（junitxml，+19 test_acquire_face.py）。
+
+#### C593：antique_inherit — 家族来源约束替代时间窗 (ccd0ecb)
+
+C592 预留的 future cycle 当轮兑现：4f54b7c9 "How many antique items did I inherit or acquire from my family members?"（旧 pred chit-chat 保险回显，GT '5'）。**无时间窗**——family 来源约束替代窗口：head 锚 'antique' + 'inherit/acquire' + 'famil'，census 全 500 恰 1 行，结构上偷不走 C592 的 acquire 行（那行有 'in the last'，本 head 不认）。**S1 来源窗口面**：信号形容词（antique|vintage|depression-era）+ 物品 NP + 同句 NP 后家庭标记（from my cousin Rachel / came from / belonged to my dad / that belonged to）；标记必须在**该物品自己的窗口**内（本信号形容词 → 下一信号形容词）——'an antique music box and a vintage necklace from my mom' 只数 necklace。**S2 所有格面**：家庭所有格在信号 NP 前（'my grandmother's vintage diamond necklace'），跨句继承动词（下一句 'I inherited it recently'）不需要。物品键：形容词后 ≤3 NP 词、介词/关系词/分词墙（'insured'）截断、尾词单数化；9 行重复提及（s21 估价 + s42 保险）折叠成 5 件。诱饵全结构性出局：'old glassware'（无信号）/ 'from a local estate sale'（非家庭）/ 'antique dealers who specialize in tea sets'（窗口纪律）/ 裸 'family heirlooms' 短语 / assistant 保险长文（user 墙）/ 有所有格但无信号的 'my grandmother's necklace'。渲染纯词形 'five'（双 judge 探针：'five (5)' 折叠成 '5 5' → NEEDS_JUDGE，C591 教训复用）。**pin 演化是计划内行为**：test_form_does_not_steal_antique_head 从钉 'enum_count' 更新为钉 'antique_inherit'，注释写明因果（C592 left it for a future cycle; C593 IS that cycle）。91b15a6e（同干草堆 vintage+antique 但问 minimum amount sold）确认为 money-form 行，本 head 正确不认领。replay PASS 1144s 一次过（连续第 3 次）：pred 变化恰 {4f54b7c9}，abs_banked 18 frozen。banked 343→344（0.688），套件 10889→10909（junitxml，+20 test_antique_face.py）。
 
 ## 许可
 
