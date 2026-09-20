@@ -10866,6 +10866,15 @@ def counting_form(question: str) -> str | None:
     # (falls through — enum_count keeps every other row).
     if _EC_DINNER_RE.match(ql) or _EC_CHARITY_RE.match(ql):
         return "event_count"
+    # C592: temporal-bounded acquisition counts — "how many <NP>
+    # did I acquire in the last <period>?" Census (all 500): the
+    # head matches EXACTLY 2 rows (3a704032 / 9d25d4e0), both
+    # unbanked (gate != counting today — the rows fell through to
+    # chit-chat). Claimed ahead of the how-many/enum block; the
+    # handler returns None on unresolvable evidence (falls
+    # through; zero overlap by census).
+    if _ACQ_HEAD_RE.match(ql):
+        return "acquire"
     if re.match(r'^how (much|many)\b', q, re.I) \
             and re.search(r'\btotal\b', ql):
         if re.search(r'\bhow many (hours|years|months)\b', ql):
@@ -12494,6 +12503,166 @@ def _cnt_event_count(question: str, sessions: list[dict]):
     else:
         return None
     return _ec_render(n) if n else None
+
+
+# ---------------------------------------------------------------------------
+# C592: temporal-bounded acquisition counts — "how many <NP> did I
+# acquire in the last <period>?". Census (all 500): the head
+# matches EXACTLY 2 rows (3a704032 plants / 9d25d4e0 jewelry),
+# both unbanked (gate != counting today — the rows fell through
+# to chit-chat). One mechanism, two topic faces; unresolvable
+# evidence returns None (falls through — zero overlap by census).
+# ---------------------------------------------------------------------------
+
+_ACQ_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+.+?\s+did\s+(?:i|we)\s+acquire\s+in\s+the"
+    r"\s+last\s+(?:(one|two|three|four|five|six|seven|eight|nine"
+    r"|ten|eleven|twelve|\d+)\s+)?months?\b", re.I)
+_ACQ_PLANT_Q_RE = re.compile(r"\bplants?\b", re.I)
+_ACQ_JEWEL_Q_RE = re.compile(r"\bjewel(?:ry|lery)?\b", re.I)
+
+# acquisition verbs, past tense, first person ('left at my
+# cousin's place' and 'getting a cleaning kit' are not
+# acquisitions — they carry no acquisition verb)
+_ACQ_VERB_RE = re.compile(
+    r"\b(?:got|bought|purchased|acquired|received|inherited)\b",
+    re.I)
+
+# month-granularity markers on top of the C591 relative set;
+# relative time never resolves to a fake exact date
+_ACQ_MONTHS_AGO_RE = re.compile(
+    r"\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten"
+    r"|eleven|twelve)\s+months?\s+ago\b", re.I)
+_ACQ_A_MONTH_AGO_RE = re.compile(r"\ban?\s+month\s+ago\b", re.I)
+_ACQ_LAST_MONTH_RE = re.compile(r"\blast\s+month\b", re.I)
+
+
+def _acq_marker_age_days(sent: str):
+    """Bounded max-age of the first acquisition marker in *sent*
+    (C591 relative set + month-granularity markers); None when
+    the sentence carries none."""
+    m = _ACQ_MONTHS_AGO_RE.search(sent)
+    if m:
+        tok = m.group(1)
+        n = (int(tok) if tok.isdigit()
+             else _CNT_WORD2NUM.get(tok.lower(), 0))
+        if n:
+            return 30 * n
+    if _ACQ_A_MONTH_AGO_RE.search(sent):
+        return 30
+    if _ACQ_LAST_MONTH_RE.search(sent):
+        return 31
+    return _ec_marker_age_days(sent)
+
+
+# plants: (A) headed NPs — 'my peace lily' / 'a succulent' — with
+# optional modifiers; (B) compounds — 'my snake plant'. Bare
+# 'plants' / 'plant' is a CATEGORY word (the C519 lesson): it
+# never counts as an item, so (B) requires a modifier token.
+_ACQ_PLANT_HEADS = ("lily", "succulent", "fern", "cactus",
+                    "orchid", "flower", "tree", "shrub", "herb")
+_ACQ_PLANT_HEAD_RE = re.compile(
+    r"\b(?:my|the|a|an)\s+((?:[a-z-]+\s+){0,2}?"
+    r"(?:lilies|lily|succulents|succulent|ferns|fern|cacti|cactuses"
+    r"|cactus|orchids|orchid|flowers?|trees?|shrubs?|herbs?))\b",
+    re.I)
+_ACQ_PLANT_COMPOUND_RE = re.compile(
+    r"\b(?:my|the|a|an)\s+([a-z-]+)\s+(plants?)\b", re.I)
+_ACQ_PLANT_TOPIC_RE = re.compile(
+    r"\b(?:plants?|lilies|lily|succulents?|ferns?|cacti|cactuses"
+    r"|orchids?|flowers?|trees?|shrubs?|herbs?|gardening|nursery)"
+    r"\b", re.I)
+
+
+def _acq_plant_harvest(sent: str) -> set[str]:
+    """Distinct plant-item keys in *sent*: headed NPs key on the
+    full NP ('peace lily'); compounds fold plant-headed modifiers
+    ('succulent plant' → 'succulent') and key other modifiers as
+    '<mod> plant' ('snake plant'); bare 'plants' yields nothing."""
+    out: set[str] = set()
+    for m in _ACQ_PLANT_HEAD_RE.finditer(sent):
+        out.add(" ".join(m.group(1).lower().split()))
+    for m in _ACQ_PLANT_COMPOUND_RE.finditer(sent):
+        mod = m.group(1).lower()
+        if mod in _ACQ_PLANT_HEADS:
+            out.add(mod)
+        else:
+            out.add(f"{mod} plant")
+    return out
+
+
+# jewelry: keyed by HEAD NOUN only ('new pair of earrings' and
+# 'those emerald earrings' are one item; 'a small pendant' is a
+# with-clause modifier of the necklace — 'pendant' is not a
+# countable head); bare 'jewelry' is a category word.
+_ACQ_JEWEL_NP_RE = re.compile(
+    r"\b(?:my|the|a|an|those|these)\s+((?:[a-z]+\s+){0,2}?"
+    r"(?:pairs?\s+of\s+)?(?:earrings?|necklaces?|rings?|bracelets?"
+    r"|brooches?|chains?))\b", re.I)
+_ACQ_JEWEL_TOPIC_RE = re.compile(
+    r"\b(?:jewelry|jewellery|earrings?|necklaces?|rings?"
+    r"|bracelets?|brooches?|chains?|gemstones?|jeweler)\b", re.I)
+
+
+def _acq_jewel_harvest(sent: str) -> set[str]:
+    """Distinct jewelry-item keys in *sent* (head noun,
+    singularized)."""
+    out: set[str] = set()
+    for m in _ACQ_JEWEL_NP_RE.finditer(sent):
+        out.add(m.group(1).split()[-1].lower().rstrip("s"))
+    return out
+
+
+def _cnt_acquire(question: str, sessions: list[dict]):
+    """Count items acquired inside a bounded look-back window
+    (C592, 3a704032: plants in the last month — peace lily +
+    succulent (nursery, two weeks ago) + snake plant (sister,
+    last month); 9d25d4e0: jewelry in the last two months —
+    flea-market earrings (last weekend) + silver necklace (the
+    15th of last month) + engagement ring (a month ago)).
+    Requires, in the SAME sentence (C591 discipline): an
+    acquisition verb + a bounded past marker inside the window +
+    a topic NP; the session must carry the topic word in its user
+    lines (session-topic gate). Returns None when nothing
+    resolves (falls through — enum_count keeps its rows)."""
+    ql = " ".join(question.split())
+    mq = _ACQ_HEAD_RE.match(ql)
+    if not mq:
+        return None
+    if mq.group(1) is None:
+        window = 31
+    else:
+        tok = mq.group(1).lower()
+        n = _CNT_WORD2NUM.get(tok)
+        if n is None:
+            n = int(tok) if tok.isdigit() else None
+        if not n:
+            return None
+        window = 30 * n + 1
+    if _ACQ_JEWEL_Q_RE.search(ql):
+        topic_re, harvest = _ACQ_JEWEL_TOPIC_RE, _acq_jewel_harvest
+    elif _ACQ_PLANT_Q_RE.search(ql):
+        topic_re, harvest = _ACQ_PLANT_TOPIC_RE, _acq_plant_harvest
+    else:
+        return None
+    user_sents: dict[int, list[str]] = {}
+    for si, sent in _cnt_sents(sessions):
+        user_sents.setdefault(si, []).append(sent)
+    items: set[str] = set()
+    for sents in user_sents.values():
+        # session-topic gate (C586/C591 lesson at session grain):
+        # a session whose user lines never name the topic does not
+        # contribute acquisitions to it
+        if not any(topic_re.search(s) for s in sents):
+            continue
+        for sent in sents:
+            if not _ACQ_VERB_RE.search(sent):
+                continue
+            age = _acq_marker_age_days(sent)
+            if age is None or age > window:
+                continue
+            items.update(harvest(sent))
+    return _ec_render(len(items)) if items else None
 
 
 def _cnt_item_total(question: str, sessions: list[dict]):
@@ -14370,7 +14539,8 @@ def answer_counting(question: str,
           "page_count_sum": _cnt_page_count_sum,
           "education_span": _cnt_education_span,
           "coord_sum": _cnt_coord_sum,
-          "event_count": _cnt_event_count}
+          "event_count": _cnt_event_count,
+          "acquire": _cnt_acquire}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break
