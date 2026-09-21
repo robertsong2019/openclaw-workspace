@@ -2,12 +2,12 @@
 
 > 基于 SQLite 的轻量知识图谱，模拟 AI Agent 的长期记忆管理
 
-[![Tests](https://img.shields.io/badge/tests-10909-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-10971-brightgreen)]()
 [![Python](https://img.shields.io/badge/python-3.10+-blue)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-success)]()
 
-> 📚 教程：[基础入门](TUTORIAL.md) · [GraphRAG 端到端（Cycles 425-440）](TUTORIAL-GRAPHRAG.md) · [Temporal QA 零 LLM 时间推理（Cycles 456-489）](TUTORIAL-TEMPORAL-QA.md) · [Abstention 弃权语义（Cycles 448-516）](TUTORIAL-ABSTENTION.md) · [Answer Faces 问题结构驱动的答案选择（Cycles 529-593）](TUTORIAL-ANSWER-FACES.md)
+> 📚 教程：[基础入门](TUTORIAL.md) · [GraphRAG 端到端（Cycles 425-440）](TUTORIAL-GRAPHRAG.md) · [Temporal QA 零 LLM 时间推理（Cycles 456-489）](TUTORIAL-TEMPORAL-QA.md) · [Abstention 弃权语义（Cycles 448-516）](TUTORIAL-ABSTENTION.md) · [Answer Faces 问题结构驱动的答案选择（Cycles 529-596）](TUTORIAL-ANSWER-FACES.md)
 
 ## 🎯 概述
 
@@ -4617,6 +4617,22 @@ enum_count 数得了清单、数不了参与：60159905 "How many dinner parties
 #### C593：antique_inherit — 家族来源约束替代时间窗 (ccd0ecb)
 
 C592 预留的 future cycle 当轮兑现：4f54b7c9 "How many antique items did I inherit or acquire from my family members?"（旧 pred chit-chat 保险回显，GT '5'）。**无时间窗**——family 来源约束替代窗口：head 锚 'antique' + 'inherit/acquire' + 'famil'，census 全 500 恰 1 行，结构上偷不走 C592 的 acquire 行（那行有 'in the last'，本 head 不认）。**S1 来源窗口面**：信号形容词（antique|vintage|depression-era）+ 物品 NP + 同句 NP 后家庭标记（from my cousin Rachel / came from / belonged to my dad / that belonged to）；标记必须在**该物品自己的窗口**内（本信号形容词 → 下一信号形容词）——'an antique music box and a vintage necklace from my mom' 只数 necklace。**S2 所有格面**：家庭所有格在信号 NP 前（'my grandmother's vintage diamond necklace'），跨句继承动词（下一句 'I inherited it recently'）不需要。物品键：形容词后 ≤3 NP 词、介词/关系词/分词墙（'insured'）截断、尾词单数化；9 行重复提及（s21 估价 + s42 保险）折叠成 5 件。诱饵全结构性出局：'old glassware'（无信号）/ 'from a local estate sale'（非家庭）/ 'antique dealers who specialize in tea sets'（窗口纪律）/ 裸 'family heirlooms' 短语 / assistant 保险长文（user 墙）/ 有所有格但无信号的 'my grandmother's necklace'。渲染纯词形 'five'（双 judge 探针：'five (5)' 折叠成 '5 5' → NEEDS_JUDGE，C591 教训复用）。**pin 演化是计划内行为**：test_form_does_not_steal_antique_head 从钉 'enum_count' 更新为钉 'antique_inherit'，注释写明因果（C592 left it for a future cycle; C593 IS that cycle）。91b15a6e（同干草堆 vintage+antique 但问 minimum amount sold）确认为 money-form 行，本 head 正确不认领。replay PASS 1144s 一次过（连续第 3 次）：pred 变化恰 {4f54b7c9}，abs_banked 18 frozen。banked 343→344（0.688），套件 10889→10909（junitxml，+20 test_antique_face.py）。
+
+## Cycles 594-596: 0.688→0.696 — 多动词、所有权与重看标记
+
+> 官方口径轨迹：0.688（C593）→ **0.690（C594）** → **0.694（C595）** → **0.696（C596）**，banked 344→348，套件 10909→10971（junitxml）。本段主轴：「约束替代时间窗」模式三连发——C594 用交易动词族 + 'past few months' 窗口收编多动词家具计数（原型扫描抓出正则复数拼写家族：`Xes?` 匹配的是 'mattresse' 不是 'mattress'）；C595 用 OWNERSHIP 约束收编双面自行车计数（贪婪 NP 正则两头失败 → 深度-1 回看分类）；C596 用 re-watch 标记收编电影重看计数（大写标题 span 遇小写即停，C595 教训升格为构造原则）。replay 五连首试过（C592 起），keep 链延至三十二连（C565 起）。教程同步增补：[TUTORIAL-ANSWER-FACES.md](TUTORIAL-ANSWER-FACES.md) §5.45-§5.47。
+
+#### C594：furniture_txn — 多动词交易计数与正则复数拼写家族 (61f3b2d)
+
+gpt4_15e38248 "How many pieces of furniture did I buy, assemble, sell, or fix in the past few months?"（旧 pred=answer 门会话回声——throw-pillow 购物对话的逐字回显，GT '4'）。一机制四面：交易动词族（bought|purchased|ordered|got|sold|assembled|fixed…）+ 'past few months' → 91d 窗口（few=3，C592 30n+1 约定）+ 同句纪律——家具物品只有在**它自己的 user 句**同时携带交易动词与物品键时才计数。**正则复数拼写家族**（原型扫描立功）：`Xes?` 实际匹配的是 'mattresse'/'couche'/'benche'/'shelve'/'bookshelve'——剥掉词尾 e 而非匹配原词；只有裸 -s 复数才配用 `Xs?`；修复家族 couch(?:es)? / bench(?:es)? / bookshel(?:f|ves) / shel(?:f|ves) / mattress(?:es)? / vanit(?:y|ies) / hutch(?:es)?。早期 'coffee table'（tables? ✓）的幸运命中完全掩盖 bug，直到逐句 isolate 才暴露 mattress/bookshelf 双零。**casing 课**：furn_key 先 .lower() 再 isupper() 检查 → 'IKEA' 品牌墙永不触发（'ikea'.isupper()=False），键漏成 'ikea bookshelf'；用原始 casing 判 isupper。4 个红全是测试构造 bug（face 无恙）：裸 tuple 当 dict 传 / wall 解包漏 [0] / judge_semantic 返回 'CORRECT' 字符串不是 bool / drift-pin 句子落在 fixture 外的 turn。replay PASS 首试 1165s（连续第 4 次）：pred 变化恰 {gpt4_15e38248}，banked 344→345（0.690），套件 10909→10930（junitxml，+26 test_furniture_face.py）。
+
+#### C595：bikes_own — 所有权约束替代时间窗与回看分类 (7bab843)
+
+census 恰 2 行的一机制两面（C592 双头模式）：6b168ec8 "How many bikes do I own?"（枚举面——s34 "I've got three of them - a road bike, a mountain bike, and a commuter bike"，GT 'three'）、89941a93 "How many bikes do I currently own?"（跨 session 物主面——s6 'my road bike' + s29 'my other two bikes, a mountain bike and a commuter bike' + 'a new hybrid bike I just purchased' → 4）。**无时间窗——OWNERSHIP 替代**（C593 模式延续）；双头 _BIKE_HEAD_RE 覆盖两种 own 变体，且结构上偷不走 C592 acquire 行（'in the last'+plants/jewelry）、C593 antique、C594 furniture 及 bike 兄弟行（service-in-March / which-bike / days-between）。**回看分类优于前瞻正则**：贪婪 NP 正则 `(?:det)?(?:mod){0,3}bike` 两头失败——动词/代词被吞进修饰链（'sure road bike'），prep 拒绝吞噬反而让真 NP 永不匹配（'to my road bike' 整段被消费）；改为逐 'bike' token 深度-1 回看分类（修饰词槽=head 前一个词），天然免吞噬。句子级许可 _BIKE_OWN_STEM_RE（my / I've got / I (currently) have|own）；复数 'bikes' 永不建键、裸 'my bike' 泛指不建键（否则 6b168ec8 数出 4≠GT 3）、裸 'a bike' 建键 'bike'。**紧邻字符课**：'a commuter bike - and…' 的空格破折号触发了为 'bike-friendly' 设计的连字符墙 → 检查 sent[m.end()] 而非 lstrip 后首字符；follower 墙要含复数（'specific bike locks' 漏过单数墙）。replay PASS 首试 1154s：pred 变化恰 {6b168ec8, 89941a93} 全 False→True，banked 345→347（0.694），套件 10930→10956（junitxml，+26 test_bike_face.py）。
+
+#### C596：marvel_rewatch — 重看标记替代窗口与遇小写即停的标题 span (03e3db4)
+
+681a1674 "How many Marvel movies did I re-watch?"（旧 pred=answer 门寄生回声——Doctor Strange 四部电影句，GT '2'）。**无时间窗——re-watch 标记替代**（C593 模式第 4 次应用）；head `^how many marvel movies did i re-?watch(ed)? ?\??$` 全 500 恰 1 行，且全库无其他问题含 re-watch → 零劫持 by construction + 实证双保险。证据=user 轮（role wall）含 `\bre-?watch(?:ed)?\b` 的句子，从标记后提取**大写标题 span**（`[A-Z][\w'’-]*` 链，**遇小写词即停**）——C595 贪婪 NP 教训以构造方式规避：'Avengers: Endgame yesterday' → 'avengers endgame'（yesterday 小写截断），'Spider-Man: No Way Home, which…' → 逗号截断。去重取 distinct 键（s6 两处 Endgame 提及折叠一次）→ {avengers endgame, spider man no way home} = 2。渲染 `_ec_render(2)='two'`，GT '2' 经 judge_semantic norm fold CORRECT（C595 four/4 已证路径）；标题泛化非硬编码——'Thor: Ragnarok' / 'Avengers: Infinity War' 等合成句产生独立键，测试钉死 two→three 的移动。TDD 课：15 测试首跑 14 绿 1 红，红是测试构造 bug 非 face bug（test_assistant_wall 断言 S6='two'，但 S6 只有 Endgame 两处提及，NWH 在 S34）——**期望值要手工按 fixture 重推一遍**。replay PASS 首试 1148s（连续第 5 次）：pred 变化恰 {681a1674}，banked 347→348（0.696），套件 10956→10971（junitxml，+15 test_marvel_face.py）。
 
 ## 许可
 

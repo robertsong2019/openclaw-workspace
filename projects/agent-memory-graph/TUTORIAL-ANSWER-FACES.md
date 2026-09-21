@@ -1,7 +1,7 @@
-# TUTORIAL: Answer Faces — 问题结构驱动的答案选择（Cycles 529-593）
+# TUTORIAL: Answer Faces — 问题结构驱动的答案选择（Cycles 529-596）
 
 > 本文解释 amg 评测管线里最反直觉的一个设计：**答案选哪个句子，不该由"分数阈值"决定，而该由"问题在问什么"决定**。
-> 覆盖 Cycle 529-593 的机制演进（banked 0.494 → 0.688），所有例子都是 LongMemEval s_cleaned full-500 里的真实题目。
+> 覆盖 Cycle 529-596 的机制演进（banked 0.494 → 0.696），所有例子都是 LongMemEval s_cleaned full-500 里的真实题目。
 
 ---
 
@@ -439,6 +439,24 @@ C592 form 门里 pin 注释预留的 future cycle 当轮兑现：antique 题（"
 
 > 结构课：**问题约束的轴决定判别器读哪条轴**——有 'in the last' 读时间窗（§5.42/§5.43），有 'from my family' 读来源窗口，两者共享同一条元纪律：标记必须落在证据自己的边界内。**pin 是租约不是墓碑**：C592 钉 `test_form_does_not_steal_antique_head` 时注释写着 "future cycle"——那是给下一棒的路标；C593 兑现时 pin 更新为 'antique_inherit' 并写明因果（哪个 cycle、为什么改、前后语义）。写 pin 时留路标，改 pin 时擦成新方向——keep 链 29 连的暗线之一。
 
+### 5.45 C594 furniture_txn — 复数拼写家族与被幸存者掩蔽的双零
+
+多动词交易计数（"How many pieces of furniture did I buy, assemble, sell, or fix in the past few months?"）的接线本身是 C591/C592 同句纪律的直接复用（交易动词 + 91d 窗口 + 物品同句），真正的新课在物品正则的拼写层：`Xes?` 拼出来的匹配目标是 'mattresse'/'couche'/'benche'/'shelve'——剥掉词尾 e，而不是匹配原词。复数拼写家族（-(e)s、-f→-ves、-y→-ies）各自需要显式交替：couch(?:es)? / bookshel(?:f|ves) / vanit(?:y|ies)。且一个幸运命中会掩蔽双零：'coffee table'（tables? ✓）最先匹配成功，掩盖了 mattress/bookshelf 永远匹配不上——直到逐句 isolate 才暴露。
+
+> 设计课：**正则的复数要按拼写变形家族写，不是按语法规则写**——`Xes?` 只对裸 -s 词安全。**单点命中 ≠ 验证通过**：第一批只测了 coffee table 就放行，双零物品静默漏数——原型扫描后逐物品 isolate 是最便宜的暴露手段。附带 casing 课：键先 .lower() 再做 isupper() 判断永远为假（'ikea'.isupper()=False），品牌墙要用原始 casing 判。
+
+### 5.46 C595 bikes_own — 回看分类优于前瞻正则
+
+所有权计数（"How many bikes do I (currently) own?"）一机制两面：枚举面（同句清单 "a road bike, a mountain bike, and a commuter bike"）与跨 session 物主面（'my road bike' 散在两个 session + 'a new hybrid bike I just purchased'）。OWNERSHIP 约束替代时间窗（C593 模式）；真正的新课在 NP 识别：贪婪 NP 正则 `(?:det)?(?:mod){0,3}bike` 两头失败——向前吞（'sure road bike' 的动词/代词被卷进修饰链）与拒绝吞（'to my road bike' 整段被 prep 消费，真 NP 永不匹配）。解法是逐 'bike' token 做深度-1 回看分类：修饰词槽只有 head 前一个词，正则只负责找 head、不负责组 NP，吞噬问题结构性消失。
+
+> 设计课：**回看分类优于前瞻正则**——head token 定位 + 邻近词分类，比「一个正则同时定边界又组结构」健壮一个量级。墙判定用紧邻字符（sent[m.end()]）而非 lstrip 后首字符：空格破折号 ' - ' 不是 'bike-friendly' 的连字符；follower 墙词表要含复数（'specific bike locks' 漏过单数墙）。键控纪律：复数 'bikes' 与裸 'my bike' 泛指永不建键，否则枚举面数出 4≠GT 3。
+
+### 5.47 C596 marvel_rewatch — 标记替代窗口，截断规则进构造
+
+重看计数（"How many Marvel movies did I re-watch?"）把「约束替代时间窗」推到第 4 次应用：re-watch 标记本身就是约束——user 轮含 `\bre-?watch(?:ed)?\b` 的句子里，标记后的大写标题 span 即证据键。span 规则只有一条：`[A-Z]` 开头的词连缀，**遇小写词即停**——'Avengers: Endgame yesterday' 在 yesterday 处截断，'Spider-Man: No Way Home, which…' 在逗号处截断。C595 的吞噬教训在这里不是被修好的，是被构造消灭的。去重取 distinct 键（两处 Endgame 提及折叠一次）→ 2。
+
+> 设计课：**截断规则写进构造，别指望下游修复**——遇小写即停让「贪婪吞到哪」变成「合法 span 到哪」，歧义在生成端消失。TDD 课：15 测试首跑 14 绿 1 红，红是断言作者没按 fixture 重推（S6 只有 Endgame，NWH 在 S34）——**期望值要手工按 fixture 重推一遍**，绿大头红一头的套件里，红的那根往往不是 face 的错。渲染课复用 §5.42：纯词形 'two' 经 judge_semantic norm fold 命中 GT '2'。
+
 ## 6. 反面教材：枚举清单没有结构键（C536，RECORD-NEGATIVE）
 
 序数清单（"5. Absinthe"）看起来也能做个 face。实现后发现 **census 全负**：
@@ -544,6 +562,9 @@ answer-face 家族的开发纪律（每个 face 都走了这套流程）：
 | 问题问时间有界/时序锚定的参与次数 | event_count | 同句时间窗标记（含拼写数词）或 before 锚；host 去重；渲染纯词形过双 judge | C591 |
 | 问题问 last N months 采集了多少 <话题>（plants/jewelry） | acquire_last | 采集动词+有界过去标记+话题 NP 同句；类别词不计数、head noun 单数化键控去重 | C592 |
 | 问题问从家人继承/收购了多少 <X>（无时间窗） | antique_inherit | family 来源窗口替代时间窗（本信号→下一信号）；S2 所有格面；重复提及折叠；pin 按注释兑现 | C593 |
+| 问题问多动词家具交易计数（buy/assemble/sell/fix） | furniture_txn | 交易动词族+91d 窗口同句纪律；复数拼写家族显式交替（`Xes?` 匹配的是 'mattresse'）；品牌墙用原始 casing 判 isupper | C594 |
+| 问题问拥有多少 <bike>（枚举/跨 session 物主双面） | bikes_own | OWNERSHIP 替代时间窗；深度-1 回看分类免吞噬；复数/泛指/follower 墙不建键；紧邻字符判墙 | C595 |
+| 问题问重看计数（re-watch 标记，无时间窗） | marvel_rewatch | re-watch 标记替代窗口；user 轮大写标题 span 遇小写即停；distinct 键去重 | C596 |
 | kh-floor 想救 kh=0 GT | 🚫 census-negative，不接线 | 1 救 vs 14 杀，absence pin 钉死 | C543 |
 | kh-elite 准入救窗口死区 | 🚫 census-negative，不接线 | impostor 杀率 23.3% vs 4 救，admission-only 全族否决 | C546 |
 | 松弛 run 门想多救几行 | 🚫 census-negative = 局部最优证书 | 全部 kill 是 run-TIE impostor；absence pin 钉死 C548 配置 | C549 |
@@ -568,7 +589,8 @@ answer-face 家族的开发纪律（每个 face 都走了这套流程）：
 16. lane 的风险评级是 census 的函数，不是直觉的函数："risky scoring lane" 可能只是没做 census 的 lane（C588 把 C587 归类 "risky" 的 9ea5eabc 正名为零分结构 face）；deferred ≠ 放弃——两轮 deferred 的 eggs lane 在双机制凑齐的那一轮一次关闭（C586），每次 deferred 的病根注记就是下一棒的施工图
 17. 渲染形式由判分公式决定，不是由美观决定：'three (3)' 过 exact_judge containment 但被 judge_semantic 归一化折叠成 '3 3'（重复 token）→ NEEDS_JUDGE——frozen correct_exact=False 的行判分完全由 semantic 侧决定（C591）；**replay 前双 judge 探针**（渲染样本各过 exact + semantic）是最便宜的伪影检测器；数据集的表面形式（'two weeks ago' 拼写数词）是正则必须吃下的现实，不是可假设掉的边角
 18. 反劫持 pin 是租约不是墓碑：为保护 banked 而钉的「此面不认领」测试，注释里写着 future cycle 时就是在给下一棒留路标——兑现时更新 pin 必须写明因果（哪个 cycle、为什么要改、更新前后语义都写清），pin 的演化是计划内行为而非违约（C592 test_form_does_not_steal_antique_head 钉 enum_count → C593 兑现为 antique_inherit）；且新 head 的 census 边界（三锚恰 1 行）反过来保证它偷不走上一棒的 face
+19. 正则的拼写层与边界层都要按真实表面设计：复数拼写家族（-es/-f→-ves/-y→-ies）需要显式交替，`Xes?` 匹配到的是 'mattresse' 不是 'mattress'（C594），且单点幸运命中会掩蔽双零——逐物品 isolate 是最便宜的暴露手段；NP 边界别让一个正则既定边界又组结构——深度-1 回看分类（C595）或「遇小写即停」的 span 规则（C596）把吞噬问题在构造端消灭
 
 ---
 
-*生成：documentation-morning cron，2026-09-02；Cycles 540-542 增补：2026-09-03；Cycles 543-545 增补：2026-09-04；Cycles 546-548 增补：2026-09-05；Cycles 549-554 增补：2026-09-07；Cycles 555-557 增补：2026-09-08；Cycles 558-559 增补：2026-09-09；Cycles 561-563 增补：2026-09-10；Cycles 564-569 增补：2026-09-13；Cycles 570-573 增补：2026-09-14；Cycles 574-576 增补：2026-09-15；Cycles 577-579 增补：2026-09-16；Cycles 580-582 增补：2026-09-17；Cycles 583-585 增补：2026-09-18；Cycles 586-588 增补：2026-09-19；Cycles 589-591 增补：2026-09-20；Cycles 592-593 增补：2026-09-21。数据口径：LongMemEval s_cleaned full-500，PYTHONHASHSEED=7，deterministic cascade banked。轨迹明细见 README Cycles 532-593 段。*
+*生成：documentation-morning cron，2026-09-02；Cycles 540-542 增补：2026-09-03；Cycles 543-545 增补：2026-09-04；Cycles 546-548 增补：2026-09-05；Cycles 549-554 增补：2026-09-07；Cycles 555-557 增补：2026-09-08；Cycles 558-559 增补：2026-09-09；Cycles 561-563 增补：2026-09-10；Cycles 564-569 增补：2026-09-13；Cycles 570-573 增补：2026-09-14；Cycles 574-576 增补：2026-09-15；Cycles 577-579 增补：2026-09-16；Cycles 580-582 增补：2026-09-17；Cycles 583-585 增补：2026-09-18；Cycles 586-588 增补：2026-09-19；Cycles 589-591 增补：2026-09-20；Cycles 592-593 增补：2026-09-21；Cycles 594-596 增补：2026-09-22。数据口径：LongMemEval s_cleaned full-500，PYTHONHASHSEED=7，deterministic cascade banked。轨迹明细见 README Cycles 532-596 段。*
