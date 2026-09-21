@@ -10900,6 +10900,19 @@ def counting_form(question: str) -> str | None:
     # overlap by census).
     if _FURN_HEAD_RE.match(ql):
         return "furniture_txn"
+    # C595 bike ownership counts — "How many bikes do I
+    # (currently) own?". Census (all 500): the head matches
+    # EXACTLY 2 rows (6b168ec8 GT 'three' / 89941a93 GT '4'),
+    # both unbanked (gate=answer / NEEDS_JUDGE echo today). No
+    # time window — OWNERSHIP replaces it (C593 pattern: the
+    # constraint replaces the window). The strict head cannot
+    # steal the C592 acquire rows ('in the last <period>' +
+    # plants/jewelry), the C593 antique row, or the C594
+    # furniture head (different NPs entirely). The handler
+    # returns None when nothing resolves (falls through; zero
+    # overlap by census).
+    if _BIKE_HEAD_RE.match(ql):
+        return "bikes_own"
     if re.match(r'^how (much|many)\b', q, re.I) \
             and re.search(r'\btotal\b', ql):
         if re.search(r'\bhow many (hours|years|months)\b', ql):
@@ -12923,6 +12936,146 @@ def _cnt_furniture_txn(question: str, sessions: list[dict]):
     return _ec_render(len(items)) if items else None
 
 
+# ---------------------------------------------------------------------------
+# C595: bike ownership counts — "How many bikes do I (currently)
+# own?" (6b168ec8 GT 'three' / 89941a93 GT '4'). One mechanism,
+# two faces: an enumeration face ("I've got three of them - a
+# road bike, a mountain bike, and a commuter bike") and a
+# cross-session possessive face ("my road bike" + "my other two
+# bikes, a mountain bike and a commuter bike" + "a new hybrid
+# bike I just purchased"). No time window — OWNERSHIP replaces
+# it (C593 pattern). Only SINGULAR 'bike' heads with >=1 kept
+# modifier create item keys: plural 'my (N) bikes' and bare
+# 'my bike' are generic mentions — 6b168ec8's haystack says
+# 'integrates with my bike' / 'keep an eye on my three bikes';
+# keying generics would overcount 3→4. Walls: follower-noun
+# ('bike lock/shop/storage', 'mountain bike trails', 'bike
+# computers' — bike-as-modifier compounds), possessive
+# ("road bike's wheels"), hyphen ('bike-friendly'), prep
+# ('what kind of bike'). License = ownership stem in the
+# sentence ('my' / "I've got" / 'I (currently) have|own') —
+# 'rent a bike for a day' / 'what kind of bike is best' carry
+# none. No session-topic gate: keys can only originate from
+# bike-mentioning sentences, so a non-topic session has
+# nothing to contribute by construction. Census (all 500):
+# the head matches EXACTLY 2 rows, both unbanked. Word-only
+# render 'three' banks exact (GT 'three') and 'four' via
+# judge_semantic (_sem_norm folds to GT '4').
+# ---------------------------------------------------------------------------
+
+_BIKE_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+bikes\s+do\s+i\s+(?:currently\s+)?own"
+    r"\s*\??\s*$", re.I)
+
+# stop adjectives drop so re-mentions collapse ('my current
+# road bike' == 'my road bike'); number words belong to
+# plural generics ('my other two bikes') and never key
+_BIKE_MOD_STOP = _FURN_MOD_STOP | {
+    "current", "two", "three", "four", "five"}
+
+# determiners/coordinators/demonstratives sit inside the NP
+# without keying ('those bike shops' must not key 'those bike')
+_BIKE_DET = frozenset({
+    "my", "a", "an", "the", "and", "or", "this", "that",
+    "these", "those",
+    "his", "her", "their", "our", "its"})
+
+# 'what kind of bike' / 'with bike storage' — the word right
+# before the head (or the modifier chain) crosses a
+# preposition, so it is not an owned-item NP
+_BIKE_PREP_WALL = frozenset({
+    "of", "for", "with", "to", "at", "from", "in", "on",
+    "is", "was", "kind", "sort", "brand"})
+
+# bike-as-modifier compounds: the head noun follows, so the
+# bike itself is not the item ('bike lock', 'bike storage',
+# 'mountain bike trails', 'bike computers')
+_BIKE_FOLLOW_WALL = frozenset({
+    "lock", "locks", "shop", "shops", "storage", "trail",
+    "trails", "lane", "lanes", "path", "paths", "computer",
+    "computers", "rack", "racks", "rental", "rentals",
+    "sharing", "stand", "stands", "hook", "hooks", "station",
+    "stations", "cover", "covers", "journal", "budget",
+    "type", "types", "ride", "rides", "tour", "tours",
+    "park", "parks", "light", "lights", "helmet", "helmets",
+    "frame", "frames", "fit"})
+
+# ownership stem licenses the sentence: possessive 'my',
+# have-got, or a have/own statement. Future 'I'll have' and
+# intent 'I'm thinking of getting' carry no stem; 'rent a
+# bike' and 'remind me' neither ('me' is not 'my').
+_BIKE_OWN_STEM_RE = re.compile(
+    r"\bmy\b|\bi'?ve\s+got\b|\bi\s+(?:currently\s+)?"
+    r"(?:have|own)\b", re.I)
+
+# candidate NP: singular head 'bike' + ONE modifier slot (the
+# word immediately before the head). Every evidence key is a
+# single-word modifier (road/mountain/commuter/hybrid); a
+# greedy multi-word modifier regex misclassifies verbs and
+# determiners as modifiers ('make sure my road bike' → 'sure
+# road bike') and prep-wall rejections swallow the real NP
+# ('to my road bike' consumed before 'my road bike' matches).
+# Depth-1 lookback + walls keeps classification structural.
+# Plural 'bikes' never matches (\b after the singular head;
+# the 's' is a word char).
+_BIKE_SING_RE = re.compile(r"\bbikes?\b", re.I)
+
+_BIKE_WORD_RE = re.compile(r"[A-Za-z][A-Za-z'-]*")
+
+
+def _bike_harvest(sent: str) -> set:
+    """Distinct owned-bike keys named in *sent* (licensed by an
+    ownership stem; walls per module docstring). One modifier
+    slot: the word immediately before the head."""
+    if not _BIKE_OWN_STEM_RE.search(sent):
+        return set()
+    keys: set[str] = set()
+    for m in _BIKE_SING_RE.finditer(sent):
+        if m.group(0).lower() == "bikes":
+            continue                  # plural = generic mention
+        nxt = sent[m.end():m.end() + 1]
+        if nxt in ("'", "-"):
+            continue                  # bike's / bike-friendly
+        # a SPACED dash ('a commuter bike - and ...') is list
+        # punctuation, not a hyphen compound — fall through
+        tail = sent[m.end():].lstrip()
+        nw = _BIKE_WORD_RE.match(tail)
+        if nw and nw.group(0).lower() in _BIKE_FOLLOW_WALL:
+            continue                  # bike lock / mountain bike trails
+        before = re.findall(r"[A-Za-z]+", sent[:m.start()])
+        if not before:
+            continue                  # sentence-initial bare head
+        w = before[-1].lower()
+        if w in _BIKE_PREP_WALL:
+            continue                  # 'kind of bike' / 'with bike storage'
+        if w in _BIKE_DET or w in _BIKE_MOD_STOP:
+            # bare head: generic with possessive ('my bike') /
+            # stop adjective ('new bike computer' — follower
+            # wall already caught it), an item with indefinite
+            # article ('a bike')
+            if w in ("a", "an"):
+                keys.add("bike")
+            continue
+        keys.add(w + " bike")
+    return keys
+
+
+def _cnt_bikes_own(question: str, sessions: list[dict]):
+    """Count DISTINCT bikes the user OWNS (C595, 6b168ec8 /
+    89941a93). No window — ownership replaces it (C593
+    pattern). Sentence-level ownership stem + singular-bike NP
+    keys with det/prep/follower walls; plural and bare heads
+    are generic mentions, never keys. User-role wall via
+    _cnt_sents. Returns None when nothing resolves (falls
+    through — census zero overlap)."""
+    if not _BIKE_HEAD_RE.match(" ".join(question.split())):
+        return None
+    items: set[str] = set()
+    for _si, sent in _cnt_sents(sessions, "user"):
+        items |= _bike_harvest(sent)
+    return _ec_render(len(items)) if items else None
+
+
 def _cnt_item_total(question: str, sessions: list[dict]):
     """Sum per-item prices for enumerated "total cost" questions.
 
@@ -14800,7 +14953,8 @@ def answer_counting(question: str,
           "event_count": _cnt_event_count,
           "acquire": _cnt_acquire,
           "antique_inherit": _cnt_antique_inherit,
-          "furniture_txn": _cnt_furniture_txn}
+          "furniture_txn": _cnt_furniture_txn,
+          "bikes_own": _cnt_bikes_own}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break
