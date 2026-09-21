@@ -30,6 +30,9 @@ cron key-development-2：autoresearch 实验循环 B，在 kd-1 (C594) 基础上
 - suite：10956 passed（junitxml 口径 281s）
 - experiments.tsv 本周期前 705 行
 
-## 待办（replay PASS 后）
-- [ ] 银行：git add amg_bench_quality.py test_bike_face.py + experiments.tsv 追加 + commit + push
-- [ ] 孤儿不提交：memory_graph.py (+24 旧 cache)、temporal_test_data.json、test_optimization.py、test_status.log
+## 银行完成（01:25）
+- [x] replay PASS 1154s：pred-change==drift=={6b168ec8, 89941a93} 全 False→True，banked 345→347（0.690→0.694）
+- [x] `7bab843` 代码+测试（+155/-1 amg，+323 test，staged 审计零外来 hunk）
+- [x] `3a86d96` tsv 第 706 行（31 连 keep，零回滚）
+- [x] `2ee8ac0` memory 文件，均 push 至 origin/master
+- [x] 孤儿未提交：memory_graph.py、temporal_test_data.json、test_optimization.py、test_status.log
