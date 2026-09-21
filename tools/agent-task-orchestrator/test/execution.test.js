@@ -150,6 +150,78 @@ describe('executeTasks agent and function tasks', () => {
   });
 });
 
+// ─── executeTasks: dependency-failure gating ──────────────────
+
+describe('executeTasks dependency-failure gating', () => {
+  let restore;
+  before(() => { restore = silenceConsole(); });
+  after(() => { restore(); });
+
+  const softSettings = { parallelExecution: true, continueOnError: true, timeout: 10000 };
+
+  it('skips a task whose dependency failed instead of running it', async () => {
+    // RED: dependent task used to execute anyway on a broken upstream state.
+    const marker = path.join(tmpDir, 'should-not-run.txt');
+    const plan = [
+      [{ id: 'a', type: 'shell', command: 'exit 1', priority: 5 }],
+      [{ id: 'b', type: 'shell', command: `touch ${marker}`, dependsOn: ['a'], priority: 5 }]
+    ];
+    const results = await executeTasks(plan, softSettings);
+    assert.equal(results.failed, 1);
+    assert.equal(results.skipped, 1);
+    const b = results.tasks.find(t => t.id === 'b');
+    assert.equal(b.status, 'skipped');
+    assert.match(b.error, /依赖未成功/);
+    const exists = await fs.pathExists(marker);
+    assert.equal(exists, false, 'dependent task must NOT have executed');
+  });
+
+  it('skips transitively: dependent of a skipped task is also skipped', async () => {
+    const plan = [
+      [{ id: 'a', type: 'shell', command: 'exit 1', priority: 5 }],
+      [{ id: 'b', type: 'shell', command: 'echo b', dependsOn: ['a'], priority: 5 }],
+      [{ id: 'c', type: 'shell', command: 'echo c', dependsOn: ['b'], priority: 5 }]
+    ];
+    const results = await executeTasks(plan, softSettings);
+    assert.equal(results.completed, 0);
+    assert.equal(results.failed, 1);
+    assert.equal(results.skipped, 2);
+    assert.deepEqual(
+      results.tasks.filter(t => t.status === 'skipped').map(t => t.id).sort(),
+      ['b', 'c']
+    );
+  });
+
+  it('still executes tasks whose dependencies all succeeded', async () => {
+    const plan = [
+      [{ id: 'ok1', type: 'shell', command: 'echo 1', priority: 5 }],
+      [
+        { id: 'child', type: 'shell', command: 'echo child', dependsOn: ['ok1'], priority: 5 },
+        { id: 'bad', type: 'shell', command: 'exit 2', priority: 5 }
+      ]
+    ];
+    const results = await executeTasks(plan, softSettings);
+    assert.equal(results.completed, 2);
+    assert.equal(results.failed, 1);
+    assert.equal(results.skipped, 0);
+    const child = results.tasks.find(t => t.id === 'child');
+    assert.equal(child.status, 'completed');
+  });
+
+  it('independent tasks in a stage still run when a sibling fails', async () => {
+    const plan = [
+      [
+        { id: 'good', type: 'shell', command: 'echo good', priority: 5 },
+        { id: 'bad', type: 'shell', command: 'exit 1', priority: 5 }
+      ],
+      [{ id: 'next', type: 'shell', command: 'echo next', priority: 5 }]
+    ];
+    const results = await executeTasks(plan, softSettings);
+    assert.equal(results.completed, 2);
+    assert.equal(results.skipped, 0);
+  });
+});
+
 // ─── executeTasks: plan/counter semantics ──────────────────────────
 
 describe('executeTasks plan semantics', () => {
@@ -289,5 +361,19 @@ describe('CLI end-to-end', () => {
       () => run(['run', 'ghost-flow']),
       err => err.code === 1 && /不存在/.test(err.stderr + err.stdout)
     );
+  });
+
+  it('run --tasks with unknown task name errors instead of silent empty run', async () => {
+    // RED: typo'd --tasks used to filter to zero tasks and exit 0 = silent success.
+    await run(['create', 'typo-guard', '--force']);
+    await run(['add-task', 'typo-guard', 'real', '-c', 'echo real-run']);
+    await assert.rejects(
+      () => run(['run', 'typo-guard', '--tasks', 'typo-name']),
+      err => err.code === 1 && /未知的任务/.test(err.stderr + err.stdout)
+    );
+    // sanity: the real task was never executed by the typo'd invocation
+    // (rc=1 aborts before execution), and valid filters still work.
+    const { stdout } = await run(['run', 'typo-guard', '--tasks', 'real', '-v']);
+    assert.match(stdout, /real-run/);
   });
 });

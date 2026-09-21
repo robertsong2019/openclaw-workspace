@@ -157,6 +157,12 @@ program
       // 过滤任务
       if (options.tasks) {
         const taskNames = options.tasks.split(',').map(t => t.trim());
+        const availableIds = tasks.map(t => t.id);
+        const unknown = taskNames.filter(n => !availableIds.includes(n));
+        if (unknown.length > 0) {
+          console.error(chalk.red(`❌ 未知的任务: ${unknown.join(', ')} (可用: ${availableIds.join(', ')})`));
+          process.exit(1);
+        }
         tasks = tasks.filter(t => taskNames.includes(t.id));
       }
       
@@ -424,6 +430,9 @@ async function executeTasks(executionPlan, settings, verbose = false) {
     tasks: []
   };
   
+  // Tasks that failed or were skipped — dependents must not run on a broken state.
+  const blockedIds = new Set();
+  
   for (let stageIndex = 0; stageIndex < executionPlan.length; stageIndex++) {
     const stage = executionPlan[stageIndex];
     console.log(chalk.blue(`\n🔄 阶段 ${stageIndex + 1}/${executionPlan.length} (${stage.length} 个任务)`));
@@ -431,6 +440,18 @@ async function executeTasks(executionPlan, settings, verbose = false) {
     const stagePromises = stage.map(async (task) => {
       try {
         results.totalTasks++;
+        
+        const blockedDeps = (task.dependsOn || []).filter(dep => blockedIds.has(dep));
+        if (blockedDeps.length > 0) {
+          results.skipped++;
+          blockedIds.add(task.id);
+          console.log(chalk.yellow(`⏭️  跳过: ${task.id} (依赖未成功: ${blockedDeps.join(', ')})`));
+          return {
+            id: task.id,
+            status: 'skipped',
+            error: `依赖未成功: ${blockedDeps.join(', ')}`
+          };
+        }
         
         console.log(chalk.cyan(`▶️  执行: ${task.id} (${task.type})`));
         
@@ -462,6 +483,7 @@ async function executeTasks(executionPlan, settings, verbose = false) {
         
       } catch (error) {
         results.failed++;
+        blockedIds.add(task.id);
         console.log(chalk.red(`❌ 失败: ${task.id} - ${error.message}`));
         
         if (!settings.continueOnError) {
