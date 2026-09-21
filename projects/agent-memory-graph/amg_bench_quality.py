@@ -10887,6 +10887,19 @@ def counting_form(question: str) -> str | None:
     # zero overlap by census).
     if _ANT_HEAD_RE.match(ql):
         return "antique_inherit"
+    # C594 furniture multi-verb transactions — "How many pieces
+    # of furniture did I buy, assemble, sell, or fix in the past
+    # few months?". Census (all 500): the head matches EXACTLY
+    # 1 row (gpt4_15e38248), unbanked (gate=answer / session echo
+    # today). Window = 'past few months' → 91d (few=3, C592 30n+1
+    # convention). _FURN_HEAD_RE requires the 'furniture' head
+    # noun + a txn verb, so it cannot steal the C592 acquire
+    # rows ('in the last <period>' + plants/jewelry) or the C593
+    # antique row ('antique items' + 'famil'). The handler
+    # returns None when no item resolves (falls through; zero
+    # overlap by census).
+    if _FURN_HEAD_RE.match(ql):
+        return "furniture_txn"
     if re.match(r'^how (much|many)\b', q, re.I) \
             and re.search(r'\btotal\b', ql):
         if re.search(r'\bhow many (hours|years|months)\b', ql):
@@ -12806,6 +12819,110 @@ def _cnt_antique_inherit(question: str, sessions: list[dict]):
     return _ec_render(len(items)) if items else None
 
 
+# ---------------------------------------------------------------------------
+# C594: furniture multi-verb transaction counts — "how many pieces
+# of furniture did I buy, assemble, sell, or fix in the past few
+# months?" (gpt4_15e38248: coffee table bought ~3w ago + IKEA
+# bookshelf assembled ~2mo ago + mattress ordered last week +
+# kitchen-table wobbly leg fixed last weekend = 4). One
+# mechanism, four verb faces (buy|assemble|sell|fix and their
+# past/gerund renderings). Same-sentence discipline (C591/C592
+# lineage): a furniture item counts only when its USER sentence
+# carries BOTH a transaction verb AND a bounded past marker
+# inside the window (_acq_marker_age_days reuse); session-topic
+# gate at session grain (C586 lesson). Item keys = (kept
+# modifier +) singularized head noun — 'coffee table' vs
+# 'kitchen table' stay distinct, brand/case modifiers ('IKEA')
+# and stop adjectives ('new') drop so re-mentions collapse.
+# Unresolvable evidence = None (falls through; census zero
+# overlap). Word-only render 'four' banks via judge_semantic
+# (_sem_norm folds to GT '4' — C591/C592/C593 discipline).
+# ---------------------------------------------------------------------------
+
+_FURN_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+(?:pieces\s+of\s+)?furniture\s+did\s+"
+    r"(?:i|we)\b.*\b(?:buy|assemble|sell|fix)\b.*\bpast\s+"
+    r"(?:few\s+)?months?\b", re.I)
+
+# plural spellings are explicit: `Xes?` would match 'mattresse'
+# /'couche'/'benche'/'shelve' — NOT the singular (C594 regex
+# lesson: only plain -s plurals tolerate `Xs?`)
+_FURN_HEADS = (r"tables?|desks?|chairs?|armchairs?|sofas?"
+               r"|couch(?:es)?|sectionals?|loveseats?|recliners?"
+               r"|futons?|ottomans?|bench(?:es)?|stools?"
+               r"|bookshel(?:f|ves)|bookcases?|shel(?:f|ves)"
+               r"|cabinets?|cupboards?|dressers?|wardrobes?"
+               r"|armoires?|nightstands?|mattress(?:es)?"
+               r"|bed\s+frames?|vanit(?:y|ies)|hutch(?:es)?"
+               r"|sideboards?|credenzas?|buffets?|cots?")
+_FURN_NP_RE = re.compile(
+    r"\b(?:([a-z-]+)\s+)?(" + _FURN_HEADS + r")\b", re.I)
+_FURN_TOPIC_RE = re.compile(
+    r"\bfurniture\b|\b(?:" + _FURN_HEADS + r")\b", re.I)
+
+# modifier drop-discipline: STOP-set adjectives determiner-like
+# modifiers drop so re-mentions collapse; capitalized brand
+# modifiers ('IKEA') drop by the case wall
+_FURN_MOD_STOP = frozenset({
+    "new", "old", "first", "second", "third", "nice", "great",
+    "big", "small", "large", "main", "only", "same", "whole",
+    "entire", "next", "other", "wooden", "metal", "modern"})
+
+_FURN_TXN_VERB_RE = re.compile(
+    r"\b(?:bought|purchased|ordered|got|sold|assembled|built"
+    r"|fixed|repaired|fixing|repairing|assembling|selling"
+    r"|buying)\b", re.I)
+
+
+def _furn_item_key(mod: str, head: str) -> str:
+    """Item key: (kept modifier +) singularized head noun.
+    'coffee table'/'kitchen table' stay distinct; 'new
+    bookshelf' and 'IKEA bookshelf' collapse to 'bookshelf'."""
+    h = " ".join(_cnt_sing(w) for w in head.lower().split())
+    if not mod:
+        return h
+    m = mod.lower()
+    if m in _FURN_MOD_STOP or mod.isupper():
+        return h
+    return _cnt_sing(m) + " " + h
+
+
+def _furn_harvest(sent: str) -> set:
+    """Distinct furniture-item keys named in *sent*."""
+    return {_furn_item_key(m.group(1), m.group(2))
+            for m in _FURN_NP_RE.finditer(sent)}
+
+
+def _cnt_furniture_txn(question: str, sessions: list[dict]):
+    """Count DISTINCT furniture pieces transacted (bought/
+    assembled/sold/fixed) inside the 'past few months' window
+    (C594, gpt4_15e38248). Same-sentence verb+marker
+    discipline; session-topic gate; user-role wall via
+    _cnt_sents. Returns None when nothing resolves (falls
+    through — census zero overlap)."""
+    if not _FURN_HEAD_RE.match(" ".join(question.split())):
+        return None
+    window = 91                     # few = 3 → 3*30 + 1 (C592)
+    by_session: dict[int, list[str]] = {}
+    for si, sent in _cnt_sents(sessions, "user"):
+        by_session.setdefault(si, []).append(sent)
+    items: set[str] = set()
+    for sents in by_session.values():
+        # session-topic gate (C586 lesson at session grain): a
+        # session whose user lines never name the furniture
+        # topic contributes nothing to it
+        if not any(_FURN_TOPIC_RE.search(s) for s in sents):
+            continue
+        for sent in sents:
+            if not _FURN_TXN_VERB_RE.search(sent):
+                continue
+            age = _acq_marker_age_days(sent)
+            if age is None or age > window:
+                continue
+            items |= _furn_harvest(sent)
+    return _ec_render(len(items)) if items else None
+
+
 def _cnt_item_total(question: str, sessions: list[dict]):
     """Sum per-item prices for enumerated "total cost" questions.
 
@@ -14682,7 +14799,8 @@ def answer_counting(question: str,
           "coord_sum": _cnt_coord_sum,
           "event_count": _cnt_event_count,
           "acquire": _cnt_acquire,
-          "antique_inherit": _cnt_antique_inherit}
+          "antique_inherit": _cnt_antique_inherit,
+          "furniture_txn": _cnt_furniture_txn}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break
