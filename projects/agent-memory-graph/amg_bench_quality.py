@@ -10913,6 +10913,18 @@ def counting_form(question: str) -> str | None:
     # overlap by census).
     if _BIKE_HEAD_RE.match(ql):
         return "bikes_own"
+    # C596 marvel re-watch counts — "How many Marvel movies did
+    # I re-watch?". Census (all 500): the head matches EXACTLY
+    # 1 row (681a1674, GT '2'), unbanked (gate=answer /
+    # parasitic session echo today). No time window — the
+    # RE-WATCH marker replaces it. _MRW_HEAD_RE pins 'marvel
+    # movies' + 're-watch', so it cannot steal the C595 bikes
+    # rows ('bikes ... own'), the C592-C594 heads (different
+    # NPs), or the generic how-many block (claimed below). The
+    # handler returns None when no titled re-watch resolves
+    # (falls through; zero overlap by census).
+    if _MRW_HEAD_RE.match(ql):
+        return "marvel_rewatch"
     if re.match(r'^how (much|many)\b', q, re.I) \
             and re.search(r'\btotal\b', ql):
         if re.search(r'\bhow many (hours|years|months)\b', ql):
@@ -13076,6 +13088,52 @@ def _cnt_bikes_own(question: str, sessions: list[dict]):
     return _ec_render(len(items)) if items else None
 
 
+_MRW_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+marvel\s+movies\s+did\s+i\s+"
+    r"re-?watch(?:ed)?\s*\??\s*$", re.I)
+_MRW_MARKER_RX = re.compile(r"\bre-?watch(?:ed)?\b", re.I)
+_MRW_TITLE_RX = re.compile(
+    r"\bre-?watch(?:ed)?\b[,:]?\s+(?:the\s+)?"
+    r"([A-Z][\w'’-]*(?:\s*:\s*[A-Z][\w'’-]*)?"
+    r"(?:\s+[A-Z][\w'’-]*)*)")
+
+
+def _mrw_title_key(sent: str) -> str | None:
+    """Title key from the capitalized span right after a
+    re-watch marker. The span stops at the first lowercase word
+    — greedy TitleCase continuation was the C595 bike-face NP
+    trap ('sure road bike'); stop-at-lowercase avoids it by
+    construction. 'Avengers: Endgame yesterday' → 'avengers
+    endgame'; 'Spider-Man: No Way Home, which…' → 'spider man no
+    way home'; 're-watched it' → None (no title to key)."""
+    m = _MRW_TITLE_RX.search(sent)
+    if not m:
+        return None
+    return re.sub(r"[^a-z0-9]+", " ", m.group(1).lower()).strip()
+
+
+def _cnt_marvel_rewatch(question: str, sessions: list[dict]):
+    """Count DISTINCT Marvel movies the user RE-WATCHED (C596,
+    681a1674, GT '2'). No window — the re-watch marker replaces
+    it (C593 pattern). User sentences carrying ``re-watch``
+    yield a title key (_mrw_title_key); distinct keys render
+    word-form ('two'; judge_semantic norm-folds onto GT '2' —
+    C595 'four'/'4' path). Returns None when nothing resolves
+    (falls through — census zero overlap: the head matches
+    exactly 1 row full-500 and no other question mentions
+    re-watch)."""
+    if not _MRW_HEAD_RE.match(" ".join(question.split())):
+        return None
+    keys: set[str] = set()
+    for _si, sent in _cnt_sents(sessions, "user"):
+        if not _MRW_MARKER_RX.search(sent):
+            continue
+        key = _mrw_title_key(sent)
+        if key:
+            keys.add(key)
+    return _ec_render(len(keys)) if keys else None
+
+
 def _cnt_item_total(question: str, sessions: list[dict]):
     """Sum per-item prices for enumerated "total cost" questions.
 
@@ -14954,7 +15012,8 @@ def answer_counting(question: str,
           "acquire": _cnt_acquire,
           "antique_inherit": _cnt_antique_inherit,
           "furniture_txn": _cnt_furniture_txn,
-          "bikes_own": _cnt_bikes_own}
+          "bikes_own": _cnt_bikes_own,
+          "marvel_rewatch": _cnt_marvel_rewatch}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break
