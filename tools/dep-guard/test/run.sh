@@ -205,6 +205,39 @@ assert_contains "python req.txt as lockfile" '"lockfile": true'
 t "unknown project exit 1" 1 env DEPG_FIXTURE=clean "$DEPG" "$TMP/proj_unknown"
 t "missing dir exit 1" 1 env DEPG_FIXTURE=clean "$DEPG" "$TMP/nope-does-not-exist"
 
+# ─── arg validation (2026-09-21 cycle) ──────────────────
+# RED family: --min-score garbage/empty/missing-value silently disabled the CI
+# gate (bash arithmetic treats invalid values as unset vars = 0), and a
+# swallowed positional meant the WRONG project got scanned, exit 0.
+
+t "--min-score non-numeric exit 1" 1 env DEPG_FIXTURE=clean "$DEPG" "$TMP/proj_node" --min-score abc
+t "--min-score empty exit 1" 1 env DEPG_FIXTURE=clean "$DEPG" "$TMP/proj_node" --min-score ""
+t "--min-score negative exit 1" 1 env DEPG_FIXTURE=clean "$DEPG" "$TMP/proj_node" --min-score -5
+t "--min-score missing value exit 1" 1 env DEPG_FIXTURE=clean "$DEPG" "$TMP/proj_node" --min-score
+
+env DEPG_FIXTURE=clean "$DEPG" "$TMP/proj_node" --min-score 0 >/dev/null 2>&1
+[[ $? -eq 0 ]] && { PASS=$((PASS+1)); echo "ok $PASS - --min-score 0 is legal (no gate)"; } || { FAIL=$((FAIL+1)); FAILED+=("--min-score 0 rejected"); }
+
+# swallowed-positional: '--min-score <dir>' with no real value must NOT scan
+# the wrong project silently; the error must name the bad value.
+t "--min-score swallowing positional exit 1" 1 env DEPG_FIXTURE=clean "$DEPG" --min-score "$TMP/proj_node"
+
+# gate still fires for a valid high threshold
+t "--min-score 999 fires gate exit 1" 1 env DEPG_FIXTURE=clean "$DEPG" "$TMP/proj_node" --min-score 999
+
+# --format validation: typo must error, not silently fall back to text
+t "--format typo exit 1" 1 env DEPG_FIXTURE=clean "$DEPG" "$TMP/proj_node" --format jsn
+t "--format empty exit 1" 1 env DEPG_FIXTURE=clean "$DEPG" "$TMP/proj_node" --format ""
+
+env DEPG_FIXTURE=clean "$DEPG" "$TMP/proj_node" --format markdown >/dev/null 2>&1
+[[ $? -eq 0 ]] && { PASS=$((PASS+1)); echo "ok $PASS - --format markdown still legal"; } || { FAIL=$((FAIL+1)); FAILED+=("markdown format rejected"); }
+
+# error message names the bad value
+env DEPG_FIXTURE=clean "$DEPG" "$TMP/proj_node" --min-score abc >/dev/null 2>"$TMP/err"
+grep -q "non-negative integer" "$TMP/err" && { PASS=$((PASS+1)); echo "ok $PASS - min-score error names the requirement"; } || { FAIL=$((FAIL+1)); FAILED+=("min-score error message"); }
+env DEPG_FIXTURE=clean "$DEPG" "$TMP/proj_node" --format jsn >/dev/null 2>"$TMP/err"
+grep -q "text, json, csv, markdown" "$TMP/err" && { PASS=$((PASS+1)); echo "ok $PASS - format error lists valid options"; } || { FAIL=$((FAIL+1)); FAILED+=("format error message"); }
+
 echo ""
 echo "# tests=$((PASS+FAIL)) pass=$PASS fail=$FAIL"
 if [[ $FAIL -gt 0 ]]; then

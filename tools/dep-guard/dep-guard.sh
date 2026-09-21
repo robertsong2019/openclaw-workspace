@@ -41,9 +41,15 @@ EOF
 # Parse args
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --format)   FORMAT="$2"; shift 2 ;;
+    --format)
+      [[ "${2:-}" =~ ^(text|json|csv|markdown)$ ]] || { echo "Error: --format must be one of: text, json, csv, markdown (got: ${2:-<missing>})" >&2; exit 1; }
+      FORMAT="$2"; shift 2 ;;
     --security-only) SECURITY_ONLY=true; shift ;;
-    --min-score) MIN_SCORE="$2"; shift 2 ;;
+    --min-score)
+      # Numeric validation: a garbage/empty/swallowed value would be silently
+      # treated as 0 by bash arithmetic — silently disabling the CI gate.
+      [[ "${2:-}" =~ ^[0-9]+$ ]] || { echo "Error: --min-score requires a non-negative integer (got: ${2:-<missing>})" >&2; exit 1; }
+      MIN_SCORE="$2"; shift 2 ;;
     --fail-on) FAIL_ON="$2"; shift 2 ;;
     --ignore)  IGNORE="$2"; shift 2 ;;
     --help) usage ;;
