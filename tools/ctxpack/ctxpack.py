@@ -37,7 +37,23 @@ DEFAULT_IGNORE_FILES = {
 
 IGNORE_PATTERNS = set()
 
+def _expand_braces(pattern: str) -> list[str]:
+    """Expand `{a,b,c}` alternatives in a glob pattern (fnmatch does NOT do this:
+    'app.{ts,js,py}' only matched a file literally named 'app.{ts,js,py}', so entry
+    categorization never fired)."""
+    m = re.search(r"\{([^{}]+)\}", pattern)
+    if not m:
+        return [pattern]
+    prefix, suffix = pattern[:m.start()], pattern[m.end():]
+    expanded: list[str] = []
+    for alt in m.group(1).split(","):
+        expanded.extend(_expand_braces(prefix + alt + suffix))
+    return expanded
+
+
 KEY_FILE_PATTERNS = {
+    category: [p for pat in patterns for p in _expand_braces(pat)]
+    for category, patterns in {
     "entry": [
         "index.{ts,js,py,go,rs}", "main.{ts,js,py,go,rs}", "app.{ts,js,py}",
         "src/index.{ts,tsx,js,jsx}", "src/main.{ts,tsx,js,py}",
@@ -67,6 +83,7 @@ KEY_FILE_PATTERNS = {
         "**/__tests__/**", "**/*.test.{ts,js,py}", "**/*.spec.{ts,js,py}",
         "tests/**", "test/**",
     ],
+    }.items()
 }
 
 FRAMEWORK_DETECTORS = {
@@ -655,6 +672,9 @@ def main():
         if not args.output:
             eprint("Error: --watch requires --output (nowhere to write regenerated context)")
             sys.exit(1)
+        if args.interval <= 0:
+            eprint(f"Error: --interval must be > 0 (got {args.interval})")
+            sys.exit(1)
 
         def regenerate() -> int:
             """Re-run scan+generate pipeline, write output. Returns token count."""
@@ -730,6 +750,10 @@ def main():
                 if fnmatch.fnmatch(f, pat) and f not in key_files["entry"]:
                     key_files["entry"].append(f)
 
+    if args.stats and args.diff:
+        eprint("Error: --stats and --diff are mutually exclusive (--diff compares generated context, --stats replaces it)")
+        sys.exit(1)
+
     if args.stats:
         eprint(f"📊 Generating stats ...")
         stats = generate_stats(
@@ -774,8 +798,11 @@ def main():
         else:
             for line in diff:
                 sys.stdout.write(line)
-            eprint(f"\n📊 {len([l for l in diff if l.startswith('+') and not l.startswith('+++')])} additions, "
-                   f"{len([l for l in diff if l.startswith('-') and not l.startswith('---')])} removals")
+            # Skip the 2 header lines (---/+++) so content lines like `++i;` —
+            # which surface as `+++i;` — aren't swallowed by the header guard.
+            body = diff[2:]
+            eprint(f"\n📊 {len([l for l in body if l.startswith('+')])} additions, "
+                   f"{len([l for l in body if l.startswith('-')])} removals")
         return
 
     tokens = estimate_tokens(context)
