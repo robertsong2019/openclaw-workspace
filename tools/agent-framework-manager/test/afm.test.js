@@ -89,6 +89,25 @@ test('ConfigManager: importFromEnv converts types and merges (non-interactive)',
   assert.equal(saved.globalSettings.maxConcurrent, 9);
 });
 
+test('ConfigManager: importFromEnv skips garbage numeric values (no NaN/null corruption, 09-22 red)', async () => {
+  await fs.remove(afm());
+  // 09-22 前：parseInt('abc')=NaN → JSON.stringify 落盘 null → 静默腐蚀配置
+  process.env.AFM_MAX_CONCURRENT = 'abc';
+  process.env.AFM_TIMEOUT = '12x'; // 非严格数字同样拒收
+  process.env.AFM_LOG_LEVEL = 'debug'; // 非数字键不受影响
+  const cm = new ConfigManager();
+  await cm.importFromEnv();
+  delete process.env.AFM_MAX_CONCURRENT;
+  delete process.env.AFM_TIMEOUT;
+  delete process.env.AFM_LOG_LEVEL;
+  assert.equal(cm.config.globalSettings.maxConcurrent, 5, 'garbage env skipped, default kept');
+  assert.equal(cm.config.globalSettings.timeout, 30000, 'garbage env skipped, default kept');
+  assert.equal(cm.config.globalSettings.logLevel, 'debug', 'string keys still imported');
+  const saved = await fs.readJSON(path.join(afm(), 'config.json'));
+  assert.equal(saved.globalSettings.maxConcurrent, 5, 'on-disk must be number, was null');
+  assert.equal(typeof saved.globalSettings.timeout, 'number', 'on-disk timeout stays numeric');
+});
+
 test('ConfigManager: backupConfig rotates, keeping only 5 newest backups', async () => {
   await cmSave(new ConfigManager()); // ensure config.json exists
   const backupDir = path.join(afm(), 'backups');
@@ -201,6 +220,51 @@ test('AgentManager: stopAgent on missing pid file is a no-op, on dead pid cleans
   await fs.writeFile(path.join(afm(), 'pids', 'ghost.pid'), '99999999');
   await am.stopAgent('ghost');
   assert.ok(!(await fs.pathExists(path.join(afm(), 'pids', 'ghost.pid'))));
+});
+
+test('AgentManager: non-numeric pid file NEVER reaches a shell (injection red, 09-22)', async () => {
+  await fs.remove(afm());
+  const am = new AgentManager();
+  await am.init();
+  await fs.ensureDir(path.join(afm(), 'pids'));
+  const marker = path.join(tmpdir, 'injection-must-not-fire');
+  // 攻击载荷：09-22 前 `kill -0 1; touch ...` 会执行且 getAgentStatus 谎报 running:true（kill -0 1 恒真）
+  await fs.writeFile(path.join(afm(), 'pids', 'evil.pid'), `1; touch ${marker}`);
+  const st = await am.getAgentStatus('evil');
+  assert.deepEqual(st, { running: false, pid: null, uptime: 0 }, 'corrupt pid → not running, no lie');
+  assert.ok(!(await fs.pathExists(marker)), 'pid file content must never be executed as shell');
+  assert.ok(!(await fs.pathExists(path.join(afm(), 'pids', 'evil.pid'))), 'corrupt pid file auto-removed');
+  // stopAgent 同一收口（stopAgent 旧代码连 trim 都没有，直接拼 kill）
+  await fs.writeFile(path.join(afm(), 'pids', 'evil2.pid'), `0; touch ${marker}`);
+  await am.stopAgent('evil2');
+  assert.ok(!(await fs.pathExists(marker)), 'stopAgent path equally sealed');
+  assert.ok(!(await fs.pathExists(path.join(afm(), 'pids', 'evil2.pid'))));
+  // 合法 pid 行为不变：带空白前后的纯数字仍走 kill -0（此 pid 必死 → stale 清理）
+  await fs.writeFile(path.join(afm(), 'pids', 'spaced.pid'), '  99999999\n');
+  const spaced = await am.getAgentStatus('spaced');
+  assert.equal(spaced.running, false);
+  assert.ok(!(await fs.pathExists(path.join(afm(), 'pids', 'spaced.pid'))), 'dead numeric pid still auto-cleaned');
+});
+
+test('AgentManager: listAgents skips corrupted agent JSON without crashing (09-22 red)', async () => {
+  await fs.remove(afm());
+  const am = new AgentManager();
+  await am.init();
+  await fs.writeFile(path.join(afm(), 'agents', 'broken.json'), '{not json');
+  const lines = [];
+  const origLog = console.log, origWarn = console.warn;
+  console.log = (...a) => lines.push(a.join(' '));
+  console.warn = (...a) => lines.push(a.join(' '));
+  try {
+    await am.listAgents();
+  } finally {
+    console.log = origLog;
+    console.warn = origWarn;
+  }
+  const out = lines.join('\n');
+  assert.match(out, /sample-agent/, 'good agents still listed');
+  assert.match(out, /broken\.json/, 'corrupted file named in the warning');
+  assert.match(out, /共跳过 1 个损坏的配置文件/, 'skip count reported');
 });
 
 test('AgentManager: startAgent spawns real process, records real pid (exec-no-pid bug fixed)', { timeout: 20000 }, async () => {

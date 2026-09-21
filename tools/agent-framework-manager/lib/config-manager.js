@@ -370,13 +370,18 @@ export class ConfigManager {
           current = current[keys[i]];
         }
         
-        // 类型转换
-        if (keys[keys.length - 1] === 'maxConcurrent' || keys[keys.length - 1] === 'timeout') {
-          current[keys[keys.length - 1]] = parseInt(value);
-        } else if (keys[keys.length - 1] === 'autoStart') {
-          current[keys[keys.length - 1]] = value.toLowerCase() === 'true';
+        // 类型转换（严格数字校验：垃圾值跳过并警告，绝不写入 NaN/null，09-22 red）
+        const lastKey = keys[keys.length - 1];
+        if (lastKey === 'maxConcurrent' || lastKey === 'timeout') {
+          if (!/^\d+$/.test(value.trim())) {
+            console.log(chalk.yellow(`⚠ 跳过无效的 ${envVar}="${value}"（需要非负整数）`));
+            continue;
+          }
+          current[lastKey] = parseInt(value, 10);
+        } else if (lastKey === 'autoStart') {
+          current[lastKey] = value.toLowerCase() === 'true';
         } else {
-          current[keys[keys.length - 1]] = value;
+          current[lastKey] = value;
         }
         
         console.log(chalk.green(`✓ 导入 ${envVar} = ${value}`));

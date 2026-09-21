@@ -87,10 +87,19 @@ export class AgentManager {
       return;
     }
 
+    let skipped = 0;
     for (const file of agentFiles) {
-      if (file.endsWith('.json')) {
-        const agentPath = path.join(agentsDir, file);
-        const agentConfig = await fs.readJSON(agentPath);
+      if (!file.endsWith('.json')) continue;
+      const agentPath = path.join(agentsDir, file);
+      let agentConfig;
+      try {
+        agentConfig = await fs.readJSON(agentPath);
+      } catch (error) {
+        // 单个损坏的配置文件不拖垮整个列表（09-22 red）
+        console.warn(chalk.yellow(`⚠ 跳过损坏的Agent配置 ${file}: ${error.message}`));
+        skipped++;
+        continue;
+      }
         
         const status = await this.getAgentStatus(agentConfig.name);
         const statusColor = status.running ? 'green' : 'red';
@@ -102,7 +111,9 @@ export class AgentManager {
         console.log(`  状态: ${status.running ? '运行中' : '已停止'}`);
         console.log(`  PID: ${status.pid || 'N/A'}`);
         console.log('');
-      }
+    }
+    if (skipped > 0) {
+      console.log(chalk.gray(`共跳过 ${skipped} 个损坏的配置文件`));
     }
   }
 
@@ -195,49 +206,55 @@ runner.start().catch(console.error);
     }
   }
 
+  // PID 文件内容必须是纯数字；损坏内容绝不允许进入 shell 命令（命令注入防护，09-22 red）。
+  // 返回纯数字 pid 字符串；文件缺失或内容损坏（已清理）返回 null。
+  async readPidFile(agentName) {
+    const agentPidPath = path.join(process.cwd(), '.afm', 'pids', `${agentName}.pid`);
+    if (!await fs.pathExists(agentPidPath)) return null;
+    const raw = (await fs.readFile(agentPidPath, 'utf8')).trim();
+    if (!/^\d+$/.test(raw)) {
+      console.warn(chalk.yellow(`⚠ PID 文件内容损坏（非数字），已清理: ${agentName}`));
+      await fs.remove(agentPidPath);
+      return null;
+    }
+    return raw;
+  }
+
   async stopAgent(agentName) {
     const agentPidPath = path.join(process.cwd(), '.afm', 'pids', `${agentName}.pid`);
-    
-    if (!await fs.pathExists(agentPidPath)) {
+    const pid = await this.readPidFile(agentName);
+
+    if (pid === null) {
       console.log(chalk.yellow(`⚠ Agent "${agentName}" 未运行`));
       return;
     }
 
     try {
-      const pid = await fs.readFile(agentPidPath, 'utf8');
-      
       // 检查进程是否仍在运行
-      try {
-        await execAsync(`kill -0 ${pid}`);
-        // 终止进程
-        await execAsync(`kill ${pid}`);
-        console.log(chalk.green(`✓ Agent "${agentName}" 已停止`));
-      } catch (error) {
-        if (error.signal === 'SIGTERM' || error.signal === 'SIGKILL') {
-          console.log(chalk.green(`✓ Agent "${agentName}" 已停止`));
-        } else {
-          console.log(chalk.yellow(`⚠ Agent "${agentName}" 进程不存在，清理PID文件`));
-        }
-      }
-      
-      // 清理PID文件
-      await fs.remove(agentPidPath);
+      await execAsync(`kill -0 ${pid}`);
+      // 终止进程
+      await execAsync(`kill ${pid}`);
+      console.log(chalk.green(`✓ Agent "${agentName}" 已停止`));
     } catch (error) {
-      console.error(chalk.red(`✗ 停止失败: ${error.message}`));
-      throw error;
+      if (error.signal === 'SIGTERM' || error.signal === 'SIGKILL') {
+        console.log(chalk.green(`✓ Agent "${agentName}" 已停止`));
+      } else {
+        console.log(chalk.yellow(`⚠ Agent "${agentName}" 进程不存在，清理PID文件`));
+      }
     }
+
+    // 清理PID文件
+    await fs.remove(agentPidPath);
   }
 
   async getAgentStatus(agentName) {
     const agentPidPath = path.join(process.cwd(), '.afm', 'pids', `${agentName}.pid`);
-    
-    if (!await fs.pathExists(agentPidPath)) {
+    const pid = await this.readPidFile(agentName);
+    if (pid === null) {
       return { running: false, pid: null, uptime: 0 };
     }
 
     try {
-      const pid = (await fs.readFile(agentPidPath, 'utf8')).trim();
-      
       // 检查进程是否仍在运行
       await execAsync(`kill -0 ${pid}`);
       
