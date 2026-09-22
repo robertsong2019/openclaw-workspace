@@ -239,6 +239,59 @@ env DEPG_FIXTURE=clean "$DEPG" "$TMP/proj_node" --format jsn >/dev/null 2>"$TMP/
 grep -q "text, json, csv, markdown" "$TMP/err" && { PASS=$((PASS+1)); echo "ok $PASS - format error lists valid options"; } || { FAIL=$((FAIL+1)); FAILED+=("format error message"); }
 
 echo ""
+# ─── N. bug: text box padding computed from full path but basename printed ──
+# The "  Project: " line pads with $((26 - ${#PROJECT_DIR})) (full path length!)
+# while displaying basename. Deep path → negative printf width; short path →
+# overshoot. Same display-family as wrong-denominator ratio bugs.
+
+strip_ansi() { sed 's/\x1b\[[0-9;]*m//g' "$1"; }
+
+mkdir -p "$TMP/box/a/myproject" "$TMP/box/very/deeply/nested/tree/of/dirs/myproject"
+echo '{"name":"n","version":"1.0.0"}' > "$TMP/box/a/myproject/package.json"
+echo '{"name":"n","version":"1.0.0"}' > "$TMP/box/very/deeply/nested/tree/of/dirs/myproject/package.json"
+
+env DEPG_FIXTURE=clean "$DEPG" "$TMP/box/a/myproject" >"$TMP/box_a" 2>&1
+env DEPG_FIXTURE=clean "$DEPG" "$TMP/box/very/deeply/nested/tree/of/dirs/myproject" >"$TMP/box_b" 2>&1
+
+pa=$(strip_ansi "$TMP/box_a" | grep 'Project:')
+pb=$(strip_ansi "$TMP/box_b" | grep 'Project:')
+if [[ "$pa" == "$pb" ]]; then
+  PASS=$((PASS+1)); echo "ok $PASS - Project line is path-independent (differential)"
+else
+  FAIL=$((FAIL+1)); FAILED+=("box padding path-dependent")
+  echo "not ok $PASS - Project line is path-independent"
+  echo "  short: $pa"
+  echo "  deep : $pb"
+fi
+
+# Box-line width pins: Project and Type lines must match separator width
+sep=$(strip_ansi "$TMP/box_a" | grep '^╠' | head -1)
+sep_inner=${sep#╠}; sep_inner=${sep_inner%╣}
+want=${#sep_inner}
+for label in Project Type; do
+  line=$(strip_ansi "$TMP/box_a" | grep "  ${label}:" | head -1)
+  inner=${line#║}; inner=${inner%║}
+  got=${#inner}
+  if [[ "$got" -eq "$want" ]]; then
+    PASS=$((PASS+1)); echo "ok $PASS - ${label} line width $got == separator width $want"
+  else
+    FAIL=$((FAIL+1)); FAILED+=("${label} line width")
+    echo "not ok $PASS - ${label} line width $got != separator width $want"
+  fi
+done
+
+# ─── N. bug: CSV project field unquoted (RFC 4180, act dde73f3 family) ──
+mkdir -p "$TMP/comma,dir"
+echo '{"name":"n","version":"1.0.0"}' > "$TMP/comma,dir/package.json"
+env DEPG_FIXTURE=clean "$DEPG" "$TMP/comma,dir" --format csv >"$TMP/out_csv" 2>&1
+if grep -q '^project,"' "$TMP/out_csv"; then
+  PASS=$((PASS+1)); echo "ok $PASS - CSV quotes project field containing comma"
+else
+  FAIL=$((FAIL+1)); FAILED+=("csv comma escaping")
+  echo "not ok $PASS - CSV quotes project field containing comma"
+  grep '^project,' "$TMP/out_csv" | head -1 | sed 's/^/  got: /'
+fi
+
 echo "# tests=$((PASS+FAIL)) pass=$PASS fail=$FAIL"
 if [[ $FAIL -gt 0 ]]; then
   printf 'FAILED: %s\n' "${FAILED[@]}"

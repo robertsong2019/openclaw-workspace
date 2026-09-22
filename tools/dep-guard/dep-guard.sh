@@ -313,8 +313,17 @@ print(json.dumps({
 "
 
 elif [[ "$FORMAT" == "csv" ]]; then
+  # RFC 4180: quote fields containing comma/quote/newline, double the quotes
+  # (same family as agent-cost-tracker dde73f3).
+  csv_escape() {
+    local v="$1" q='"'
+    if [[ "$v" == *,* || "$v" == *"$q"* || "$v" == *$'\n'* ]]; then
+      v="${q}${v//"$q"/${q}${q}}${q}"
+    fi
+    printf '%s' "$v"
+  }
   echo "metric,value"
-  echo "project,$PROJECT_DIR"
+  echo "project,$(csv_escape "$PROJECT_DIR")"
   echo "type,$PROJECT_TYPE"
   echo "score,$SCORE"
   echo "vulnerabilities,$VULN_COUNT"
@@ -358,8 +367,14 @@ else
   echo -e "${CYAN}╔══════════════════════════════════════╗${NC}"
   echo -e "${CYAN}║${NC}  ${BOLD}dep-guard${NC} · Dependency Health Scan   ${CYAN}║${NC}"
   echo -e "${CYAN}╠══════════════════════════════════════╣${NC}"
-  echo -e "${CYAN}║${NC}  Project: $(basename "$PROJECT_DIR")$(printf '%*s' $((26 - ${#PROJECT_DIR})) '')  ${CYAN}║${NC}"
-  echo -e "${CYAN}║${NC}  Type:    ${PROJECT_TYPE}$(printf '%*s' $((27 - ${#PROJECT_TYPE})) '')  ${CYAN}║${NC}"
+  # Box inner width is 38: "  Project: " (11) + content (25) + "  " (2).
+  # Pad from the BASENAME actually displayed — full-path length made padding
+  # path-dependent (negative printf width on deep paths).
+  proj_name=$(basename "$PROJECT_DIR")
+  pad=$((25 - ${#proj_name})); (( pad < 0 )) && pad=0
+  echo -e "${CYAN}║${NC}  Project: ${proj_name}$(printf '%*s' "$pad" '')  ${CYAN}║${NC}"
+  pad=$((25 - ${#PROJECT_TYPE})); (( pad < 0 )) && pad=0
+  echo -e "${CYAN}║${NC}  Type:    ${PROJECT_TYPE}$(printf '%*s' "$pad" '')  ${CYAN}║${NC}"
   printf "${CYAN}║${NC}  ${BOLD}Score:   ${SCORE}/100 $(score_emoji)${NC}\n"
   echo -e "${CYAN}╠══════════════════════════════════════╣${NC}"
   echo -e "${CYAN}║${NC}                                      ${CYAN}║${NC}"
