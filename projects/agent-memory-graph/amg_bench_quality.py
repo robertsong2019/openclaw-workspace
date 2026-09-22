@@ -10936,6 +10936,22 @@ def counting_form(question: str) -> str | None:
     # overlap by census).
     if _BAKE_HEAD_RE.match(ql):
         return "bake_two_weeks"
+    # C598: self-stated cumulative activity totals — "how many
+    # trips/times have I taken/worn …?". Census (all 500): the
+    # head matches EXACTLY 2 rows (26bdc477 GT 'five' /
+    # 618f13b2 GT 'six'), both unbanked (gate=answer / session
+    # echo today). No window — the STATED TOTAL replaces it
+    # (C593 pattern): the answer is the user's own running
+    # total ("on five trips now" / "six times now that I've
+    # worn them"), not a counted key set. The taken|worn verbs
+    # keep the 603deb26 Negroni 5-v-10 conflict trap and the
+    # ride/metup/Chiefs siblings out; it cannot steal the
+    # C591-C597 heads (different NPs/markers) or the generic
+    # how-many block. The handler returns None when no (or
+    # conflicting) totals resolve (falls through; zero overlap
+    # by census).
+    if _CUM_HEAD_RE.match(ql):
+        return "cum_total"
     if re.match(r'^how (much|many)\b', q, re.I) \
             and re.search(r'\btotal\b', ql):
         if re.search(r'\bhow many (hours|years|months)\b', ql):
@@ -13216,6 +13232,62 @@ def _cnt_bake_two_weeks(question: str, sessions: list[dict]):
     return _ec_render(len(keys)) if keys else None
 
 
+# C598 topic walls — the total construction must share its
+# sentence with the question's topic NP (C591+ same-sentence
+# discipline): camera terms for the trips head, Converse/
+# sneaker terms for the worn head. Totals in topic-less
+# sentences are other people's counts.
+_CUM_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+(trips|times)\s+have\s+i\s+"
+    r"(?:taken|worn)\b", re.I)
+_CUM_TOPIC = {
+    "trips": re.compile(r"\bcanon\b|\beos\b|\b80d\b|\bcamera\b",
+                        re.I),
+    "times": re.compile(r"\bconverse\b|\bchuck\b|\btaylor\b"
+                        r"|\bsneakers?\b", re.I),
+}
+# the stated-total construction: "on five trips now" /
+# "six times now that I've worn them". The 'now' anchor is
+# what separates a running TOTAL from a bare enumeration
+# ("three trips to Yellowstone, Yosemite, and the Grand
+# Canyon" — no 'now', no total).
+_CUM_TOTAL_RX = re.compile(
+    r"\b(?:on\s+)?((?:one|two|three|four|five|six|seven|eight"
+    r"|nine|ten|eleven|twelve)|\d+)\s+(?:trips|times)\s+now\b",
+    re.I)
+
+
+def _cnt_cum_total(question: str, sessions: list[dict]):
+    """Resolve the user's STATED cumulative activity total
+    (C598, 26bdc477 GT 'five' / 618f13b2 GT 'six'). No window —
+    the stated total replaces it (C593 pattern). A user-role
+    sentence yields the total when it carries BOTH the topic NP
+    (same-sentence wall, _CUM_TOPIC) and the '<num> trips|times
+    now' construction (_CUM_TOTAL_RX). Renders the captured
+    token as stated ('five' banks numeric-first via
+    counting_judge; digits pass through). Conflicting distinct
+    totals abstain (None) — no recency arbitration exists in
+    this lane; identical repeats dedup to the one value.
+    Returns None when nothing (or contradictory things) resolve
+    (falls through — census zero overlap: the head matches
+    exactly 2 rows full-500 and no other question pairs
+    trips|times with taken|worn)."""
+    m = _CUM_HEAD_RE.match(" ".join(question.split()))
+    if not m:
+        return None
+    topic = _CUM_TOPIC[m.group(1).lower()]
+    vals: set[str] = set()
+    for _si, sent in _cnt_sents(sessions, "user"):
+        if not topic.search(sent):
+            continue
+        t = _CUM_TOTAL_RX.search(sent)
+        if t:
+            vals.add(t.group(1).lower())
+    if len(vals) == 1:
+        return vals.pop()
+    return None
+
+
 def _cnt_item_total(question: str, sessions: list[dict]):
     """Sum per-item prices for enumerated "total cost" questions.
 
@@ -15096,7 +15168,8 @@ def answer_counting(question: str,
           "furniture_txn": _cnt_furniture_txn,
           "bikes_own": _cnt_bikes_own,
           "marvel_rewatch": _cnt_marvel_rewatch,
-          "bake_two_weeks": _cnt_bake_two_weeks}
+          "bake_two_weeks": _cnt_bake_two_weeks,
+          "cum_total": _cnt_cum_total}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break
