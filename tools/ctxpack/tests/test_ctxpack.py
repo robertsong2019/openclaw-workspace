@@ -852,10 +852,52 @@ class TestGitignoreDirPatterns:
         # Non-default dir name proves the pattern path, not defaults.
         assert should_ignore("third_party/lib.js", {"third_party/"})
 
-    def test_negation_patterns_stay_inert(self):
-        # Unchanged behavior, pinned explicitly: "!" lines never match.
-        assert should_ignore("keep.log", {"!keep.log", "*.log"})
+    def test_negation_reincludes_glob_exception(self):
+        # "!" lines beat positive matches (order-free approximation of
+        # gitignore last-match-wins: patterns arrive as an unordered set).
+        # Mechanism tested with non-default file type (*.tmp — *.log is a
+        # built-in default and would mask the user patterns).
+        assert not should_ignore("keep.tmp", {"!keep.tmp", "*.tmp"})
+        assert should_ignore("debug.tmp", {"!keep.tmp", "*.tmp"})
+
+    def test_negation_overrides_builtin_defaults(self):
+        # "*.log" is in DEFAULT_IGNORE_FILES; an explicit "!" must win.
+        assert not should_ignore("important.log", {"!important.log"})
+        assert should_ignore("other.log", {"!important.log"})
+
+    def test_negation_reincludes_dir_contents(self):
+        # "!secrets" re-includes the dir and everything inside it.
+        assert not should_ignore("secrets", {"secrets/", "!secrets"})
+        assert not should_ignore("secrets/key.js", {"secrets/", "!secrets"})
 
     def test_plain_glob_path_form_still_works(self):
         assert should_ignore("debug.log", {"*.log"})
         assert should_ignore("src/app.js", {"src/*.js"})
+
+
+    def test_negation_scan_tree_glob_exception(self, tmp_path):
+        (tmp_path / ".gitignore").write_text("*.tmp\n!keep.tmp\n")
+        (tmp_path / "app.js").write_text("x")
+        (tmp_path / "debug.tmp").write_text("x")
+        (tmp_path / "keep.tmp").write_text("x")
+        from ctxpack import scan_tree
+
+        files = scan_tree(tmp_path, load_gitignore(tmp_path))
+        assert "app.js" in files
+        assert "keep.tmp" in files
+        assert "debug.tmp" not in files
+
+    def test_negation_cannot_rescue_inside_excluded_dir(self, tmp_path):
+        # File-level "!" cannot bypass directory pruning: scan_tree drops the
+        # dir before per-file checks, so "secrets/keep.log" stays out even
+        # though the file itself matches a negation line.
+        (tmp_path / ".gitignore").write_text("secrets/\n!keep.log\n")
+        (tmp_path / "app.js").write_text("x")
+        sub = tmp_path / "secrets"
+        sub.mkdir()
+        (sub / "keep.log").write_text("x")
+        from ctxpack import scan_tree
+
+        files = scan_tree(tmp_path, load_gitignore(tmp_path))
+        assert "app.js" in files
+        assert not any("secrets" in f for f in files)

@@ -144,26 +144,33 @@ def load_ctxpackignore(root: Path) -> set[str]:
 
 
 def should_ignore(path: str, gitignore_patterns: set[str]) -> bool:
+    # Per-path predicate; directory pruning is scan_tree's job (a "!" file
+    # exception cannot rescue a file whose parent dir was pruned).
+    # Defaults participate in the same accounting as user patterns, so an
+    # explicit "!name" can override built-in ignores ("*.log" etc.).
     name = os.path.basename(path)
-    for d in DEFAULT_IGNORE_DIRS:
-        if fnmatch.fnmatch(name, d):
-            return True
-    for p in DEFAULT_IGNORE_FILES:
-        if fnmatch.fnmatch(name, p):
-            return True
     parts = path.split("/")
+    positive = any(fnmatch.fnmatch(name, d) for d in DEFAULT_IGNORE_DIRS)
+    positive = positive or any(fnmatch.fnmatch(name, p) for p in DEFAULT_IGNORE_FILES)
+    negated = False
     for p in gitignore_patterns:
         pat = p.strip().rstrip("/")
         if pat.startswith("/"):  # anchored pattern — approximate as bare name
             pat = pat.lstrip("/")
-        if not pat or pat.startswith("!"):  # negation lines stay inert
+        if not pat:
             continue
-        if fnmatch.fnmatch(name, pat) or fnmatch.fnmatch(path, pat):
-            return True
-        # dir pattern ("secrets/" or "secrets"): match any ancestor segment
-        if any(fnmatch.fnmatch(seg, pat) for seg in parts[:-1]):
-            return True
-    return False
+        if pat.startswith("!"):
+            pat = pat[1:]
+            if not pat:
+                continue
+            hit = (fnmatch.fnmatch(name, pat) or fnmatch.fnmatch(path, pat)
+                   or any(fnmatch.fnmatch(seg, pat) for seg in parts[:-1]))
+            negated = negated or hit
+            continue
+        hit = (fnmatch.fnmatch(name, pat) or fnmatch.fnmatch(path, pat)
+               or any(fnmatch.fnmatch(seg, pat) for seg in parts[:-1]))
+        positive = positive or hit
+    return positive and not negated
 
 
 def scan_tree(root: Path, gitignore: set[str], max_depth: int = 4):
