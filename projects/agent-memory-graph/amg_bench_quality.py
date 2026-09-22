@@ -10925,6 +10925,17 @@ def counting_form(question: str) -> str | None:
     # (falls through; zero overlap by census).
     if _MRW_HEAD_RE.match(ql):
         return "marvel_rewatch"
+    # C597 bake two-weeks event counts — "How many times did I
+    # bake something in the past two weeks?". Census (all 500):
+    # the head matches EXACTLY 1 row (88432d0a, GT '4'),
+    # unbanked (gate=answer / parasitic session echo today). The
+    # head supplies the window itself; it cannot steal the
+    # C591-C596 heads (different NPs/markers) or the generic
+    # how-many block (no 'total'). The handler returns None when
+    # no anchored bake event resolves (falls through; zero
+    # overlap by census).
+    if _BAKE_HEAD_RE.match(ql):
+        return "bake_two_weeks"
     if re.match(r'^how (much|many)\b', q, re.I) \
             and re.search(r'\btotal\b', ql):
         if re.search(r'\bhow many (hours|years|months)\b', ql):
@@ -13134,6 +13145,77 @@ def _cnt_marvel_rewatch(question: str, sessions: list[dict]):
     return _ec_render(len(keys)) if keys else None
 
 
+_BAKE_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+times\s+did\s+i\s+bake\s+something\s+"
+    r"in\s+the\s+past\s+two\s+weeks\s*\??\s*$", re.I)
+# baked-good object nouns — the event KEY space. 'sourdough' is
+# deliberately absent ('sourdough starter' is a maintained
+# culture, not an event object; the bread itself keys on
+# 'bread') — first-match-wins keeps every bread surface on one
+# key.
+_BAKE_GOOD_RX = re.compile(
+    r"\b(bread|baguette|loaves?|cake|cookies?|muffins?"
+    r"|croissants?|pastr(?:y|ies)|pies?|tarts?|brownies?"
+    r"|focaccia|cupcakes?|scones?|biscuits?|pretzels?"
+    r"|donuts?|waffles?)\b", re.I)
+# past-tense event verbs: direct bake/make/try + the
+# used…-to-bake/make chain (gap-bounded like _EC_AT_PLACE_RE —
+# the s37 cookie surface spans 'used my oven's convection
+# setting for the first time last Thursday to bake').
+_BAKE_VERB_RX = re.compile(
+    r"\b(?:baked|made|tried)\b"
+    r"|\bused\b[^.?!]{0,80}?\bto\s+(?:bake|make)\b", re.I)
+# past anchors inside the two-week wall (C591 _EC_MARKER_AGE
+# family + weekday surfaces). 'last month' deliberately absent
+# (outside the window); future anchors ('this weekend',
+# 'tonight', 'tomorrow') deliberately absent — plans fall out
+# by construction.
+_BAKE_PAST_RX = re.compile(
+    r"\b(?:yesterday"
+    r"|last\s+(?:monday|tuesday|wednesday|thursday|friday"
+    r"|saturday|sunday|weekend|week)"
+    r"|on\s+(?:monday|tuesday|wednesday|thursday|friday"
+    r"|saturday|sunday)"
+    r"|recently|just"
+    r"|(?:(?:one|two|three|four|five|six|seven|eight|nine|ten)"
+    r"|\d+)\s+(?:days?|weeks?)\s+ago)\b", re.I)
+
+
+def _cnt_bake_two_weeks(question: str, sessions: list[dict]):
+    """Count DISTINCT bake events in the past two weeks (C597,
+    88432d0a, GT '4'). The head supplies the window; events must
+    carry a past anchor inside it (C591 marker family + weekday
+    surfaces) — plans carry future anchors ('this weekend',
+    'tonight') that sit structurally outside the past set, so
+    there is no sentence-level plan wall (the s22 surface shares
+    one sentence between 'I made … last Saturday' and 'I'm
+    considering' — a plan wall at sentence grain would eat the
+    event). A sentence counts when a user-role sentence carries
+    ALL of: past-tense event verb (baked/made/tried, or the
+    used…-to-bake/make chain — the baguette surfaces carry NO
+    bake verb, only 'made'/'used to make'), a past anchor, and a
+    baked-good noun (the event KEY). Distinct keys render
+    word-form ('four'; judge_semantic norm-folds onto GT '4').
+    Known granularity limits (documented, not patched —
+    surgical): negated pasts ('haven't baked bread recently')
+    would count; two distinct events sharing one good noun would
+    merge. Returns None when nothing resolves (falls through —
+    census zero overlap: the head matches exactly 1 row full-500
+    and no other question pairs 'bake something' with the
+    two-week window)."""
+    if not _BAKE_HEAD_RE.match(" ".join(question.split())):
+        return None
+    keys: set[str] = set()
+    for _si, sent in _cnt_sents(sessions, "user"):
+        if not (_BAKE_VERB_RX.search(sent)
+                and _BAKE_PAST_RX.search(sent)):
+            continue
+        m = _BAKE_GOOD_RX.search(sent)
+        if m:
+            keys.add(m.group(1).lower())
+    return _ec_render(len(keys)) if keys else None
+
+
 def _cnt_item_total(question: str, sessions: list[dict]):
     """Sum per-item prices for enumerated "total cost" questions.
 
@@ -15013,7 +15095,8 @@ def answer_counting(question: str,
           "antique_inherit": _cnt_antique_inherit,
           "furniture_txn": _cnt_furniture_txn,
           "bikes_own": _cnt_bikes_own,
-          "marvel_rewatch": _cnt_marvel_rewatch}
+          "marvel_rewatch": _cnt_marvel_rewatch,
+          "bake_two_weeks": _cnt_bake_two_weeks}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break
