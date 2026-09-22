@@ -377,3 +377,78 @@ describe('CLI end-to-end', () => {
     assert.match(stdout, /real-run/);
   });
 });
+
+// ─── Exit-code integrity: run must not report success on failure ───
+
+describe('timeout semantics in executeTasks', () => {
+  let restore;
+  before(() => { restore = silenceConsole(); });
+  after(() => { restore(); });
+
+  it('task.timeout 0 means unlimited (not settings.timeout fallback)', async () => {
+    // RED: `task.timeout || settings.timeout` swallowed explicit 0.
+    const plan = [[{
+      id: 'slow', type: 'shell', timeout: 0, priority: 5,
+      command: 'node -e "setTimeout(()=>process.exit(0), 400)"'
+    }]];
+    const results = await executeTasks(plan, { parallelExecution: true, continueOnError: false, timeout: 100 });
+    assert.equal(results.completed, 1, `expected completion with unlimited timeout, got ${JSON.stringify(results.tasks)}`);
+  });
+
+  it('negative timeout is a clear error, not raw ERR_OUT_OF_RANGE', async () => {
+    await assert.rejects(
+      () => executeTasks(
+        [[{ id: 'neg', type: 'shell', command: 'echo hi', timeout: -5, priority: 5 }]],
+        settings
+      ),
+      err => /无效的超时时间/.test(err.message) && !/OUT_OF_RANGE/.test(err.message)
+    );
+  });
+});
+
+describe('CLI run exit-code integrity', () => {
+  const cli = path.join(process.cwd(), 'index.js');
+  let workDir;
+
+  before(async () => {
+    workDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ato-exit-'));
+    await fs.ensureDir(path.join(workDir, '.orchestrator'));
+  });
+
+  after(async () => { await fs.remove(workDir); });
+
+  const run = (args) => execFileAsync('node', [cli, ...args], { cwd: workDir });
+
+  const writeOrch = (name, orch) =>
+    fs.writeJson(path.join(workDir, '.orchestrator', `${name}.json`), {
+      name, description: name, version: '1.0.0', createdAt: new Date().toISOString(), ...orch
+    });
+
+  it('run exits 1 when a task fails under continueOnError', async () => {
+    await writeOrch('cont', {
+      settings: { parallelExecution: true, continueOnError: true, timeout: 10000 },
+      tasks: [{ id: 'boom', type: 'shell', command: 'exit 3', priority: 5 }]
+    });
+    // RED: results.failed was never checked → exit 0 on total failure.
+    await assert.rejects(
+      () => run(['run', 'cont']),
+      err => err.code === 1
+    );
+  });
+
+  it('run refuses to exit 0 when the plan cannot schedule every task', async () => {
+    // dangle depends on a task id that does not exist → never schedulable.
+    await writeOrch('dangle', {
+      settings: { parallelExecution: true, continueOnError: true, timeout: 10000 },
+      tasks: [
+        { id: 'ok', type: 'shell', command: 'echo fine', priority: 5 },
+        { id: 'dangle', type: 'shell', command: 'echo never', dependsOn: ['ghost'], priority: 5 }
+      ]
+    });
+    // RED: buildExecutionPlan only warns on stdout; run exits 0 with 1/2 tasks run.
+    await assert.rejects(
+      () => run(['run', 'dangle']),
+      err => err.code === 1 && /执行计划不完整|循环依赖/.test(err.stderr + err.stdout)
+    );
+  });
+});

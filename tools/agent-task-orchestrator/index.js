@@ -169,6 +169,14 @@ program
       // 构建执行计划
       const executionPlan = buildExecutionPlan(tasks, options.sequential);
       
+      // Plan must cover every requested task — cycles/dangling deps are fatal,
+      // not a stdout warning while exit code claims success.
+      const plannedCount = executionPlan.reduce((n, stage) => n + stage.length, 0);
+      if (plannedCount < tasks.length) {
+        console.error(chalk.red(`❌ 执行计划不完整: ${tasks.length - plannedCount} 个任务因循环依赖或依赖不存在的任务无法调度，拒绝执行`));
+        process.exit(1);
+     }
+      
       if (options.dryRun) {
         printExecutionPlan(executionPlan);
         return;
@@ -183,6 +191,11 @@ program
       
       // 显示结果
       printResults(results);
+      
+      // Exit code is the conclusion: any failed task must fail the run.
+      if (results.failed > 0) {
+        process.exit(1);
+      }
       
     } catch (error) {
       console.error(chalk.red('❌ 执行失败:'), error.message);
@@ -456,7 +469,10 @@ async function executeTasks(executionPlan, settings, verbose = false) {
         console.log(chalk.cyan(`▶️  执行: ${task.id} (${task.type})`));
         
         let result;
-        const timeout = task.timeout || settings.timeout;
+        const timeout = task.timeout ?? settings.timeout;
+        if (!Number.isFinite(timeout) || timeout < 0) {
+          throw new Error(`无效的超时时间: ${timeout} (任务 ${task.id})`);
+        }
         
         switch (task.type) {
           case 'shell':
