@@ -798,3 +798,64 @@ def test_watch_exclude_paths_prevents_feedback_loop(tmp_path):
     changed, added, removed = seen[0]
     assert "out.md" not in changed + added + removed
     assert "app.py" in changed
+
+
+# ── Gitignore dir-pattern family (trailing slash + leading-slash anchor) ──
+# Regression: patterns like "secrets/" or "/private" never matched anything
+# (fnmatch has no trailing-slash / anchor semantics). Common default dirs were
+# masked by DEFAULT_IGNORE_DIRS, so the bug was invisible for non-default names.
+
+
+class TestGitignoreDirPatterns:
+    def test_trailing_slash_pattern_ignores_dir(self, tmp_path):
+        (tmp_path / ".gitignore").write_text("secrets/\n")
+        (tmp_path / "app.js").write_text("x")
+        (tmp_path / "secrets").mkdir()
+        (tmp_path / "secrets" / "key.js").write_text("x")
+        from ctxpack import scan_tree
+
+        files = scan_tree(tmp_path, load_gitignore(tmp_path))
+        assert "app.js" in files
+        assert not any("secrets" in f for f in files)
+
+    def test_trailing_slash_pattern_ignores_nested(self, tmp_path):
+        (tmp_path / ".gitignore").write_text("secrets/\n")
+        (tmp_path / "app.js").write_text("x")
+        nested = tmp_path / "a" / "b" / "secrets"
+        nested.mkdir(parents=True)
+        (nested / "key.js").write_text("x")
+        from ctxpack import scan_tree
+
+        files = scan_tree(tmp_path, load_gitignore(tmp_path))
+        assert "app.js" in files
+        assert not any("secrets" in f for f in files)
+
+    def test_leading_slash_anchor_pattern(self, tmp_path):
+        # Documented loosening: "/private" is treated like "private"
+        # (anchored-to-root semantics are approximated, not exact).
+        (tmp_path / ".gitignore").write_text("/private\n")
+        (tmp_path / "app.js").write_text("x")
+        (tmp_path / "private").mkdir()
+        (tmp_path / "private" / "x.js").write_text("x")
+        from ctxpack import scan_tree
+
+        files = scan_tree(tmp_path, load_gitignore(tmp_path))
+        assert "app.js" in files
+        assert not any("private" in f for f in files)
+
+    def test_trailing_slash_unit_should_ignore(self):
+        # Unit-level: pattern itself (not DEFAULT_IGNORE_DIRS) does the work.
+        assert should_ignore("secrets", {"secrets/"})
+        assert should_ignore("secrets/key.js", {"secrets/"})
+        assert should_ignore("a/b/secrets/key.js", {"secrets/"})
+        assert not should_ignore("app.js", {"secrets/"})
+        # Non-default dir name proves the pattern path, not defaults.
+        assert should_ignore("third_party/lib.js", {"third_party/"})
+
+    def test_negation_patterns_stay_inert(self):
+        # Unchanged behavior, pinned explicitly: "!" lines never match.
+        assert should_ignore("keep.log", {"!keep.log", "*.log"})
+
+    def test_plain_glob_path_form_still_works(self):
+        assert should_ignore("debug.log", {"*.log"})
+        assert should_ignore("src/app.js", {"src/*.js"})

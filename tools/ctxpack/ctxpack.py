@@ -151,8 +151,17 @@ def should_ignore(path: str, gitignore_patterns: set[str]) -> bool:
     for p in DEFAULT_IGNORE_FILES:
         if fnmatch.fnmatch(name, p):
             return True
+    parts = path.split("/")
     for p in gitignore_patterns:
-        if fnmatch.fnmatch(name, p) or fnmatch.fnmatch(path, p):
+        pat = p.strip().rstrip("/")
+        if pat.startswith("/"):  # anchored pattern — approximate as bare name
+            pat = pat.lstrip("/")
+        if not pat or pat.startswith("!"):  # negation lines stay inert
+            continue
+        if fnmatch.fnmatch(name, pat) or fnmatch.fnmatch(path, pat):
+            return True
+        # dir pattern ("secrets/" or "secrets"): match any ancestor segment
+        if any(fnmatch.fnmatch(seg, pat) for seg in parts[:-1]):
             return True
     return False
 
