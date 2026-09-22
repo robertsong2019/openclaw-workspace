@@ -1,7 +1,7 @@
-# TUTORIAL: Answer Faces — 问题结构驱动的答案选择（Cycles 529-596）
+# TUTORIAL: Answer Faces — 问题结构驱动的答案选择（Cycles 529-599）
 
 > 本文解释 amg 评测管线里最反直觉的一个设计：**答案选哪个句子，不该由"分数阈值"决定，而该由"问题在问什么"决定**。
-> 覆盖 Cycle 529-596 的机制演进（banked 0.494 → 0.696），所有例子都是 LongMemEval s_cleaned full-500 里的真实题目。
+> 覆盖 Cycle 529-599 的机制演进（banked 0.494 → 0.706），所有例子都是 LongMemEval s_cleaned full-500 里的真实题目。
 
 ---
 
@@ -165,7 +165,7 @@ judge cascade（exact → semantic → LLM）里有一个 NEEDS_JUDGE 区间：e
 
 ---
 
-## 5. 值解析与锚点族 face：数字、日期、时长、锚点选择（C549-C593）
+## 5. 值解析与锚点族 face：数字、日期、时长、锚点选择（C549-C599）
 
 §3-§4 的 face 都长在"**选哪句话**"上；C549-C554 是第三波：答案本身是个数值/日期/时长，face 长在"**值解析**"上——不是从候选里挑句子，而是从通过 gate 的内容里提炼出**正确的值**。C555-C557 是第四波：值对了还不够，**锚点选择**本身也是信号源——锚是谁说的（角色）、跨度怎么定义（口径）、行内多个日期选哪个（临近度/连续对）。外加一次方法论升级（C549：census-negative 的第三种用法）。C561-C563 是值解析族的残留地带清扫：counting 的非金钱度量兄弟（距离/重量/时长）、item_total 的空清单分支（类别求和）、时长族最后两个病根（同句状态绑定 + 进行体问头/会话跨度）。C564-C569 是第五波：**期限/跨度/求和面**——pp_duration 三条新 route（晋职扣减、完成时长求和、活动跨度求和）与一个门入口（have-had），counting 三个新 gate entry（页码进度双面、成书页数求和、教育年限链）；附赠两次"队列注记被证据翻案"的方法论实录（C564 弃权→rescue、C565 现成→错面）。C570-C573 把第五波收束成 session-date 跨度族（书本/事件/旅程跨度、ago 倒推、具名日偏移）。C574-C576 是第六波：**结构回指族**——问题自身的引用结构（出版引证、bullet 列表体、回指提法）本身就是 bearer 的连接条件。C580-C582 把「谁有权作答」（角色墙、header 行、让位规则）推到前台。C583-C585 是第七波：**结构性判别族**——判别信号完成从调分数到结构性硬约束的转向：需求名词是过滤不是权重（答案必须含问题 demand 的名词，C584）、判别式跨域迁移成 NP 全实词锚（C585）、序数后缀守卫数量锚的邻接（C583）；证据面也第一次对 user 角色开放，用结构锚代替角色墙。
 
@@ -457,6 +457,24 @@ C592 form 门里 pin 注释预留的 future cycle 当轮兑现：antique 题（"
 
 > 设计课：**截断规则写进构造，别指望下游修复**——遇小写即停让「贪婪吞到哪」变成「合法 span 到哪」，歧义在生成端消失。TDD 课：15 测试首跑 14 绿 1 红，红是断言作者没按 fixture 重推（S6 只有 Endgame，NWH 在 S34）——**期望值要手工按 fixture 重推一遍**，绿大头红一头的套件里，红的那根往往不是 face 的错。渲染课复用 §5.42：纯词形 'two' 经 judge_semantic norm fold 命中 GT '2'。
 
+### 5.48 C597 bake_two_weeks — 结构性排除优于文本墙
+
+双周烘焙计数（"How many times have I baked in the past two weeks?"）的证据条件是三重合取：过去时烘焙动词（baked/made/tried，含 used…to bake/make 链——baguette 的两个 surface 均无 bake 动词，make 链正是为此预留的捕获点）+ 窗内过去锚 + 烘焙品名词键。真正的设计决策是**不加句级 plan 墙**：s22 的 'I made … last Saturday' 与 'I'm considering …' 同句共存，句级 plan 拦截会把真证据一起杀掉——而未来锚（this weekend/tonight）结构性地不在过去锚集合里，计划句自动出局。
+
+> 设计课：**能被既有集合的结构性排除处理的，就不要再叠文本墙**——墙每多一条，误杀面就大一圈；在 C591 的锚集合纪律里，「过去」本身就是计划句的过滤器。配套 tsv 课：照抄上一棒 append 脚本的 `assert all(l.strip())` 必炸——历史数据本就含空行，断言要对「本轮新增」负责（行数 + 相邻性），不对全文件历史负责。
+
+### 5.49 C598 cum_total — 自述总数是构式不是计数
+
+"五次"可以来自两种完全不同的证据：key-set 枚举（C595/596/597 的模式：数出 distinct 键）与**用户亲口说出的运行总数**（"I've had my Canon EOS 80D with me on five trips now" / "so that's six times now that I've worn them"）。后者必须走构式路线：捕获 "N trips/times now" 里的 N。构式的分界线就是 **`now` 锚**——"three trips to X, Y, Z"（无 now）只是提及清单，永不产 3；这是本轮最核心的诱饵钉子。冲突总量（同一话题出现 5-v-10 两个总数）诚实弃权，时间序仲裁（后值胜）留给 future cycle。
+
+> 设计课：**先问答案的来源类型，再选机制**——同样是 "how many times"，枚举题数键、构式题捕数；机制选错则证据面全错。渲染照抄捕获 token（'five'/'six'），counting_judge 数值优先 + judge_semantic 词形 fold 双路皆 bank——C591 的双 judge 探针纪律在第 4 次应用中零成本通过。
+
+### 5.50 C599 march-window — 粒度二象性与序数后缀坑
+
+March 月份锚定计数一机制双面：bike 服务面（serviced March 10th 的 road bike + 锚 "this month, before April comes" 的换胎意图）与 doctor's appointment 面（March 3rd 的 Dr. Smith + March 20th 的 Dr. Thompson）。**同一轮里两种粒度并存**：bike 面 F2 的意图与锚分属同 turn 兄弟句，句粒度必失配 → turn 粒度（安全，因为锚文本上钉死 March）；appt 面 turn 粒度会把 'should discuss with Dr. Johnson' 的邻居多算进来（2→3）→ 句粒度是承重墙。粒度跟着证据的文本分布走，不由机制偏好决定。
+
+> 设计课：**序数后缀坑**——`\bmarch\s+\d{1,2}\b` 在 "March 10**th**" 失配，因为 `\b` 落在数字与字母之间（都是 word char）；`(?:st|nd|rd|th)?` 消费后缀，"March 2023" 仍经回溯正确拒绝。**双面守卫坑**——`if not keys` 的早退会让 F1 命中后 F2 被跳过，丢掉 commuter 面；双面必须无条件全跑，set 天然去重。**敬称句切坑**——按 `.` 切句把 "Dr. Smith" 切成两半；合并以 Dr./Mr./Mrs./Ms./St. 结尾的碎片。**流程课**——选面先查链上 banked 态：队列是快照不是事实源，候选 #1 在排队的两天里已被别的 cycle banked（链上查证先于队列信任）。
+
 ## 6. 反面教材：枚举清单没有结构键（C536，RECORD-NEGATIVE）
 
 序数清单（"5. Absinthe"）看起来也能做个 face。实现后发现 **census 全负**：
@@ -565,12 +583,15 @@ answer-face 家族的开发纪律（每个 face 都走了这套流程）：
 | 问题问多动词家具交易计数（buy/assemble/sell/fix） | furniture_txn | 交易动词族+91d 窗口同句纪律；复数拼写家族显式交替（`Xes?` 匹配的是 'mattresse'）；品牌墙用原始 casing 判 isupper | C594 |
 | 问题问拥有多少 <bike>（枚举/跨 session 物主双面） | bikes_own | OWNERSHIP 替代时间窗；深度-1 回看分类免吞噬；复数/泛指/follower 墙不建键；紧邻字符判墙 | C595 |
 | 问题问重看计数（re-watch 标记，无时间窗） | marvel_rewatch | re-watch 标记替代窗口；user 轮大写标题 span 遇小写即停；distinct 键去重 | C596 |
+| 问题问过去两周烘焙/做了多少 <烘焙品>（make 链无 bake 动词） | bake_two_weeks | 烘焙动词（含 used…to make 链）+过去锚+名词键三重合取；不加句级 plan 墙——未来锚结构性出局 | C597 |
+| 问题问 "N trips/times now" 型自述累计总数 | cum_total | `now` 锚区分总数与裸枚举（无 now 的清单永不产数）；冲突总量弃权；渲染照抄捕获 token 双 judge 皆 bank | C598 |
+| 问题问 March 窗口内服务/拜访计数（bike/appt 双面） | march-window | 粒度随证据分布：锚与键跨句必失配→turn 粒度、邻居跨句会多算→句粒度承重墙；序数后缀消费 + 敬称句切修复 | C599 |
 | kh-floor 想救 kh=0 GT | 🚫 census-negative，不接线 | 1 救 vs 14 杀，absence pin 钉死 | C543 |
 | kh-elite 准入救窗口死区 | 🚫 census-negative，不接线 | impostor 杀率 23.3% vs 4 救，admission-only 全族否决 | C546 |
 | 松弛 run 门想多救几行 | 🚫 census-negative = 局部最优证书 | 全部 kill 是 run-TIE impostor；absence pin 钉死 C548 配置 | C549 |
 | 嵌入 side-channel 重排 | 🚫 census-negative，默认 False | 离线增益被 gate+judge 吸收，pin 死默认值 | C545 |
 
-**十八条带走的原则**：
+**二十条带走的原则**：
 1. 答案选择读**问题结构**，不调阈值
 2. face 重排不越权翻地板；地板排除自有理由
 3. census-first：先数人口，先离线模拟，再接线；证伪的方向写进台账并用 absence pin 钉住
@@ -590,7 +611,8 @@ answer-face 家族的开发纪律（每个 face 都走了这套流程）：
 17. 渲染形式由判分公式决定，不是由美观决定：'three (3)' 过 exact_judge containment 但被 judge_semantic 归一化折叠成 '3 3'（重复 token）→ NEEDS_JUDGE——frozen correct_exact=False 的行判分完全由 semantic 侧决定（C591）；**replay 前双 judge 探针**（渲染样本各过 exact + semantic）是最便宜的伪影检测器；数据集的表面形式（'two weeks ago' 拼写数词）是正则必须吃下的现实，不是可假设掉的边角
 18. 反劫持 pin 是租约不是墓碑：为保护 banked 而钉的「此面不认领」测试，注释里写着 future cycle 时就是在给下一棒留路标——兑现时更新 pin 必须写明因果（哪个 cycle、为什么要改、更新前后语义都写清），pin 的演化是计划内行为而非违约（C592 test_form_does_not_steal_antique_head 钉 enum_count → C593 兑现为 antique_inherit）；且新 head 的 census 边界（三锚恰 1 行）反过来保证它偷不走上一棒的 face
 19. 正则的拼写层与边界层都要按真实表面设计：复数拼写家族（-es/-f→-ves/-y→-ies）需要显式交替，`Xes?` 匹配到的是 'mattresse' 不是 'mattress'（C594），且单点幸运命中会掩蔽双零——逐物品 isolate 是最便宜的暴露手段；NP 边界别让一个正则既定边界又组结构——深度-1 回看分类（C595）或「遇小写即停」的 span 规则（C596）把吞噬问题在构造端消灭
+20. 粒度与墙跟着证据的共生结构走，不跟机制惯性走：锚与键分属同 turn 兄弟句时句粒度必失配（C599 bike 面 → turn 粒度），日期与多个专名跨句分布时 turn 粒度会把邻居多算进来（C599 appt 面 → 句粒度承重墙）——同一轮两种粒度并存是常态；能被锚集合结构性排除的计划句（未来锚不在过去集合里）就不要叠句级文本墙去误杀共生的过去陈述（C597）；队列是快照不是事实源——动工前先查链上 banked 态（C599 选面插曲）
 
 ---
 
-*生成：documentation-morning cron，2026-09-02；Cycles 540-542 增补：2026-09-03；Cycles 543-545 增补：2026-09-04；Cycles 546-548 增补：2026-09-05；Cycles 549-554 增补：2026-09-07；Cycles 555-557 增补：2026-09-08；Cycles 558-559 增补：2026-09-09；Cycles 561-563 增补：2026-09-10；Cycles 564-569 增补：2026-09-13；Cycles 570-573 增补：2026-09-14；Cycles 574-576 增补：2026-09-15；Cycles 577-579 增补：2026-09-16；Cycles 580-582 增补：2026-09-17；Cycles 583-585 增补：2026-09-18；Cycles 586-588 增补：2026-09-19；Cycles 589-591 增补：2026-09-20；Cycles 592-593 增补：2026-09-21；Cycles 594-596 增补：2026-09-22。数据口径：LongMemEval s_cleaned full-500，PYTHONHASHSEED=7，deterministic cascade banked。轨迹明细见 README Cycles 532-596 段。*
+*生成：documentation-morning cron，2026-09-02；Cycles 540-542 增补：2026-09-03；Cycles 543-545 增补：2026-09-04；Cycles 546-548 增补：2026-09-05；Cycles 549-554 增补：2026-09-07；Cycles 555-557 增补：2026-09-08；Cycles 558-559 增补：2026-09-09；Cycles 561-563 增补：2026-09-10；Cycles 564-569 增补：2026-09-13；Cycles 570-573 增补：2026-09-14；Cycles 574-576 增补：2026-09-15；Cycles 577-579 增补：2026-09-16；Cycles 580-582 增补：2026-09-17；Cycles 583-585 增补：2026-09-18；Cycles 586-588 增补：2026-09-19；Cycles 589-591 增补：2026-09-20；Cycles 592-593 增补：2026-09-21；Cycles 594-596 增补：2026-09-22；Cycles 597-599 增补：2026-09-23。数据口径：LongMemEval s_cleaned full-500，PYTHONHASHSEED=7，deterministic cascade banked。轨迹明细见 README Cycles 532-599 段。*

@@ -2,12 +2,12 @@
 
 > 基于 SQLite 的轻量知识图谱，模拟 AI Agent 的长期记忆管理
 
-[![Tests](https://img.shields.io/badge/tests-10971-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-11029-brightgreen)]()
 [![Python](https://img.shields.io/badge/python-3.10+-blue)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-success)]()
 
-> 📚 教程：[基础入门](TUTORIAL.md) · [GraphRAG 端到端（Cycles 425-440）](TUTORIAL-GRAPHRAG.md) · [Temporal QA 零 LLM 时间推理（Cycles 456-489）](TUTORIAL-TEMPORAL-QA.md) · [Abstention 弃权语义（Cycles 448-516）](TUTORIAL-ABSTENTION.md) · [Answer Faces 问题结构驱动的答案选择（Cycles 529-596）](TUTORIAL-ANSWER-FACES.md)
+> 📚 教程：[基础入门](TUTORIAL.md) · [GraphRAG 端到端（Cycles 425-440）](TUTORIAL-GRAPHRAG.md) · [Temporal QA 零 LLM 时间推理（Cycles 456-489）](TUTORIAL-TEMPORAL-QA.md) · [Abstention 弃权语义（Cycles 448-516）](TUTORIAL-ABSTENTION.md) · [Answer Faces 问题结构驱动的答案选择（Cycles 529-599）](TUTORIAL-ANSWER-FACES.md)
 
 ## 🎯 概述
 
@@ -4633,6 +4633,22 @@ census 恰 2 行的一机制两面（C592 双头模式）：6b168ec8 "How many b
 #### C596：marvel_rewatch — 重看标记替代窗口与遇小写即停的标题 span (03e3db4)
 
 681a1674 "How many Marvel movies did I re-watch?"（旧 pred=answer 门寄生回声——Doctor Strange 四部电影句，GT '2'）。**无时间窗——re-watch 标记替代**（C593 模式第 4 次应用）；head `^how many marvel movies did i re-?watch(ed)? ?\??$` 全 500 恰 1 行，且全库无其他问题含 re-watch → 零劫持 by construction + 实证双保险。证据=user 轮（role wall）含 `\bre-?watch(?:ed)?\b` 的句子，从标记后提取**大写标题 span**（`[A-Z][\w'’-]*` 链，**遇小写词即停**）——C595 贪婪 NP 教训以构造方式规避：'Avengers: Endgame yesterday' → 'avengers endgame'（yesterday 小写截断），'Spider-Man: No Way Home, which…' → 逗号截断。去重取 distinct 键（s6 两处 Endgame 提及折叠一次）→ {avengers endgame, spider man no way home} = 2。渲染 `_ec_render(2)='two'`，GT '2' 经 judge_semantic norm fold CORRECT（C595 four/4 已证路径）；标题泛化非硬编码——'Thor: Ragnarok' / 'Avengers: Infinity War' 等合成句产生独立键，测试钉死 two→three 的移动。TDD 课：15 测试首跑 14 绿 1 红，红是测试构造 bug 非 face bug（test_assistant_wall 断言 S6='two'，但 S6 只有 Endgame 两处提及，NWH 在 S34）——**期望值要手工按 fixture 重推一遍**。replay PASS 首试 1148s（连续第 5 次）：pred 变化恰 {681a1674}，banked 347→348（0.696），套件 10956→10971（junitxml，+15 test_marvel_face.py）。
+
+## Cycles 597-599: 0.696→0.706 — 双周烘焙、自述累计与月份锚定计数
+
+> 官方口径轨迹：0.696（C596）→ **0.698（C597）** → **0.702（C598）** → **0.706（C599）**，banked 348→353，套件 10971→11029（junitxml）。本段主轴：counting 族离开 key-set 枚举的主场——C597 收双周烘焙计数（baked/made/tried 与 used…to bake/make 链双路捕获 + **无句级 plan wall**：未来锚结构性地不在过去集合里，计划句自动出局）；C598 收自述累计总数（"N trips/times now" 构式，`now` 锚区分运行总数与裸枚举——key-set 计数的对照组）；C599 收 March 月份锚定一机制双面（**粒度由证据的文本分布决定**：bike 面 F2 需 turn 粒度、appt 面句粒度是承重墙 + 序数后缀消费 + 敬称句切修复）。replay 六连首试过（C592 起），keep 链延至三十五连（C565 起）。教程同步增补：[TUTORIAL-ANSWER-FACES.md](TUTORIAL-ANSWER-FACES.md) §5.48-§5.50。
+
+#### C597：bake_two_weeks — 双周烘焙计数与结构性排除优于文本墙 (41a608e)
+
+88432d0a "How many times have I baked in the past two weeks?"（census 恰 1/500，旧 pred=寄生 session echo，GT '4'）。证据=user 句同时具备过去时烘焙动词（baked|made|tried，或 **used…to bake/make 链**——baguette 两个 surface 均无 bake 动词，make 链正是捕获点）+ 窗内过去锚（C591 marker 族 + on <weekday>/recently/just）+ 烘焙品名词键；去重后 {bread, cake, baguette, cookies}=4（10 个 EVT 命中全在 answer sessions）。**设计关键是无句级 plan wall**：s22 的 'I made … last Saturday' 与 'I'm considering …' 同句共存，句级 plan 拦截会误杀真证据——未来锚（this weekend/tonight）结构性地不在过去锚集合里，计划句自动出局（C591 同构纪律）。replay PASS 首试 1176s（连续第 5 次）：pred 变化恰 {88432d0a}（echo→'four'），banked 348→349（0.698），套件 10971→10986（junitxml，+15 test_bake_face.py）。tsv 断言课：C596 append 脚本的 `assert all(l.strip())` 照抄必炸——历史 443 行本就含空行，行数 + 相邻性断言足矣。
+
+#### C598：cum_total — 自述累计总数与 now 锚 (7d60bbb)
+
+一机制两面的对照组设计：26bdc477 "How many trips have I taken my Canon EOS 80D camera on?"（GT 'five'，证据 "I've had my Canon EOS 80D with me on **five trips now**, and it's been a beast!"）、618f13b2 "How many times have I worn my new black Converse sneakers?"（GT 'six'，证据 "so that's **six times now** that I've worn them."）。答案不是 key-set 计数（C595/596/597 模式），而是**用户自己说出的运行总数**——"N trips/times now" 构式。**`now` 锚是总数与裸枚举的分界线**："three trips to X, Y, Z"（无 now）= 提及清单，永不产 3，这是本轮核心诱饵钉子。同句话题墙（C591+ 纪律）：trips 面 → camera 术语，worn 面 → Converse/sneaker 术语。冲突总量弃权：603deb26 Negroni 5-v-10 冲突陷阱由 head 动词（taken|worn）+ 冲突规则双重挡在门外（时间序仲裁留给 future cycle）。渲染照抄捕获 token（'five'/'six'），counting_judge 数值优先 + judge_semantic 词形 fold 双路皆 bank（replay 前双 judge 探针两行双 CORRECT）。replay PASS 首试 1158s：pred 变化恰 {26bdc477, 618f13b2} 全 False→True，banked 349→351（0.702），套件 10986→11001（+15 test_cum_total_face.py）。
+
+#### C599：march-window — 月份锚定计数与粒度二象性 (64674a7)
+
+C598 队列候选 #2 的一机制双面（选面插曲：候选 #1 Negroni 已在链上 banked——**链上查证先于队列信任**）：a9f6b44c "How many bikes did I service or plan to service in March?"（GT '2'：F1 road bike @ Pedal Power March 10th serviced + F2 commuter bike 换胎意图锚 "this month, before April comes"；旧 pred=Toyota Camry 汽车保养回声）、00ca467f "How many doctor's appointments did I go to in March?"（GT '2'：Dr. Smith March 3rd + Dr. Thompson March 20th follow-up；旧 pred=bronchitis 咳嗽回声）。**粒度二象性是本轮主课**：bike 面 F2 的换胎意图与 March 锚分属同 turn 兄弟句，句粒度必失配 → turn 粒度（安全因为锚文本上钉死 March）；appt 面恰好相反——t6 把 "March 15th" 和 "Dr. Smith/Dr. Johnson" 放在不同句（'should discuss with'），turn 粒度会 2→3 多算 johnson → **句粒度是承重墙**。三个实现课：序数后缀 `\bmarch\s+\d{1,2}\b` 在 "March 10**th**" 失配（`\b` 落在 0 与 t 之间），`(?:st|nd|rd|th)?` 消费后缀且 "March 2023" 仍经回溯拒绝；F2 守卫 `if not keys` 会让 F1 命中后 F2 被跳过——双面必须无条件全跑，set 天然去重；`_cnt_sents` 按 `.` 切句把 "Dr. Smith" 切成两半，_map_sents 合并以 Dr./Mr./Mrs./Ms./St. 结尾的碎片。墙全部逐 turn 钉死（mountain bike 只 got 水壶架、系动词谓语 "just a regular hybrid bike" 无锚不键 → GT 2 非 3、April EMG / PT "since March 25th" 无拜访动词等）。渲染 '2' 三 judge 全绿。TDD 28 测试红→绿；replay PASS 首试 1159s（连续第 6 次）：pred 变化恰 {a9f6b44c, 00ca467f}，banked 351→353（0.706），套件 11001→11029（+28 test_march_faces.py）。
 
 ## 许可
 
