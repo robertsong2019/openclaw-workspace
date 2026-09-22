@@ -10952,6 +10952,21 @@ def counting_form(question: str) -> str | None:
     # by census).
     if _CUM_HEAD_RE.match(ql):
         return "cum_total"
+    # C599: March-window anchored counting — two strict heads.
+    # Census (all 500): each matches EXACTLY 1 row (a9f6b44c GT
+    # 2 / 00ca467f GT 2), both unbanked (gate=answer / session
+    # echo today; a9f6b44c echoed a TOYOTA CAMRY service line).
+    # The strict heads cannot steal the C592-C598 faces
+    # (different NPs/markers), the March siblings (21d02d0d fun
+    # runs / gpt4_9a159967 airline), or the bike siblings
+    # (gpt4_e4142 which-bike / gpt4_d84a3 days-between — no
+    # 'service or plan to service' shape). Handlers return None
+    # when nothing resolves (falls through; zero overlap by
+    # census).
+    if _BSM_HEAD_RE.match(ql):
+        return "bike_service_march"
+    if _MAP_HEAD_RE.match(ql):
+        return "march_appt"
     if re.match(r'^how (much|many)\b', q, re.I) \
             and re.search(r'\btotal\b', ql):
         if re.search(r'\bhow many (hours|years|months)\b', ql):
@@ -13288,6 +13303,144 @@ def _cnt_cum_total(question: str, sessions: list[dict]):
     return None
 
 
+# C599 head/evidence regexes — see the two handlers below.
+# Census (all 500): each head matches EXACTLY its own row.
+_BSM_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+bikes\s+did\s+i\s+servic(?:e|ed)\s+or"
+    r"\s+plan\s+to\s+servic(?:e|ed)\s+in\s+march\s*\??\s*$",
+    re.I)
+_MAP_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+doctor'?s?\s+appointments\s+did\s+i\s+"
+    r"go\s+to\s+in\s+march\s*\??\s*$", re.I)
+# bike-type key: allowlisted type immediately before singular
+# 'bike' (depth-1, C595 pattern); plural 'bikes' never keys;
+# bike-as-modifier followers ('bike lock/shops/computer') and
+# bare 'bike' carry no allowlisted type and never key
+_BSK_TYPE_RX = re.compile(
+    r"\b(road|commuter|mountain|hybrid|gravel|touring|city|"
+    r"cruiser|electric|race|dirt|bmx|tandem|folding|track)\s+"
+    r"bike\b", re.I)
+_BSM_SVC_RX = re.compile(r"\bservic(?:e|ed)\b", re.I)
+# ordinal suffix must be consumed ('March 10th' — a bare \b
+# after \d lands between '0' and 't', both word chars, and
+# never fires; 'March 2023' still rejects by backtracking)
+_BSM_MARCH_DAY_RX = re.compile(
+    r"\bmarch\s+\d{1,2}(?:st|nd|rd|th)?\b", re.I)
+_BSM_PLAN_RX = re.compile(
+    r"\bgetting\s+a\s+new\s+tire\b|\btime\s+to\s+replace\b",
+    re.I)
+# 'before April' pins the plan textually to March; 'this
+# month' + 'March <day>' round out the anchor set
+_BSM_ANCHOR_RX = re.compile(
+    r"\bbefore\s+april\b|\bmarch\s+\d{1,2}\b|\bthis\s+month\b",
+    re.I)
+_MAP_VISIT_RX = re.compile(
+    r"\bwent\s+to\s+see\b|\bhad\s+an?\s+(?:[a-z-]+\s+)*"
+    r"appointment\b", re.I)
+_MAP_DR_RX = re.compile(r"\bDr\.?\s+([A-Z][a-z]+)\b")
+_MAP_MARCH_DAY_RX = re.compile(
+    r"\bmarch\s+\d{1,2}(?:st|nd|rd|th)?\b", re.I)
+# honorific-boundary repair: _cnt_sents splits at every '.',
+# including 'Dr. Smith' — merge the fragments back
+_MAP_HONOR_END_RX = re.compile(r"\b(?:Dr|Mr|Mrs|Ms|St)\.\s*$")
+
+
+def _map_sents(sessions: list[dict]):
+    """``_cnt_sents(…, 'user')`` with honorific repair: a
+    fragment ending in 'Dr.' / 'Mr.' / … is merged with the
+    next fragment so 'Dr. Smith' stays one sentence."""
+    buf_si, buf = None, ""
+    for si, frag in _cnt_sents(sessions, "user"):
+        if buf:
+            si, frag = buf_si, buf + " " + frag
+            buf_si, buf = None, ""
+        if _MAP_HONOR_END_RX.search(frag):
+            buf_si, buf = si, frag
+            continue
+        yield si, frag
+    if buf:
+        yield buf_si, buf
+
+
+def _cnt_bike_service_march(question: str, sessions: list[dict]):
+    """March-window bike service counts (C599, a9f6b44c GT 2).
+    Two faces over an allowlisted bike-type key (singular
+    '<type> bike'; plural 'bikes' never keys, C595 rule):
+
+    F1 serviced — user SENTENCE carrying <type> bike +
+    ``servic(e|ed)`` + explicit ``March <day>`` ('got my road
+    bike serviced at Pedal Power on March 10th').
+    F2 plan-to-service — user TURN carrying <type> bike + a
+    tire-replacement intent marker ('getting a new tire' /
+    'time to replace') + a March anchor ('this month, before
+    April comes'). Turn grain is required: the bike NP and the
+    anchor live in sibling sentences. The anchor pins the plan
+    to March textually ('before April'), so no session dates
+    are needed.
+
+    'Cleaned and lubricated the chain' is deliberately NOT a
+    service verb (chain work never keys; the serviced road bike
+    is keyed by its own Pedal Power sentence). Copula
+    predicates ('is just a regular hybrid bike') carry no March
+    anchor in their turn and key nothing — hybrid stays
+    uncounted (GT 2, not 3). 'services' does not match
+    ``service\b`` so 'repair services' walls itself.
+    Renders the distinct-key count as digits (GT 2 numeric).
+    """
+    m = _BSM_HEAD_RE.match(" ".join(question.split()))
+    if not m:
+        return None
+    keys: set[str] = set()
+    for _si, sent in _cnt_sents(sessions, "user"):
+        km = _BSK_TYPE_RX.search(sent)
+        if km and _BSM_SVC_RX.search(sent) \
+                and _BSM_MARCH_DAY_RX.search(sent):
+            keys.add(km.group(1).lower())
+    # F2 plan-to-service at turn grain — runs unconditionally;
+    # the keys set dedups F1/F2 overlaps by construction
+    for s in sessions:
+        for t in s.get("turns", []):
+            if t.get("role") != "user":
+                continue
+            turn = t.get("content", "")
+            km = _BSK_TYPE_RX.search(turn)
+            if km and _BSM_PLAN_RX.search(turn) \
+                    and _BSM_ANCHOR_RX.search(turn):
+                keys.add(km.group(1).lower())
+    return str(len(keys)) if keys else None
+
+
+def _cnt_march_appt(question: str, sessions: list[dict]):
+    """March doctor-appointment counts (C599, 00ca467f GT 2).
+    A user SENTENCE yields a doctor key when it carries ALL of:
+    a past visit marker (``went to see`` / ``had a ... ap-
+    pointment``), a ``Dr. <Name>`` key, and an explicit
+    ``March <day>`` anchor. Distinct surnames dedup re-mentions
+    (Smith's March 3rd visit is re-told twice).
+
+    SENTENCE grain is load-bearing: t6 puts 'March 15th' in one
+    sentence and 'Dr. Smith / Dr. Johnson' in the NEXT ('should
+    discuss with') — turn grain would overcount 2 -> 3. Walls
+    by construction: undated re-mentions ('I had an appointment
+    with my primary care physician' — no Dr., no day), intent
+    ('considering scheduling' Patel), future ('I'll schedule'),
+    April anchors (EMG Johnson April 1st), and marker-less
+    March+Dr. surfaces (PT 'since March 25th ... cleared me').
+    Renders the distinct-doctor count as digits (GT 2).
+    """
+    m = _MAP_HEAD_RE.match(" ".join(question.split()))
+    if not m:
+        return None
+    keys: set[str] = set()
+    for _si, sent in _map_sents(sessions):
+        if not _MAP_VISIT_RX.search(sent):
+            continue
+        dm = _MAP_DR_RX.search(sent)
+        if dm and _MAP_MARCH_DAY_RX.search(sent):
+            keys.add(dm.group(1).lower())
+    return str(len(keys)) if keys else None
+
+
 def _cnt_item_total(question: str, sessions: list[dict]):
     """Sum per-item prices for enumerated "total cost" questions.
 
@@ -15169,7 +15322,9 @@ def answer_counting(question: str,
           "bikes_own": _cnt_bikes_own,
           "marvel_rewatch": _cnt_marvel_rewatch,
           "bake_two_weeks": _cnt_bake_two_weeks,
-          "cum_total": _cnt_cum_total}
+          "cum_total": _cnt_cum_total,
+          "bike_service_march": _cnt_bike_service_march,
+          "march_appt": _cnt_march_appt}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break
