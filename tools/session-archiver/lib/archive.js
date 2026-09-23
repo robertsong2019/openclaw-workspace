@@ -75,13 +75,23 @@ function archiveSession({ id, label, history, meta }) {
   return { id: record.id, messageCount: record.messageCount, path: filePath };
 }
 
+/** Validate a date bound: undefined → undefined; invalid strings → clean error (no silent empty results). */
+function _dateBound(value, name) {
+  if (value === undefined) return undefined;
+  const ts = new Date(value).getTime();
+  if (Number.isNaN(ts)) {
+    throw new Error(`Invalid ${name} date: ${JSON.stringify(value)}`);
+  }
+  return ts;
+}
+
 /**
  * List all archives, newest first.
  */
 function listArchives({ limit = 50, from, to } = {}) {
   ensureDir();
-  const fromMs = from ? new Date(from).getTime() : -Infinity;
-  const toMs = to ? new Date(to).getTime() : Infinity;
+  const fromMs = _dateBound(from, "from") ?? -Infinity;
+  const toMs = _dateBound(to, "to") ?? Infinity;
   const files = fs
     .readdirSync(ARCHIVE_DIR)
     .filter((f) => f.endsWith(".json"))
@@ -279,8 +289,15 @@ function getStats() {
 
 /**
  * Remove archives older than N days.
+ * days must be a finite non-negative number — negative would put the cutoff
+ * in the future and delete EVERY archive; NaN would silently no-op.
  */
 function cleanOldArchives(days, dryRun = false) {
+  if (typeof days !== "number" || !Number.isFinite(days) || days < 0) {
+    throw new Error(
+      `Invalid days: ${JSON.stringify(days)}. Expected a finite non-negative number of days.`
+    );
+  }
   ensureDir();
   const cutoff = Date.now() - days * 86400000;
   const files = fs.readdirSync(ARCHIVE_DIR).filter((f) => f.endsWith(".json"));
@@ -444,14 +461,19 @@ function diffArchives(idA, idB) {
   const onlyInB = (b.history || []).filter((m) => !setA.has(`${m.role}:${(m.content || m.text || "").trim()}`));
   const common = (a.history || []).filter((m) => setB.has(`${m.role}:${(m.content || m.text || "").trim()}`));
 
+  // Denominator = actual history lengths, NOT stored messageCount (which can
+  // be stale in legacy/tampered archives and skew similarity above 1.0).
+  const lenA = (a.history || []).length;
+  const lenB = (b.history || []).length;
+
   return {
     a: { id: a.id, label: a.label, messageCount: a.messageCount },
     b: { id: b.id, label: b.label, messageCount: b.messageCount },
     onlyInA: onlyInA.map((m) => ({ role: m.role, text: (m.content || m.text || "").slice(0, 200) })),
     onlyInB: onlyInB.map((m) => ({ role: m.role, text: (m.content || m.text || "").slice(0, 200) })),
     commonCount: common.length,
-    similarity: a.messageCount + b.messageCount > 0
-      ? (2 * common.length / (a.messageCount + b.messageCount)).toFixed(2)
+    similarity: lenA + lenB > 0
+      ? (2 * common.length / (lenA + lenB)).toFixed(2)
       : "0.00",
   };
 }

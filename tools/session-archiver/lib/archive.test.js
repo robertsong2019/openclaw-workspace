@@ -464,3 +464,48 @@ test("deleteArchive throws for missing or invalid id", () => {
   assert.throws(() => deleteArchive("never-existed"), /not found/i);
   assert.throws(() => deleteArchive("../traversal"), /invalid archive id/i);
 });
+
+// --- 2026-09-23: similarity denominator + clean/list input validation gates ---
+
+test("diffArchives similarity uses actual history lengths, not stored messageCount", () => {
+  archiveSession({ id: "sim-a", label: "A", history: [
+    { role: "user", content: "shared message" },
+    { role: "assistant", content: "reply a" },
+  ] });
+  archiveSession({ id: "sim-b", label: "B", history: [
+    { role: "user", content: "shared message" },
+    { role: "assistant", content: "reply b" },
+  ] });
+  // simulate legacy/tampered archive: stored count stale (0 vs actual 2)
+  const p = path.join(TMP_DIR, "sim-a.json");
+  const rec = JSON.parse(fs.readFileSync(p, "utf-8"));
+  rec.messageCount = 0;
+  fs.writeFileSync(p, JSON.stringify(rec));
+
+  const d = diffArchives("sim-a", "sim-b");
+  // actual lengths 2+2, common=1 → 0.50; stored counts 0+2 would give 1.00
+  assert.equal(d.similarity, "0.50");
+});
+
+test("cleanOldArchives rejects negative days (would delete everything)", () => {
+  archiveSession({ id: "neg-keep", label: "keep", history: [{ role: "user", content: "fresh" }] });
+  const before = listArchives().length;
+  assert.throws(() => cleanOldArchives(-1), /Invalid days/);
+  assert.equal(listArchives().length, before, "negative days must not delete anything");
+});
+
+test("cleanOldArchives rejects NaN and non-number days", () => {
+  assert.throws(() => cleanOldArchives(NaN), /Invalid days/);
+  assert.throws(() => cleanOldArchives("7"), /Invalid days/);
+});
+
+test("cleanOldArchives(0) stays legal (clean-all semantics, pre-existing pin)", () => {
+  archiveSession({ id: "zero-ok", label: "old", history: [{ role: "user", content: "x" }] });
+  const r = cleanOldArchives(0, true); // dry-run: proves 0 passes validation
+  assert.ok(r.count >= 1);
+});
+
+test("listArchives throws clean error on invalid from/to instead of silent empty", () => {
+  assert.throws(() => listArchives({ from: "garbage-date" }), /Invalid from date/);
+  assert.throws(() => listArchives({ to: "not-a-date" }), /Invalid to date/);
+});
