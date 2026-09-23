@@ -201,6 +201,11 @@ function cmdMerge(src, dst) {
   if (!src || !dst) { console.error('Usage: amk merge <source.md> <dest.md>'); process.exit(1); }
   const srcPath = src.includes('/') ? src : join(MEMORY_DIR, src);
   const dstPath = dst.includes('/') ? dst : join(MEMORY_DIR, dst);
+  if (srcPath === dstPath) {
+    // Self-merge would duplicate the whole file onto itself (content × 2).
+    console.error(`Source and destination are the same file: ${dstPath}`);
+    process.exit(1);
+  }
   
   const srcContent = readFileSafe(srcPath);
   if (!srcContent) { console.error(`Source not found: ${srcPath}`); process.exit(1); }
@@ -212,8 +217,18 @@ function cmdMerge(src, dst) {
   console.log(`✅ Merged ${src} into ${dst}`);
 }
 
-function cmdPrune(days, apply = false) {
-  if (!days) { console.error('Usage: amk prune <days> [--apply]'); process.exit(1); }
+function cmdPrune(rawDays, apply = false) {
+  if (rawDays === undefined || String(rawDays).trim() === '') {
+    console.error('Usage: amk prune <days> [--apply]');
+    process.exit(1);
+  }
+  const days = Number(rawDays);
+  if (!Number.isFinite(days) || days < 0) {
+    // Negative days put the cutoff in the future: with --apply that deletes
+    // EVERY memory file. NaN silently matched nothing. Reject both.
+    console.error(`Invalid days: ${JSON.stringify(String(rawDays))}. Expected a non-negative number of days.`);
+    process.exit(1);
+  }
   const cutoff = Date.now() - days * 86400000;
   const files = getMemoryFiles();
   const old = files.filter(f => {
@@ -280,7 +295,7 @@ switch (command) {
   case 'extract-tags': cmdExtractTags(); break;
   case 'timeline': cmdTimeline(); break;
   case 'merge': cmdMerge(args[1], args[2]); break;
-  case 'prune': cmdPrune(parseInt(args[1]), args.includes('--apply')); break;
+  case 'prune': cmdPrune(args[1], args.includes('--apply')); break;
   case 'context': cmdContext(args[1]); break;
   default:
     console.log(`agent-memory-kit (amk) v1.0.0

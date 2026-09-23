@@ -6,7 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -301,4 +301,39 @@ test('tags: mixed latin+CJK token does not vanish or glue', () => {
 test('package.json wires npm test to the suite', () => {
   const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf-8'));
   assert.ok(pkg.scripts && pkg.scripts.test, 'scripts.test missing — npm test is DOA');
+});
+
+// ---------- 2026-09-23: prune negative-days gate + merge self guard ----------
+
+test('prune: negative days rejected, nothing deleted even with --apply', () => {
+  const ws = mkWorkspace();
+  writeFileSync(join(ws, 'memory', '2026-01-01.md'), '# keep me\n');
+  const { code, err } = amk(ws, 'prune', '-5', '--apply');
+  assert.equal(code, 1);
+  assert.match(err, /Invalid days/);
+  // must-not-delete proof: fixture file still on disk
+  assert.ok(existsSync(join(ws, 'memory', '2026-01-01.md')), 'negative days must not delete anything');
+});
+
+test('prune: invalid days name the bad value', () => {
+  const { code, err } = amk(mkWorkspace(), 'prune', 'abc');
+  assert.equal(code, 1);
+  assert.match(err, /Invalid days: "abc"/);
+});
+
+test('prune: valid days still work (legality pin)', () => {
+  const ws = mkWorkspace();
+  const { code, out } = amk(ws, 'prune', '30');
+  assert.equal(code, 0);
+  assert.match(out, /older than 30 days|No files older/);
+});
+
+test('merge: same source and dest rejected without duplicating content', () => {
+  const ws = mkWorkspace();
+  writeFileSync(join(ws, 'memory', 'self.md'), '# line1\nline2\n');
+  const { code, err } = amk(ws, 'merge', 'self.md', 'self.md');
+  assert.equal(code, 1);
+  assert.match(err, /same file/);
+  const after = readFileSync(join(ws, 'memory', 'self.md'), 'utf-8');
+  assert.equal(after.split('\n').filter(l => l.trim()).length, 2, 'content must be untouched');
 });
