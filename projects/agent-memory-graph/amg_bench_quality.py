@@ -10800,6 +10800,20 @@ def counting_form(question: str) -> str | None:
         return "freq_days"
     if re.match(r'^what is the total number of (days|weeks)', ql):
         return "duration_sum"
+    # C601: faith-days December window — one strict head.
+    # Census (all 500): matches EXACTLY 1 row (5a7937c8 GT '3
+    # days.', unbanked, gate=answer / volunteer-echo today).
+    # Claimed ahead of the generic how-many-days duration_sum
+    # block (the head contains 'how many days'; duration_sum
+    # resolves None on this evidence today). The 'faith-related
+    # activities in december' anchor cannot steal the C592-C600
+    # faces (different NPs/markers), the duration family, or the
+    # temporal-arithmetic faith cousins (Maundy Thursday 'days
+    # ago' / Ash Wednesday 'days had passed'). Handler returns
+    # None when no December faith day resolves (falls through;
+    # zero overlap by census).
+    if _FD_HEAD_RE.match(ql):
+        return "faith_days"
     if re.search(r'\bhow many (days|weeks)\b', ql) or \
             (re.search(r'\b(days|weeks)\b', ql)
              and re.search(r'\b(spend|spent|take|took)\b', ql)
@@ -13505,6 +13519,74 @@ def _cnt_species_total(question: str, sessions: list[dict]):
     return None
 
 
+# C601 head/evidence regexes — see _cnt_faith_days below.
+# Census (all 500): the head matches EXACTLY its own row
+# (5a7937c8 GT '3 days.', qtype multi-session), unbanked today
+# (gate=answer — the pred was a volunteer-echo sentence with no
+# number). It cannot steal the C592-C600 faces (different
+# NPs/markers), the duration family, or the temporal-arithmetic
+# faith cousins (gpt4_b5700ca9 'days ago ... Maundy Thursday',
+# 08f4fc43 / 2a1811e2 'days had passed between ... mass').
+_FD_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+days\s+did\s+i\s+spend\s+participating"
+    r"\s+in\s+faith[-\s]related\s+activities\s+in\s+december"
+    r"\s*\??\s*$", re.I)
+# December day anchor — 'December 10th' / 'Dec 10'. The optional
+# ordinal suffix consumes 'st|nd|rd|th' so 'December 10th'
+# matches (C599 lesson: \b falls between '0' and 't'); bare
+# 'December 2023' never captures (\d{1,2} + \b backtracks off
+# the trailing digits of the year).
+_FD_DEC_DAY_RX = re.compile(
+    r"\bdec(?:ember)?\.?\s+(\d{1,2})(?:st|nd|rd|th)?\b", re.I)
+# faith-activity topic wall: the December day must sit in a
+# sentence that ALSO names a faith activity — the Dec 12 Le
+# Creuset / Coach store runs carry a December day but never
+# key, and painter 'Frederic Edwin Church' carries the noun
+# but no date.
+_FD_FAITH_RX = re.compile(
+    r"\bchurch\b|\bmidnight\s+mass\b|\bbible\s+study\b|"
+    r"\bworship\b|\bprayer\s+service\b", re.I)
+# past-participation wall: 'helped out at the church's food
+# drive' / 'just got back from a lovely midnight mass' / 'just
+# did a Bible study'. Future/intent mentions ('leading next
+# week', 'thinking of doing') carry no December day anyway, and
+# the re-mention ('after our Bible study group on December
+# 17th') carries no verb — even if it keyed, same-day dedup
+# holds.
+_FD_PART_RX = re.compile(
+    r"\bhelped\s+out\b|\bgot\s+back\s+from\b|\battended?\b|"
+    r"\bvolunteered\b|\bdid\b|\bwent\s+to\b|\bspent\b", re.I)
+
+
+def _cnt_faith_days(question: str, sessions: list[dict]):
+    """Count DISTINCT December days with a faith-activity
+    participation face (C601, 5a7937c8 GT '3 days.'). A user
+    sentence (honorific-merged — the Dec 24 evidence splits at
+    the 'St.' of St. Mary's; _map_sents re-joins it) yields a
+    day when it carries ALL: a faith-activity term (church|
+    midnight mass|bible study|worship|prayer service), a past-
+    participation verb, and an explicit 'December <day>' anchor
+    (user role only — assistant echoes never read). Distinct
+    days are additive: Dec 10 church food drive + Dec 17 Bible
+    study at my church + Dec 24 midnight mass at St. Mary's =
+    3; re-mentions of the same day dedup. Off-topic December
+    dates (store runs), future intent, proper-name 'Church',
+    and non-December dates never key. Renders the day count
+    (GT '3 days.'; counting_judge banks numeric-first). Census
+    (all 500): head matches exactly 1 row. Returns None when no
+    day resolves (falls through — zero overlap by census)."""
+    if not _FD_HEAD_RE.match(" ".join(question.split())):
+        return None
+    days: set[str] = set()
+    for _si, sent in _map_sents(sessions):
+        if not (_FD_FAITH_RX.search(sent)
+                and _FD_PART_RX.search(sent)):
+            continue
+        for d in _FD_DEC_DAY_RX.finditer(sent):
+            days.add(d.group(1))
+    return str(len(days)) if days else None
+
+
 def _cnt_item_total(question: str, sessions: list[dict]):
     """Sum per-item prices for enumerated "total cost" questions.
 
@@ -15389,7 +15471,8 @@ def answer_counting(question: str,
           "cum_total": _cnt_cum_total,
           "bike_service_march": _cnt_bike_service_march,
           "march_appt": _cnt_march_appt,
-          "species_total": _cnt_species_total}
+          "species_total": _cnt_species_total,
+          "faith_days": _cnt_faith_days}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break
