@@ -89,6 +89,42 @@ describe('createSkill', () => {
     const md = await fs.readFile(path.join(result.path, 'SKILL.md'), 'utf-8');
     assert.ok(md.includes('A custom description here'));
   });
+
+  it('rejects path traversal in name (../escape must not escape output dir)', async () => {
+    await assert.rejects(
+      () => createSkill('../escape', { template: 'basic', output: TMP }),
+      { message: /无效 skill 名称/ }
+    );
+    // must-not-exist proof: nothing may be written outside the output dir
+    const outside = path.resolve(TMP, '..', 'escape');
+    const st = await fs.stat(path.join(outside, 'SKILL.md')).catch(() => null);
+    assert.equal(st, null, 'traversal name must not create files outside output dir');
+  });
+
+  it('rejects empty name with a naming error, not misleading 目录已存在', async () => {
+    await assert.rejects(
+      () => createSkill('', { template: 'basic', output: TMP }),
+      { message: /无效 skill 名称/ }
+    );
+  });
+
+  it('rejects underscore and uppercase names (kebab-case only)', async () => {
+    await assert.rejects(
+      () => createSkill('my_skill', { template: 'basic', output: TMP }),
+      { message: /无效 skill 名称/ }
+    );
+    await assert.rejects(
+      () => createSkill('BadName', { template: 'basic', output: TMP }),
+      { message: /无效 skill 名称/ }
+    );
+  });
+
+  it('legality pin: single char, digits and digit-leading names still create fine', async () => {
+    for (const name of ['a', 'skill-2x', '9lives']) {
+      const r = await createSkill(name, { template: 'basic', output: TMP });
+      assert.ok(r.files.includes('SKILL.md'), `${name} should create`);
+    }
+  });
 });
 
 // ── listTemplates ───────────────────────────────────────
@@ -120,6 +156,15 @@ describe('validateSkill', () => {
     const result = await validateSkill(path.join(TMP, 'good-skill'));
     assert.equal(result.valid, true);
     assert.equal(result.issues.length, 0);
+  });
+
+  it('flags underscore directory names as not kebab-case', async () => {
+    const dir = path.join(TMP, 'my_skill');
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(path.join(dir, 'SKILL.md'), '# X\n## Activation\nfoo');
+    const result = await validateSkill(dir);
+    assert.equal(result.valid, false, 'underscore name violates the kebab-case rule the validator claims to enforce');
+    assert.ok(result.issues.some(i => i.includes('kebab-case')));
   });
 
   it('reports missing SKILL.md', async () => {
