@@ -10967,6 +10967,15 @@ def counting_form(question: str) -> str | None:
         return "bike_service_march"
     if _MAP_HEAD_RE.match(ql):
         return "march_appt"
+    # C600: species running-total declaration — one strict head.
+    # Census (all 500): matches EXACTLY 1 row (affe2881 GT '32',
+    # unbanked, gate=answer volunteer-echo today). Cannot steal
+    # the C592-C599 faces (different NPs/markers) or the generic
+    # how-many block. Handler returns None when nothing (or
+    # conflicting totals) resolve (falls through; zero overlap
+    # by census).
+    if _SPT_HEAD_RE.match(ql):
+        return "species_total"
     if re.match(r'^how (much|many)\b', q, re.I) \
             and re.search(r'\btotal\b', ql):
         if re.search(r'\bhow many (hours|years|months)\b', ql):
@@ -13441,6 +13450,61 @@ def _cnt_march_appt(question: str, sessions: list[dict]):
     return str(len(keys)) if keys else None
 
 
+# C600 head/evidence regexes — see _cnt_species_total below.
+# Census (all 500): the head matches EXACTLY its own row
+# (affe2881 GT '32', qtype knowledge-update), unbanked today
+# (gate=answer — the pred was a volunteer-echo sentence with no
+# number). It cannot steal the C592-C599 faces (different
+# NPs/markers) or the generic how-many block.
+_SPT_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+different\s+species\s+of\s+birds\s+have"
+    r"\s+i\s+seen\s+in\s+my\s+local\s+park\s*\??\s*$", re.I)
+# the running-total DECLARATION: "brings my total species count
+# to 32" — an explicit self-updating construction. Snapshot
+# totals ("spot 27 different species so far") and third-party
+# echoes (assistant "reaching 32 species") deliberately never
+# match: the DECLARATION, not freshest-number arbitration, is
+# the mechanism — no session dating needed. Gap capped at 3
+# words ('total species count', 'total bird count'); the
+# species|bird same-sentence wall keeps off-topic declarations
+# ('brings my total miles count to 120') out.
+_SPT_TOTAL_RX = re.compile(
+    r"\bbrings?\s+my\s+total(?:\s+\w+){0,3}\s+count\s+to\s+"
+    r"(\d+)\b", re.I)
+_SPT_TOPIC_RX = re.compile(r"\bspecies\b|\bbirds?\b", re.I)
+
+
+def _cnt_species_total(question: str, sessions: list[dict]):
+    """Resolve the user's STATED running species total (C600,
+    affe2881 GT '32'). The row is a knowledge-update pair: an
+    early snapshot ("spot 27 different species so far", May 24)
+    is superseded by an explicit declaration ("brings my total
+    species count to 32", May 29; question dated Jun 7). A
+    user-role sentence yields the total when it carries BOTH the
+    declaration (_SPT_TOTAL_RX) and a species|bird topic word
+    (same-sentence wall, C591+ discipline). The stale snapshot
+    can never key — no recency arbitration is needed. Distinct
+    conflicting totals abstain (None), identical repeats dedup.
+    Renders the captured digits (GT '32'; counting_judge banks
+    numeric-first). Census (all 500): head matches exactly 1
+    row; the construction fires once in-row (32) and the 27-
+    snapshot correctly never keys. Returns None when nothing
+    (or contradictory things) resolve (falls through — zero
+    overlap by census)."""
+    if not _SPT_HEAD_RE.match(" ".join(question.split())):
+        return None
+    vals: set[str] = set()
+    for _si, sent in _cnt_sents(sessions, "user"):
+        if not _SPT_TOPIC_RX.search(sent):
+            continue
+        t = _SPT_TOTAL_RX.search(sent)
+        if t:
+            vals.add(t.group(1))
+    if len(vals) == 1:
+        return vals.pop()
+    return None
+
+
 def _cnt_item_total(question: str, sessions: list[dict]):
     """Sum per-item prices for enumerated "total cost" questions.
 
@@ -15324,7 +15388,8 @@ def answer_counting(question: str,
           "bake_two_weeks": _cnt_bake_two_weeks,
           "cum_total": _cnt_cum_total,
           "bike_service_march": _cnt_bike_service_march,
-          "march_appt": _cnt_march_appt}
+          "march_appt": _cnt_march_appt,
+          "species_total": _cnt_species_total}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break
