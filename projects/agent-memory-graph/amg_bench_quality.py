@@ -10814,6 +10814,17 @@ def counting_form(question: str) -> str | None:
     # zero overlap by census).
     if _FD_HEAD_RE.match(ql):
         return "faith_days"
+    # C602: food-delivery distinct-service census — one strict
+    # head. Census (all 500): matches EXACTLY 1 row (d682f1a2
+    # GT 3, unbanked, gate=answer / Fresh-Fusion recipe-echo
+    # today). Claimed ahead of every generic how-many block
+    # (enum/inventory gates never see it). A loose sweep of the
+    # question text ('food delivery' / 'delivery service') hits
+    # no other row, so there is nothing to steal. Handler
+    # returns None when no branded service resolves (falls
+    # through; zero overlap by census).
+    if _FDL_HEAD_RE.match(ql):
+        return "delivery_services"
     if re.search(r'\bhow many (days|weeks)\b', ql) or \
             (re.search(r'\b(days|weeks)\b', ql)
              and re.search(r'\b(spend|spent|take|took)\b', ql)
@@ -13587,6 +13598,70 @@ def _cnt_faith_days(question: str, sessions: list[dict]):
     return str(len(days)) if days else None
 
 
+# C602 head/evidence regexes — see _cnt_delivery_services below.
+# Census (all 500): the head matches EXACTLY its own row
+# (d682f1a2 GT 3, qtype multi-session), unbanked today (gate=
+# answer — the pred was the Fresh-Fusion recipe-echo turn, no
+# number). In-row brand surfaces: user turns carry all three
+# services (Domino's Pizza s8 / Uber Eats s27 / Fresh Fusion
+# s41); every assistant turn that names a brand also carries a
+# usage verb ('you've found a convenient option') — the
+# user-role wall is LOAD-BEARING, not cosmetic.
+_FDL_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+different\s+types\s+of\s+food\s+delivery\s+"
+    r"services\s+have\s+i\s+used\s+recently\s*\??\s*$", re.I)
+# delivery-service brand wall. 'domino' requires 'pizza' (a
+# bare 'domino effect' never keys); both apostrophe forms
+# accepted for Domino's. Census: zero other brand surfaces in
+# the row (any role) and zero sibling questions mention these
+# brands.
+_FDL_BRAND_RX = re.compile(
+    r"\bdomino(?:['\u2019]s|s)?\s+pizza\b|\buber\s+eats\b|"
+    r"\bfresh\s+fusion\b", re.I)
+# usage/experience wall: the brand must sit in a sentence that
+# ALSO carries a real-usage marker. Evidence markers: 'I had
+# Domino's Pizza three times', 'weekends have been all about
+# Uber Eats', 'relying on Uber Eats/Food delivery services ...
+# Fresh Fusion'. Marketing-style bare mentions ('Fresh Fusion
+# is on every billboard') carry none and never key.
+_FDL_USE_RX = re.compile(
+    r"\bhad\b|\brelying\s+on\b|been\s+all\s+about\b|\bfound\b|"
+    r"\bordered\b|\btried\b|\bused\b", re.I)
+
+
+def _cnt_delivery_services(question: str, sessions: list[dict]):
+    """Count DISTINCT food-delivery services with a usage face
+    (C602, d682f1a2 GT 3). A user sentence (_map_sents grain)
+    yields a service key when it carries ALL: a known brand
+    (Domino's Pizza | Uber Eats | Fresh Fusion) and a usage/
+    experience marker ('had' / 'relying on' / 'been all about'
+    / 'found' / 'ordered' / 'tried' / 'used'). User role only —
+    the s41 assistant echo ('As for Fresh Fusion, ... you've
+    found a convenient option') carries BOTH the brand and
+    'found', so the role wall is load-bearing. Real evidence:
+    Domino's Pizza (s8 'I had Domino's Pizza three times last
+    week') + Uber Eats (s27 'weekends have been all about'
+    + 'relying on' re-mention — same-key dedup) + Fresh Fusion
+    (s41 'this new one I found called') = 3. Sentence grain is
+    required: brand and verb must share one sentence ('I found
+    a new spot today. It's called Fresh Fusion ...' keys
+    nothing). Renders the distinct-brand count as digits
+    (GT 3; counting_judge banks numeric-first, exact banks on
+    digits). Census (all 500): head matches exactly 1 row.
+    Returns None when no service resolves (falls through —
+    zero overlap by census)."""
+    if not _FDL_HEAD_RE.match(" ".join(question.split())):
+        return None
+    brands: set[str] = set()
+    for _si, sent in _map_sents(sessions):
+        if not (_FDL_BRAND_RX.search(sent)
+                and _FDL_USE_RX.search(sent)):
+            continue
+        for m in _FDL_BRAND_RX.finditer(sent):
+            brands.add(" ".join(m.group(0).lower().split()))
+    return str(len(brands)) if brands else None
+
+
 def _cnt_item_total(question: str, sessions: list[dict]):
     """Sum per-item prices for enumerated "total cost" questions.
 
@@ -15472,7 +15547,8 @@ def answer_counting(question: str,
           "bike_service_march": _cnt_bike_service_march,
           "march_appt": _cnt_march_appt,
           "species_total": _cnt_species_total,
-          "faith_days": _cnt_faith_days}
+          "faith_days": _cnt_faith_days,
+          "delivery_services": _cnt_delivery_services}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break
