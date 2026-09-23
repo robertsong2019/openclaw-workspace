@@ -92,8 +92,9 @@ class ProjectDashboard:
                     project = self._analyze_project(item)
                     self.projects.append(project)
         
-        # Sort by health score (descending)
-        self.projects.sort(key=lambda p: p.health_score, reverse=True)
+        # Sort by health score (descending), name as deterministic tiebreak —
+        # equal scores are common and filesystem iteration order is not a contract.
+        self.projects.sort(key=lambda p: (-p.health_score, p.name))
         return self.projects
     
     def _is_project(self, path: Path) -> bool:
@@ -178,8 +179,12 @@ class ProjectDashboard:
                 for line in lines:
                     if line.strip():
                         status = line[:2]
-                        if 'M' in status or 'A' in status or 'D' in status:
-                            return "dirty"
+                        if status == '??':
+                            continue  # pure-untracked files are not "dirty"
+                        # Any other porcelain code is a tracked change: M/A/D but also
+                        # R (renames), C/T (copies/typechange) and U* (merge conflicts —
+                        # which are WORSE than dirty and must not score higher).
+                        return "dirty"
                 return "untracked"
         except (subprocess.TimeoutExpired, Exception):
             pass

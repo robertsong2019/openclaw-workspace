@@ -182,6 +182,73 @@ def test_missing_workspace_errors_gracefully(tmp_path):
     assert "Traceback" not in err, "must not crash with a traceback"
 
 
+def test_staged_rename_is_dirty(tmp_path):
+    """Regression: porcelain 'R ' (staged rename) is a tracked change → dirty.
+    Old code checked only M/A/D chars, so renames scored +10 as 'untracked'."""
+    p = tmp_path / "rename-proj"
+    p.mkdir()
+    (p / "package.json").write_text('{"name":"r"}\n')
+    (p / "old.py").write_text("print(1)\n")
+    git(p, "init", "-q")
+    git(p, "add", "-A")
+    git(p, "commit", "-qm", "init")
+    git(p, "mv", "old.py", "new.py")
+    by = {pr["name"]: pr for pr in scan_json(tmp_path)["projects"]}
+    assert by["rename-proj"]["git_status"] == "dirty"
+
+
+def test_merge_conflict_is_dirty(tmp_path):
+    """Regression: porcelain 'UU' (unresolved merge conflict) is worse than
+    dirty and must not be reported as 'untracked' (+10 score inflation)."""
+    p = tmp_path / "conflict-proj"
+    p.mkdir()
+    (p / "package.json").write_text('{"name":"c"}\n')
+    (p / "f.txt").write_text("base\n")
+    git(p, "init", "-q")
+    git(p, "add", "-A")
+    git(p, "commit", "-qm", "base")
+    git(p, "checkout", "-q", "-b", "side")
+    (p / "f.txt").write_text("side\n")
+    git(p, "commit", "-aqm", "side")
+    git(p, "checkout", "-q", "master")
+    (p / "f.txt").write_text("main\n")
+    git(p, "commit", "-aqm", "main")
+    # merge conflicts on purpose; rc=1 is the expected outcome, not an error
+    subprocess.run(["git", "merge", "side"], cwd=p, env=GIT_ENV,
+                   capture_output=True, timeout=30)
+    by = {pr["name"]: pr for pr in scan_json(tmp_path)["projects"]}
+    assert by["conflict-proj"]["git_status"] == "dirty"
+
+
+def test_untracked_only_is_untracked(tmp_path):
+    """Legality pin: a pure-untracked state (?? only, no tracked changes)
+    must stay 'untracked' — guards the dirty-classification chokepoint
+    against over-tightening."""
+    p = tmp_path / "untracked-proj"
+    p.mkdir()
+    (p / "package.json").write_text('{"name":"u"}\n')
+    git(p, "init", "-q")
+    git(p, "add", "-A")
+    git(p, "commit", "-qm", "init")
+    (p / "stray.txt").write_text("untracked\n")
+    by = {pr["name"]: pr for pr in scan_json(tmp_path)["projects"]}
+    assert by["untracked-proj"]["git_status"] == "untracked"
+
+
+def test_equal_score_sorted_by_name(tmp_path):
+    """Regression: equal health scores must tiebreak by name — filesystem
+    iteration order is not a contract (dashboard output was nondeterministic)."""
+    for name in ("zzz-proj", "aaa-proj"):  # created in reverse-alpha order
+        p = tmp_path / name
+        p.mkdir()
+        (p / "app.py").write_text("print(1)\n")
+        (p / "pyproject.toml").write_text('[build-system]\nrequires = ["setuptools"]\n')
+    code, out, err = run_dashboard(str(tmp_path), "-f", "json")
+    assert code == 0, err
+    names = [pr["name"] for pr in json.loads(out)["projects"]]
+    assert names == ["aaa-proj", "zzz-proj"]
+
+
 def test_health_score_bounds(ws):
     for p in scan_json(ws)["projects"]:
         assert 0 <= p["health_score"] <= 100, f"{p['name']}: {p['health_score']}"
