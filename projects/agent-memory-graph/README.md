@@ -2,7 +2,7 @@
 
 > 基于 SQLite 的轻量知识图谱，模拟 AI Agent 的长期记忆管理
 
-[![Tests](https://img.shields.io/badge/tests-11029-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-11082-brightgreen)]()
 [![Python](https://img.shields.io/badge/python-3.10+-blue)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-success)]()
@@ -4649,6 +4649,22 @@ census 恰 2 行的一机制两面（C592 双头模式）：6b168ec8 "How many b
 #### C599：march-window — 月份锚定计数与粒度二象性 (64674a7)
 
 C598 队列候选 #2 的一机制双面（选面插曲：候选 #1 Negroni 已在链上 banked——**链上查证先于队列信任**）：a9f6b44c "How many bikes did I service or plan to service in March?"（GT '2'：F1 road bike @ Pedal Power March 10th serviced + F2 commuter bike 换胎意图锚 "this month, before April comes"；旧 pred=Toyota Camry 汽车保养回声）、00ca467f "How many doctor's appointments did I go to in March?"（GT '2'：Dr. Smith March 3rd + Dr. Thompson March 20th follow-up；旧 pred=bronchitis 咳嗽回声）。**粒度二象性是本轮主课**：bike 面 F2 的换胎意图与 March 锚分属同 turn 兄弟句，句粒度必失配 → turn 粒度（安全因为锚文本上钉死 March）；appt 面恰好相反——t6 把 "March 15th" 和 "Dr. Smith/Dr. Johnson" 放在不同句（'should discuss with'），turn 粒度会 2→3 多算 johnson → **句粒度是承重墙**。三个实现课：序数后缀 `\bmarch\s+\d{1,2}\b` 在 "March 10**th**" 失配（`\b` 落在 0 与 t 之间），`(?:st|nd|rd|th)?` 消费后缀且 "March 2023" 仍经回溯拒绝；F2 守卫 `if not keys` 会让 F1 命中后 F2 被跳过——双面必须无条件全跑，set 天然去重；`_cnt_sents` 按 `.` 切句把 "Dr. Smith" 切成两半，_map_sents 合并以 Dr./Mr./Mrs./Ms./St. 结尾的碎片。墙全部逐 turn 钉死（mountain bike 只 got 水壶架、系动词谓语 "just a regular hybrid bike" 无锚不键 → GT 2 非 3、April EMG / PT "since March 25th" 无拜访动词等）。渲染 '2' 三 judge 全绿。TDD 28 测试红→绿；replay PASS 首试 1159s（连续第 6 次）：pred 变化恰 {a9f6b44c, 00ca467f}，banked 351→353（0.706），套件 11001→11029（+28 test_march_faces.py）。
+
+## Cycles 600-602: 0.706→0.712 — 构造声明、全句严格头与品牌双墙
+
+> 官方口径轨迹：0.706（C599）→ **0.708（C600）** → **0.710（C601）** → **0.712（C602）**，banked 353→356，套件 11029→11082（junitxml）。本段主轴：状态更新对与回声劫持的构造解法三连——C600 用 running-total 声明构式让新值由构造语义直接解析（stale 快照构造上永不 key，无需 recency 仲裁）；C601 用三重墙收 December 信仰天数（**全句严格头必须注册在 generic 时长 block 之前**，否则 "how many days" 先被泛化面捕获）；C602 用 brand+usage 双墙收 distinct 外卖品牌计数（assistant 回声能逐词复制全部词面墙，user-role 是唯一不可伪造的承重结构）。replay 首试八连（C592 起），keep 链延至三十八连（C565 起）。教程同步增补：[TUTORIAL-ANSWER-FACES.md](TUTORIAL-ANSWER-FACES.md) §5.51-§5.53。
+
+#### C600：species_total — running-total 构造声明解决 knowledge-update 对 (edcc784)
+
+affe2881 "How many bird species have I seen in total?"（kd queue #2——#1 faith-days 因 GT 句式最重顺延；旧 pred='27' 快照回声，GT '32'）。**声明构式** `"brings my total … count to N"`（gap ≤3 词）+ species|bird 同句 topic wall + user-role only：May 24 snapshot "27 so far"（无数值声明，构造上不 key）被 May 29 declaration "brings my total species count to 32" 直接覆盖——**无需 session dating / recency 仲裁**，C587 latest-session-wins 的知识更新对在此拿到构造侧替代。冲突弃权/同值去重沿用 C598 cum_total 家族。TDD 14 测试红（ImportError）→绿；suite 11029→11043（+14，272s 零漂移）。replay PASS 首试（七连首试）：pred 变化恰 {affe2881}（27-echo→'32'），drift 恰 1 行 False→True，banked 353→354（0.708）。**🐛 本轮发现 C501 删行事故**：6ef39db 删掉 `def demo():` 行 → demo 体孤儿落入前一 class 的 class scope → import memory_graph 即执行 demo（横幅×2 + MemoryGraph() DB 副作用；MCP stdio 场景有协议流污染风险）——修复只需 1 行但被 memory_graph.py 44 天 `_search_cache` 脏 hunk 阻塞，留独立 cycle 手术。
+
+#### C601：faith_days — 全句严格头与三重墙 (20ca7a5)
+
+5a7937c8 "How many days did I spend participating in faith-related activities in December?"（旧 pred=volunteer echo，GT '3 days.'）。**全句严格头**（census 恰 1/500）必须注册在 counting_form 的 generic `how many (days|weeks)`→duration_sum block **之前**——head 自含 "how many days"，晚注册会被泛化面提前捕获。三重墙：faith term（church|midnight mass|bible study|worship|prayer service）+ 过去参与动词（helped out|attend(ed)|volunteered|went to…）+ 显式 `December <day>`（ordinal 后缀可选——C599 `\b` 落在 '0' 与 't' 之间的教训复用）。证据 Dec 10 church food drive / Dec 17 Bible study / Dec 24 midnight mass at St. Mary's → '3'；decoy 全不 key（购物无 faith term、future intent 无日期、t4 re-mention 无动词、画家 Frederic Edwin Church 无日期、assistant echo 非 user、`December 2023` 裸年回溯拒绝）；**honorific 合并承重**——Dec 24 证据在 "St. Mary's" 的 St. 处被句切碎，C599 合并机制第二次承重。20 测试红→绿；suite 11043→11063（+20，278s）。replay 首跑假 drift `099778bb True→False`——**replay 脚本重写 = 假 drift**：自写 banking 规则把 canonical 的 `ok = (v == "CORRECT") or (correct_exact and v != "WRONG")` 简化成 `v == "CORRECT"`，丢了 frozen correct_exact 血统项（v=NEEDS_JUDGE 且 frozen-exact 的 '20%' 行被误判 down-drift）；kill 首跑、`cp /tmp/c600/…` 逐字节复制只改默认值后重跑 PASS 1190s：pred 变化恰 {5a7937c8}，banked 354→355（0.710）。**流程教训固化：下次 replay 一律从上一 cycle canonical cp 起步。**
+
+#### C602：delivery_services — 品牌双墙与 user-role 承重 (a67cfa0)
+
+d682f1a2 "How many different types of food delivery services have I used recently?"（旧 pred=Fresh Fusion recipe-echo 整段吐出，GT 3）。**双墙**：brand（`domino('s|s)?\s+pizza` 必带 pizza 防 domino effect / uber eats / fresh fusion）+ usage marker（had|relying on|been all about|found|ordered|tried|used）；brand 全量 finditer、**小写归一 set 去重**（Uber Eats s27 跨 turn 重提计 1）→ {Domino's, Uber Eats, Fresh Fusion}='3'，judge_semantic/exact/counting 三判全 CORRECT。**user-role 墙承重**：s41 assistant 回声 "As for Fresh Fusion, … you've found a convenient option" 同时含 brand+found——词面双墙被回声逐词复制时，说话人角色是唯一不可伪造的判别；3 个 assistant 回声原文进测试 pin 角色墙。decoy pin：brand 无动词（billboard）、动词无 brand（takeout）、found 与 brand 分句（句粒度失配）、裸 domino 无 pizza。19 测试红→绿；suite 11063→11082（+19，289s）。replay 走 C601 固化流程：cp C601 canonical + sed 改默认值 + diff 审计（恰 5 处）——**PASS 首试 1199s（八连首试），零假 drift**，pred 变化恰 {d682f1a2}，banked 355→356（0.712）。
 
 ## 许可
 

@@ -1,7 +1,7 @@
-# TUTORIAL: Answer Faces — 问题结构驱动的答案选择（Cycles 529-599）
+# TUTORIAL: Answer Faces — 问题结构驱动的答案选择（Cycles 529-602）
 
 > 本文解释 amg 评测管线里最反直觉的一个设计：**答案选哪个句子，不该由"分数阈值"决定，而该由"问题在问什么"决定**。
-> 覆盖 Cycle 529-599 的机制演进（banked 0.494 → 0.706），所有例子都是 LongMemEval s_cleaned full-500 里的真实题目。
+> 覆盖 Cycle 529-602 的机制演进（banked 0.494 → 0.712），所有例子都是 LongMemEval s_cleaned full-500 里的真实题目。
 
 ---
 
@@ -475,6 +475,24 @@ March 月份锚定计数一机制双面：bike 服务面（serviced March 10th �
 
 > 设计课：**序数后缀坑**——`\bmarch\s+\d{1,2}\b` 在 "March 10**th**" 失配，因为 `\b` 落在数字与字母之间（都是 word char）；`(?:st|nd|rd|th)?` 消费后缀，"March 2023" 仍经回溯正确拒绝。**双面守卫坑**——`if not keys` 的早退会让 F1 命中后 F2 被跳过，丢掉 commuter 面；双面必须无条件全跑，set 天然去重。**敬称句切坑**——按 `.` 切句把 "Dr. Smith" 切成两半；合并以 Dr./Mr./Mrs./Ms./St. 结尾的碎片。**流程课**——选面先查链上 banked 态：队列是快照不是事实源，候选 #1 在排队的两天里已被别的 cycle banked（链上查证先于队列信任）。
 
+### 5.51 C600 species_total — 声明构式让旧快照在构造上出局
+
+"How many bird species have I seen in total?" 是知识更新对：May 24 的快照 "27 so far" 与 May 29 的声明 "brings my total species count to 32" 共存，GT 是新值。解法不是时间序仲裁（给 session 标日期、比先后），而是**只认声明构式**：`"brings my total … count to N"`（gap ≤3 词）——快照句没有声明动词，构造上永不 key，新值由构式语义直接解析。C587 latest-session-wins 是检索侧解法，C600 是构造侧替代：**当证据形态本身能区分新旧时，不需要裁判**。冲突弃权/同值去重沿用 C598 家族。
+
+> 设计课：**能用构式区分的证据对，就别上时间序仲裁**——仲裁要引入日期解析与会话排序两个新依赖，构式只要一个正则。配套发现（与本 face 无关但必须记账）：import memory_graph 会执行 demo（C501 删行事故，`def demo():` 被删后 demo 体孤儿落入 class scope）——MCP stdio 场景这是协议流污染，eval 链只是 cosmetic 噪音。
+
+### 5.52 C601 faith_days — 专属 head 要注册在泛化 block 之前，replay 要从 canonical 复制起步
+
+December 信仰活动天数（GT '3 days.'）的 head 是全句严格问式（census 恰 1/500），但它自含 "how many days"——**注册位置在 counting_form 的 generic 时长 block 之后时，泛化面会先把它捕获走**，专属 face 永不上场。三重墙：faith term + 过去参与动词 + 显式 `December <day>`（序数后缀可选，C599 坑复用）；"St. Mary's" 的 St. 句切靠 honorific 合并修复（C599 机制第二次承重）。
+
+> 流程课（本 cycle 最重教训）：**replay 脚本重写 = 假 drift 工厂**——重写时把 banking 规则 `ok = CORRECT or (correct_exact and v != WRONG)` 简化成 `v == CORRECT`，丢了 frozen correct_exact 血统项，v=NEEDS_JUDGE 且 frozen-exact 的行（'20%'）出现假 down-drift。canonical 的 `up_all`（drift 必须 False→True）检查正是防这个的。处理：kill 首跑，`cp` 上一 cycle canonical 逐字节复制只改默认值，重跑 PASS。**replay 从 cp 起步，永不重写。**
+
+### 5.53 C602 delivery_services — 词面墙能被回声逐词复制，角色墙不可伪造
+
+distinct 外卖品牌计数（GT 3）的双墙设计：brand（domino's pizza 必带 pizza 防 domino effect / uber eats / fresh fusion）+ usage marker（had|relying on|been all about|found|ordered|tried|used），brand 小写归一 set 去重（Uber Eats 跨 turn 重提计 1）。真正的承重墙是 **user-role**：s41 的 assistant 回声 "As for Fresh Fusion, … you've found a convenient option" 同时含 brand 和 found——**词面墙无论叠多少层都能被回声逐词复制，说话人角色是唯一不可伪造的判别**。三个 assistant 回声原文进测试 pin 死角色墙。
+
+> 设计课：C548 的角色分离教训在 counting 侧第 3 次应用（C598 话题墙 → C600 user-only → C602 承重墙）——回声劫持的终极判别不是更精的词表，而是「谁说的」。配套流程课：C601 的 canonical-cp 纪律落地执行（cp + sed 改默认值 + diff 审计恰 5 处），replay PASS 首试零假 drift——**流程教训的价值在于下一次 cycle 是否还犯**。
+
 ## 6. 反面教材：枚举清单没有结构键（C536，RECORD-NEGATIVE）
 
 序数清单（"5. Absinthe"）看起来也能做个 face。实现后发现 **census 全负**：
@@ -586,12 +604,15 @@ answer-face 家族的开发纪律（每个 face 都走了这套流程）：
 | 问题问过去两周烘焙/做了多少 <烘焙品>（make 链无 bake 动词） | bake_two_weeks | 烘焙动词（含 used…to make 链）+过去锚+名词键三重合取；不加句级 plan 墙——未来锚结构性出局 | C597 |
 | 问题问 "N trips/times now" 型自述累计总数 | cum_total | `now` 锚区分总数与裸枚举（无 now 的清单永不产数）；冲突总量弃权；渲染照抄捕获 token 双 judge 皆 bank | C598 |
 | 问题问 March 窗口内服务/拜访计数（bike/appt 双面） | march-window | 粒度随证据分布：锚与键跨句必失配→turn 粒度、邻居跨句会多算→句粒度承重墙；序数后缀消费 + 敬称句切修复 | C599 |
+| 问题问 running-total 声明（"brings my total to N"，知识更新对） | species_total | 声明构式直接解析新值；快照句构造上不 key，无需 recency 仲裁；冲突弃权/同值去重 | C600 |
+| 问题问 December 信仰活动天数（faith term 三重墙） | faith_days | 全句严格头注册在 generic 时长 block 之前防提前捕获；faith 词+过去动词+显式日期合取；honorific 句切合并承重 | C601 |
+| 问题问 distinct 品牌计数（外卖服务） | delivery_services | brand+usage 双墙 + user-role 承重（回声能复制词面复制不了角色）；小写归一 set 去重 | C602 |
 | kh-floor 想救 kh=0 GT | 🚫 census-negative，不接线 | 1 救 vs 14 杀，absence pin 钉死 | C543 |
 | kh-elite 准入救窗口死区 | 🚫 census-negative，不接线 | impostor 杀率 23.3% vs 4 救，admission-only 全族否决 | C546 |
 | 松弛 run 门想多救几行 | 🚫 census-negative = 局部最优证书 | 全部 kill 是 run-TIE impostor；absence pin 钉死 C548 配置 | C549 |
 | 嵌入 side-channel 重排 | 🚫 census-negative，默认 False | 离线增益被 gate+judge 吸收，pin 死默认值 | C545 |
 
-**二十条带走的原则**：
+**二十一条带走的原则**：
 1. 答案选择读**问题结构**，不调阈值
 2. face 重排不越权翻地板；地板排除自有理由
 3. census-first：先数人口，先离线模拟，再接线；证伪的方向写进台账并用 absence pin 钉住
@@ -612,7 +633,8 @@ answer-face 家族的开发纪律（每个 face 都走了这套流程）：
 18. 反劫持 pin 是租约不是墓碑：为保护 banked 而钉的「此面不认领」测试，注释里写着 future cycle 时就是在给下一棒留路标——兑现时更新 pin 必须写明因果（哪个 cycle、为什么要改、更新前后语义都写清），pin 的演化是计划内行为而非违约（C592 test_form_does_not_steal_antique_head 钉 enum_count → C593 兑现为 antique_inherit）；且新 head 的 census 边界（三锚恰 1 行）反过来保证它偷不走上一棒的 face
 19. 正则的拼写层与边界层都要按真实表面设计：复数拼写家族（-es/-f→-ves/-y→-ies）需要显式交替，`Xes?` 匹配到的是 'mattresse' 不是 'mattress'（C594），且单点幸运命中会掩蔽双零——逐物品 isolate 是最便宜的暴露手段；NP 边界别让一个正则既定边界又组结构——深度-1 回看分类（C595）或「遇小写即停」的 span 规则（C596）把吞噬问题在构造端消灭
 20. 粒度与墙跟着证据的共生结构走，不跟机制惯性走：锚与键分属同 turn 兄弟句时句粒度必失配（C599 bike 面 → turn 粒度），日期与多个专名跨句分布时 turn 粒度会把邻居多算进来（C599 appt 面 → 句粒度承重墙）——同一轮两种粒度并存是常态；能被锚集合结构性排除的计划句（未来锚不在过去集合里）就不要叠句级文本墙去误杀共生的过去陈述（C597）；队列是快照不是事实源——动工前先查链上 banked 态（C599 选面插曲）
+21. 构造区分优于仲裁，角色判别优于词面墙：证据对的新旧能在构式上区分时（声明 vs 快照），不要引入时间序裁判（C600）；词面墙无论叠多少层都能被 assistant 回声逐词复制，唯一不可伪造的判别是「谁说的」（C602）；专属 head 必须注册在泛化 block 之前，先到先得的匹配序会让泛化面吃掉专属题（C601）。同一血脉的流程纪律：replay 脚本从上一棒 canonical cp 起步，重写 banking 逻辑 = 假 drift 工厂（C601 教训、C602 落地零假 drift）
 
 ---
 
-*生成：documentation-morning cron，2026-09-02；Cycles 540-542 增补：2026-09-03；Cycles 543-545 增补：2026-09-04；Cycles 546-548 增补：2026-09-05；Cycles 549-554 增补：2026-09-07；Cycles 555-557 增补：2026-09-08；Cycles 558-559 增补：2026-09-09；Cycles 561-563 增补：2026-09-10；Cycles 564-569 增补：2026-09-13；Cycles 570-573 增补：2026-09-14；Cycles 574-576 增补：2026-09-15；Cycles 577-579 增补：2026-09-16；Cycles 580-582 增补：2026-09-17；Cycles 583-585 增补：2026-09-18；Cycles 586-588 增补：2026-09-19；Cycles 589-591 增补：2026-09-20；Cycles 592-593 增补：2026-09-21；Cycles 594-596 增补：2026-09-22；Cycles 597-599 增补：2026-09-23。数据口径：LongMemEval s_cleaned full-500，PYTHONHASHSEED=7，deterministic cascade banked。轨迹明细见 README Cycles 532-599 段。*
+*生成：documentation-morning cron，2026-09-02；Cycles 540-542 增补：2026-09-03；Cycles 543-545 增补：2026-09-04；Cycles 546-548 增补：2026-09-05；Cycles 549-554 增补：2026-09-07；Cycles 555-557 增补：2026-09-08；Cycles 558-559 增补：2026-09-09；Cycles 561-563 增补：2026-09-10；Cycles 564-569 增补：2026-09-13；Cycles 570-573 增补：2026-09-14；Cycles 574-576 增补：2026-09-15；Cycles 577-579 增补：2026-09-16；Cycles 580-582 增补：2026-09-17；Cycles 583-585 增补：2026-09-18；Cycles 586-588 增补：2026-09-19；Cycles 589-591 增补：2026-09-20；Cycles 592-593 增补：2026-09-21；Cycles 594-596 增补：2026-09-22；Cycles 597-599 增补：2026-09-23；Cycles 600-602 增补：2026-09-24。数据口径：LongMemEval s_cleaned full-500，PYTHONHASHSEED=7，deterministic cascade banked。轨迹明细见 README Cycles 532-602 段。*
