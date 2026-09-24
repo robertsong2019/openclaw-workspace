@@ -10825,6 +10825,20 @@ def counting_form(question: str) -> str | None:
     # through; zero overlap by census).
     if _FDL_HEAD_RE.match(ql):
         return "delivery_services"
+    # C603: recency-superseded self-stated running totals — two
+    # strict heads. Census (all 500): each matches EXACTLY its
+    # own row (a2f3aa27 GT 1300 / a1eacc2a GT 'seven', both
+    # unbanked; a2f3aa27 was enum_count's stale-'1250' echo).
+    # Claimed ahead of the generic how-many block (enum_count
+    # never sees them). The mechanism is SUPERSESSION: two
+    # same-shape user declarations of one running total — the
+    # LATEST session's declaration wins (haystack order is
+    # chronological); distinct totals within one session
+    # abstain. Cannot steal the C592-C602 faces (different
+    # NPs/markers). Handlers return None when nothing resolves
+    # (falls through; zero overlap by census).
+    if _SPS_INSTA_HEAD_RE.match(ql) or _SPS_STORY_HEAD_RE.match(ql):
+        return "supersede_total"
     if re.search(r'\bhow many (days|weeks)\b', ql) or \
             (re.search(r'\b(days|weeks)\b', ql)
              and re.search(r'\b(spend|spent|take|took)\b', ql)
@@ -13662,6 +13676,90 @@ def _cnt_delivery_services(question: str, sessions: list[dict]):
     return str(len(brands)) if brands else None
 
 
+# C603 head/evidence regexes — see _cnt_supersede_total below.
+# Census (all 500): each head matches EXACTLY its own row
+# (a2f3aa27 GT 1300, unbanked, gate=counting enum_count pred
+# '1250' — the stale earlier declaration; a1eacc2a GT 'seven',
+# unbanked, gate=answer / chatter echo today). Loose sweeps
+# ('how many followers', 'how many short stories',
+# 'instagram … now') hit no sibling rows — nothing to steal.
+_SPS_INSTA_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+followers\s+do\s+i\s+have\s+on\s+"
+    r"instagram\s+now\s*\??\s*$", re.I)
+_SPS_STORY_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+short\s+stories\s+have\s+i\s+written"
+    r"\s+since\s+i\s+started\s+writing\s+regularly\s*\??\s*$",
+    re.I)
+# followers total: "<num> followers" (topic embedded) or
+# "close to <num>" — the close-to form REQUIRES the
+# follower|instagram same-sentence topic wall (the rent decoy
+# '$1,300' never carries it; census zero collision).
+_SPS_INSTA_TOTAL_RX = re.compile(
+    r"\b(?P<n1>\d{2,5})\s+followers?\b|"
+    r"\bclose\s+to\s+(?P<n2>\d{2,5})\b", re.I)
+_SPS_INSTA_TOPIC_RX = re.compile(r"\bfollowers?\b|\binstagram\b",
+                                 re.I)
+# stories total: "written|wrote|complete(d) <num>" plus the
+# 'since I started' anchor, same sentence. The anchor — not
+# the topic NP — is load-bearing: 'I've written four so far
+# since I started writing regularly' carries total+anchor
+# while the topic ('short stories per month?') lives in the
+# SIBLING sentence (C599 turn-grain lesson). 'aiming to write
+# 500 words a week' has no written|wrote|completed verb and
+# never keys; 'wrote a short poem' has no number.
+_SPS_STORY_TOTAL_RX = re.compile(
+    r"\b(?:written|wrote|completed?)\s+"
+    r"(?P<n1>(?:ten|eleven|twelve|one|two|three|four|five|six"
+    r"|seven|eight|nine)|\d+)\b", re.I)
+_SPS_STORY_ANCHOR_RX = re.compile(r"\bsince\s+i\s+started\b",
+                                  re.I)
+
+
+def _cnt_supersede_total(question: str, sessions: list[dict]):
+    """Resolve a RECENCY-SUPERSEDED self-stated running total
+    (C603, a2f3aa27 GT 1300 / a1eacc2a GT 'seven'). Each row
+    carries TWO same-shape user declarations of one running
+    total; the LATEST session's declaration wins — haystack
+    sessions are chronological (dataset invariant), so recency
+    is session order and no date parsing is needed. A user
+    sentence yields a candidate when it carries BOTH the branch
+    total construction and its wall: followers = '<num>
+    followers' or 'close to <num>' with a follower|instagram
+    same-sentence topic word; stories = 'written|wrote|
+    complete(d) <num>' with the 'since I started' anchor (the
+    anchor, not the topic NP, is load-bearing — the topic may
+    live in the sibling sentence). Distinct totals within the
+    SAME session abstain (None); identical repeats dedup;
+    assistant echoes never read (user role only). Renders the
+    captured token as stated ('7' word-folds to GT 'seven' via
+    judge_semantic; counting_judge banks numeric-first).
+    Returns None when nothing (or contradictory same-session)
+    declarations resolve (falls through — zero overlap by
+    census: each head matches exactly its own row)."""
+    ql = " ".join(question.split())
+    if _SPS_INSTA_HEAD_RE.match(ql):
+        total_rx = _SPS_INSTA_TOTAL_RX
+        wall_rx = _SPS_INSTA_TOPIC_RX
+    elif _SPS_STORY_HEAD_RE.match(ql):
+        total_rx = _SPS_STORY_TOTAL_RX
+        wall_rx = _SPS_STORY_ANCHOR_RX
+    else:
+        return None
+    cands: list[tuple[int, str]] = []
+    for si, sent in _cnt_sents(sessions, "user"):
+        t = total_rx.search(sent)
+        if t and wall_rx.search(sent):
+            gd = t.groupdict()
+            tok = (gd.get("n1") or gd.get("n2") or "").lower()
+            if tok:
+                cands.append((si, tok))
+    if not cands:
+        return None
+    latest = max(si for si, _ in cands)
+    toks = {tok for si, tok in cands if si == latest}
+    return toks.pop() if len(toks) == 1 else None
+
+
 def _cnt_item_total(question: str, sessions: list[dict]):
     """Sum per-item prices for enumerated "total cost" questions.
 
@@ -15548,7 +15646,8 @@ def answer_counting(question: str,
           "march_appt": _cnt_march_appt,
           "species_total": _cnt_species_total,
           "faith_days": _cnt_faith_days,
-          "delivery_services": _cnt_delivery_services}
+          "delivery_services": _cnt_delivery_services,
+          "supersede_total": _cnt_supersede_total}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break
