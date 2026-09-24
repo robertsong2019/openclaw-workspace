@@ -761,3 +761,49 @@ describe("CLI --format github", () => {
     expect(parsed[0].summary).toBeDefined();
   });
 });
+
+// ── CLI argument validation (silent-flag-loss gate, 2026-09-24) ──
+describe("CLI argument validation", () => {
+  function runCli(argsArr) {
+    let out = "", status = 0;
+    try {
+      out = execFileSync("node", ["index.js", ...argsArr], { encoding: "utf8" });
+    } catch (e) {
+      out = (e.stdout || "") + (e.stderr || "");
+      status = e.status;
+    }
+    return { out, status };
+  }
+
+  test("unknown flag → exit 2, flag named, no misleading directory error", () => {
+    const dir = createTempSkill({});
+    const { out, status } = runCli(["--verbose", dir]);
+    expect(status).toBe(2);
+    expect(out).toContain("--verbose");
+    expect(out).toContain("Unknown option");
+    expect(out).not.toContain("Directory not found");
+  });
+
+  test("unsupported --format value → exit 2, value named, supported list shown", () => {
+    const dir = createTempSkill({});
+    const { out, status } = runCli(["--format", "xml", dir]);
+    expect(status).toBe(2);
+    expect(out).toContain("xml");
+    expect(out).toContain("github");
+  });
+
+  test("--format with missing value → exit 2 (was silently treated as text mode)", () => {
+    const { out, status } = runCli(["--format"]);
+    expect(status).toBe(2);
+    expect(out).toContain("--format");
+  });
+
+  test("known flags unaffected: --quiet on healthy dir exits 0", () => {
+    const dir = createTempSkill({
+      "SKILL.md": "---\nname: ok-skill\ndescription: healthy skill for validation\n---\n\n" + "B".repeat(200),
+      "README.md": "# r\n",
+    });
+    const { status } = runCli(["--quiet", dir]);
+    expect(status).toBe(0);
+  });
+});

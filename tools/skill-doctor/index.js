@@ -369,12 +369,35 @@ if (require.main === module) {
   const fixMode = args.includes("--fix");
   const quietMode = args.includes("--quiet");
   const formatIdx = args.indexOf("--format");
-  const formatMode = formatIdx !== -1 ? args[formatIdx + 1] : null; // "github" expected
+  const formatMode = formatIdx !== -1 ? (args[formatIdx + 1] ?? null) : null; // "github" expected
   const dirs = args.filter(
     (a, i) =>
       a !== "--json" && a !== "--fix" && a !== "--quiet" && a !== "--format" &&
       !(formatIdx !== -1 && i === formatIdx + 1)
   );
+
+  // ── Argument validation ──────────────────────────────────
+  // Silent-flag-loss family gate: unknown flags used to be treated as skill
+  // directories ("Directory not found: --verbose"), and --format with an
+  // unsupported or missing value silently fell back to text mode.
+  const KNOWN_FLAGS = new Set(["--json", "--fix", "--quiet", "--format", "--help", "-h"]);
+  const unknownFlags = args.filter(
+    (a, i) =>
+      a.startsWith("-") && a !== "-" && !KNOWN_FLAGS.has(a) &&
+      !(formatIdx !== -1 && i === formatIdx + 1) // --format's value is not a flag
+  );
+  if (unknownFlags.length) {
+    console.error(fail(`Unknown option(s): ${unknownFlags.join(", ")} — run skill-doctor --help`));
+    process.exit(2);
+  }
+  if (formatIdx !== -1 && formatMode === null) {
+    console.error(fail("--format requires a value (supported: github)"));
+    process.exit(2);
+  }
+  if (formatMode !== null && formatMode !== "github") {
+    console.error(fail(`Unsupported --format value: ${formatMode} (supported: github)`));
+    process.exit(2);
+  }
 
   if (dirs.length === 0 || args.includes("--help") || args.includes("-h")) {
     console.log(`${c.bold}skill-doctor${c.reset} — Diagnose OpenClaw Agent Skills
