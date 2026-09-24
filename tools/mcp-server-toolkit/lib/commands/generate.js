@@ -114,6 +114,12 @@ export async function generate(options) {
     process.exit(1);
   }
 
+  // 目录目标走 readFile 会裸 EISDIR 未捕获崩溃（与 validate 同款 isFile 门）
+  if (!(await fs.stat(configFile)).isFile()) {
+    console.log(chalk.red(`❌ 不是配置文件: ${configFile}（这是一个目录）`));
+    process.exit(1);
+  }
+
   const raw = await fs.readFile(configFile, 'utf8');
   let config;
   const ext = path.extname(configFile).toLowerCase();
