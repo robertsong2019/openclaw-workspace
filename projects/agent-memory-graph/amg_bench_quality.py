@@ -10851,6 +10851,18 @@ def counting_form(question: str) -> str | None:
     # overlap by census).
     if _FRM_HEAD_RE.match(ql):
         return "funrun_miss"
+    # C605: knowledge-update base+delta coin total — one strict
+    # head. Census (all 500): matches EXACTLY 1 row (69fee5aa
+    # GT 38, unbanked, gate=answer / s12 base-echo today).
+    # Claimed ahead of every generic how-many block (enum/
+    # inventory gates never see it). The 'pre-1920 American
+    # coins ... in my collection' anchor cannot steal the
+    # C592-C604 faces (different NPs/markers); the BASE/ADD
+    # RXes hit zero other sentences in any role across all 500
+    # rows. Handler returns None when no base resolves (falls
+    # through; zero overlap by census).
+    if _CAD_HEAD_RE.match(ql):
+        return "coin_add"
     if re.search(r'\bhow many (days|weeks)\b', ql) or \
             (re.search(r'\b(days|weeks)\b', ql)
              and re.search(r'\b(spend|spent|take|took)\b', ql)
@@ -13836,6 +13848,73 @@ def _cnt_funrun_miss(question: str, sessions: list[dict]):
     return str(len(days)) if days else None
 
 
+# C605 head/evidence regexes — see _cnt_coin_add below.
+# Census (all 500): the head matches EXACTLY its own row
+# (69fee5aa GT 38, qtype knowledge-update, question_date
+# 2023/06/09), unbanked today (gate=answer — the pred was the
+# s12 base-declaration echo turn). The BASE and ADD RXes hit
+# ZERO other sentences in any role across all 500 rows — zero
+# siblings by construction.
+_CAD_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+pre-?1920\s+american\s+coins\s+do\s+i\s+have"
+    r"\s+in\s+my\s+collection\s*\??\s*$", re.I)
+# base declaration: 'I have a total of 37 coins in that
+# collection' — the pre-1920 topic lives in the SIBLING
+# sentence of the same turn ('organizing my pre-1920 American
+# coins by denomination and mint mark'), so the base RX keys on
+# the anaphoric 'in that collection' instead of the topic
+# (C603 stories lesson: the anchor is not always topic-bearing).
+# Assistant echoes carry no 'total of N coins in that
+# collection' phrasing ('cases that can hold 37 coins' etc.).
+_CAD_BASE_RX = re.compile(
+    r"\btotal\s+of\s+(\d{1,4})\s+coins\s+in\s+that\s+collection\b",
+    re.I)
+# delta event: 'I just added a new coin to my collection of
+# pre-1920 American coins - a 1915-S Barber quarter' — fully
+# self-contained (topic + just-added verb in one sentence). The
+# 1972 doubled-die cent ('recently bought') and the 1913
+# Liberty Head nickel ('meaning to get ... appraised') never
+# key; 'before adding a coin' (no 'just added', no topic) never
+# keys; assistant 'Congratulations on adding a new coin' never
+# reads (user wall).
+_CAD_ADD_RX = re.compile(
+    r"\bjust\s+added\s+a\s+new\s+coin\s+to\s+my\s+collection\s+of"
+    r"\s+pre-?1920\s+american\s+coins\b", re.I)
+
+
+def _cnt_coin_add(question: str, sessions: list[dict]):
+    """Knowledge-update base+delta coin total (C605, 69fee5aa
+    GT 38). The row needs ARITHMETIC over two user declarations
+    in different sessions — not recency supersession (C603):
+    the LATEST base declaration ('total of 37 coins in that
+    collection') is the running total, and each DISTINCT delta
+    event ('just added a new coin to my collection of pre-1920
+    American coins') in a STRICTLY LATER session adds 1. Adds
+    in or before the base session are baked into the base
+    (never double-counted); identical add repeats dedup;
+    distinct add sentences are additive. Evidence: s12
+    (2023/05/27) base 37 + s39 (2023/05/29) add 1 -> 38.
+    Renders the total (GT 38; exact + judge_semantic +
+    counting_judge all bank). Returns None when no base
+    resolves (falls through — zero overlap by census: the head
+    matches exactly its own row)."""
+    if not _CAD_HEAD_RE.match(" ".join(question.split())):
+        return None
+    base_si, base_val = None, None
+    adds: dict[str, int] = {}   # normalized sentence -> first si
+    for si, sent in _map_sents(sessions):
+        m = _CAD_BASE_RX.search(sent)
+        if m:
+            base_si, base_val = si, int(m.group(1))
+            continue
+        if _CAD_ADD_RX.search(sent):
+            adds.setdefault(" ".join(sent.split()), si)
+    if base_val is None:
+        return None
+    late = sum(1 for asi in adds.values() if asi > base_si)
+    return str(base_val + late)
+
+
 def _cnt_item_total(question: str, sessions: list[dict]):
     """Sum per-item prices for enumerated "total cost" questions.
 
@@ -15724,7 +15803,8 @@ def answer_counting(question: str,
           "faith_days": _cnt_faith_days,
           "delivery_services": _cnt_delivery_services,
           "supersede_total": _cnt_supersede_total,
-          "funrun_miss": _cnt_funrun_miss}
+          "funrun_miss": _cnt_funrun_miss,
+          "coin_add": _cnt_coin_add}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break
