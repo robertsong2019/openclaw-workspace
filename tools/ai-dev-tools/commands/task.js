@@ -110,6 +110,13 @@ async function generateTask(templateName, options) {
       variables = JSON.parse(options.variables);
     } catch (e) {
       console.log(chalk.red('变量 JSON 格式错误'));
+      process.exitCode = 1;
+      return;
+    }
+    // JSON 合法但不是键值对（null/数组/标量）——与解析失败同门：明确报错而非静默产出半成品
+    if (variables === null || typeof variables !== 'object' || Array.isArray(variables)) {
+      console.log(chalk.red('变量 JSON 必须是对象，如 {"key":"value"}'));
+      process.exitCode = 1;
       return;
     }
   } else {
@@ -372,10 +379,12 @@ export async function loadTemplate(name) {
 export function generateTaskContent(template, variables) {
   let content = template.template;
   
-  Object.entries(variables).forEach(([key, value]) => {
-    // Function replacer: prevents `$&`, `$'`, "$`" in values from being
-    // interpreted as replacement patterns and corrupting the output
-    content = content.replace(new RegExp(`{${key}}`, 'g'), () => String(value));
+  // null/undefined 变量集 = 不做任何替换（此前 Object.entries(null) 直接 TypeError 崩溃）
+  Object.entries(variables || {}).forEach(([key, value]) => {
+    // 占位符键按字面量匹配：转义正则元字符，此前 'a(b' 这类键会让 new RegExp
+    // 抛出未捕获的 SyntaxError（Unterminated group），整个任务生成崩溃
+    const literal = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    content = content.replace(new RegExp(`\\{${literal}\\}`, 'g'), () => String(value));
   });
   
   return content;

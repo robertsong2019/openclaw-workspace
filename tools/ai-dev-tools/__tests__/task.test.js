@@ -1,4 +1,11 @@
 import { loadTemplate, generateTaskContent } from '../commands/task.js';
+import { spawn } from 'child_process';
+import path from 'path';
+import os from 'os';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Real-module tests (replaced previous suite that tested self-defined fixtures)
 describe('task command — real template engine', () => {
@@ -68,5 +75,95 @@ describe('task command — real template engine', () => {
       const t = { name: 'partial', variables: ['a'], template: '{a} {b}' };
       expect(generateTaskContent(t, { a: 'X' })).toBe('X {b}');
     });
+
+    // 2026-09-24: regex-metachar keys used to crash with raw SyntaxError from
+    // new RegExp('{a(b}') — "Unterminated group". Placeholder lookup is literal.
+    describe('metacharacter keys are literal (no RegExp injection)', () => {
+      const t = { name: 'inj', variables: ['x'], template: 'run: {x}' };
+
+      test.each([
+        ['paren group opener', 'a(b'],
+        ['bracket class', 'x[1]'],
+        ['quantifier brace', 'a{2}'],
+        ['dot-all', 'a.b'],
+        ['dollar anchor', 'end$'],
+        ['star quantifier', 'a*b'],
+      ])('%s key: no-throw, no substitution side-effects', (_label, badKey) => {
+        expect(() => generateTaskContent(t, { [badKey]: 'VAL' })).not.toThrow();
+        // key is not a declared placeholder → template body unchanged
+        expect(generateTaskContent(t, { [badKey]: 'VAL' })).toBe('run: {x}');
+      });
+
+      test('mixed: metachar garbage key + real placeholder still substitutes', () => {
+        const out = generateTaskContent(t, { 'a(b': 'V', 'x]': 'W', x: 'OK' });
+        expect(out).toBe('run: OK');
+      });
+
+      test('brace in key does not break literal pattern', () => {
+        const t2 = { name: 'brace', variables: ['q'], template: 'Q: {q}' };
+        expect(generateTaskContent(t2, { 'q{': 'V', 'q': 'REAL' })).toBe('Q: REAL');
+      });
+    });
+
+    // 2026-09-24: Object.entries(null) TypeError — null/undefined = no substitution
+    describe('null/undefined variables are a no-op, not a TypeError', () => {
+      const t = { name: 'nul', variables: ['x'], template: 'run: {x}' };
+
+      test('null', () => {
+        expect(generateTaskContent(t, null)).toBe('run: {x}');
+      });
+
+      test('undefined', () => {
+        expect(generateTaskContent(t, undefined)).toBe('run: {x}');
+      });
+    });
+  });
+
+  describe('CLI gate: --variables non-object JSON exits 1 (spawn e2e)', () => {
+    const bin = path.resolve(__dirname, '../bin/aid.js');
+    const cliDataDir = path.join(os.tmpdir(), `aidt-cli-e2e-${process.pid}`);
+
+    function runAid(args) {
+      return new Promise((resolve) => {
+        const child = spawn(process.execPath, [bin, ...args], {
+          env: { ...process.env, AID_DATA_PATH: cliDataDir, XDG_CONFIG_HOME: path.join(cliDataDir, 'cfg') },
+        });
+        let stdout = '';
+        child.stdout.on('data', d => { stdout += d; });
+        child.on('close', code => resolve({ code, stdout }));
+      });
+    }
+
+    test('valid object variables → exit 0, placeholders filled, no prompt',
+      async () => {
+        const { code, stdout } = await runAid([
+          'task', 'code-review',
+          '-v', JSON.stringify({ file_path: 'src/app.js', review_type: 'security' }),
+        ]);
+        expect(code).toBe(0);
+        expect(stdout).toContain('src/app.js');
+        expect(stdout).not.toContain('{file_path}');
+      }, 30000);
+
+    test('null JSON → exit 1 with object-required error (was silent raw template)',
+      async () => {
+        const { code, stdout } = await runAid(['task', 'code-review', '-v', 'null']);
+        expect(code).toBe(1);
+        expect(stdout).toContain('必须是对象');
+      }, 30000);
+
+    test('array JSON → exit 1 (same gate)',
+      async () => {
+        const { code, stdout } = await runAid(['task', 'code-review', '-v', '[1,2]']);
+        expect(code).toBe(1);
+        expect(stdout).toContain('必须是对象');
+      }, 30000);
+
+    test('unparseable JSON → exit 1 with parse error (exitCode was silently 0)',
+      async () => {
+        const { code, stdout } = await runAid(['task', 'code-review', '-v', '{bad']);
+        expect(code).toBe(1);
+        expect(stdout).toContain('格式错误');
+      }, 30000);
   });
 });
