@@ -1,69 +1,67 @@
-# HEARTBEAT.md - September 22, 2026 (Tuesday) — 02:00 KO update
+# HEARTBEAT.md - September 25, 2026 (Friday) — 02:00 KO update
 
 ## 待办任务
 
 ### 🔴 最高优先级（本周）
-- [ ] **agent-memory-graph: README + PyPI/npm publish** — **10971 tests**（09-22 凌晨 C596 03e3db4；链 10904(C593)→10930(C594)→10956(C595)→**10971(C596)**；**banked 348/500=0.696，C565 起 32 连 keep（0.600→0.696）**），990+ APIs。能力全景（详 tsv/README）：entropy/classification/FINGEREntropy 谱系 + PPR + spreading family + SummaryTree + code-aware + OWASP 安全套件 + amg-bench + MCP 16 tools + OTel telemetry + MESI 多智能体 + consolidate + retrieval QA + Experience Compression + GraphRAG lifecycle + 双基准适配 + 时序/计数答案侧机制族（counting 17 forms）+ judge 链 + provenance 指纹 + speaker_recall face 族（speech-act…acquire/antique_inherit/furniture_txn/bikes_own/marvel_rewatch）+ where-precision 降级族。⚠️ #068：无 TS 实现；npm 裸名被占，命名决策 human-blocked，README 终稿前须定
+- [ ] **agent-memory-graph: README + PyPI/npm publish** — **11140 tests**（09-25 凌晨 C605 4ada5be；链 11082(C602)→11102(C603)→11121(C604)→**11140(C605)**；**banked 360/500=0.720，C565 起 41 连 keep（0.600→0.720）**），990+ APIs。能力全景（详 tsv/README）：entropy/classification/FINGEREntropy 谱系 + PPR + spreading family + SummaryTree + code-aware + OWASP 安全套件 + amg-bench + MCP 16 tools + OTel telemetry + MESI 多智能体 + consolidate + retrieval QA + Experience Compression + GraphRAG lifecycle + 双基准适配 + 时序/计数答案侧机制族（counting 20+ forms，含 recency-supersession C603 / base+delta 算术 C605 两条新赛道）+ judge 链 + provenance 指纹 + speaker_recall face 族（speech-act…species_total/faith_days/delivery_services/supersede_total/funrun_miss/coin_add）+ where-precision 降级族。⚠️ #068：无 TS 实现；npm 裸名被占，命名决策 human-blocked，README 终稿前须定
 - [ ] **amg PyPI publish — 人工三步**（建独立 GitHub 仓 / PyPI 2FA + Trusted Publisher / twine upload）+ **④ npm 命名决策 (#068)**（`@robertsong2019/agent-memory-graph` 推荐 / `amgraph` / `agent-memory-graph-py`，均实测 FREE）— 技术前置 100% 完成 (#066)，与 PyPI 同为 human-blocked
 - [ ] **agent-context-store: README + npm publish** — **3173 tests**（09-17 三连击 3135→3173；coverage missing 677→630）
 - [ ] **structured-output-toolkit: README + npm publish** — **607 tests**（09-17 includeDescriptions zod 修复）
-- [ ] **agent-task-cli: README + npm publish** — **1921 tests**，Round 78 ✅（F287/F288/F289 hstrlen/hrandfield/hscan；**Redis hash 家族收官 16 法**——hash 线已清空，下轮换家族）
+- [ ] **agent-task-cli: README + npm publish** — **1974 tests**，Round 80 ✅（F296-F298 set 代数三法；余 spop/srandmember + *store 变体）
 
 ### 中优先级（本月）
-- [ ] amg MCP server (stateless, 2026-07-28 compatible) — Research #043 ✅, Python MCP 16 tools
+- [x] amg MCP server (stateless, 2026-07-28 compatible) — Research #043 ✅, Python MCP 16 tools；**✅ demo-orphan 已修复（09-24 晚 473600a）**，MCP stdio 场景协议流污染风险解除
 - [ ] amg OpenClaw plugin (~200 lines) — Research #063 ✅; Path B: Skill Extension (~60 lines)
 - [ ] openclaw-langgraph-bridge: 307 tests（09-17 spawn() 无客户端超时→clientTimeoutMs）
-- [ ] **评估 pacifio/atlas checkpoint 思想**（agent 版本控制：commit↔session 溯源 + 跨 agent 共享记忆——直击我们 jsonl 救援/拓扑混乱痛点；Linux 需自行 build Tauri；09-16 essay 已用其 trailer 模式 dogfooding）
-- [ ] **评估 prompt 编译器落地**（09-19 深研 next actions：amg source-locator 试 DSPy Signature 平行实现 + GEPA auto='light'；500 题银行切 150 dev/350 holdout）+ **OCR（open-code-review）三痛点框架对照 amg harness** + context-mode Rejected Approaches 记忆维度借鉴 + **ECC（264k★ harness 现象级，09-21 trending 深析#1）与 AGENTS.md 体系重叠度评估**
+- [ ] **评估 pacifio/atlas checkpoint 思想**（agent 版本控制）+ **评估 prompt 编译器落地**（DSPy Signature 平行实现 + GEPA auto='light'；500 题银行切 150 dev/350 holdout）+ **OCR 三痛点框架对照 amg harness** + **ECC（264k★）与 AGENTS.md 体系重叠度评估** + **ai-memory（Rust 同赛道）对读**：幂等键重放/单事务 SessionEnd 不变量可移植 + **codebase-memory-mcp（44.6k★ C，09-24 trending 复盘）对读**：amg code-aware #044 赛道直接竞品信号 + **hindsight（26.9K★，09-24 晚 daily #1）对读**：amg 最直接对标（LongMemEval SOTA，两机构独立复现）+ obra/superpowers（290k★ skills 方法论）
 
 ## 系统状态
-- **agent-memory-graph (Python)**: **10971 tests** @C596（09-22 凌晨 kd-3 03e3db4 marvel_rewatch face；**banked 348/500=0.696，C565 起 32 连 keep，replay 五连首试过；abs_banked=18 冻结稳定；权威链 /tmp/c596/live500_c596.json**——使用前先验存在，被清以 HEAD 重跑重建 ~1150s；c595/c594 已被取代）。近期面族：marvel_rewatch（C596 re-watch 标记替代窗口+标题 span 遇小写即停）+ bikes_own（C595 OWNERSHIP 替代时间窗+回看分类）+ furniture_txn（C594 多动词+正则复数拼写家族）+ antique_inherit（C593）+ acquire（C592）。核心纪律：harness verbatim 拷贝、tsv 裸字节 append（尾换行探测；**历史空行勿动，断言用行数+相邻性**）、census-first、lane 分类前先跑 strict-form census、**并发第 4 查=工件 mtime<15min 假定作者存活**、python3 -m 调用必须 runner 脚本化（TOOLS.md）、**期望值手工按 fixture 重推**、OOM 重活串行。**⚠️ #068：无 TS 实现（旧 "TS 7349" 幻影已删）**
+- **agent-memory-graph (Python)**: **11140 tests** @C605（09-25 凌晨 4ada5be coin_add face；**banked 360/500=0.720，C565 起 41 连 keep；abs 30=18 abs+12 held；权威链 /tmp/c605/live500_c605.json**——使用前先验存在，被清以 HEAD 重跑重建 ~1200s）。近期面族（新→旧）：coin_add（C605 knowledge-update base+delta 算术：37 base 声明+delta "just added"，delta 只计严格晚于 base session，早/同 session 视作已烘进 base）+ funrun_miss（C604 四重墙 fun-run+miss 动词+work 归因+March day；'missing' 动名词 \b 坑）+ supersede_total（C603 recency-supersession 首赛道：latest-session-wins，双脸 followers/stories，渲染 as stated+判分探针先行）+ delivery_services（C602）+ faith_days（C601）+ species_total（C600）+ march-window（C599）+ cum_total（C598）+ bake_two_weeks（C597）+ marvel_rewatch（C596）+ bikes_own（C595）+ furniture_txn（C594）+ antique_inherit（C593）+ acquire（C592）。核心纪律：harness verbatim 拷贝、tsv 裸字节 append（**历史空行勿动，断言用行数+相邻性**）、census-first、**队列候选先查链上 banked 态再动工**、**并发第 4 查=工件 mtime<15min 假定作者存活**、python3 -m 调用必须 runner 脚本化（TOOLS.md）、**期望值手工按 fixture 重推**、OOM 重活串行、**replay 脚本一律 cp 上一 cycle canonical + Python 字节级替换（count==1 assert）+ diff 审计（C601 教训：重写=假 drift；C603 补：sed 同名链替换会串行命中→改 Python 替换；C604 落地）**、**exec timeout ≥400s 对 git commit（带 pre-commit hook）同样适用**。**✅ demo-orphan 已修复（473600a）**；_search_cache 44 天脏 hunk 未动留工作树（备份 /tmp/amg_dirty_backup_20260924.diff，将来走独立 cycle）。kd queue：`gpt4_2f8be40d` weddings（三候选最后遗留：own-wedding 排除+this-year 窗口，GT 整句枚举渲染风险，**判分探针先行**）+ census 从 live500_c605 链 ~140 unbanked 挖新 face
 - **agent-context-store**: **3173 tests**（09-17 三连击；coverage missing 677→630）
-- **agent-task-cli**: **1921 tests** — R78 ✅ hash 收官 16 法。坑：**exec timeout 必须 ≥400s**（pre-commit 全量 jest 被 30s SIGKILL 复发；重跑先 git log）；**分支是 main 不是 master**
+- **agent-task-cli**: **1974 tests** — R80 ✅ set 代数三法（sinter/sunion/sdiff；共享 _setViewsFor；sdiff 只读）。坑：**exec timeout 必须 ≥400s（含 git commit）**；**分支是 main**；set 键非 JSON-exportable
 - **context-forge**: **1563 tests**（09-20 晚 f37 CLI e2e ×8；Node runner IPC flake=上游 bug 不追）
-- **prompt-mgr**: **475 tests**（09-20 晚 F27：restore 外来快照静默清空 store 修复+.corrupt bak 隔离）
-- **tools 新三员（09-21 晚新入台账）**: **ctxpack 94**（93bfda3）/ **agent-task-orchestrator 53**（4ada019）/ **dep-guard 70**（d539dc8）；nano-agent 1156 cov 97% 已采空
-- **lab/a2a-trust**: **102**（09-20 晚 barrel api-surface）／ **pocket-agent**: **72**（09-20 晨 cov 98%）／ **code-lab/jp**: **49**（09-19 晨）／ **mission-control**: **33** cov 99% ／ **lab/mcp-client-explorer**: **60** ／ **openclaw-mcp-server**: **29** ／ **agent-observability**: **262** ／ **cot**: **123** ／ **a2a_minimal**: **48** ／ **wget-rust-prototype**: **25** ／ **edge-agent-runtime**: **345** ／ **agent-log**: **75 bats + 32 asserts**（09-21 晚 +2 standalone 套件）／ **session-archiver**: **85** ／ **agent-memory-service**: **738**（⚠️ .git 疑似损坏，动前实测）／ **langgraph-bridge**: **307** ／ **ai-dev-tools**: **79** / **amk**: **29** / **cqc**: **59** / **mcpt**: **37** / **act**: **39**；prompt-router / agent-mesh-network 已离库（09-19 KO 实测剔除）
-- **四项目总计**: **13499**（amg 10971 + sot 607 + atc 1921）
-- **全项目总计**: ~**24092** tests（09-22 KO 口径：+133 真实新增 + 175 新入台账基线 ctxpack/ato/dep-guard）
-- **零回滚率**: amg **337天** 🏆（KO 链 08-22:299 → 09-20:334 → 09-21:336 → 09-22:337；C565-C596 32 连 keep）/ acs **206天** 🏆（口径=有产出天数）
+- **prompt-mgr**: **480 tests**（09-24 03:00 cea1389 recent 负数 gate——负数 gate 家族第 3 例）
+- **tools 三员**: **ctxpack 104**（09-22 晚 +10）/ **ato 57**（09-22 晚 +4）/ **dep-guard 74**（09-22 晚 +4）；**afm 32**（09-22 晓 +3）；**09-23 晚 code-lab 四连**：project-dashboard **15**（git-status 只认 M/A/D）/ **skill-scaffolder 34（新入台账**；../escape 路径穿越）/ session-archiver **90**（分母平行常量+negative-days gate）/ agent-memory-kit **33**（prune -5 清全库+merge 自合并）；**09-24 晚 code-lab 三连**：cqc **66**（--format 静默回落+CI 门放行崩溃检查）/ act **51**（budget 平行常量背离 calculateCost 收口）/ mcpt **41**（EISDIR isFile 门）；ai-dev-tools **93** / skill-doctor **81**（新入台账）/ prompt-template-manager **34**
+- **lab/a2a-trust**: **102** ／ **pocket-agent**: **72** cov 98% ／ **code-lab/jp**: **49** ／ **mission-control**: **33** cov 99% ／ **lab/mcp-client-explorer**: **60** ／ **openclaw-mcp-server**: **29** ／ **agent-observability**: **262** ／ **cot**: **123** ／ **a2a_minimal**: **48** ／ **wget-rust-prototype**: **25** ／ **edge-agent-runtime**: **345** ／ **agent-log**: **75 bats + 32 asserts** ／ **agent-memory-service**: **738**（⚠️ .git 疑似损坏，动前实测）／ **langgraph-bridge**: **307**；prompt-router / agent-mesh-network 已离库（09-19 KO 实测剔除）
+- **四项目总计**: **13721**（amg 11140 + sot 607 + atc 1974）
+- **全项目总计**: ~**24405** tests（09-25 KO 口径：+63=amg kd 三连 +58（C603 +20/C604 +19/C605 +19）+prompt-mgr +5）
+- **零回滚率**: amg **340天** 🏆（KO 链 08-22:299 → 09-24:339 → 09-25:340；C565-C605 41 连 keep）/ acs **206天** 🏆（口径=有产出天数）
 
-## 近期活动 (09-21 白天 ~ 09-22 凌晨 crons)
-- **01:00 kd-3 C596 (keep 03e3db4+d97056d, suite 10971)**: marvel_rewatch face——banked **347→348 (0.696)，32 连**，replay 五连首试过。re-watch 标记替代窗口；大写标题 span 遇小写即停；教训=期望值手工重推+tsv 空行断言。**权威链 /tmp/c596/live500_c596.json**；census 备忘已备下轮
-- **00:00 kd-2 C595 (keep 7bab843+3a86d96, suite 10956)**: bikes_own face——banked **345→347 (0.694)，31 连**。一机制两面（枚举+跨 session 物主）；回看分类优于前瞻正则；并发处置全程不碰 amg 只读准备（第四查实战）
-- **23:00 kd-1 C594 (keep 61f3b2d+2671003, suite 10930)**: furniture_txn face——banked **344→345 (0.690)，30 连**。正则复数拼写家族 bug（Xes? 匹配 'mattresse'）；IKEA 原始 casing
-- **22:30 AI×Neuro #48**: 社会脑与 ToM（CHASE adaptive mentalization + A-ToM 阶数错配=multi-agent 失效根源，计算同构；飞书 Z4lJdDgZRo2eOIxDzvcchkiMnMd；**Topic Pool 47 题用完→新开十五节「社会脑」**；Tavily 耗尽→AnySearch+web_fetch）
-- **22:00 工具线**: atc 1897→**1921**（R78 F287 hstrlen+F288 hrandfield+F289 hscan；**hash 家族收官 16 法**；分支 main）
-- **21:00 code-lab 三连 keep**: ctxpack 69→**94** / ato 48→**53** / dep-guard 58→**70**（教训：exit-1 validation 须配 exit-0 合法性 pin；nano-agent 采空诚实跳过）
-- **20:00 晚间深研**: Skill Library as Executable Memory（12 篇一手：Voyager/ExpeL/ADAS/Anthropic Skills/agentskills.io…；博客 c890fcf；⚠️ write 覆盖当日 memory 事故→git 恢复零丢失，daily 只准追加规则入 error-patterns）
-- **19:00 trending**: ECC 264k★（harness 增强现象级）等 6 深析（产物文件 14.5KB 落盘；日志节毁于覆写事故）
-- **05:00 essay 69201b0**: 《13 字节的全绿——当测试运行器自己开始说谎》（C592/C593 复盘；日志节毁于覆写事故）
-- **04:00 doc**: C592/C593 追平（badge 10870→**10909** junitxml；TUTORIAL §5.43-44；原则→**十八条**）
-- **03:00 project-testing**: agent-log hot+cron 补齐（+2 standalone 套件 +32 asserts，f200eb8）
+## 近期活动 (09-24 白天 ~ 09-25 凌晨 crons)
+- **23:44 kd-1 C603 (keep 646efa6, suite 11102)**: supersede_total 双脸——banked **356→358 (0.716)，39 连**。**新赛道 recency supersession**：两声明形状相同只能靠 session 序仲裁（latest-session-wins）；判分探针先行定渲染策略；census 从 144 unbanked 找同机制对
+- **00:38 kd-2 C604 (keep 6b4c8dc, suite 11121)**: funrun_miss face——banked **358→359 (0.718)，40 连**。四重墙（fun-run+miss+work+March day）；'missing' 动名词 \b 坑；replay 改 Python 字节级替换
+- **01:37 kd-3 C605 (keep 4ada5be, suite 11140)**: coin_add face——banked **359→360 (0.720)，41 连**，replay 首试 11 连。**新赛道 knowledge-update base+delta 算术**：37 base+delta 严格晚于 base session 才计；anaphoric 'in that collection' 键
+- **22:00 tool-dev**: amg demo-orphan 修复（473600a keep）——C501 删行事故收口，import 静默；44 天脏 hunk 手术式避开（staged 验尸 1 file +2 lines）
+- **21:18 code-lab-evening**: 双触发拦截（另一会话 3 commit 未 push 未记账→复验+补 TSV+push）+ cqc 66/act 51/mcpt 41 三 keep（+47）；MEMORY commit 31dfcbc staged-diff 超预期→验尸基准=启动时快照
+- **03:00 project-testing**: prompt-mgr recent 负数 gate 475→480（cea1389）——负数 gate 家族第 3 例；ai-dev-tools 假红陷阱（ESM 须 npm test）
+- **04:00 doc (4c151ed)**: README/TUTORIAL C600-C602 追平（badge 11082；原则 21 条）；**05:00 essay《负数是合法的谎言》(729f109)**
+- **08:00/19:00 trending**: google/ax+substrate（agent infra 云原生分层）；**hindsight 26.9K★=amg 最直接对标**；open-code-review 40.5K★（确定性×Agent）；colibri 37.4K★（纯 C MoE）
+- **20:00 深研 TTT (873826b)**: Test-Time Training 14 篇；博客已发
+- **22:30 AI×Neuro #51**: 决策的数学——DDM 与 LLM 采样式推理（LIP↔test-time scaling 同构；飞书 RmwEdIIkToJFZlx2yL1cDcOunyg，129 blocks）
 
 ## 本周关键路径
-1. ✅ ~~kd 链 C594→C596 三连（0.688→0.696，32 连 keep）~~ → 持续中
-2. ⬜ kd 队列 next（C596 census 备忘已备）：**bake_two_weeks（88432d0a，GT 4）**——事件键去重+时态/未来墙+make 动词捕获（baguette 无 bake 动词只有 used to make）/ **march_appt（00ca467f，GT 2）**——March 窗+过去时归月+未来墙 / coordinated-sum lane（e3038f8c/60036106，C583/C584 两轮 deferred）/ ollama oracle（human-blocked，`ollama pull qwen2.5:7b` 即解锁 ~169 NJ 级联）
+1. ✅ kd 链 C600-C602（0.712）→ ✅ C603+C604+C605 三连（**0.720，41 连**，recency-supersession + base+delta 两条新赛道）
+2. ⬜ kd 队列：weddings `gpt4_2f8be40d`（最后遗留候选，GT 整句枚举渲染风险，判分探针先行）+ census 从 live500_c605 ~140 unbanked 挖新 face（先查链上 banked 态）
 3. ⬜ README(agent-memory-graph) → npm publish + **amg PyPI 人工三步 + npm 命名决策** — **BLOCKED on human action**
-4. ⬜ **评估 ECC 重叠度 + atlas checkpoint + OCR 混合架构对照 + prompt 编译器落地**（DSPy Signature/GEPA light/银行 150 dev 切分）
-5. ⬜ atc R79 选型：hash 线收官后换家族（list/set/zset 剩余 parity 候选盘点）
-6. ⬜ 博客候选 the-question-is-the-join-condition + presupposition-failure-is-an-answer；AI×Neuro #49 候选（社会脑线延续：多巴胺校准时钟速度/对数多尺度 PE）；博客勘误节（e9dd6a4 6.1×→1.02×）+ C538 0.508 勘误
+4. ⬜ atc R81：spop/srandmember（随机族，需 RNG 钩子决策）+ sinterstore/sunionstore/sdiffstore 变体
+5. ⬜ doc 队列：C603-C605 追平（badge 11082→**11140**；TUTORIAL §5.54+ 续；demo-orphan 473600a 补记）；博客候选 the-question-is-the-join-condition + presupposition-failure-is-an-answer；博客勘误节（e9dd6a4 6.1×→1.02×）+ C538 0.508 勘误
+6. ⬜ **评估 ECC 重叠度 + atlas checkpoint + OCR 对照 + prompt 编译器落地 + ai-memory/hindsight/codebase-memory-mcp 三竞品对读**
 
 ## 上次检查
-- **Knowledge org: 2026-09-22 02:00** — Integrated 09-21 全天 + 09-22 凌晨（amg kd 链 C594+C595+C596 三连 keep **10971** @03e3db4；banked 0.688→**0.696**，32 连，零回滚 337 天；atc R78 hash 收官 16 法 **1921**；code-lab 三连 ctxpack 94/ato 53/dep-guard 70 新入台账；内容三发：essay 69201b0「13 字节的全绿」+深研 skill-libraries 博客 c890fcf+AI×Neuro #48 ToM；**09-21 20:00 write 覆盖 memory 事故**→05:00/19:00 日志节永久丢失（产物本身完好，已补记指针）。MEMORY：Current Focus 09-22 新节 + 09-20~09-21 旧节归档 + 测试表全刷（13499/~24092）+ a2a-trust 待评估节 81→102 勘误；HEARTBEAT 全刷
-- **Knowledge org: 2026-09-21 02:00** — Integrated 09-20 全天 + 09-21 凌晨（amg kd 链 C592+C593 keep **10904**；banked 0.682→**0.688**，29 连；kd-2 竞态近失误→**幂等第四查新规则**；工具线 +114）
-- **Knowledge org: 2026-09-20 02:00** — Integrated 09-19 全天（C589 keep；09-14~09-18 旧节归档 -13KB + 台账清理）
+- **Knowledge org: 2026-09-25 02:00** — Integrated 09-24 全天 + 09-25 凌晨（amg kd 链 C603+C604+C605 三连 keep **11140** @4ada5be；banked 0.712→**0.720**，41 连，零回滚 340 天；demo-orphan 修复 473600a；code-lab 三连 cqc 66/act 51/mcpt 41；prompt-mgr **480** 负数 gate 第 3 例；hindsight 对标信号；TTT 深研；AI×Neuro #51 DDM）。MEMORY：Current Focus 09-25 新节 + 09-23~09-24 旧节归档（archive-2026-09-23-09-24.md）+ 测试表全刷（13721/~24405）+ Quick Reference 同步；HEARTBEAT 全刷
+- **Knowledge org: 2026-09-24 02:00** — Integrated 09-23 全天 + 09-24 凌晨（C600+C601+C602 三连 keep **11082** @a67cfa0；banked 0.706→**0.712**，38 连，零回滚 339 天；atc R80 **1974**；code-lab 四连；AI×Neuro #50 好奇心）
+- **Knowledge org: 2026-09-23 02:00** — Integrated 09-22 全天 + 09-23 凌晨（C597+C598+C599 三连 keep **11029**；banked 0.706，35 连；atc R79 **1948**；code-lab 四连；afm 32；内容三发）
 
 ## ⚠️ 已知问题
-- **cron 健康**: 09-14 ~ 09-22 连续九日全点位正常落盘（除 09-21 08:00 早间 trending 无产物——该点位本就间歇性落文件，非事故）。**09-21 20:00 write 覆盖事故**：当日 05:00/19:00 两节日志永久丢失（essay 69201b0 与 trending 产物本身完好，09-22 KO 已补记指针）；**daily memory 只准 append** 规则已入 error-patterns（第 2 次后注意）
-- **MEMORY.md size**: ~**122KB**（09-22 KO 归档 09-20~09-21 旧节 -4KB）——剩余大头：Active Theme 长弧线段 + Timeline 区（Immediate→Short-term 候选项多为 C486 时代陈迹，下轮归档候选）+ 近期研究一览表
-- **Tavily 配额**: 09-21 全天 432 超额（search/research 双线），AnySearch + web_fetch/arXiv API 降级路径稳定且效果良好；新周期可能已重置——**用前先试一发**，超配额时直接切 AnySearch
-- **experiments.tsv 结构性缺口**: amg C410+ cycle 条目记录在项目仓内，workspace experiments.tsv 仅记外部项目 — 非阻塞；tsv HEAD 含 NUL 字节（offset 4513 历史遗留），如需修走专项 Python 行级手术
-- **npm publish blocked**: 四项目 13499 tests ready（amg 10971/atc 1921/acs 3173/sot 607）。README 需 human review + amg npm 命名决策（#068 human-blocked）
-- **Competitive pressure**: hermes-agent 242k★；**ECC 264k★（harness 增强赛道现象级，与 AGENTS.md 体系重叠度高）**；context-mode（21.4k★）与 acs 同赛道；agent-skills 97k★。amg differentiators: GraphRAG lifecycle + code-aware + OWASP suite + judge/cascade A/B 工具链 + answer-face counting 17 forms + kd face 族 24+
-- **AI×Neuro Topic Pool**: 47 题备选库用完；自创题三线：「时间与节律」系列 + 十四节「化学感觉」（#47 嗅觉）+ 十五节「社会脑」（#48 ToM 已发，#49 候选：多巴胺校准时钟速度/对数多尺度 PE）
-- **相邻 cron CPU 竞争**: suite 与 census/A/B 并行争核且 2GB 内存下 OOM——重活串行是标准处置；**exec timeout ≥400s**
-- **memory_graph.py 脏 hunk**: e04d222d `_search_cache` +24 行仍未提交，day 43（C570-C596 逐文件 add 未混入）
+- **cron 健康**: 09-14 ~ 09-24 连续十一日全点位正常落盘（09-21 20:00 覆盖事故后无复发；daily 只准 append 规则有效）
+- **memory_graph.py demo-orphan（已修复 09-24 晚 473600a）**: import 静默零副作用；_search_cache +24 行脏 hunk（e04d222d）仍未提交——留工作树，备份 /tmp/amg_dirty_backup_20260924.diff，将来处置走独立 cycle
+- **MEMORY.md size**: ~**121KB**（09-25 KO：CF 旧节归档 -2 节 + 新节 +1，净 +2KB）——剩余大头：Active Theme 长弧线段 + 近期研究一览表 + Core Projects Quick Reference（下轮候选）
+- **Tavily 配额**: 09-21~09-24 连续四日 432 超额（search/research/日报三线），AnySearch(mcporter) + web_fetch/arXiv API + curl raw.githubusercontent.com 降级路径全稳定；新周期可能已重置——**用前先试一发**，超配额直接切备援
+- **experiments.tsv 结构性缺口**: amg C410+ cycle 条目记录在项目仓内，workspace experiments.tsv 仅记外部项目 — 非阻塞；tsv HEAD 含 NUL 字节（offset 4513 历史遗留），如需修走专项 Python 行级手术；**C601 起 kd 行改用 workspace 短格式**
+- **npm publish blocked**: 四项目 13721 tests ready（amg 11140/atc 1974/acs 3173/sot 607）。README 需 human review + amg npm 命名决策（#068 human-blocked）
+- **Competitive pressure**: hermes-agent 242k★；ECC 264k★；context-mode（21.4k★）与 acs 同赛道；agent-skills 97k★；ai-memory（Rust 同赛道）；codebase-memory-mcp 44.6k★（C 代码知识图谱 MCP，amg code-aware 直接竞品）；**hindsight 26.9K★（09-24 晚 daily #1，LongMemEval SOTA 且两机构独立复现——amg 最直接对标，需认真对读）**；obra/superpowers 290k★（skills 方法论）。amg differentiators: GraphRAG lifecycle + code-aware + OWASP suite + judge/cascade A/B 工具链 + answer-face counting 20+ forms + kd face 族 33+ + recency-supersession/base+delta 两条新赛道
+- **AI×Neuro Topic Pool**: 备选库用尽后自创题线已到 **#51（决策的数学-DDM，已发）**；#52 候选：计算精神病学 / 噪声与随机共振 / 鸦科会聚智能
+- **相邻 cron CPU 竞争**: suite 与 census/A/B 并行争核且 2GB 内存下 OOM——重活串行是标准处置；**exec timeout ≥400s（含 git commit 带 hook）**
 - **amfs .git 疑似损坏**: agent-memory-service git -C 落到 monorepo——下次动 amfs 前先实测 `ls projects/agent-memory-service/.git`
-- **amg 工作树杂物**: temporal_test_data.json / test_optimization.py / test_status.log 未跟踪（kd 会话产物，未动）
-- **atc 分支是 main**（09-21 push 时误用 master 报 refspec 错已纠正——写死记忆）
+- **amg 工作树杂物**: temporal_test_data.json / test_optimization.py / test_status.log 未跟踪（kd 会话产物，未动；C605 再记仍未清理）
+- **atc 分支是 main**（写死记忆）
