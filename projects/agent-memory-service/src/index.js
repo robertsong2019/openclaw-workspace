@@ -487,6 +487,31 @@ class LinkStore {
   }
 
   /**
+   * Re-point every link referencing oldId to newId (merge/absorb support).
+   * Updates link objects AND the memory index; marks the store dirty so
+   * the next save() persists the rewrite. Returns the number of links changed.
+   * @param {string} oldId
+   * @param {string} newId
+   * @returns {number}
+   */
+  repoint(oldId, newId) {
+    let count = 0;
+    for (const l of this.#links.values()) {
+      let changed = false;
+      if (l.source === oldId) { l.source = newId; changed = true; }
+      if (l.target === oldId) { l.target = newId; changed = true; }
+      if (changed) {
+        this.#memIndex.get(oldId)?.delete(l.id);
+        if (!this.#memIndex.has(newId)) this.#memIndex.set(newId, new Set());
+        this.#memIndex.get(newId).add(l.id);
+        count++;
+      }
+    }
+    if (count > 0) this.#dirty = true;
+    return count;
+  }
+
+  /**
    * Get all links involving a memory (both directions)
    * @param {string} memId
    * @returns {Link[]}
@@ -2233,11 +2258,11 @@ export class MemoryService {
     keeper.accessCount += absorbed.accessCount;
     keeper.accessedAt = Math.max(keeper.accessedAt, absorbed.accessedAt);
 
-    // Re-link any links pointing to absorbed → point to keeper
-    for (const link of this.#links.all()) {
-      if (link.source === absorbedId) link.source = keeperId;
-      if (link.target === absorbedId) link.target = keeperId;
-    }
+    // Re-link any links pointing to absorbed → point to keeper.
+    // Must go through LinkStore.repoint(): mutating link objects in place
+    // left #dirty false and links.json never rewritten — reloads resurrected
+    // dangling references to the deleted absorbed memory (2026-09-25 fix).
+    this.#links.repoint(absorbedId, keeperId);
 
     // Delete absorbed memory
     this.#store.delete(absorbedId);
@@ -2245,6 +2270,7 @@ export class MemoryService {
     this.#store.put(keeper);
     this.#changelog.record('update', keeperId, keeper.layer);
     await this.#store.save();
+    await this.#links.save();
     await this.#changelog.save();
     return keeper;
   }
