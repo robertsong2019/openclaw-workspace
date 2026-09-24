@@ -10839,6 +10839,18 @@ def counting_form(question: str) -> str | None:
     # (falls through; zero overlap by census).
     if _SPS_INSTA_HEAD_RE.match(ql) or _SPS_STORY_HEAD_RE.match(ql):
         return "supersede_total"
+    # C604: March fun-run work-miss census — one strict head.
+    # Census (all 500): matches EXACTLY 1 row (21d02d0d GT 2,
+    # unbanked, gate=answer / marathon-recovery echo today).
+    # Claimed ahead of every generic how-many block (enum/inventory
+    # gates never see it). The 'fun runs ... miss ... march ...
+    # work commitments' anchor cannot steal the C599 March faces
+    # (bike service / doctor appts — different NPs) or the
+    # C592-C603 faces (different NPs/markers). Handler returns
+    # None when no missed day resolves (falls through; zero
+    # overlap by census).
+    if _FRM_HEAD_RE.match(ql):
+        return "funrun_miss"
     if re.search(r'\bhow many (days|weeks)\b', ql) or \
             (re.search(r'\b(days|weeks)\b', ql)
              and re.search(r'\b(spend|spent|take|took)\b', ql)
@@ -13760,6 +13772,70 @@ def _cnt_supersede_total(question: str, sessions: list[dict]):
     return toks.pop() if len(toks) == 1 else None
 
 
+# C604 head/evidence regexes — see _cnt_funrun_miss below.
+# Census (all 500): the head matches EXACTLY its own row
+# (21d02d0d GT 2, qtype multi-session, question_date
+# 2023/04/26), unbanked today (gate=answer — the pred was the
+# marathon-recovery echo turn, no number). In-row fun-run
+# surfaces (any role): exactly 4 sentences — the 2 user
+# evidence sentences plus 2 assistant echoes ('don't worry
+# about missing the 5K fun run' carries NO miss verb — the
+# gerund dies the \b — and no work word; 'have been attending
+# the weekly 5K fun runs' carries neither miss nor work), so
+# the miss+work conjunction wall is load-bearing on the
+# assistant side too, and the user-role wall backstops it.
+_FRM_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+fun\s+runs\s+did\s+i\s+miss\s+in\s+march"
+    r"\s+due\s+to\s+work\s+commitments\s*\??\s*$", re.I)
+# fun-run topic wall: '5K fun run(s)' / 'fun run(s)'. A bare
+# 'morning run' never keys; 'movie marathon' / the April-10
+# marathon-recovery sentence carry no fun-run term.
+_FRM_RUN_RX = re.compile(r"\bfun\s+runs?\b", re.I)
+# miss verb: 'missed a few events' / 'had to miss'. The
+# 'missing' GERUND never keys (\bmiss(ed)?\b — the boundary
+# falls between 's' and 'i'; C599 ordinal-suffix lesson's
+# sibling).
+_FRM_MISS_RX = re.compile(r"\bmiss(?:ed)?\b", re.I)
+# work-attribution wall: 'busy with work lately and missed' /
+# 'due to work commitments'. A fun-run miss with a March day
+# but a non-work reason (family trip) never keys.
+_FRM_WORK_RX = re.compile(r"\bwork\b", re.I)
+# March day anchor — 'March 26th' / 'March 5th'. Optional
+# ordinal suffix consumes 'st|nd|rd|th' (C599 lesson: \b falls
+# between '0' and 't'); bare 'March' without a day never
+# captures.
+_FRM_MARCH_DAY_RX = re.compile(
+    r"\bMarch\s+(\d{1,2})(?:st|nd|rd|th)?\b", re.I)
+
+
+def _cnt_funrun_miss(question: str, sessions: list[dict]):
+    """Count DISTINCT March fun-run days missed for work
+    (C604, 21d02d0d GT 2). A user sentence yields a day when
+    it carries ALL FOUR: a fun-run term, a miss verb, an
+    explicit work-attribution word, and a 'March <day>' anchor
+    (user role only — assistant echoes never read). Evidence:
+    s3 'busy with work lately and missed a few events,
+    including a 5K fun run on March 26th' + s30 'attend most
+    of the weekly 5K fun runs ... except for the run on March
+    5th when I had to miss due to work commitments' = days
+    {26, 5} -> 2; same-day re-mentions dedup; distinct days
+    are additive. Renders the day count (GT 2; exact +
+    judge_semantic + counting_judge all bank). Returns None
+    when no day resolves (falls through — zero overlap by
+    census: the head matches exactly its own row)."""
+    if not _FRM_HEAD_RE.match(" ".join(question.split())):
+        return None
+    days: set[str] = set()
+    for _si, sent in _map_sents(sessions):
+        if not (_FRM_RUN_RX.search(sent)
+                and _FRM_MISS_RX.search(sent)
+                and _FRM_WORK_RX.search(sent)):
+            continue
+        for d in _FRM_MARCH_DAY_RX.finditer(sent):
+            days.add(d.group(1))
+    return str(len(days)) if days else None
+
+
 def _cnt_item_total(question: str, sessions: list[dict]):
     """Sum per-item prices for enumerated "total cost" questions.
 
@@ -15647,7 +15723,8 @@ def answer_counting(question: str,
           "species_total": _cnt_species_total,
           "faith_days": _cnt_faith_days,
           "delivery_services": _cnt_delivery_services,
-          "supersede_total": _cnt_supersede_total}
+          "supersede_total": _cnt_supersede_total,
+          "funrun_miss": _cnt_funrun_miss}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break
