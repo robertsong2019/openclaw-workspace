@@ -55880,6 +55880,8 @@ class FastAppendQueue:
 # Temporal Entropy Tracker (Cycle 293)
 # ------------------------------------------------------------------
 
+
+def demo():
     print("🧪 Agent Memory Graph Demo\n")
     print("🧪 Agent Memory Graph Demo\n")
     mg = MemoryGraph()
