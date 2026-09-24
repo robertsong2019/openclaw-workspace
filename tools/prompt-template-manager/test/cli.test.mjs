@@ -285,3 +285,57 @@ test('parseVars ignores stray args without "=" or leading "="', () => {
   assert.match(r.stdout, /X=1/);
   assert.match(r.stdout, /Y=\{\{b\}\}/); // =odd doesn't bind key '' 
 });
+
+// ─── directory-entries poisoning (EISDIR gate, 2026-09-24) ───
+
+test('list with a directory named dir.md → clean skip, real templates still listed, no stack', () => {
+  const { home, tdir } = freshHome();
+  mkdirSync(tdir, { recursive: true });
+  writeFileSync(join(tdir, 'real.md'), '# Real\n\nbody\n');
+  mkdirSync(join(tdir, 'dir.md')); // directory with .md extension
+  const r = ptm(home, ['list']);
+  assert.equal(r.status, 0);
+  assert.match(r.stdout, /real/);
+  assert.match(r.stderr, /Skipping non-file entry: dir\.md/);
+  assert.doesNotMatch(r.stdout + r.stderr, /EISDIR/);
+  assert.doesNotMatch(r.stderr, /at\s+readFileSync/); // no raw stack
+});
+
+test('show on a directory-backed template name → clean exit 1, no raw stack', () => {
+  const { home, tdir } = freshHome();
+  mkdirSync(tdir, { recursive: true });
+  mkdirSync(join(tdir, 'd.md'));
+  const r = ptm(home, ['show', 'd']);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /Not a template file: d/);
+  assert.doesNotMatch(r.stderr, /EISDIR/);
+});
+
+test('render on a directory-backed template name → clean exit 1', () => {
+  const { home, tdir } = freshHome();
+  mkdirSync(tdir, { recursive: true });
+  mkdirSync(join(tdir, 'd.md'));
+  const r = ptm(home, ['render', 'd', 'k=v']);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /Not a template file: d/);
+});
+
+test('export on a directory-backed template name → clean exit 1', () => {
+  const { home, tdir } = freshHome();
+  mkdirSync(tdir, { recursive: true });
+  mkdirSync(join(tdir, 'd.md'));
+  const r = ptm(home, ['export', 'd', 'k=v']);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /Not a template file: d/);
+});
+
+test('legality pin: normal file-backed templates unaffected after gates', () => {
+  const { home } = freshHome();
+  seed(home, 'ok', '# OK\n\nHi {{who}}\n');
+  const r = ptm(home, ['render', 'ok', 'who=you']);
+  assert.equal(r.status, 0);
+  assert.match(r.stdout, /Hi you/);
+  const s = ptm(home, ['show', 'ok']);
+  assert.equal(s.status, 0);
+  assert.match(s.stdout, /# OK/);
+});

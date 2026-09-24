@@ -10,7 +10,7 @@
 //   edit <name>             Open template in $EDITOR
 //   export <name>           Output rendered prompt to stdout (for piping)
 
-import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync, statSync } from 'fs';
 import { join } from 'path';
 import { spawnSync } from 'child_process';
 
@@ -26,11 +26,19 @@ function getTemplates() {
   return readdirSync(TEMPLATES_DIR)
     .filter(f => f.endsWith('.md'))
     .map(f => {
-      const content = readFileSync(join(TEMPLATES_DIR, f), 'utf-8');
+      const full = join(TEMPLATES_DIR, f);
+      // One bad entry (directory named *.md, unreadable file) must not kill the
+      // whole list with a raw EISDIR stack — warn and skip (afm listAgents precedent)
+      if (!statSync(full).isFile()) {
+        console.error(`⚠ Skipping non-file entry: ${f}`);
+        return null;
+      }
+      const content = readFileSync(full, 'utf-8');
       const firstLine = content.split('\n')[0] || '';
       const desc = firstLine.startsWith('#') ? firstLine.replace(/^#+\s*/, '') : '(no description)';
       return { name: f.replace(/\.md$/, ''), file: f, desc, size: content.length };
     })
+    .filter(Boolean)
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
@@ -76,6 +84,8 @@ switch (command) {
     const name = validateName(args[1]);
     const p = join(TEMPLATES_DIR, name + '.md');
     if (!existsSync(p)) { console.error(`Template not found: ${name}`); process.exit(1); }
+    // readFileSync on a directory throws a raw EISDIR stack — gate it cleanly
+    if (!statSync(p).isFile()) { console.error(`Not a template file: ${name}`); process.exit(1); }
     console.log(readFileSync(p, 'utf-8'));
     break;
   }
@@ -119,6 +129,7 @@ switch (command) {
     const name = validateName(args[1]);
     const p = join(TEMPLATES_DIR, name + '.md');
     if (!existsSync(p)) { console.error(`Template not found: ${name}`); process.exit(1); }
+    if (!statSync(p).isFile()) { console.error(`Not a template file: ${name}`); process.exit(1); }
     const vars = parseVars(args.slice(2));
     const result = render(readFileSync(p, 'utf-8'), vars);
     console.log(result);
@@ -129,6 +140,7 @@ switch (command) {
     const name = validateName(args[1]);
     const p = join(TEMPLATES_DIR, name + '.md');
     if (!existsSync(p)) { console.error(`Template not found: ${name}`); process.exit(1); }
+    if (!statSync(p).isFile()) { console.error(`Not a template file: ${name}`); process.exit(1); }
     const vars = parseVars(args.slice(2));
     process.stdout.write(render(readFileSync(p, 'utf-8'), vars));
     break;
