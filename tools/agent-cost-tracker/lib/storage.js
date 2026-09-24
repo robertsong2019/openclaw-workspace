@@ -87,6 +87,11 @@ export function deleteLogs(logIds) {
 
 export function clearLogs(beforeDate = null) {
   if (beforeDate) {
+    const cutoff = new Date(beforeDate);
+    // 无效日期静默 0 删除（session-archiver listArchives 家族）：拒绝并指名坏值
+    if (isNaN(cutoff.getTime())) {
+      throw new Error(`无效的日期: ${beforeDate}`);
+    }
     const logs = getLogs({ before: beforeDate });
     const ids = logs.map(log => log.id);
     deleteLogs(ids);
@@ -144,11 +149,24 @@ export function getBudget() {
 }
 
 export function setBudget(amount, period = 'month', warningThreshold = 80) {
+  // 输入门控（2026-09-24）：NaN 会经 JSON.stringify 变 null 落盘（afm importFromEnv 家族），
+  // 负数预算使所有支出立即超支（negative-gate 家族）——解析期拒绝，不写半截状态
+  const amt = Number(amount);
+  if (!Number.isFinite(amt) || amt <= 0) {
+    throw new Error(`无效的预算金额: ${amount}（需大于 0 的数字）`);
+  }
+  if (!['day', 'week', 'month'].includes(period)) {
+    throw new Error(`无效的预算周期: ${period}（可选 day | week | month）`);
+  }
+  const warn = Number(warningThreshold);
+  if (!Number.isInteger(warn) || warn < 1 || warn > 100) {
+    throw new Error(`无效的警告阈值: ${warningThreshold}（需 1-100 的整数）`);
+  }
   config.set('budget', {
     enabled: true,
-    amount: parseFloat(amount),
+    amount: amt,
     period,
-    warningThreshold: parseInt(warningThreshold)
+    warningThreshold: warn
   });
 }
 

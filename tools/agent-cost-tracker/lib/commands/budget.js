@@ -3,7 +3,7 @@
  */
 
 import chalk from 'chalk';
-import { getLogs, getBudget, setBudget, resetBudget } from '../storage.js';
+import { getLogs, getBudget, setBudget, resetBudget, calculateCost } from '../storage.js';
 import { format, subDays, startOfDay } from 'date-fns';
 
 export default async function budgetCommand(action, options) {
@@ -70,10 +70,9 @@ async function checkBudgetStatus() {
   const logs = getLogs({ period: 'all' });
   const periodLogs = logs.filter(log => new Date(log.timestamp) >= periodStart);
 
-  // 计算当前成本
-  const currentCost = periodLogs.reduce((sum, log) => {
-    return sum + ((log.promptTokens || 0) / 1000000 * 0.01 + (log.completionTokens || 0) / 1000000 * 0.03);
-  }, 0);
+  // 计算当前成本 — 必须走模型价格表（calculateCost），
+  // 硬编码 $0.01/$0.03 使同一份日志在 stats 与 budget check 报出不同的钱（平行常量家族）
+  const currentCost = periodLogs.reduce((sum, log) => sum + calculateCost(log), 0);
 
   const percentage = (currentCost / budget.amount) * 100;
   const remaining = budget.amount - currentCost;
@@ -107,7 +106,7 @@ async function checkBudgetStatus() {
       if (!modelStats[log.model]) {
         modelStats[log.model] = { cost: 0, requests: 0 };
       }
-      modelStats[log.model].cost += ((log.promptTokens || 0) / 1000000 * 0.01 + (log.completionTokens || 0) / 1000000 * 0.03);
+      modelStats[log.model].cost += calculateCost(log);
       modelStats[log.model].requests++;
     });
 
