@@ -2,12 +2,12 @@
 
 > 基于 SQLite 的轻量知识图谱，模拟 AI Agent 的长期记忆管理
 
-[![Tests](https://img.shields.io/badge/tests-11082-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-11140-brightgreen)]()
 [![Python](https://img.shields.io/badge/python-3.10+-blue)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-success)]()
 
-> 📚 教程：[基础入门](TUTORIAL.md) · [GraphRAG 端到端（Cycles 425-440）](TUTORIAL-GRAPHRAG.md) · [Temporal QA 零 LLM 时间推理（Cycles 456-489）](TUTORIAL-TEMPORAL-QA.md) · [Abstention 弃权语义（Cycles 448-516）](TUTORIAL-ABSTENTION.md) · [Answer Faces 问题结构驱动的答案选择（Cycles 529-599）](TUTORIAL-ANSWER-FACES.md)
+> 📚 教程：[基础入门](TUTORIAL.md) · [GraphRAG 端到端（Cycles 425-440）](TUTORIAL-GRAPHRAG.md) · [Temporal QA 零 LLM 时间推理（Cycles 456-489）](TUTORIAL-TEMPORAL-QA.md) · [Abstention 弃权语义（Cycles 448-516）](TUTORIAL-ABSTENTION.md) · [Answer Faces 问题结构驱动的答案选择（Cycles 529-605）](TUTORIAL-ANSWER-FACES.md)
 
 ## 🎯 概述
 
@@ -4665,6 +4665,22 @@ affe2881 "How many bird species have I seen in total?"（kd queue #2——#1 fai
 #### C602：delivery_services — 品牌双墙与 user-role 承重 (a67cfa0)
 
 d682f1a2 "How many different types of food delivery services have I used recently?"（旧 pred=Fresh Fusion recipe-echo 整段吐出，GT 3）。**双墙**：brand（`domino('s|s)?\s+pizza` 必带 pizza 防 domino effect / uber eats / fresh fusion）+ usage marker（had|relying on|been all about|found|ordered|tried|used）；brand 全量 finditer、**小写归一 set 去重**（Uber Eats s27 跨 turn 重提计 1）→ {Domino's, Uber Eats, Fresh Fusion}='3'，judge_semantic/exact/counting 三判全 CORRECT。**user-role 墙承重**：s41 assistant 回声 "As for Fresh Fusion, … you've found a convenient option" 同时含 brand+found——词面双墙被回声逐词复制时，说话人角色是唯一不可伪造的判别；3 个 assistant 回声原文进测试 pin 角色墙。decoy pin：brand 无动词（billboard）、动词无 brand（takeout）、found 与 brand 分句（句粒度失配）、裸 domino 无 pizza。19 测试红→绿；suite 11063→11082（+19，289s）。replay 走 C601 固化流程：cp C601 canonical + sed 改默认值 + diff 审计（恰 5 处）——**PASS 首试 1199s（八连首试），零假 drift**，pred 变化恰 {d682f1a2}，banked 355→356（0.712）。
+
+## Cycles 603-605: 0.712→0.720 — recency 仲裁、四重合取墙与 base+delta 算术
+
+> 官方口径轨迹：0.712（C602）→ **0.716（C603）** → **0.718（C604）** → **0.720（C605）**，banked 356→360，套件 11082→11140（junitxml）。本段主轴：状态仲裁谱系的三次扩展——C603 首次引入 recency 仲裁赛道（两次声明形状完全相同、只有会话先后能区分时，latest session wins，裁判依据是数据集不变量而非日期解析）；C604 用 fun-run+miss+work+March 四重合取墙收归因计数（'missing' 动名词的 \b 边界死亡是 C599 序数后缀坑的同族第二例）；C605 把 knowledge-update 对补成 base+delta 算术形态（latest base + 严格晚于 base 的 add 事件，早烘不双计——counting 家族的形态学补全）。replay 首试十一连（C592 起），keep 链延至四十一连（C565 起）。教程同步增补：[TUTORIAL-ANSWER-FACES.md](TUTORIAL-ANSWER-FACES.md) §5.54-§5.56。
+
+#### C603：supersede_total — recency 仲裁首次登场 (646efa6)
+
+a2f3aa27 + a1eacc2a 双面（"How many followers do I have on Instagram now?" GT 1300 / "How many short stories have I written since I started writing regularly?" GT seven；旧 pred '1250' 旧声明被勾住 / 闲聊回声整段）。与 C600 的关键分野：两行的两次声明**形状完全相同**（"I've got 1250 followers … now" vs "close to 1300 now"；"written four so far since" vs "complete 7 short stories since I started"）——构式无从区分，**只有会话先后能区分**，故首次引入 recency 仲裁：haystack sessions 时序有序（数据集不变量），latest session 声明 wins，无需日期解析（`_cnt_sents` 的 si 即时序）。followers 分支 total RX = `<num> followers`（topic 内嵌）或 `close to <num>`（必须 follower|instagram 同句 topic 墙——房租 decoy "$1,300" 无 topic 永不命中）；stories 分支 total RX = written|wrote|complete(d) `<num>` + `since I started` 同句锚（锚不是 topic 承重——four 声明句无 short stories 词，C599 粒度教训复用）。仲裁规则：跨 session latest wins、同 session distinct totals → abstain、identical repeats dedup、user-role only。渲染 as stated：'1300' exact 全中；'7' vs GT 'seven' 靠 judge_semantic word-fold + counting_judge numeric-first（**pre-test 判分探针钉死行为后才定渲染策略**）。20 测试红→绿；suite 11082→11102（+20，249s）。replay PASS 首试（1152s，九连首试）：pred 变化恰 {a1eacc2a, a2f3aa27} 全 False→True，banked 356→358（0.716）。
+
+#### C604：funrun_miss — 四重合取墙收归因计数 (6b4c8dc)
+
+21d02d0d "How many fun runs did I miss in March due to work commitments?"（GT 2；旧 pred=marathon-recovery echo；C599 记录的 no-steal lane 本轮接手）。**四重墙**句粒度合取：fun-run term（`\bfun\s+runs?\b`，裸 'morning run' 不命中）+ miss 动词（`\bmiss(ed)?\b`——**'missing' 动名词不过墙**，\b 落在 's' 与 'i' 之间，C599 序数后缀坑的同族兄弟）+ work 归因（`\bwork\b`，家人旅行借口不命中）+ 显式 `March <day>`。证据 s3 "missed a few events, including a 5K fun run on March 26th" + s30 "the run on March 5th when I had to miss due to work commitments" → days {5,26} 加法 = '2'；双 assistant 回声双双缺 miss 动词+work——**miss+work 合取墙在 assistant 侧也是承重墙**，user-role 墙再兜底。选面：三候选按机制重量排序（coins 需 base+delta 双机制最重、weddings GT 整句渲染风险高、fun-run 单机制单脸最干净——C601 先例）。19 测试红→绿（途中修 `exact_judge` 3 参签名想当然——测试 observable 教训再现挂）；suite 11102→11121（+19，258s）。replay 走 Python 字节级替换（count==1 assert，绕开 sed chain/out 同名替换链坑）：PASS 首试（十连首试）：pred 变化恰 {21d02d0d}，banked 358→359（0.718）。
+
+#### C605：coin_add — knowledge-update 的 base+delta 算术 (4ada5be)
+
+69fee5aa "How many pre-1920 American coins…"（GT 38，qtype=**knowledge-update**——counting 家族此前未覆盖的赛道；旧 pred=37 声明回声）。**base+delta 分裂**：s12 (05/27) base 声明 "a total of 37 coins in that collection"（topic 'pre-1920 American coins' 在同 turn 兄弟句——base RX 键 anaphoric 'in that collection' 而非 topic，C603 stories 锚教训复用）+ s39 (05/29) delta "just added a new coin … pre-1920"（全句自含）→ 37+1=**38**。仲裁：latest base wins（时序扫描）；delta 只计**严格晚于 base session** 的事件（早于/同 session 的 add 视作已烘进 base 不双计——算术语义自带时序仲裁）；identical add dedup、distinct additive；无 base → None fall through（诚实弃权）；单遍扫描实现（首版两遍扫描自审简化——Simplicity First）。墙：ADD RX 全自含（1972 doubled-die 'recently bought'、1913 Liberty nickel 'meaning to get…appraised'、camera collection 全不命中）；BASE/ADD RX 跨 500 行任意角色零兄弟句。19 测试红→绿首试；suite 11121→11140（+19，264s）。replay 走字节级替换（count==1 assert ×6）+ diff 审计（恰 6 hunk）：PASS 首试（十一连首试）：pred 变化恰 {69fee5aa}，banked 359→360（0.720）。
 
 ## 许可
 

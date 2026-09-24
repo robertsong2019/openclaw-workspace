@@ -1,7 +1,7 @@
-# TUTORIAL: Answer Faces — 问题结构驱动的答案选择（Cycles 529-602）
+# TUTORIAL: Answer Faces — 问题结构驱动的答案选择（Cycles 529-605）
 
 > 本文解释 amg 评测管线里最反直觉的一个设计：**答案选哪个句子，不该由"分数阈值"决定，而该由"问题在问什么"决定**。
-> 覆盖 Cycle 529-602 的机制演进（banked 0.494 → 0.712），所有例子都是 LongMemEval s_cleaned full-500 里的真实题目。
+> 覆盖 Cycle 529-605 的机制演进（banked 0.494 → 0.720），所有例子都是 LongMemEval s_cleaned full-500 里的真实题目。
 
 ---
 
@@ -165,7 +165,7 @@ judge cascade（exact → semantic → LLM）里有一个 NEEDS_JUDGE 区间：e
 
 ---
 
-## 5. 值解析与锚点族 face：数字、日期、时长、锚点选择（C549-C599）
+## 5. 值解析与锚点族 face：数字、日期、时长、锚点选择（C549-C605）
 
 §3-§4 的 face 都长在"**选哪句话**"上；C549-C554 是第三波：答案本身是个数值/日期/时长，face 长在"**值解析**"上——不是从候选里挑句子，而是从通过 gate 的内容里提炼出**正确的值**。C555-C557 是第四波：值对了还不够，**锚点选择**本身也是信号源——锚是谁说的（角色）、跨度怎么定义（口径）、行内多个日期选哪个（临近度/连续对）。外加一次方法论升级（C549：census-negative 的第三种用法）。C561-C563 是值解析族的残留地带清扫：counting 的非金钱度量兄弟（距离/重量/时长）、item_total 的空清单分支（类别求和）、时长族最后两个病根（同句状态绑定 + 进行体问头/会话跨度）。C564-C569 是第五波：**期限/跨度/求和面**——pp_duration 三条新 route（晋职扣减、完成时长求和、活动跨度求和）与一个门入口（have-had），counting 三个新 gate entry（页码进度双面、成书页数求和、教育年限链）；附赠两次"队列注记被证据翻案"的方法论实录（C564 弃权→rescue、C565 现成→错面）。C570-C573 把第五波收束成 session-date 跨度族（书本/事件/旅程跨度、ago 倒推、具名日偏移）。C574-C576 是第六波：**结构回指族**——问题自身的引用结构（出版引证、bullet 列表体、回指提法）本身就是 bearer 的连接条件。C580-C582 把「谁有权作答」（角色墙、header 行、让位规则）推到前台。C583-C585 是第七波：**结构性判别族**——判别信号完成从调分数到结构性硬约束的转向：需求名词是过滤不是权重（答案必须含问题 demand 的名词，C584）、判别式跨域迁移成 NP 全实词锚（C585）、序数后缀守卫数量锚的邻接（C583）；证据面也第一次对 user 角色开放，用结构锚代替角色墙。
 
@@ -493,6 +493,24 @@ distinct 外卖品牌计数（GT 3）的双墙设计：brand（domino's pizza �
 
 > 设计课：C548 的角色分离教训在 counting 侧第 3 次应用（C598 话题墙 → C600 user-only → C602 承重墙）——回声劫持的终极判别不是更精的词表，而是「谁说的」。配套流程课：C601 的 canonical-cp 纪律落地执行（cp + sed 改默认值 + diff 审计恰 5 处），replay PASS 首试零假 drift——**流程教训的价值在于下一次 cycle 是否还犯**。
 
+### 5.54 C603 supersede_total — 仲裁的入场券：构式无法区分时才上裁判
+
+§5.51 说「能用构式区分就别上仲裁」，C603 是这句话的另一半：当两次声明**形状完全相同**（"I've got 1250 followers … now" vs "close to 1300 now"；"written four so far since" vs "complete 7 short stories since I started"），构式无从区分，**只有会话先后能区分**——recency 仲裁（latest session wins）就不再是过度设计而是必需品。实现依赖数据集不变量（haystack sessions 时序有序）而非日期解析：`_cnt_sents` 的 session 序号 si 就是时序。配套墙各有分工：followers 的 `close to <num>` 必须同句 topic 墙（房租 decoy "$1,300" 无 topic 永不命中）；stories 的 `since I started` 锚不是 topic 承重（four 声明句无 short stories 词——C599 粒度教训复用）；同 session 内 distinct totals 弃权、identical repeats 去重。渲染前先跑判分探针：'7' vs GT 'seven' 靠 judge_semantic word-fold + counting_judge numeric-first 双通道 bank——**渲染策略由判分公式的实测行为决定，pre-test 探针是最便宜的事先验证**。
+
+> 设计课：C600（构式区分）与 C603（仲裁区分）合起来是完整的决策树——先问「证据对能否在构式上区分」，能则不引入裁判；不能则仲裁是唯一出路，且裁判依据要挑**数据集已保证的不变量**（会话时序），不要自己发明日期解析。
+
+### 5.55 C604 funrun_miss — 归因语义的合取墙与 \b 边界家族第二例
+
+"How many fun runs did I miss in March due to work commitments?" 的四重合取墙：fun-run term（裸 'morning run' 不命中）+ miss 动词 + work 归因（家人旅行借口天然出局）+ March 日期，缺一不 key。两个边界细节：'missing' 动名词不过 miss 墙（`\b` 落在 's' 与 'i' 之间——**\b 在拼写内部的失败模式**，C599 序数后缀 'March 10th' 落在 '0' 与 't' 之间的直系兄弟，同一家族第二例）；assistant 回声 "don't worry about missing the 5K fun run" 恰好因缺 miss 动词+work 而出局——**合取墙在回声侧同样承重**（C602 角色墙的补充：词面合取做不到角色判别，但能把语义残缺的回声挡在墙外）。
+
+> 设计课：选面时把队列候选按机制重量排序（coins 需 base+delta 双机制、weddings GT 整句渲染风险、fun-run 单机制）——**先摘最干净的脸不是偷懒，是控制单轮变量**；C599 留下的 no-steal 注记（“此面需 miss+work 归因语义”）就是本轮的施工图。
+
+### 5.56 C605 coin_add — base+delta：知识更新的算术形态
+
+知识更新对至此覆盖了三种解法（C587 latest-wins 检索侧、C600 声明构式构造侧、C603 recency 仲裁侧），C605 补上第四种：**值不是任何单句声明，而是 base + delta 的算术和**——"total of 37 coins in that collection"（s12）+ "just added a new coin"（s39，严格更晚）= 38。三个结构决定：① base RX 键 anaphoric "in that collection" 而非 topic（topic 在同 turn 兄弟句——anaphor 这次才是承重键）；② delta 只计**严格晚于 base session** 的 add（早于/同 session 视作已烘进 base，不双计——算术语义自带时序仲裁）；③ 无 base → None fall through（只有增量没有基数 = 证据不完整，诚实弃权）。BASE/ADD 两条正则跨全 500 行任意角色零兄弟句——严格自含的墙让 census 一步到位。
+
+> 设计课：counting 家族到 C605 的形态学补全——枚举计数（C591-C596）、自述总数（C598/C600）、recency 仲裁（C603）、**base+delta 算术**（C605）。最后一种的判别测试：删掉 delta 句答案仍差 1（37≠38），删掉 base 句答案崩溃——base 与 delta 角色不对称，测试必须分别 pin（no-base / add-only / base-only / 早烘 / 晚加 / 同 session 全覆盖）。
+
 ## 6. 反面教材：枚举清单没有结构键（C536，RECORD-NEGATIVE）
 
 序数清单（"5. Absinthe"）看起来也能做个 face。实现后发现 **census 全负**：
@@ -607,12 +625,15 @@ answer-face 家族的开发纪律（每个 face 都走了这套流程）：
 | 问题问 running-total 声明（"brings my total to N"，知识更新对） | species_total | 声明构式直接解析新值；快照句构造上不 key，无需 recency 仲裁；冲突弃权/同值去重 | C600 |
 | 问题问 December 信仰活动天数（faith term 三重墙） | faith_days | 全句严格头注册在 generic 时长 block 之前防提前捕获；faith 词+过去动词+显式日期合取；honorific 句切合并承重 | C601 |
 | 问题问 distinct 品牌计数（外卖服务） | delivery_services | brand+usage 双墙 + user-role 承重（回声能复制词面复制不了角色）；小写归一 set 去重 | C602 |
+| 问题问 recency 型自述总数（同构声明只有会话先后可分） | supersede_total | latest session 声明 wins（时序不变量当裁判，非日期解析）；同 session 冲突弃权；close-to 数字必须同句 topic 墙 | C603 |
+| 问题问因 <归因> 错过的 <事件> 计数 | funrun_miss | 四重合取墙（事件词+miss 动词+归因+日期）；'missing' 动名词 \b 边界死亡（C599 同族） | C604 |
+| 问题问可增集合的当前规模（知识更新算术） | coin_add | base+delta 分裂：latest base（键 anaphor）+ 严格晚于 base 的 add；早烘不双计；无 base 弃权 | C605 |
 | kh-floor 想救 kh=0 GT | 🚫 census-negative，不接线 | 1 救 vs 14 杀，absence pin 钉死 | C543 |
 | kh-elite 准入救窗口死区 | 🚫 census-negative，不接线 | impostor 杀率 23.3% vs 4 救，admission-only 全族否决 | C546 |
 | 松弛 run 门想多救几行 | 🚫 census-negative = 局部最优证书 | 全部 kill 是 run-TIE impostor；absence pin 钉死 C548 配置 | C549 |
 | 嵌入 side-channel 重排 | 🚫 census-negative，默认 False | 离线增益被 gate+judge 吸收，pin 死默认值 | C545 |
 
-**二十一条带走的原则**：
+**二十二条带走的原则**：
 1. 答案选择读**问题结构**，不调阈值
 2. face 重排不越权翻地板；地板排除自有理由
 3. census-first：先数人口，先离线模拟，再接线；证伪的方向写进台账并用 absence pin 钉住
@@ -634,7 +655,8 @@ answer-face 家族的开发纪律（每个 face 都走了这套流程）：
 19. 正则的拼写层与边界层都要按真实表面设计：复数拼写家族（-es/-f→-ves/-y→-ies）需要显式交替，`Xes?` 匹配到的是 'mattresse' 不是 'mattress'（C594），且单点幸运命中会掩蔽双零——逐物品 isolate 是最便宜的暴露手段；NP 边界别让一个正则既定边界又组结构——深度-1 回看分类（C595）或「遇小写即停」的 span 规则（C596）把吞噬问题在构造端消灭
 20. 粒度与墙跟着证据的共生结构走，不跟机制惯性走：锚与键分属同 turn 兄弟句时句粒度必失配（C599 bike 面 → turn 粒度），日期与多个专名跨句分布时 turn 粒度会把邻居多算进来（C599 appt 面 → 句粒度承重墙）——同一轮两种粒度并存是常态；能被锚集合结构性排除的计划句（未来锚不在过去集合里）就不要叠句级文本墙去误杀共生的过去陈述（C597）；队列是快照不是事实源——动工前先查链上 banked 态（C599 选面插曲）
 21. 构造区分优于仲裁，角色判别优于词面墙：证据对的新旧能在构式上区分时（声明 vs 快照），不要引入时间序裁判（C600）；词面墙无论叠多少层都能被 assistant 回声逐词复制，唯一不可伪造的判别是「谁说的」（C602）；专属 head 必须注册在泛化 block 之前，先到先得的匹配序会让泛化面吃掉专属题（C601）。同一血脉的流程纪律：replay 脚本从上一棒 canonical cp 起步，重写 banking 逻辑 = 假 drift 工厂（C601 教训、C602 落地零假 drift）
+22. 仲裁有入场券，算术有形态学：构式区分不了的同构声明对才上 recency 裁判，且裁判依据选数据集已保证的不变量（会话时序）而非自建日期解析——C600 构式 / C603 仲裁合起来是完整决策树；值可以是 base+delta 的算术和而非任何单句（C605），base 键 anaphor、delta 要求严格晚于 base（早烘不双计）、无 base 弃权——算术语义自带时序仲裁；`\b` 在拼写字符内部（'missing' 的 s|i、'10th' 的 0|t）是同一家族的边界失败模式，锚正则设计时先想后缀/动名词再落笔（C599+C604）
 
 ---
 
-*生成：documentation-morning cron，2026-09-02；Cycles 540-542 增补：2026-09-03；Cycles 543-545 增补：2026-09-04；Cycles 546-548 增补：2026-09-05；Cycles 549-554 增补：2026-09-07；Cycles 555-557 增补：2026-09-08；Cycles 558-559 增补：2026-09-09；Cycles 561-563 增补：2026-09-10；Cycles 564-569 增补：2026-09-13；Cycles 570-573 增补：2026-09-14；Cycles 574-576 增补：2026-09-15；Cycles 577-579 增补：2026-09-16；Cycles 580-582 增补：2026-09-17；Cycles 583-585 增补：2026-09-18；Cycles 586-588 增补：2026-09-19；Cycles 589-591 增补：2026-09-20；Cycles 592-593 增补：2026-09-21；Cycles 594-596 增补：2026-09-22；Cycles 597-599 增补：2026-09-23；Cycles 600-602 增补：2026-09-24。数据口径：LongMemEval s_cleaned full-500，PYTHONHASHSEED=7，deterministic cascade banked。轨迹明细见 README Cycles 532-602 段。*
+*生成：documentation-morning cron，2026-09-02；Cycles 540-542 增补：2026-09-03；Cycles 543-545 增补：2026-09-04；Cycles 546-548 增补：2026-09-05；Cycles 549-554 增补：2026-09-07；Cycles 555-557 增补：2026-09-08；Cycles 558-559 增补：2026-09-09；Cycles 561-563 增补：2026-09-10；Cycles 564-569 增补：2026-09-13；Cycles 570-573 增补：2026-09-14；Cycles 574-576 增补：2026-09-15；Cycles 577-579 增补：2026-09-16；Cycles 580-582 增补：2026-09-17；Cycles 583-585 增补：2026-09-18；Cycles 586-588 增补：2026-09-19；Cycles 589-591 增补：2026-09-20；Cycles 592-593 增补：2026-09-21；Cycles 594-596 增补：2026-09-22；Cycles 597-599 增补：2026-09-23；Cycles 600-602 增补：2026-09-24；Cycles 603-605 增补：2026-09-25。数据口径：LongMemEval s_cleaned full-500，PYTHONHASHSEED=7，deterministic cascade banked。轨迹明细见 README Cycles 532-605 段。*
