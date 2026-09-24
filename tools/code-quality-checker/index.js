@@ -35,6 +35,18 @@ program
   .option('--min-score <score>', 'CI 门控：健康分数低于此值时 exit 1（0-100）')
   .action(async (targetPath, options) => {
     try {
+      // 解析期校验（silent-flag-loss 家族防线）：无效 --format/--fail-on 立即报错退出，
+      // 不执行任何检查、不输出报告（09-24 探针：--format xml 静默回落 console rc0）
+      const FORMAT_CHOICES = ['console', 'json'];
+      if (!FORMAT_CHOICES.includes(options.format)) {
+        console.error(chalk.red(`❌ 无效的 --format: ${options.format}（可选 ${FORMAT_CHOICES.join(' | ')}）`));
+        process.exit(1);
+      }
+      if (options.failOn !== 'off' && !['error', 'warning'].includes(options.failOn)) {
+        console.error(chalk.red(`❌ 无效的 --fail-on 等级: ${options.failOn}（可选 error | warning）`));
+        process.exit(1);
+      }
+
       console.log(chalk.blue('🔍 开始代码质量检查...'));
 
       const results = {
@@ -72,8 +84,11 @@ program
       // CI 门控退出码
       const failOn = options.failOn;
       if (failOn && failOn !== 'off') {
-        if (!['error', 'warning'].includes(failOn)) {
-          console.error(chalk.red(`❌ 无效的 --fail-on 等级: ${failOn}（可选 error | warning）`));
+        // 检查器崩溃 ≠ 达标：status 'failed'（如 ESLint 配置损坏导致 eslint 自身崩溃）时
+        // 门控必须触发，否则 CI 把「检查没跑成」当「检查通过」（09-24 探针实锤 rc0 放行）
+        const failedChecks = Object.entries(results.checks).filter(([, c]) => c.status === 'failed');
+        if (failedChecks.length > 0) {
+          console.error(chalk.red(`🚫 --fail-on ${failOn} 触发：检查执行失败 (${failedChecks.map(([n]) => n).join(', ')})，无法证明达标`));
           process.exit(1);
         }
         const completed = Object.values(results.checks).filter(c => c.status === 'completed');
