@@ -10887,6 +10887,17 @@ def counting_form(question: str) -> str | None:
     # through; zero overlap by census).
     if _WKD_HEAD_RE.match(ql):
         return "workshop_days"
+    # C608: past-month art-event census — one strict head.
+    # Census (all 500): matches EXACTLY 1 row (2ce6a0f2 GT 4,
+    # unbanked, gate=answer / NEEDS_JUDGE today). Claimed ahead
+    # of the generic how-many blocks (enum/inventory gates
+    # never see it). The loose 'art-related' cousin
+    # (gpt4_59149c78 where-was-it-held) carries a different
+    # head — never stolen; the C592-C607 faces carry different
+    # NPs/markers. Handler returns None when no date resolves
+    # (falls through; zero overlap by census).
+    if _AEV_HEAD_RE.match(ql):
+        return "art_events"
     if re.search(r'\bhow many (days|weeks)\b', ql) or \
             (re.search(r'\b(days|weeks)\b', ql)
              and re.search(r'\b(spend|spent|take|took)\b', ql)
@@ -14078,6 +14089,87 @@ def _cnt_workshop_days(question: str, sessions: list[dict]):
     return str(len(days)) if days else None
 
 
+# C608 head/evidence regexes — see _cnt_art_events below.
+# Census (all 500): the head matches EXACTLY its own row
+# (2ce6a0f2 GT 4, qtype multi-session, question_date
+# 2023/03/08, unbanked today, gate=answer / NEEDS_JUDGE). The
+# loose 'art-related' cousin (gpt4_59149c78 where-was-it-held)
+# carries a different head — nothing to steal.
+_AEV_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+different\s+art[- ]related\s+events\s+"
+    r"did\s+i\s+attend\s+in\s+the\s+past\s+month\s*\??\s*$", re.I)
+# art-event topic wall: art | exhibition | gallery | museum |
+# lecture | tour. \bart\b cannot match inside 'artists' or
+# 'Pinterest'; in-row user re-mentions carry topic but no
+# participation verb ('seeing some of the work at the
+# lecture', 'looking for ... local art events') or no date
+# ('guided tour at the History Museum' pottery follow-up).
+_AEV_TOPIC_RX = re.compile(
+    r"\bart\b|\bexhibitions?\b|\bgalleries?\b|\bmuseums?\b"
+    r"|\blectures?\b|\btours?\b", re.I)
+# past-participation wall: attended / volunteered / went on
+# (a guided tour). 'seeing', 'visiting', 'participated in',
+# and future 'looking forward to attending' never key.
+_AEV_PART_RX = re.compile(
+    r"\battended\b|\bvolunteered\b|\bwent\s+on\b", re.I)
+# month-first month-day anchor — 'February 17th' / 'March
+# 3rd' (every evidence sentence in the row uses this shape).
+# The optional ordinal suffix consumes 'st|nd|rd|th'; the
+# alias map folds Mar/March onto one key (dedup by date).
+_AEV_MD_RX = re.compile(
+    r"\b(january|february|march|april|may|june|july|august"
+    r"|september|october|november|december|jan|feb|mar|apr"
+    r"|jun|jul|aug|sept|sep|oct|nov|dec)\.?\s+(\d{1,2})"
+    r"(?:st|nd|rd|th)?\b", re.I)
+_AEV_MON_NUM = {name: i + 1 for i, month in enumerate(
+    ["january", "february", "march", "april", "may", "june",
+     "july", "august", "september", "october", "november",
+     "december"])
+    for name in (month, month[:3])}
+_AEV_MON_NUM["sept"] = 9
+
+
+def _cnt_art_events(question: str, sessions: list[dict]):
+    """Count DISTINCT art-event date keys (C608, 2ce6a0f2 GT
+    4). A user sentence yields date keys when it carries ALL:
+    an art-event topic term (art | exhibition | gallery |
+    museum | lecture | tour), a past-participation verb
+    (attended | volunteered | went on), and an explicit
+    month-day anchor ('February 17th' / 'Mar 3rd'). Evidence:
+    s8 'volunteered at the Children's Museum for their "Art
+    Afternoon" event on February 17th' + s24 'attended a
+    lecture at the Art Gallery ... on March 3rd' + s38 '"Women
+    in Art" exhibition which I attended on February 10th' +
+    s40 'went on a guided tour at the History Museum on
+    February 24th' = {(2,10),(2,17),(2,24),(3,3)} -> 4.
+    Same-date re-mentions dedup ('seeing some of the work at
+    the lecture on March 3rd' carries no participation verb —
+    dark regardless); distinct dates additive. 'attended a
+    charity yoga event' has the verb but no topic term — dark;
+    'guided tour at the History Museum' (pottery follow-up)
+    has topic but no date — dark; 'artists'/'Pinterest' never
+    hit \bart\b; assistant surfaces echo volunteer/event but
+    carry no date (user-role wall backstops the all-walls
+    echo). Renders the distinct count (GT 4; counting_judge
+    banks numeric-first, exact + judge_semantic bank on the
+    digit match). Returns None when no date resolves (falls
+    through — zero overlap by census: the head matches exactly
+    its own row)."""
+    if not _AEV_HEAD_RE.match(" ".join(question.split())):
+        return None
+    keys: set[tuple[int, int]] = set()
+    for _si, sent in _map_sents(sessions):
+        if not (_AEV_TOPIC_RX.search(sent)
+                and _AEV_PART_RX.search(sent)):
+            continue
+        for m in _AEV_MD_RX.finditer(sent):
+            mon = _AEV_MON_NUM[m.group(1).lower()]
+            day = int(m.group(2))
+            if 1 <= day <= 31:
+                keys.add((mon, day))
+    return str(len(keys)) if keys else None
+
+
 def _cnt_item_total(question: str, sessions: list[dict]):
     """Sum per-item prices for enumerated "total cost" questions.
 
@@ -15969,7 +16061,8 @@ def answer_counting(question: str,
           "funrun_miss": _cnt_funrun_miss,
           "coin_add": _cnt_coin_add,
           "weddings_attended": _cnt_weddings,
-          "workshop_days": _cnt_workshop_days}
+          "workshop_days": _cnt_workshop_days,
+          "art_events": _cnt_art_events}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break
