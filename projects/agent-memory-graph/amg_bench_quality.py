@@ -10875,6 +10875,18 @@ def counting_form(question: str) -> str | None:
     # census).
     if _WED_HEAD_RE.match(ql):
         return "weddings_attended"
+    # C607: April workshop/lecture/conference day census — one
+    # strict head. Census (all 500): matches EXACTLY 1 row
+    # (10d9b85a GT '3 days', unbanked, gate=answer today).
+    # Claimed ahead of the generic duration_sum block ('how
+    # many days' would otherwise route there). The loose
+    # 'workshop' cousins (gpt4_1e4a8aeb days-between,
+    # 0bb5a684 days-before) carry different heads — never
+    # stolen; the C592-C606 faces carry different NPs/markers.
+    # Handler returns None when no day resolves (falls
+    # through; zero overlap by census).
+    if _WKD_HEAD_RE.match(ql):
+        return "workshop_days"
     if re.search(r'\bhow many (days|weeks)\b', ql) or \
             (re.search(r'\b(days|weeks)\b', ql)
              and re.search(r'\b(spend|spent|take|took)\b', ql)
@@ -13993,6 +14005,79 @@ def _cnt_weddings(question: str, sessions: list[dict]):
     return str(len(events))
 
 
+# C607 head/evidence regexes — see _cnt_workshop_days below.
+# Census (all 500): the head matches EXACTLY its own row
+# (10d9b85a GT '3 days', qtype multi-session, question_date
+# 2023/05/01), unbanked today (gate=answer). The loose
+# 'workshop' cousins (gpt4_1e4a8aeb days-between, 0bb5a684
+# days-before) carry different heads — nothing to steal.
+_WKD_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+days\s+did\s+i\s+spend\s+attending\s+"
+    r"workshops?,?\s+lectures?,?\s+(?:and\s+)?conferences?\s+"
+    r"in\s+april\s*\??\s*$", re.I)
+# learning-event topic wall: workshop | lecture | conference.
+# Every in-row assistant surface that names one ('Attend
+# classes or workshops with a teacher', 'Video lectures')
+# carries NO April day; the user re-mentions ('The workshop
+# covered a lot of topics', 'thinking about the workshop')
+# carry no participation verb.
+_WKD_TOPIC_RX = re.compile(
+    r"\bworkshops?\b|\blectures?\b|\bconferences?\b", re.I)
+# past-participation wall: 'attended a lecture' / 'workshop I
+# attended'. Bare topic mentions never key.
+_WKD_PART_RX = re.compile(r"\battend(?:ed)?\b|\bspent\b", re.I)
+# month-first April day anchor — 'April 12th' / 'Apr 12'. The
+# optional ordinal suffix consumes 'st|nd|rd|th'; 'April 2023'
+# backtracks off the year digits (C601 faith_days lesson).
+_WKD_DAY_AFTER_RX = re.compile(
+    r"\bapr(?:il)?\.?\s+(\d{1,2})(?:st|nd|rd|th)?\b", re.I)
+# day-first April anchor(s) — BOTH C607 evidence sentences use
+# this shape: 'the 10th of April' (one day) and 'the 17th and
+# 18th of April' (a two-day list in one sentence; the optional
+# 'and <day>' group carries the second ordinal).
+_WKD_DAY_BEFORE_RX = re.compile(
+    r"\b(\d{1,2})(?:st|nd|rd|th)?(?:\s+and\s+(\d{1,2})"
+    r"(?:st|nd|rd|th)?)?\s+of\s+apr(?:il)?\.?\b", re.I)
+
+
+def _cnt_workshop_days(question: str, sessions: list[dict]):
+    """Count DISTINCT April learning-event days (C607,
+    10d9b85a GT '3 days'). A user sentence yields a day when it
+    carries ALL: a learning-event term (workshop | lecture |
+    conference), a past-participation verb (attend(ed) |
+    spent), and an explicit April day anchor — month-first
+    ('April 12th') or day-first ('the 10th of April', incl. the
+    two-day list 'the 17th and 18th of April'). Evidence: s29
+    'attended a lecture ... on the 10th of April' + s39 'a
+    2-day workshop I attended on the 17th and 18th of April'
+    = days {10, 17, 18} -> 3; re-mentions dedup, distinct days
+    additive. 'The workshop covered a lot of topics' and
+    'thinking about the workshop' carry no participation verb —
+    dark; assistant surfaces carry no April day (user-role wall
+    backstops). 'April 2023' never captures a day. Renders the
+    day count (GT '3 days'; counting_judge banks numeric-first,
+    _cnt_numval('3 days') == 3.0 — exact is False on the unit
+    suffix). Returns None when no day resolves (falls through —
+    zero overlap by census: the head matches exactly its own
+    row)."""
+    if not _WKD_HEAD_RE.match(" ".join(question.split())):
+        return None
+    days: set[str] = set()
+    for _si, sent in _map_sents(sessions):
+        if not (_WKD_TOPIC_RX.search(sent)
+                and _WKD_PART_RX.search(sent)):
+            continue
+        for m in _WKD_DAY_AFTER_RX.finditer(sent):
+            d = int(m.group(1))
+            if 1 <= d <= 31:
+                days.add(str(d))
+        for m in _WKD_DAY_BEFORE_RX.finditer(sent):
+            for g in (m.group(1), m.group(2)):
+                if g and 1 <= int(g) <= 31:
+                    days.add(str(g))
+    return str(len(days)) if days else None
+
+
 def _cnt_item_total(question: str, sessions: list[dict]):
     """Sum per-item prices for enumerated "total cost" questions.
 
@@ -15883,7 +15968,8 @@ def answer_counting(question: str,
           "supersede_total": _cnt_supersede_total,
           "funrun_miss": _cnt_funrun_miss,
           "coin_add": _cnt_coin_add,
-          "weddings_attended": _cnt_weddings}
+          "weddings_attended": _cnt_weddings,
+          "workshop_days": _cnt_workshop_days}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break
