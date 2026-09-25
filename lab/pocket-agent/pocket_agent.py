@@ -4,9 +4,58 @@
 Demonstrates: Tool use, ReAct loop, Memory, Streaming thoughts
 """
 
-import json, time, re, inspect, textwrap
+import json, time, re, inspect, textwrap, ast, operator
 from dataclasses import dataclass, field
 from typing import Callable, Any
+
+# ── Safe Arithmetic Eval ─────────────────────────────────────
+
+_SAFE_BINOPS = {
+    ast.Add: operator.add, ast.Sub: operator.sub,
+    ast.Mult: operator.mul, ast.Div: operator.truediv,
+    ast.FloorDiv: operator.floordiv, ast.Mod: operator.mod,
+}
+_MAX_EXPR_LEN = 200
+_MAX_EXPONENT = 1000
+
+def safe_eval(expression: str) -> float:
+    """Evaluate an arithmetic expression via an AST whitelist.
+
+    Bare eval() with {"__builtins__": {}} is NOT a sandbox: attribute
+    chains like ().__class__.__mro__[1].__subclasses__() escape it.
+    Here only constants, + - * / // % **, unary +/-, and parentheses
+    are accepted — names, calls, and attributes are structurally
+    impossible. Raises ValueError on anything outside the whitelist
+    (SyntaxError propagates for unparseable input).
+    """
+    if not isinstance(expression, str):
+        raise ValueError("expression must be a string")
+    if len(expression) > _MAX_EXPR_LEN:
+        raise ValueError("expression too long")
+    tree = ast.parse(expression, mode="eval")
+
+    def walk(node):
+        if isinstance(node, ast.Expression):
+            return walk(node.body)
+        if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+            return node.value
+        if isinstance(node, ast.BinOp):
+            op_type = type(node.op)
+            if op_type is ast.Pow:
+                left, right = walk(node.left), walk(node.right)
+                if abs(right) > _MAX_EXPONENT:
+                    raise ValueError("exponent too large")
+                return left ** right
+            if op_type in _SAFE_BINOPS:
+                return _SAFE_BINOPS[op_type](walk(node.left), walk(node.right))
+        if isinstance(node, ast.UnaryOp):
+            if isinstance(node.op, ast.USub):
+                return -walk(node.operand)
+            if isinstance(node.op, ast.UAdd):
+                return +walk(node.operand)
+        raise ValueError(f"disallowed syntax: {type(node).__name__}")
+
+    return walk(tree)
 
 # ── Tool System ──────────────────────────────────────────────
 
@@ -174,13 +223,13 @@ def main():
         """Returns simulated weather data"""
         return json.dumps({"city": city, "temp": "22°C", "condition": "sunny", "humidity": "45%"})
 
-    @agent.tool(description="Evaluate a math expression")
+    @agent.tool(description="Evaluate a math expression (AST-whitelisted)")
     def calculate(expression: str) -> str:
         try:
-            result = eval(expression, {"__builtins__": {}}, {})
+            result = safe_eval(expression)
             return f"{expression} = {result}"
-        except:
-            return f"Could not evaluate: {expression}"
+        except (ValueError, SyntaxError, ZeroDivisionError) as e:
+            return f"Could not evaluate: {expression} ({e})"
 
     @agent.tool(description="Get current date and time")
     def current_time() -> str:

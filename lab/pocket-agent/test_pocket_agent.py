@@ -216,5 +216,60 @@ class TestPocketAgent:
         assert agent.run("anything") == "⚠️ Max iterations reached"
 
 
+class TestSafeEval:
+    """safe_eval: AST-whitelisted arithmetic. Bare eval with
+    {"__builtins__": {}} is NOT a sandbox — attribute-chain siphon
+    (().__class__.__mro__) escapes it structurally."""
+
+    def test_arithmetic_semantics(self):
+        from pocket_agent import safe_eval
+        assert safe_eval("42 * 137") == 5754
+        assert safe_eval("(2 + 3) * 4") == 20
+        assert safe_eval("2 ** 10") == 1024
+        assert safe_eval("-5 + 3") == -2
+        assert safe_eval("10 // 3") == 3
+        assert safe_eval("10 % 3") == 1
+        assert safe_eval("7 / 2") == 3.5
+
+    def test_blocks_import_call(self):
+        from pocket_agent import safe_eval
+        with pytest.raises(ValueError):
+            safe_eval("__import__('os').system('true')")
+
+    def test_blocks_attribute_chain_siphon(self):
+        from pocket_agent import safe_eval
+        with pytest.raises(ValueError):
+            safe_eval("().__class__.__mro__[1].__subclasses__()")
+
+    def test_blocks_name_lookup(self):
+        from pocket_agent import safe_eval
+        with pytest.raises(ValueError):
+            safe_eval("os.getcwd")
+
+    def test_blocks_huge_exponent_dos(self):
+        from pocket_agent import safe_eval
+        with pytest.raises(ValueError):
+            safe_eval("9 ** 99999999")
+
+    def test_syntax_error_propagates(self):
+        from pocket_agent import safe_eval
+        with pytest.raises(SyntaxError):
+            safe_eval("")
+
+
+class TestMemoryRecallEmptyQuery:
+    """Gap pin: empty query has no words -> no positive scores -> []."""
+
+    def test_empty_query_returns_empty(self):
+        m = Memory()
+        m.store("weather in Paris")
+        assert m.recall("") == []
+
+    def test_whitespace_query_returns_empty(self):
+        m = Memory()
+        m.store("weather in Paris")
+        assert m.recall("   ") == []
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

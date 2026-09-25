@@ -1,0 +1,2 @@
+2026-09-18T21:50	3549004	test_pass_rate	100% (65/65)	keep	self_evolving_agent 状态持久化: export/import_state + compile() 先行验证 + 损坏条目跳过报告 + generation 导入后续增; 58→65 (+7 RED-first)
+2026-09-25T21:09	52fada9	test_pass_rate	100% (80/80)	keep	safe_eval AST whitelist 替换裸 eval 沙箱逃逸缺口 + recall 空 query 双 pin; 72→80 (+8 RED-first)
