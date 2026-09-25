@@ -1,1 +1,2 @@
 timestamp	commit	metric	value	status	description
+2026-09-25T21:16	c80d762	test_pass_rate	100% (62/62)	keep	request-shape 防御家族补全(params/message/parts 形状错回-32602) + 1MB body 上限(无界 read 单线程 DoS,首跑红就挂死套件实证); 48→62 (+5 新测试 RED-first)
