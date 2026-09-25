@@ -22,9 +22,13 @@ def sess(*lines):
 # ------------------------------------------------------------- gate
 
 def test_form_gate_claims_plain_how_many():
+    # C606: the exact 'in this year' phrase moved to the strict
+    # weddings_attended head (enum_count read '4' on the full
+    # haystack — sister-wedding sweep); bare/short wedding heads
+    # below stay enum_count
     assert counting_form(
         "How many weddings have I attended in this year?") \
-        == "enum_count"
+        == "weddings_attended"
     assert counting_form(
         "How many babies were born to friends and family "
         "members this year?") == "enum_count"

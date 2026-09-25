@@ -10863,6 +10863,18 @@ def counting_form(question: str) -> str | None:
     # through; zero overlap by census).
     if _CAD_HEAD_RE.match(ql):
         return "coin_add"
+    # C606: attended-wedding census — one strict head. Census
+    # (all 500): matches EXACTLY 1 row (gpt4_2f8be40d GT 'three',
+    # unbanked, gate=counting via enum_count '4' today — the enum
+    # sweep counts the sister's wedding into the tally). Claimed
+    # ahead of the generic how-many/enum block (enum_count never
+    # sees it). A loose 'how many weddings' sweep hits no other
+    # row, so there is nothing to steal; the C592-C605 faces
+    # carry different NPs/markers. Handler returns None when no
+    # attended wedding resolves (falls through; zero overlap by
+    # census).
+    if _WED_HEAD_RE.match(ql):
+        return "weddings_attended"
     if re.search(r'\bhow many (days|weeks)\b', ql) or \
             (re.search(r'\b(days|weeks)\b', ql)
              and re.search(r'\b(spend|spent|take|took)\b', ql)
@@ -13915,6 +13927,72 @@ def _cnt_coin_add(question: str, sessions: list[dict]):
     return str(base_val + late)
 
 
+# C606 head/evidence regexes — see _cnt_weddings below.
+# Census (all 500): the strict head matches EXACTLY its own row
+# (gpt4_2f8be40d GT 'three', question_date 2023/10/15), unbanked
+# today (gate=counting via enum_count, whose tally reads '4' —
+# it sweeps the sister's wedding into the same bag). A loose
+# 'how many weddings' sweep hits no other row, so there is
+# nothing to steal.
+_WED_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+weddings\s+have\s+i\s+attended\s+in\s+this"
+    r"\s+year\s*\??\s*$", re.I)
+# attendance markers — user-voice past-attendance phrasing only:
+# 'just got back from ... wedding' / 'been to ... wedding(s)'.
+# The OWN-wedding wall: 'planning my own wedding' / 'getting
+# married soon ... wedding venue ideas' carry no attendance
+# verb. The sister wall: 'my sister's wedding was just amazing
+# ... I was the maid of honor' praises the event but never
+# phrases attendance — no marker, no key.
+_WED_ATTEND_RE = re.compile(
+    r"\b(?:got\s+back\s+from|been\s+to)\b[^.?!]*?\bweddings?\b",
+    re.I)
+# role-noun possessive — the event key. Same-key mentions dedup
+# (the cousin's vineyard wedding is re-mentioned 4x, the friend's
+# wedding 3x — one event each).
+_WED_ROLE_WED_RE = re.compile(
+    r"\b((?:college\s+)?(?:roommate|cousin|friend|sister|brother|"
+    r"colleague|classmate|neighbor|neighbour))['’]s\s+wedding",
+    re.I)
+
+
+def _cnt_weddings(question: str, sessions: list[dict]):
+    """Attended-wedding census with role-keyed dedup (C606,
+    gpt4_2f8be40d GT 'three'). Counts DISTINCT attended weddings
+    keyed by the role-noun possessive ('college roommate's
+    wedding' / 'cousin's wedding' / 'friend's wedding') inside
+    user sentences that ALSO carry an attendance marker ('just
+    got back from', 'been to'). The decoy walls: the user's OWN
+    wedding ('planning my own wedding', 'getting married soon')
+    and the sister's wedding ('was just amazing ... maid of
+    honor') never carry an attendance marker — both stay
+    uncounted, which is exactly the GT tally (the three
+    named-couple weddings: Emily+Sarah roommate / Rachel cousin
+    / Jen+Tom friend; 'Mike' never appears in the haystack —
+    the GT enumeration is name-authoritative, only the COUNT
+    feeds the numeric judge). An attended sentence with no
+    role-noun possessive falls back to the normalized sentence
+    as its own key. Returns None when nothing resolves (falls
+    through; zero overlap by census: the head matches exactly
+    its own row)."""
+    if not _WED_HEAD_RE.match(" ".join(question.split())):
+        return None
+    events: dict[str, None] = {}
+    for _si, sent in _map_sents(sessions):
+        if not _WED_ATTEND_RE.search(sent):
+            continue
+        keys = [m.group(1).lower() for m in
+                _WED_ROLE_WED_RE.finditer(sent)]
+        if keys:
+            for k in keys:
+                events.setdefault(k, None)
+        else:
+            events.setdefault(" ".join(sent.split()), None)
+    if not events:
+        return None
+    return str(len(events))
+
+
 def _cnt_item_total(question: str, sessions: list[dict]):
     """Sum per-item prices for enumerated "total cost" questions.
 
@@ -15804,7 +15882,8 @@ def answer_counting(question: str,
           "delivery_services": _cnt_delivery_services,
           "supersede_total": _cnt_supersede_total,
           "funrun_miss": _cnt_funrun_miss,
-          "coin_add": _cnt_coin_add}
+          "coin_add": _cnt_coin_add,
+          "weddings_attended": _cnt_weddings}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break

@@ -55,9 +55,11 @@ def test_form_gate_rivals_keep_their_claims():
     assert counting_form(
         "How many model kits have I worked on or bought?") \
         == "inventory_count"
+    # C606: exact 'in this year' phrase now claimed by the strict
+    # weddings_attended head (claim moved off enum_count)
     assert counting_form(
         "How many weddings have I attended in this year?") \
-        == "enum_count"
+        == "weddings_attended"
 
 
 # ------------------------------------------------ month window logic
