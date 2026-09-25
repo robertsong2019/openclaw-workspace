@@ -90,6 +90,8 @@ class AgentExecutor:
 
         results = []
         for part in message_parts:
+            if not isinstance(part, dict):
+                continue  # 非 object part 跳过，不崩 executor
             if part.get("kind") == "text" or "text" in part:
                 text = part.get("text", "")
                 # 简单能力：echo + reverse
@@ -112,6 +114,7 @@ class A2AHandler(BaseHTTPRequestHandler):
     """处理 A2A JSON-RPC 请求"""
     store = TaskStore()
     executor = AgentExecutor()
+    MAX_BODY_BYTES = 1 * 1024 * 1024  # 声明超大 body 的请求直接拒绝，不读
 
     def _send_json(self, data, status=200):
         body = json.dumps(data).encode()
@@ -144,6 +147,15 @@ class A2AHandler(BaseHTTPRequestHandler):
                 "id": None,
             })
             return
+        if length > self.MAX_BODY_BYTES:
+            # 无界 read 是阻塞 DoS：单线程 server 的唯一 handler 线程会
+            # 卡死在等一个永远到不了的 body 上，后续全部请求饿死。
+            self._send_json({
+                "jsonrpc": "2.0",
+                "error": {"code": -32600, "message": "Invalid Request: body too large"},
+                "id": None,
+            })
+            return
         raw = self.rfile.read(length)
         # 垃圾输入防御：畸形 JSON / 非 object 体必须回 JSON-RPC 错误，
         # 而不是让 handler 抛异常断连（客户端只见 RemoteDisconnected）。
@@ -168,6 +180,14 @@ class A2AHandler(BaseHTTPRequestHandler):
         params = body.get("params", {})
         req_id = body.get("id")
 
+        if not isinstance(params, dict):
+            self._send_json({
+                "jsonrpc": "2.0",
+                "error": {"code": -32602, "message": "Invalid params: params must be a JSON object"},
+                "id": req_id,
+            })
+            return
+
         # ---- A2A 核心操作 ----
         if method == "message/send":
             # 发送消息给 Agent，创建或继续 Task
@@ -183,10 +203,24 @@ class A2AHandler(BaseHTTPRequestHandler):
                 return
             task = task or self.store.create(task_id)
             message = params.get("message", {})
+            if not isinstance(message, dict):
+                self._send_json({
+                    "jsonrpc": "2.0",
+                    "error": {"code": -32602, "message": "Invalid params: message must be a JSON object"},
+                    "id": req_id,
+                })
+                return
             task["messages"].append(message)
 
             # 执行 Agent 逻辑
             parts = message.get("parts", [])
+            if not isinstance(parts, list):
+                self._send_json({
+                    "jsonrpc": "2.0",
+                    "error": {"code": -32602, "message": "Invalid params: message.parts must be a list"},
+                    "id": req_id,
+                })
+                return
             response_parts = self.executor.execute(task, parts)
 
             result = {

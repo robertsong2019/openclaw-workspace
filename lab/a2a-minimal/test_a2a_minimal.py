@@ -270,6 +270,57 @@ class MalformedRequestTest(ServerE2ETest):
 # ============================================================
 
 
+class RequestShapeHardeningTest(ServerE2ETest):
+    """垃圾输入防御家族的更深层：params 非对象、message/parts 形状错误
+    必须回 -32602 而非 AttributeError 崩 handler；Content-Length 必须有
+    上界（无界 read = 阻塞 DoS）。"""
+
+    def test_params_non_dict_gets_error_not_crash(self):
+        resp = self.post_raw(json.dumps({"jsonrpc": "2.0",
+                                         "method": "message/send",
+                                         "params": "garbage", "id": 1}).encode())
+        self.assertEqual(resp["error"]["code"], -32602)
+        self.assertEqual(self.client.discover()["name"], "EchoAgent")
+
+    def test_message_non_dict_gets_error_not_crash(self):
+        resp = self.rpc("message/send", {"message": "just a string"}, req_id=2)
+        self.assertEqual(resp["error"]["code"], -32602)
+
+    def test_parts_non_list_gets_error_not_crash(self):
+        resp = self.rpc("message/send",
+                        {"message": {"role": "user", "parts": "not-a-list"}},
+                        req_id=3)
+        self.assertEqual(resp["error"]["code"], -32602)
+
+    def test_part_non_dict_skipped_not_crash(self):
+        resp = self.rpc("message/send",
+                        {"message": {"role": "user",
+                                     "parts": [123, {"kind": "text", "text": "hi"}]}},
+                        req_id=4)
+        self.assertEqual(resp["result"]["status"], "completed")
+        texts = [p["text"] for a in resp["result"]["artifacts"] for p in a["parts"]]
+        self.assertEqual(texts, ["Echo: hi", "Reverse: ih"])
+
+    def test_oversized_content_length_rejected_immediately(self):
+        sock = socket.create_connection(("127.0.0.1", self.port), timeout=3)
+        sock.sendall(
+            f"POST / HTTP/1.1\r\nHost: t\r\nContent-Type: application/json\r\n"
+            f"Content-Length: {2 * 1024 * 1024}\r\n\r\n".encode())
+        sock.settimeout(3)
+        data = b""
+        try:
+            while b"too large" not in data and len(data) < 65536:
+                chunk = sock.recv(65536)
+                if not chunk:
+                    break
+                data += chunk
+        except socket.timeout:
+            pass
+        sock.close()
+        self.assertIn("-32600", data.decode())
+        self.assertIn("too large", data.decode())
+
+
 class TerminalStateTest(ServerE2ETest):
     def seed_working(self, tid):
         task = A2AHandler.store.create(tid)
