@@ -2,12 +2,12 @@
 
 > 基于 SQLite 的轻量知识图谱，模拟 AI Agent 的长期记忆管理
 
-[![Tests](https://img.shields.io/badge/tests-11140-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-11272-brightgreen)]()
 [![Python](https://img.shields.io/badge/python-3.10+-blue)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-success)]()
 
-> 📚 教程：[基础入门](TUTORIAL.md) · [GraphRAG 端到端（Cycles 425-440）](TUTORIAL-GRAPHRAG.md) · [Temporal QA 零 LLM 时间推理（Cycles 456-489）](TUTORIAL-TEMPORAL-QA.md) · [Abstention 弃权语义（Cycles 448-516）](TUTORIAL-ABSTENTION.md) · [Answer Faces 问题结构驱动的答案选择（Cycles 529-605）](TUTORIAL-ANSWER-FACES.md)
+> 📚 教程：[基础入门](TUTORIAL.md) · [GraphRAG 端到端（Cycles 425-440）](TUTORIAL-GRAPHRAG.md) · [Temporal QA 零 LLM 时间推理（Cycles 456-489）](TUTORIAL-TEMPORAL-QA.md) · [Abstention 弃权语义（Cycles 448-516）](TUTORIAL-ABSTENTION.md) · [Answer Faces 问题结构驱动的答案选择（Cycles 529-611）](TUTORIAL-ANSWER-FACES.md)
 
 ## 🎯 概述
 
@@ -4681,6 +4681,34 @@ a2f3aa27 + a1eacc2a 双面（"How many followers do I have on Instagram now?" GT
 #### C605：coin_add — knowledge-update 的 base+delta 算术 (4ada5be)
 
 69fee5aa "How many pre-1920 American coins…"（GT 38，qtype=**knowledge-update**——counting 家族此前未覆盖的赛道；旧 pred=37 声明回声）。**base+delta 分裂**：s12 (05/27) base 声明 "a total of 37 coins in that collection"（topic 'pre-1920 American coins' 在同 turn 兄弟句——base RX 键 anaphoric 'in that collection' 而非 topic，C603 stories 锚教训复用）+ s39 (05/29) delta "just added a new coin … pre-1920"（全句自含）→ 37+1=**38**。仲裁：latest base wins（时序扫描）；delta 只计**严格晚于 base session** 的事件（早于/同 session 的 add 视作已烘进 base 不双计——算术语义自带时序仲裁）；identical add dedup、distinct additive；无 base → None fall through（诚实弃权）；单遍扫描实现（首版两遍扫描自审简化——Simplicity First）。墙：ADD RX 全自含（1972 doubled-die 'recently bought'、1913 Liberty nickel 'meaning to get…appraised'、camera collection 全不命中）；BASE/ADD RX 跨 500 行任意角色零兄弟句。19 测试红→绿首试；suite 11121→11140（+19，264s）。replay 走字节级替换（count==1 assert ×6）+ diff 审计（恰 6 hunk）：PASS 首试（十一连首试）：pred 变化恰 {69fee5aa}，banked 359→360（0.720）。
+
+## Cycles 606-611: 0.720→0.732 — 出席标记墙、日锚双模式、乘次优先级与领地卫生
+
+> 官方口径轨迹：0.720（C605）→ **0.722（C606）** → **0.724（C607）** → **0.726（C608）** → **0.728（C609）** → **0.730（C610）** → **0.732（C611）**，banked 360→366，套件 11140→11272（junitxml）。本段主轴：counting 面进入稳定量产期的六连 keep；机制增量之外浮现一条**领地卫生**主线——C610 前缀撞名（_SPT_ 撞 species 家族）暴露 face-only 绿的结构性盲区，C611 pin census 抓出 C511 时代的历史 whitelist 约并按换约纪律更新：face 的领地边界不只在问题头（strict head census），还在测试 pin、表亲 form 归属与模块级名字前缀三个维度。replay 首试十六连（C606-C611 全部一次过），keep 链延至四十七连（C565 起）。教程同步增补：[TUTORIAL-ANSWER-FACES.md](TUTORIAL-ANSWER-FACES.md) §5.57-§5.62。
+
+#### C606：weddings_attended — 出席标记墙与角色所有格事件键 (6d899a5)
+
+gpt4_2f8be40d "How many weddings have I attended in this year?"（GT 'three'；旧 pred='4'——enum_count 把 sister 婚礼扫进 tally）。三重结构：严格头（census 恰 1/500；短变体 "attended this year?"/"attended?" 不匹配、仍归 enum_count——claim-transfer 的边界由 pin 钉住）+ 出席标记墙（句内须有 got back from / been to，user-only via _map_sents）+ 事件键 role-noun 所有格（(college )?roommate|cousin|friend|sister|brother|colleague|classmate|neighbo[u]r['’]s wedding，cousin 婚礼重提 4x/friend 3x 同键去重；无 role key 的出席句回退整句 normalized 作 key）。干扰墙正是 GT=3 的语义：own wedding（planning/venue ideas 无出席动词）+ sister's wedding（maid of honor 赞美无出席动词）天然不计数；'Mike' 从未出现在 haystack——GT 枚举是 name-authoritative，数值判分只看 count（判分探针先行：确认 counting_judge 数值路径后 '3' 即 bank）。14 测试红→绿（途中 2 个 stale claim pins 转移：enum_count → weddings_attended）；suite 11140→11154（+14，276s）。replay PASS 首试（1182s）：pred 变化恰 {gpt4_2f8be40d: '4'→'3'}，drift 1 False→True，零 lateral 翻动，banked 360→361（0.722）。
+
+#### C607：workshop_days — claim 排序与日锚双模式 (25b4fd0)
+
+10d9b85a "How many days did I spend attending workshops, lectures, and conferences in April?"（GT '3 days'；旧 pred=social-media 回声整 turn 无数字）。faith_days（C601）的直系变体，两个新形状：① 分类器 claim 必须注册在**通用 duration_sum 块之前**（'how many days' 否则被泛化面截胡——C601 专属先于泛化教训的第二次落地，新插桩点在 C606 weddings 块后）；② **日锚双模式**：两条证据句全用 day-first 形式（'the 10th of April' / 'the 17th and 18th of April' 列表式，可选 and <day> 一次匹配吃两日），与 faith_days 的 month-first 相反——两条 RX 各钉一半测试（'April 12th' 合成句 pin），'April 2023' 年份回溯沿用 C601（\b 不落在年份数字间）。四重墙句粒度自含：topic（workshop|lecture|conference）+ 参与动词（attend(ed)|spent）+ April 日锚 + user-role。证据 s29 lecture → {10} + s39 '2-day workshop' → {17,18}，distinct days {10,17,18}=3 ✓；同日重提/无动词计划句/honorific 句全暗；行内 assistant 面 7 处全无 April 日。23 测试红→绿首试；suite 11154→11177（+23，276s）。replay PASS 首试：pred 变化恰 {10d9b85a}，banked 361→362（0.724）。流程课：kd 交接 note 的两个 lane 备选实查全已 banked——**队列是快照，链是事实源**，unbanked 清单从最新权威链现拉。
+
+#### C608：art_events — distinct-date 去重与窗口省略的收据 (2c6fb80)
+
+2ce6a0f2 "How many art-related events … in the past month?"（GT 4 纯数字；旧 pred=Heifer International 无关回声）。C607 workshop_days 的姊妹形状，distinct-date 计数三重墙：art-topic（art|exhibition|gallery|museum|lecture|tour；\bart\b 天然不咬 artists/Pinterest）+ 过去参与动词（attended|volunteered|went on——seeing/visiting/participated/将来时全暗）+ month-first 月日锚（别名归一 March/Mar→3）。去重键 (month,day)：Mar 3 重提句 'after seeing some of the work at the lecture' 无参与动词天然暗（双保险）。证据 s8 Art Afternoon 2/17 + s24 gallery lecture 3/3 + s38 Women in Art exhibition 2/10 + s40 history museum tour 2/24 → {(2,10),(2,17),(2,24),(3,3)} = **4** ✓。最有趣的决定是**没做什么**：'past month' 相对窗逻辑整个省略——全 47 session 日期都是 2023/03/08，census 验证零出窗命中，窗判定无案可办（Simplicity First 的减法也要收据）。25 测试红→绿首试；suite 11177→11202（+25，304s）。replay PASS 首试（1193s）：pred 变化恰 {2ce6a0f2}，banked 362→363（0.726）。流程课：build_replay 的 anchor 串先 grep 上游 replay 实际值（--out 每轮滑动，照抄上一轮 diff = 假 anchor 工厂）。
+
+#### C609：coaster_rides — 三形状乘次优先级与判分红利 (0d38475)
+
+gpt4_e05b82a6 "how many times … rollercoasters … July–October"（GT '10 times'；旧 pred=session-echo 无数字）。跨 4 个月多证据句计数的**三形状优先级**：显式 N-times 倍数（word+digit，'three times in a row'）> 名字枚举（'rode the Mako, Kraken, and Manta rollercoasters'）> bare-rode = 1——语义强度排序（次数自述 > 逐次列举 > 默认一次）。三重墙：rode 动词（'riding'/'been on'/将来计划暗）+ Jul-Oct 月墙 + ride-context 墙（coaster 名词或 times，挡 'rode my bike in July'）。双墙缺一不可的反常证据：Space Mountain 句（9/24）**无 coaster 名词**（times 墙接住）、Mako/Kraken/Manta 枚举句（7月）**无 'times'**（枚举接住）——Mummy three times 3 + Xcelerator bare-rode 1 + Space Mountain 3 + 枚举 3 = **10** ✓。判分红利：认领 form 前裸 '10' vs GT '10 times' 走 exact_judge=False；认领后 counting_judge 数字优先 _cnt_numval('10 times')==10.0 直接 bank——**认领 form 的同时修好了 judge 路径**。22 测试红→绿；suite 11202→11224（+22）。replay PASS 首试：pred 变化恰 {gpt4_e05b82a6}，banked 363→364（0.728，45 连 keep）。
+
+#### C610：sports_competitive — 前缀撞名与 face-only 盲区 (483b3fa)
+
+ef66a6e5 "How many sports have I played competitively in the past?"（GT 'two'；旧 pred=home-insurance 回声，gate=answer/NEEDS_JUDGE）。双墙机制：过去习惯墙 \bused\s+to\s+(?:play|swim)\b + 竞技语域墙 \bcompetitiv*；sport 键：动词直连 swim（'used to swim competitively in college' 三种 rephrase 折叠一键）+ 'play <名词>' 取名词（tennis）；set-dedup 加法 → distinct=2。暗区全钉：gerund 习惯（'used to swimming' 无 play|swim 词干）、现在时（"I've been playing soccer and tennis lately"）、yoga 课表、'competitive prices'、assistant 回声（role 墙兜底）。渲染 '2' 走 counting_judge 数值优先（GT 'two'，C606 先例）。**本轮事故比机制更有教学价值**：新正则前缀起名 _SPT_ 臆断 "SPortS"——实为 C600 species 家族既有前缀（_SPT_HEAD_RE 被 species claim+guard 引用），模块级 shadow → species 路由断崖，**全量 suite 首跑 7 红而 22 个 face 测试全绿**——face-only 绿对跨 face 冲突是结构性盲的。改名 _SPORT_（grep 确认无占用）后 11246 全绿（245s）。规则入库：模块级名字查**前缀级**冲突（grep '_<PREFIX>_'），不只查全名。replay PASS 首试：pred 变化恰 {ef66a6e5}，banked 364→365（0.730，46 连 keep）。
+
+#### C611：fitness_week — (class, day) 周课去重与 pin census (c596d1f)
+
+2788b940 "How many fitness classes do I attend in a typical week?"（GT int 5；旧 pred=meal-prep 回声）。(class, day) 集合去重的周课次计数：课名墙 zumba|body ?pump|hip hop abs|yoga（\b 挡 yogurt）+ 星期墙 monday..sunday（s? 吸收复数；裸 'days'/'weekdays' 永不匹配）→ Zumba{Tue,Thu}+BodyPump{Mon}+yoga{Sun}+HipHopAbs{Sat}=**5** ✓。暗区全钉：四课名罗列无天（'classes like Zumba, Hip Hop Abs, yoga, and BodyPump'）、meal-prep on Sundays、sculpting classes、'on days when I have BodyPump classes'、yoga routines/channels 无天、assistant 全程表回声。census 第四步落地：**pin census**——grep test_*.py 历史 pin 抓出 C511 时代 whitelist pin（钉此题返 None），首跑全量 suite 1 红后按 C592/C593 换约纪律更新 pin（写明 C611 因果 + freq_days 表亲断言）；loose 表亲 a08a253f 查链后实为 freq_days 既有领地（已 banked '4'，不动）。26 face 测试红→绿首试 + pin 更新；suite 11246→**11272**（244.6s）。流程增量：后台跑长 suite 用 Tee 落盘（exec 捕获两次 0 字节幽灵；Tee 必须 isatty()=False 否则 pytest INTERNALERROR）。replay PASS 首试：pred 变化恰 {2788b940}，banked 365→366（0.732，47 连 keep）。
 
 ## 许可
 
