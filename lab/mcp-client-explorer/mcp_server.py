@@ -211,6 +211,15 @@ class MCPServer:
             tool_name = params.get("name")
             args = params.get("arguments", {})
 
+            # arguments 形状门：非 dict（含 null）是 -32602 Invalid params，
+            # 落进工具体会变成 -32603 内部错误 + 异常消息泄漏（参数错≠工具错）
+            if not isinstance(args, dict):
+                return {
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "error": {"code": -32602, "message": "Invalid params: expected object"},
+                }
+
             try:
                 result = self._execute_tool(tool_name, args)
                 return {
@@ -277,6 +286,15 @@ class MCPServer:
         if method == "prompts/get":
             prompt_name = params.get("name")
             args = params.get("arguments", {})
+
+            # arguments 形状门（同 tools/call）：非 dict 会以 AttributeError
+            # 文本泄漏进错误消息，且语义应是 -32602 而非内部异常回显
+            if not isinstance(args, dict):
+                return {
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "error": {"code": -32602, "message": "Invalid params: expected object"},
+                }
 
             try:
                 result = self._get_prompt(prompt_name, args)
