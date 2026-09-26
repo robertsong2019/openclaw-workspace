@@ -195,3 +195,26 @@
 - **修正：** 语法错误阻止了我的脚本执行 + 我的 add 链因 py_compile 失败中止（staged 区干净）+ kd-1 脚本行内幂等断言（C592 存在/703 行）三重挡板，零损失；kd-1 自行完成 commit 6f6c781/f856f94 + memory + TOOLS.md + push
 - **规则：** 幂等三查加第四查——transcript mtime 或 /tmp 任务工件 <15 min 新鲜 = 假定作者存活，接管前先复查进程表/等一个轮询周期，或把接管意图写进共享工件让作者可见；绝不与疑似存活的会话竞争同一写路径
 - **出现次数：** 1
+
+### [2026-09-21] write 覆盖当日 memory 文件（近失误，git 挽回）
+- **场景：** 晚间深研 cron 收尾，写 memory/2026-09-21.md 日常记录
+- **错误：** 直接 `write` 整文件，覆盖了当天已有的 KO/测试/docs 三节（02:00-04:00 的丰富内容）
+- **根因：** write 工具默认覆盖；写 daily note 前没检查文件是否已存在——cron 场景下当天几乎必然已有晨间记录
+- **修正：** `git show HEAD:file > file` 恢复 + 扫描当日全部会话 transcript 确认 HEAD 后无未提交增量（零丢失）+ 追加写入
+- **出现次数：** 1
+- **规则（立即生效）：** daily memory 只准追加（cat >> 或 edit 定位尾部锚点），write 仅限确认文件不存在/确认要整体重写时
+
+### [2026-09-26] pytest.main() 进程内静默 exit-0（C592 家族变体 #2）
+- **场景：** kd C609 amg 套件，runner 脚本里 pytest.main()（非 python3 -m）
+- **错误：** rc=0 + 零输出 + 秒退，focused/full 套件实际一个测试都没跑
+- **根因：** amg 测试文件顶部有 `os.execve` PYTHONHASHSEED=7 自重执行守卫；env 未预置时守卫在 pytest.main 的 in-process collection 中触发重执行，二次进程又静默退出——runner 脚本化挡不住这个变体
+- **修正：** shell env 前缀 `PYTHONHASHSEED=7 python3 runner.py`（TOOLS.md 钉法两有效方式之一）；跑完必验 log 非空 + 测试数与预期核对（11224）
+- **出现次数：** 1
+
+### [2026-09-27] 新 handler 正则前缀与既有家族撞名（C610，suite 拦截）
+- **场景：** kd C610 sports_competitive face，往 amg_bench_quality.py 加 5 个模块级 `_SPT_*` 正则
+- **错误：** `_SPT_HEAD_RE` 已被 C600 species 家族占用（species claim + handler guard 都引用它）；我的重定义在模块级 shadow，species 路由断崖（claim 落到 enum_count、guard 返 None），全量 suite 7 红
+- **根因：** 我把 `_SPT_` 臆断成 "SPortS" 缩写——它是既有的 species 家族前缀；focused 测试全绿（我的名字是幸存定义），只有全量 suite 能暴露跨 face 冲突
+- **修正：** 全部改 `_SPORT_` 前缀（预先 grep 确认无占用），suite 复跑 11246 全绿
+- **规则：** 在 amg_bench_quality.py 加模块级名字前必须 `grep -n "_<PREFIX>_"` 查前缀级冲突（不是只查全名）；新 handler 家族前缀选显式全词（`_SPORT_`）避开既有缩写命名空间；face-only 绿 ≠ 安全，跨 face 影响只有全量 suite 能证伪
+- **出现次数：** 1
