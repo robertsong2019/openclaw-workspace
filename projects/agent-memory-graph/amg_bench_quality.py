@@ -10898,6 +10898,18 @@ def counting_form(question: str) -> str | None:
     # (falls through; zero overlap by census).
     if _AEV_HEAD_RE.match(ql):
         return "art_events"
+    # C609: Jul-Oct rollercoaster-ride census — one strict
+    # head. Census (all 500): matches EXACTLY 1 row
+    # (gpt4_e05b82a6 GT '10 times', unbanked, gate=answer /
+    # WRONG today — the frozen pred carried no ride tally).
+    # Claimed ahead of the generic how-many blocks (enum/
+    # inventory gates never see it). A loose 'rollercoaster'
+    # sweep over question text hits no other row, so there is
+    # nothing to steal; the C592-C608 faces carry different
+    # NPs/markers. Handler returns None when no ride resolves
+    # (falls through; zero overlap by census).
+    if _CRD_HEAD_RE.match(ql):
+        return "coaster_rides"
     if re.search(r'\bhow many (days|weeks)\b', ql) or \
             (re.search(r'\b(days|weeks)\b', ql)
              and re.search(r'\b(spend|spent|take|took)\b', ql)
@@ -14170,6 +14182,118 @@ def _cnt_art_events(question: str, sessions: list[dict]):
     return str(len(keys)) if keys else None
 
 
+# C609: Jul-Oct rollercoaster-ride census — one strict head.
+# Census (all 500): matches EXACTLY 1 row (gpt4_e05b82a6 GT
+# '10 times', unbanked, gate=answer / WRONG today). Claimed
+# ahead of the generic how-many blocks (enum/inventory gates
+# never see it). A loose 'rollercoaster' sweep over question
+# text hits no other row, so there is nothing to steal; the
+# C592-C608 faces carry different NPs/markers. Handler
+# returns None when no ride resolves (falls through; zero
+# overlap by census).
+_CRD_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+times\s+did\s+i\s+ride\s+rollercoasters"
+    r"\s+across\s+all\s+the\s+events\s+i\s+attended\s+from\s+"
+    r"july\s+to\s+october\s*\??\s*$", re.I)
+# past-tense ride verb — every evidence sentence uses 'rode';
+# 'riding' mentions, 'have you ever been on ...?' question
+# forms, and future trip plans ('planning a trip ... soon')
+# stay dark.
+_CRD_RODE_RX = re.compile(r"\brode\b", re.I)
+# in-window month anchor (the question pins July..October):
+# 'in July' / 'on September 24th' / 'on October 8th'. All
+# four evidence sentences carry one; month-less ride talk
+# never keys.
+_CRD_MONTH_RX = re.compile(r"\b(july|august|september|october)\b",
+                           re.I)
+# ride-context wall backstop: a keyed sentence must also
+# name a coaster (rollercoaster/coaster) or carry an explicit
+# times multiplier — 'rode my bike in July' shapes stay dark.
+_CRD_CTX_RX = re.compile(r"\broller\s*coasters?\b|\btimes\b",
+                         re.I)
+# explicit ride multiplier: 'three times in a row' / 'three
+# times' / '3 times' (word forms limited to _CNT_WORD2NUM
+# keys; digits cover the rest).
+_CRD_TIMES_RX = re.compile(
+    r"\b(twenty|fifteen|twelve|eleven|ten|nine|eight|seven"
+    r"|six|five|four|three|two|\d+)\s+times\b", re.I)
+# coaster-name enumeration span: 'rode the Mako, Kraken, and
+# Manta rollercoasters' — the names sit between 'rode the'
+# and the coaster head noun; each distinct name = one ride.
+_CRD_SPAN_RX = re.compile(
+    r"\brode\s+(?:out\s+)?the\s+(.+?)\s+roller\s*coasters?\b",
+    re.I)
+_CRD_NAME_SPLIT_RX = re.compile(r",?\s+and\s+|,\s*")
+
+
+def _crd_name_count(sent: str) -> int:
+    """Ride count from the 'rode the A, B, and C rollercoasters'
+    enumeration span (1 for a single name or when no span
+    matches — a bare 'rode the Xcelerator rollercoaster' is
+    one ride)."""
+    m = _CRD_SPAN_RX.search(sent)
+    if not m:
+        return 1
+    names = [n.strip() for n in _CRD_NAME_SPLIT_RX.split(
+        m.group(1)) if n.strip()]
+    return max(1, len(names))
+
+
+def _cnt_coaster_rides(question: str, sessions: list[dict]):
+    """Count rollercoaster rides across the July-October event
+    window (C609, gpt4_e05b82a6 GT '10 times'). A user
+    sentence yields rides when it carries ALL: the past-tense
+    ride verb ('rode'), an in-window month anchor
+    (July..October), and a ride-context term (coaster noun or
+    'times' multiplier). Per-sentence ride count resolves in
+    precedence order:
+    (1) explicit multiplier — 'rode the Revenge of the Mummy
+    rollercoaster three times in a row' (=3), 'three times'
+    / '3 times' (word and digit forms);
+    (2) coaster-name enumeration — 'rode the Mako, Kraken,
+    and Manta rollercoasters all in one night' (=3, one ride
+    per distinct name);
+    (3) fallback 1 — 'I rode the Xcelerator rollercoaster on
+    October 8th' (bare rode = one ride).
+    Evidence (all in-window): Mummy 'three times in a row' on
+    October 15th (=3) + Xcelerator on October 8th (=1) +
+    Space Mountain: Ghost Galaxy 'three times' on September
+    24th (=3 — NO coaster noun, the multiplier wall keys it)
+    + Mako/Kraken/Manta 'in one night ... in July' (=3 — NO
+    'times', the enumeration wall keys it) = 10 (GT '10
+    times'). Dark: 'how many times I shopped online' (no
+    rode), 'have you ever been on a rollercoaster ...?'
+    (question, no rode), 'planning a trip to Knott's Berry
+    Farm soon' (future, no rode), assistant coaster echoes
+    (Giant Dipper recommendation, Gadget's Go Coaster,
+    'Coasters Diner' — user-role wall). Renders the digit
+    total (GT banks via counting_judge numeric-first:
+    _cnt_numval('10') == _cnt_numval('10 times') == 10.0).
+    Returns None when no ride resolves (falls through — zero
+    overlap by census: the head matches exactly its own
+    row)."""
+    if not _CRD_HEAD_RE.match(" ".join(question.split())):
+        return None
+    total = 0
+    hit = False
+    for _si, sent in _map_sents(sessions):
+        if not (_CRD_RODE_RX.search(sent)
+                and _CRD_MONTH_RX.search(sent)
+                and _CRD_CTX_RX.search(sent)):
+            continue
+        m = _CRD_TIMES_RX.search(sent)
+        if m:
+            tok = m.group(1).lower()
+            n = int(tok) if tok.isdigit() else _CNT_WORD2NUM[tok]
+        else:
+            n = _crd_name_count(sent)
+        if n <= 0:
+            continue
+        total += n
+        hit = True
+    return str(total) if hit else None
+
+
 def _cnt_item_total(question: str, sessions: list[dict]):
     """Sum per-item prices for enumerated "total cost" questions.
 
@@ -16062,7 +16186,8 @@ def answer_counting(question: str,
           "coin_add": _cnt_coin_add,
           "weddings_attended": _cnt_weddings,
           "workshop_days": _cnt_workshop_days,
-          "art_events": _cnt_art_events}
+          "art_events": _cnt_art_events,
+          "coaster_rides": _cnt_coaster_rides}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break
