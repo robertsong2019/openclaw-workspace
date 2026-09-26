@@ -10,11 +10,28 @@ export type GateDecision = 'allow' | 'deny' | 'escalate';
 export type Capability = 'read' | 'write' | 'execute' | 'delegate';
 type BetaParams = { alpha: number; beta: number };
 
-export function betaMean(p: BetaParams): number { return p.alpha / (p.alpha + p.beta); }
+export function betaMean(p: BetaParams): number {
+  // Improper prior or corrupted params yield NaN/negative trust scores that
+  // silently poison every downstream gate comparison (NaN < x is always false).
+  if (!Number.isFinite(p.alpha) || !Number.isFinite(p.beta) || p.alpha <= 0 || p.beta <= 0) {
+    throw new RangeError(
+      `betaMean: Beta params must be finite and > 0, got {alpha: ${p.alpha}, beta: ${p.beta}}`
+    );
+  }
+  return p.alpha / (p.alpha + p.beta);
+}
 export function betaUpdate(p: BetaParams, success: boolean, w = 1): BetaParams {
+  // w<=0 silently drops or reverses the observation, corrupting params toward 0.
+  if (!Number.isFinite(w) || w <= 0) {
+    throw new RangeError(`betaUpdate: w must be a finite number > 0, got ${w}`);
+  }
   return success ? { alpha: p.alpha + w, beta: p.beta } : { alpha: p.alpha, beta: p.beta + w };
 }
 export function exponentialDecay(mean: number, hours: number, halfLife = 168, prior = 0.5): number {
+  // halfLife<=0 flips/inflates the exponent and pushes the score outside [0,1].
+  if (!Number.isFinite(halfLife) || halfLife <= 0) {
+    throw new RangeError(`exponentialDecay: halfLife must be a finite number > 0, got ${halfLife}`);
+  }
   return mean + (prior - mean) * (1 - Math.exp(-Math.LN2 * hours / halfLife));
 }
 export function simpleHash(str: string): number {
@@ -25,6 +42,11 @@ export function simpleHash(str: string): number {
 export function simhash(text: string, bands = 4): number {
   const tokens = text.toLowerCase().split(/\s+/).filter(Boolean);
   if (!tokens.length) return 0;
+  // bands<1 makes the bit-tally loop a no-op: every text hashes to the same
+  // constant 0 fingerprint, so distinct texts all look identical.
+  if (!Number.isFinite(bands) || bands < 1) {
+    throw new RangeError(`simhash: bands must be a finite number >= 1, got ${bands}`);
+  }
   // Banding needs >=1 token per band: with fewer tokens than bands, empty
   // slices all hash to the djb2 constant (5381) and win the majority vote,
   // collapsing distinct short texts to one fingerprint.

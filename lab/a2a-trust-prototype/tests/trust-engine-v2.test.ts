@@ -130,3 +130,34 @@ describe('TrustEngineV2 — Hamming', () => {
     assert.equal(hammingDistance(a, b), 3);
   });
 });
+
+// Validation guards (2026-09-27 silent-poison family, RED-first x6):
+// unvalidated inputs produced NaN/trust scores outside [0,1] or constant
+// fingerprints that silently poisoned every downstream gate comparison.
+describe('TrustEngineV2 — validation guards', () => {
+  it('betaUpdate w=0 must throw RangeError (silently dropped the observation)', () => {
+    assert.throws(() => betaUpdate({ alpha: 1, beta: 1 }, true, 0), RangeError);
+  });
+
+  it('betaUpdate w negative must throw RangeError (corrupts params toward 0)', () => {
+    assert.throws(() => betaUpdate({ alpha: 2, beta: 1 }, true, -1), RangeError);
+  });
+
+  it('betaUpdate w NaN must throw RangeError (poisons mean into NaN)', () => {
+    assert.throws(() => betaUpdate({ alpha: 1, beta: 1 }, true, NaN), RangeError);
+  });
+
+  it('betaMean improper prior (0,0) must throw RangeError (mean is NaN)', () => {
+    assert.throws(() => betaMean({ alpha: 0, beta: 0 }), RangeError);
+  });
+
+  it('exponentialDecay halfLife <= 0 must throw RangeError (score escapes [0,1])', () => {
+    assert.throws(() => exponentialDecay(0.9, 168, 0), RangeError);
+    assert.throws(() => exponentialDecay(0.9, 168, -5), RangeError);
+  });
+
+  it('simhash bands < 1 must throw RangeError (constant-0 fingerprint collapse)', () => {
+    assert.throws(() => simhash('hello world', 0), RangeError);
+    assert.throws(() => simhash('hello world', -2), RangeError);
+  });
+});
