@@ -265,7 +265,12 @@ export function compareTraces(
 export function costEfficiencyCheck(spans: Span[]): EvalCheckResult[] {
   const llmSpans = spans.filter(s => s.operation === 'llm.call');
   if (llmSpans.length === 0) return [{ dimension: 'cost_efficiency', score: 1, reason: 'No LLM calls' }];
-  const totalTokens = llmSpans.reduce((sum, s) => sum + Number(s.attributes.totalTokens ?? 0), 0);
+  // 非 finite 值（脏字符串/NaN 属性）按 0 处理：Number() 产 NaN 会污染求和，
+  // 且 Math.max/min 对 NaN 全部失效 → score=NaN 静默传播（evaluator 谎报层）
+  const totalTokens = llmSpans.reduce((sum, s) => {
+    const n = Number(s.attributes.totalTokens ?? 0);
+    return sum + (Number.isFinite(n) ? n : 0);
+  }, 0);
   // Score 1 if < 1000 tokens, degrade to 0 at 100k
   const score = Math.max(0, Math.min(1, 1 - (totalTokens - 1000) / 99000));
   return [{
