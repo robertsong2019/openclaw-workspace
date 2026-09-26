@@ -218,3 +218,11 @@
 - **修正：** 全部改 `_SPORT_` 前缀（预先 grep 确认无占用），suite 复跑 11246 全绿
 - **规则：** 在 amg_bench_quality.py 加模块级名字前必须 `grep -n "_<PREFIX>_"` 查前缀级冲突（不是只查全名）；新 handler 家族前缀选显式全词（`_SPORT_`）避开既有缩写命名空间；face-only 绿 ≠ 安全，跨 face 影响只有全量 suite 能证伪
 - **出现次数：** 1
+
+### [2026-09-27] write 覆盖已跟踪文件（ls|head 截断误判"文件不存在"）
+- **场景：** a2a-trust-prototype 循环，为 trust-engine-v2 建"首个"测试文件
+- **错误：** 首轮 `ls tests/ | head -8` 截断（恰好 8 行）漏掉 trust-engine-v2.test.ts → 误判不存在 → write 整文件覆盖上一个 cycle 的 26 个 pins → 套件 102→97 倒退，commit message 谎称 "first test file"
+- **根因：** ① 截断的列表输出当存在性证明；② write 新文件前没跑 `git ls-files <path>` 验证；③ 靠 staged diff 验尸才抓到（86 行删除出现在"新"文件里=不可能）
+- **修正：** git show parent:file 恢复旧内容 → 合并（旧 26 pins + 新 6 guards）→ 108/108 ×2 → amend + force-with-lease（3am solo repo 自有提交，安全）
+- **规则升级（第 2 次同族，新形态）：** 任何 write 创建测试/源文件前必须 `git ls-files <path>` 确认不存在；`ls | head -N` 输出永远不作存在性依据。与 09-08 "add 前验尸" 同族不同形态：那个是 edit 卷入他人改动，这个是 write 摧毁既有 pins
+- **出现次数：** 1（本形态）
