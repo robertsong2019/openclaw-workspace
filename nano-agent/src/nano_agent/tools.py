@@ -3,7 +3,8 @@
 """
 
 import inspect
-from typing import Callable, Dict, Any, List
+from typing import Callable, Dict, Any, List, Union, get_origin
+from types import UnionType
 from dataclasses import dataclass, field
 
 
@@ -85,6 +86,12 @@ def tool(func: Callable = None, *, name: str = None, description: str = None) ->
             # 类型推断
             type_map = {str: "string", int: "integer", float: "number", bool: "boolean", list: "array", dict: "object"}
             annotation = param.annotation if param.annotation != inspect.Parameter.empty else str
+            # 解包 Union/Optional（含 PEP 604 `X | None`）：取第一个非 NoneType 类型，
+            # 否则 schema 会把 Optional[int] 谎报为 "string"
+            if get_origin(annotation) in (Union, UnionType):
+                non_none = [a for a in annotation.__args__ if a is not type(None)]
+                if non_none:
+                    annotation = non_none[0]
             origin = getattr(annotation, "__origin__", None)
             actual = origin or annotation
             param_info = {"type": type_map.get(actual, "string")}
