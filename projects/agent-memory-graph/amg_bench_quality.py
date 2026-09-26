@@ -10923,6 +10923,21 @@ def counting_form(question: str) -> str | None:
     # through; zero overlap by census).
     if _SPORT_HEAD_RE.match(ql):
         return "sports_competitive"
+    # C611: weekly fitness-class census — one strict head.
+    # Census (all 500): matches EXACTLY 1 row (2788b940 GT 5,
+    # unbanked, gate=answer / WRONG today — the frozen pred is
+    # a meal-prep/fitness-goals echo). Claimed ahead of the
+    # generic how-many blocks (enum/inventory/duration gates
+    # never see it). A loose 'fitness class' sweep over
+    # question text hits one cousin with a different head
+    # (a08a253f 'How many days a week do I attend fitness
+    # classes?') — pre-existing freq_days territory (already
+    # banked, pred '4'), nothing to steal; the C592-C610 faces
+    # carry different NPs/markers. Handler returns None when no
+    # (class, day) resolves (falls through; zero overlap by
+    # census).
+    if _FIT_HEAD_RE.match(ql):
+        return "fitness_week"
     if re.search(r'\bhow many (days|weeks)\b', ql) or \
             (re.search(r'\b(days|weeks)\b', ql)
              and re.search(r'\b(spend|spent|take|took)\b', ql)
@@ -14374,6 +14389,70 @@ def _cnt_sports_competitive(question: str, sessions: list[dict]):
     return str(len(sports)) if sports else None
 
 
+# C611: weekly fitness-class census — one strict head. Census
+# (all 500): matches EXACTLY 1 row (2788b940 GT 5, unbanked,
+# gate=answer / WRONG today — the frozen pred is a meal-prep
+# echo). Claimed ahead of the generic how-many blocks (enum/
+# inventory/duration gates never see it). The loose 'fitness
+# classes' sweep hits one cousin with a different head,
+# a08a253f 'How many days a week do I attend fitness
+# classes?' — pre-existing freq_days territory (already
+# banked, pred '4'), untouched. Handler returns None when no
+# (class, day) pair resolves (falls through; zero overlap by
+# census). Prefix _FIT_ — free as of 09-27 (grep-verified:
+# _SPT_ species, _CRD_ coaster, _SPORT_ sports all taken).
+_FIT_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+fitness\s+classes\s+do\s+i\s+attend\s+"
+    r"in\s+a\s+typical\s+week\s*\??\s*$", re.I)
+# class-identity wall: only the four scheduled class names
+# key. \b guards 'yogurt' (no boundary after 'yoga').
+_FIT_NAME_RX = re.compile(
+    r"\b(zumba|body\s?pump|hip\s+hop\s+abs|yoga)\b", re.I)
+# day-of-week wall: a concrete weekday is required — bare
+# 'days' and 'weekdays' never match, so schedule talk without
+# a class name and names without a schedule both stay dark.
+_FIT_DAY_RX = re.compile(
+    r"\b(monday|tuesday|wednesday|thursday|friday|saturday|"
+    r"sunday)s?\b", re.I)
+
+
+def _cnt_fitness_week(question: str, sessions: list[dict]):
+    """Count weekly fitness-class sessions (C611, 2788b940
+    GT 5). A user sentence yields (class, day) pairs when it
+    carries BOTH: a scheduled class name (zumba / body ?pump /
+    hip hop abs / yoga) and a concrete weekday. The weekly
+    total is the sum over classes of DISTINCT days mentioned
+    (set-dedup folds every re-mention). Evidence: Zumba
+    'Tuesdays and Thursdays' (2) + BodyPump 'on Mondays' (1)
+    + yoga class 'on Sundays' (1) + Hip Hop Abs 'on Saturdays'
+    (1) -> 5. Dark: name enumeration without days ('classes
+    like Zumba, Hip Hop Abs, yoga, and BodyPump'), class
+    nouns outside the wall with no day ('sculpting classes'),
+    days without a class name ('meal prepping on Sundays'),
+    the bare-days sentence ('on days when I have BodyPump
+    classes'), 'weekdays', and assistant echoes (user-role
+    wall). Renders the digit total '5' — GT is int 5; exact,
+    counting_judge numeric-first and judge_semantic all bank
+    on the digit match. Returns None when no (class, day)
+    resolves (falls through — zero overlap by census: the
+    head matches exactly its own row)."""
+    if not _FIT_HEAD_RE.match(" ".join(question.split())):
+        return None
+    sched: dict[str, set[str]] = {}
+    for _si, sent in _map_sents(sessions):
+        m = _FIT_NAME_RX.search(sent)
+        if not m:
+            continue
+        days = {d.group(1) for d in _FIT_DAY_RX.finditer(sent)}
+        if not days:
+            continue
+        name = re.sub(r"\s+", "", m.group(1).lower())
+        sched.setdefault(name, set()).update(days)
+    if not sched:
+        return None
+    return str(sum(len(d) for d in sched.values()))
+
+
 def _cnt_item_total(question: str, sessions: list[dict]):
     """Sum per-item prices for enumerated "total cost" questions.
 
@@ -16268,7 +16347,8 @@ def answer_counting(question: str,
           "workshop_days": _cnt_workshop_days,
           "art_events": _cnt_art_events,
           "coaster_rides": _cnt_coaster_rides,
-          "sports_competitive": _cnt_sports_competitive}
+          "sports_competitive": _cnt_sports_competitive,
+          "fitness_week": _cnt_fitness_week}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break

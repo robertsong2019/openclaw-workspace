@@ -50,9 +50,16 @@ def test_form_gate_whitelist_only():
         == "number_total"
     assert counting_form("How many times did I visit Rome?") \
         is None
+    # C611: the fitness-classes row graduated from unclaimed to
+    # its own strict-head face (fitness_week); the days-a-week
+    # cousin keeps its pre-existing freq_days claim
     assert counting_form(
         "How many fitness classes do I attend in a typical "
-        "week?") is None
+        "week?") == "fitness_week"
+    # cousin (a08a253f) is pre-existing freq_days territory
+    assert counting_form(
+        "How many days a week do I attend fitness classes?") \
+        == "freq_days"
 
 
 # ------------------------------------------------- kits (scale/brand)
