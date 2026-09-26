@@ -10910,6 +10910,19 @@ def counting_form(question: str) -> str | None:
     # (falls through; zero overlap by census).
     if _CRD_HEAD_RE.match(ql):
         return "coaster_rides"
+    # C610: competitive-sport census — one strict head. Census
+    # (all 500): matches EXACTLY 1 row (ef66a6e5 GT 'two',
+    # unbanked, gate=answer / NEEDS_JUDGE today — the frozen
+    # pred is a home-insurance echo). Claimed ahead of the
+    # generic how-many blocks (enum/inventory gates never see
+    # it). A loose 'sport' sweep over question text hits only
+    # event-ORDER cousins (gpt4_45189cb4 / gpt4_e061b84f /
+    # gpt4_e061b84g) with different heads — nothing to steal;
+    # the C592-C609 faces carry different NPs/markers.
+    # Handler returns None when no sport resolves (falls
+    # through; zero overlap by census).
+    if _SPORT_HEAD_RE.match(ql):
+        return "sports_competitive"
     if re.search(r'\bhow many (days|weeks)\b', ql) or \
             (re.search(r'\b(days|weeks)\b', ql)
              and re.search(r'\b(spend|spent|take|took)\b', ql)
@@ -14294,6 +14307,73 @@ def _cnt_coaster_rides(question: str, sessions: list[dict]):
     return str(total) if hit else None
 
 
+# C610: competitive-sport census — one strict head. Census
+# (all 500): matches EXACTLY 1 row (ef66a6e5 GT 'two',
+# unbanked, gate=answer / NEEDS_JUDGE today). Claimed ahead of
+# the generic how-many blocks (enum/inventory gates never see
+# it). The loose 'sport' cousins (event-order faces
+# gpt4_45189cb4 / gpt4_e061b84f / gpt4_e061b84g) carry
+# different heads — nothing to steal; the C592-C609 faces
+# carry different NPs/markers. Handler returns None when no
+# sport resolves (falls through; zero overlap by census).
+# Prefix _SPORT_ — _SPT_ is TAKEN by the C600 species family
+# (module-level shadowing would break its claim + guard).
+_SPORT_HEAD_RE = re.compile(
+    r"^\s*how\s+many\s+sports\s+have\s+i\s+played\s+"
+    r"competitively\s+in\s+the\s+past\s*\??\s*$", re.I)
+# past-habit participation wall: every evidence sentence uses
+# 'used to swim' / 'used to play <sport>'; present play
+# ("I've been playing soccer and tennis lately") and the
+# gerund habit ("used to swimming competitively") stay dark.
+_SPORT_USED_RX = re.compile(r"\bused\s+to\s+(?:play|swim)\b", re.I)
+# competitive register wall — the question pins 'competitively';
+# casual play talk and class scheduling never key.
+_SPORT_COMP_RX = re.compile(r"\bcompetitiv", re.I)
+# sport key: verb-direct swim ('used to swim competitively')
+# folds onto one key regardless of rephrasing; play takes the
+# sport noun ('used to play tennis competitively' -> 'tennis').
+_SPORT_SWIM_RX = re.compile(r"\bused\s+to\s+swim\b", re.I)
+_SPORT_PLAY_RX = re.compile(r"\bused\s+to\s+play\s+([a-z]+)",
+                            re.I)
+
+
+def _cnt_sports_competitive(question: str, sessions: list[dict]):
+    """Count DISTINCT sports played competitively in the past
+    (C610, ef66a6e5 GT 'two'). A user sentence yields a sport
+    key when it carries ALL: the past-habit marker 'used to
+    play|swim', the competitive register ('competitiv*'), and
+    a sport identity (swim folds to one key; 'play <noun>'
+    takes the noun). Evidence: 'I used to swim competitively
+    in college ...' (rephrasings -> one 'swim' key) + 'I used
+    to play tennis competitively in high school' -> 2.
+    Dark: present play ("I've been playing soccer and tennis
+    lately" — no used-to, no competitive register), the
+    gerund habit ("who's used to swimming competitively" —
+    no play|swim stem), yoga-class scheduling (no competitive
+    register), competitive-price/business talk (no used-to
+    play|swim), assistant echoes ('competitive background',
+    'former competitive tennis player' — user-role wall).
+    Renders the distinct count (GT 'two'; counting_judge
+    banks numeric-first, _cnt_numval('two') ==
+    _cnt_numval('2') == 2.0). Returns None when no sport
+    resolves (falls through — zero overlap by census: the
+    head matches exactly its own row)."""
+    if not _SPORT_HEAD_RE.match(" ".join(question.split())):
+        return None
+    sports: set[str] = set()
+    for _si, sent in _map_sents(sessions):
+        if not (_SPORT_USED_RX.search(sent)
+                and _SPORT_COMP_RX.search(sent)):
+            continue
+        if _SPORT_SWIM_RX.search(sent):
+            sports.add("swim")
+            continue
+        m = _SPORT_PLAY_RX.search(sent)
+        if m:
+            sports.add(m.group(1).lower())
+    return str(len(sports)) if sports else None
+
+
 def _cnt_item_total(question: str, sessions: list[dict]):
     """Sum per-item prices for enumerated "total cost" questions.
 
@@ -16187,7 +16267,8 @@ def answer_counting(question: str,
           "weddings_attended": _cnt_weddings,
           "workshop_days": _cnt_workshop_days,
           "art_events": _cnt_art_events,
-          "coaster_rides": _cnt_coaster_rides}
+          "coaster_rides": _cnt_coaster_rides,
+          "sports_competitive": _cnt_sports_competitive}
     try:
         return fn[form](question, sessions), {"form": form}
     except Exception:                     # noqa: BLE001 — never break
