@@ -36,6 +36,13 @@ export function throttle(
       `throttle: limit must be a number >= 1, got ${config.limit}`
     );
   }
+  // windowMs<=0/NaN empties the timestamp window on every call, so the queue
+  // never fills and the throttle silently becomes a no-op. Fail loudly instead.
+  if (!Number.isFinite(config.windowMs) || config.windowMs <= 0) {
+    throw new RangeError(
+      `throttle: windowMs must be a number > 0, got ${config.windowMs}`
+    );
+  }
 
   function cleanWindow(now: number) {
     const cutoff = now - config.windowMs;

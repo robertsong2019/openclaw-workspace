@@ -34,6 +34,20 @@ export function withRateLimit(
   const { maxCalls, windowMs, keyFn, strategy = "reject", fallbackState = {} } = config;
   const windows = new Map<string, WindowEntry>();
 
+  // Config validation: maxCalls=NaN made `length >= maxCalls` always false and
+  // windowMs<=0/NaN emptied the window on every call — either way the limiter
+  // silently became a no-op. Fail loudly instead (mirrors throttle/batch/retry).
+  if (!Number.isFinite(config.maxCalls) || config.maxCalls < 1) {
+    throw new RangeError(
+      `withRateLimit: maxCalls must be a number >= 1, got ${config.maxCalls}`
+    );
+  }
+  if (!Number.isFinite(config.windowMs) || config.windowMs <= 0) {
+    throw new RangeError(
+      `withRateLimit: windowMs must be a number > 0, got ${config.windowMs}`
+    );
+  }
+
   function cleanup(key: string, now: number) {
     const entry = windows.get(key);
     if (!entry) return;

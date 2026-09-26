@@ -84,4 +84,18 @@ describe("throttle config validation (C2 red-first)", () => {
     const r = await t({});
     assert.equal(r.ok, true);
   });
+
+  // windowMs pins: windowMs<=0/NaN empties the timestamp window on every
+  // call, so the queue never fills and throttle silently becomes a no-op.
+  it("windowMs=0 must throw RangeError (silently disabled the throttle)", () => {
+    assert.throws(() => throttle(noop, { limit: 1, windowMs: 0 }), RangeError);
+  });
+
+  it("windowMs negative must throw RangeError", () => {
+    assert.throws(() => throttle(noop, { limit: 1, windowMs: -50 }), RangeError);
+  });
+
+  it("windowMs NaN must throw RangeError", () => {
+    assert.throws(() => throttle(noop, { limit: 1, windowMs: NaN }), RangeError);
+  });
 });

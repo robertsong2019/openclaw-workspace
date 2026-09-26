@@ -2,6 +2,8 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { withRateLimit } from "../dist/rate-limit.js";
 
+const noop = async (s) => ({ ...s });
+
 describe("withRateLimit", () => {
   it("allows calls within limit", async () => {
     const node = async (s) => ({ ...s, done: true });
@@ -75,5 +77,79 @@ describe("withRateLimit", () => {
     // After expiry, calling with different key triggers cleanup
     const result = await limited({ key: "b" });
     assert.equal(result.ok, true);
+  });
+
+  // --- config validation pins (mirror throttle's RangeError contract) ---
+  // Before the guard, maxCalls=NaN made `length >= NaN` always false and
+  // windowMs<=0/NaN emptied the window every call: the limiter silently
+  // became a no-op instead of failing loudly.
+
+  it("maxCalls=0 must throw RangeError (deny-all is a config mistake)", () => {
+    assert.throws(
+      () => withRateLimit(noop, { maxCalls: 0, windowMs: 50 }),
+      RangeError
+    );
+  });
+
+  it("maxCalls negative must throw RangeError", () => {
+    assert.throws(
+      () => withRateLimit(noop, { maxCalls: -1, windowMs: 50 }),
+      RangeError
+    );
+  });
+
+  it("maxCalls NaN must throw RangeError (silently disabled the limiter)", () => {
+    assert.throws(
+      () => withRateLimit(noop, { maxCalls: NaN, windowMs: 50 }),
+      RangeError
+    );
+  });
+
+  it("maxCalls Infinity must throw RangeError", () => {
+    assert.throws(
+      () => withRateLimit(noop, { maxCalls: Infinity, windowMs: 50 }),
+      RangeError
+    );
+  });
+
+  it("maxCalls fractional < 1 must throw RangeError", () => {
+    assert.throws(
+      () => withRateLimit(noop, { maxCalls: 0.5, windowMs: 50 }),
+      RangeError
+    );
+  });
+
+  it("maxCalls non-number string must throw RangeError (no coercion)", () => {
+    assert.throws(
+      () => withRateLimit(noop, { maxCalls: "3", windowMs: 50 }),
+      RangeError
+    );
+  });
+
+  it("windowMs=0 must throw RangeError (silently disabled the limiter)", () => {
+    assert.throws(
+      () => withRateLimit(noop, { maxCalls: 1, windowMs: 0 }),
+      RangeError
+    );
+  });
+
+  it("windowMs negative must throw RangeError", () => {
+    assert.throws(
+      () => withRateLimit(noop, { maxCalls: 1, windowMs: -100 }),
+      RangeError
+    );
+  });
+
+  it("windowMs NaN must throw RangeError", () => {
+    assert.throws(
+      () => withRateLimit(noop, { maxCalls: 1, windowMs: NaN }),
+      RangeError
+    );
+  });
+
+  it("valid config still works after guards (maxCalls=1, windowMs=20)", async () => {
+    const limited = withRateLimit(noop, { maxCalls: 1, windowMs: 20 });
+    const r = await limited({ ok: true });
+    assert.equal(r.ok, true);
   });
 });
