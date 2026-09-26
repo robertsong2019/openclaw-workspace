@@ -226,3 +226,11 @@
 - **修正：** git show parent:file 恢复旧内容 → 合并（旧 26 pins + 新 6 guards）→ 108/108 ×2 → amend + force-with-lease（3am solo repo 自有提交，安全）
 - **规则升级（第 2 次同族，新形态）：** 任何 write 创建测试/源文件前必须 `git ls-files <path>` 确认不存在；`ls | head -N` 输出永远不作存在性依据。与 09-08 "add 前验尸" 同族不同形态：那个是 edit 卷入他人改动，这个是 write 摧毁既有 pins
 - **出现次数：** 1（本形态）
+
+### [2026-09-27] edit 工具本体会做全文件标点归一化（标点家族第 2 例，新变体）
+- **场景：** documentation-morning cron 给 TUTORIAL-ANSWER-FACES.md 一次 7 处多块编辑（§5.57-62 + 速查表 + 原则 + footer），worktree 事前验证干净
+- **错误：** edit 工具调用本身把全文件 ：，；（） 等全角标点归一化为半角（372-/415+，单 hunk 全文件重写）；与 09-08 不同——这次不是外来 worktree 污染，是工具本次调用自身所为；同批 README 调用未中招
+- **根因：** edit 模糊匹配的归一化写回路径在 CJK 标点密集 + 多块大编辑下被触发；staged diff 验尸（+444/-373 vs 预期 ~40）当场拦下，未进 commit
+- **修正：** `git show HEAD:` 恢复 → Python 字节级重放 7 处编辑（锚点 assert count==1）→ 净 diff +48/-5；另抓到自己的 heredoc 非 raw 字符串 \b 变退格符（0x08），字节级修复
+- **规则升级：** CJK 标点密集文件的多块编辑，首轮就直接走 git-show+Python 重放，不用 edit 工具（edit 只留给单点小编辑）；diff --stat 与预期规模核对是最后的闸门，每轮必过
+- **出现次数：** 2（家族：07ca9c3 + 本次）
