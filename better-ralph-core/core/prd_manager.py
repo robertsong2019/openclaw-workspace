@@ -306,6 +306,11 @@ class PRDManager:
             self.logger.warning(f"Story {story_id} not found for splitting")
             return []
         
+        # Guard BEFORE removing the original: max_criteria < 1 produces zero
+        # chunks → original removed with nothing created = silent data loss.
+        if max_criteria < 1:
+            raise ValueError(f"max_criteria must be >= 1, got {max_criteria}")
+        
         # Remove original story
         self.remove_story(story_id)
         
@@ -372,6 +377,11 @@ class PRDManager:
         if not source:
             self.logger.warning(f"Story {story_id} not found for duplication")
             return None
+
+        # A colliding new_id would silently shadow the existing story in every
+        # ID-keyed lookup (get_story_by_id returns the first match).
+        if self.get_story_by_id(new_id) is not None:
+            raise ValueError(f"Cannot duplicate: story id '{new_id}' already exists")
 
         dup = UserStory(
             id=new_id,
@@ -552,6 +562,13 @@ class PRDManager:
         """
         existing_ids = {s.id for s in self.stories}
         added = skipped = renamed = 0
+
+        # Validate strategy up-front: an invalid value previously fell through
+        # to the skip branch, silently merging nothing.
+        if conflict_strategy not in ('skip', 'overwrite', 'rename'):
+            raise ValueError(
+                f"conflict_strategy must be 'skip', 'overwrite', or 'rename', got {conflict_strategy!r}"
+            )
 
         for story in other.stories:
             if story.id not in existing_ids:
