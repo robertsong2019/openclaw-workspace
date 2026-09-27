@@ -292,6 +292,33 @@ else
   grep '^project,' "$TMP/out_csv" | head -1 | sed 's/^/  got: /'
 fi
 
+# ─── C64: --ignore whitespace trimming (silent no-match family) ──
+# "express, ms" (space after comma) → entry " ms" never equals "ms" → the
+# package is silently still counted. Package names cannot contain whitespace,
+# so human-formatted lists must behave like compact ones.
+run dirty proj_node --format json --ignore "express, ms"
+assert_contains "C64 ignore 'express, ms' (space after comma) → 80" '"score": 80'
+run dirty proj_node --format json --ignore " express ,  ms "
+assert_contains "C64 ignore padded both sides → 80" '"score": 80'
+
+# ─── C64: --fail-on / --ignore missing value → clean error, not set -u crash ──
+# Siblings --format/--min-score validate ${2:-}; --fail-on/--ignore crashed with
+# "unbound variable" spew when given no value.
+check_clean_err() { # <name> <cmd...> — expect exit 1, stderr has Error:, no unbound-variable crash
+  local name="$1"; shift
+  env DEPG_FIXTURE=clean "$@" >"$TMP/out" 2>"$TMP/err"; local rc=$?
+  if [[ $rc -eq 1 ]] && grep -q "Error:" "$TMP/err" && ! grep -q "unbound variable" "$TMP/err"; then
+    PASS=$((PASS+1)); echo "ok $PASS - $name"
+  else
+    FAIL=$((FAIL+1)); FAILED+=("$name")
+    echo "not ok $PASS - $name (rc=$rc)"
+    head -2 "$TMP/err" | sed 's/^/  # /'
+  fi
+  return 0
+}
+check_clean_err "--fail-on missing value → clean Error" "$DEPG" "$TMP/proj_node" --fail-on
+check_clean_err "--ignore missing value → clean Error" "$DEPG" "$TMP/proj_node" --ignore
+
 echo "# tests=$((PASS+FAIL)) pass=$PASS fail=$FAIL"
 if [[ $FAIL -gt 0 ]]; then
   printf 'FAILED: %s\n' "${FAILED[@]}"

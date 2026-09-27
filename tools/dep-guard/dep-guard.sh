@@ -50,8 +50,14 @@ while [[ $# -gt 0 ]]; do
       # treated as 0 by bash arithmetic — silently disabling the CI gate.
       [[ "${2:-}" =~ ^[0-9]+$ ]] || { echo "Error: --min-score requires a non-negative integer (got: ${2:-<missing>})" >&2; exit 1; }
       MIN_SCORE="$2"; shift 2 ;;
-    --fail-on) FAIL_ON="$2"; shift 2 ;;
-    --ignore)  IGNORE="$2"; shift 2 ;;
+    --fail-on)
+      # Validate before shift: with --fail-on as the last arg, a bare "shift 2"
+      # silently exits 1 under set -e (no message at all).
+      [[ "${2:-}" =~ ^(none|vuln|major|outdated)$ ]] || { echo "Error: --fail-on must be one of: none, vuln, major, outdated (got: ${2:-<missing>})" >&2; exit 1; }
+      FAIL_ON="$2"; shift 2 ;;
+    --ignore)
+      [[ -n "${2:-}" ]] || { echo "Error: --ignore requires a package name list (got: <missing>)" >&2; exit 1; }
+      IGNORE="$2"; shift 2 ;;
     --help) usage ;;
     --version) echo "dep-guard v${VERSION}"; exit 0 ;;
     -*) echo "Unknown option: $1"; exit 1 ;;
@@ -216,6 +222,10 @@ except Exception: pass
 declare -a IGNORES=()
 if [[ -n "$IGNORE" ]]; then
   IFS=',' read -ra IGNORES <<< "$IGNORE"
+  # Trim whitespace per entry: "express, ms" must behave like "express,ms".
+  # Package names never contain whitespace, so stripping all of it is safe;
+  # untrimmed entries silently matched nothing (counted anyway).
+  for _i in "${!IGNORES[@]}"; do IGNORES[${_i}]="${IGNORES[${_i}]//[[:space:]]/}"; done
 fi
 
 # ─── Run scan ────────────────────────────────────────
