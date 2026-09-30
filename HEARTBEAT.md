@@ -1,4 +1,4 @@
-# HEARTBEAT.md - September 30, 2026 (Wednesday) — 02:00 KO update
+# HEARTBEAT.md - October 1, 2026 (Thursday) — 02:00 KO update
 
 ## ⚠️ 执行环境变化（09-27 21:55 起）
 **cron 15→8（罗嵩手动删 7 条）**：已删 00:00 kd-2 / 01:00 kd-3 / 21:00 code-lab-evening / 22:00 tool-development-evening / 23:00 key-development-1 / 03:00 project-testing-morning / 04:00 documentation-morning。夜间 kd 链、晚间自动开发、晨间测试/文档线全部停摆，**开发节奏转罗嵩手动驱动**（kd prompt 全文在 09-27 会话 cron list 输出中可随时重建；amg kd 赛道 0.732/47 连不受影响，可手动续跑）。剩余 8 cron 全为内容线：02:00 KO / 05:00 essay / 06:00 dashboard / 07:00+08:00 trending / 19:00 creative / 20:00 deep-exploration / 22:30 AI×Neuro
@@ -27,27 +27,30 @@
 - **tools/其他**: ctxpack 104 / ato 57 / afm 32 / project-dashboard 15 / skill-scaffolder 34 / session-archiver 90 / agent-memory-kit 33 / cqc 66 / act 51 / mcpt 41 / ai-dev-tools 93 / skill-doctor 81 / prompt-template-manager 34 / amg-mcp 128 / nano 1162 / mcx 65 / jp 59 / obs 268 / pocket-agent 80 / a2a_minimal 62 / cot 123 / wget-rust 25 / edge-agent-runtime 345 / agent-log 75 bats+32 / openclaw-mcp-server 29 / mission-control 45
 - **四项目总计**: **13943**（amg 11272 + sot 619 + atc 2052）
 - **全项目总计**: ~**24744** tests（09-29 连续纯内容日零增量维持；09-28 +51 口径）
-- **零回滚率**: amg **344天** 🏆（KO 链 08-22:299 → 09-28:343 → 09-29:344；C565-C611 47 连 keep）/ acs **207天**（口径=有产出天数）
-- **工具链**: ⚠️ Tavily 本月配额耗尽（432）——10-01 重置；月初前内容线搜索走 AnySearch(mcporter)+web_fetch 备援链（09-29 全天验证通畅）
+- **零回滚率**: amg **345天** 🏆（KO 链 08-22:299 → 09-29:344 → 09-30:345；C565-C611 47 连 keep）/ acs **207天**（口径=有产出天数）
+- **工具链**: ✅ Tavily 配额 **10-01 已重置**——搜索路由恢复默认（Tavily 首选/AnySearch 备援，备援链经 09-28~30 三天实战验证可靠）
 
-## 近期活动 (09-29 全天——连续第 2 纯内容日，8/8 全绿)
-- **05:00 essay《RAG 记得住，学不会》（94f7b16）**: hindsight 40.8k★ 深拆——observation 修正不覆盖/mental model 物化视图/recall≠learn；与 amg 同卷 LongMemEval 直接对照；staged 验尸 163 纯新增 0 删除
-- **07:00/08:00 trending 双发**: 09-29 晚报（NVIDIA/OpenShell 头条=agent 运行时+策略形式化验证、openrig 同域、PageIndex 回榜、VoiceStudio 4 周 3 倍）；09-28 晚报缺失（幂等三查中记录）
-- **19:00 creative**: 与 trending 同题晚报（buzz 落榜解除深析 flag）
-- **20:00 deep-exploration（ebbd578）**: 《测试全绿，代码没修》Agent RL 奖励作弊全景——METR o3 30.4%/GPT-5 76% 可拨 92%↔1%/RHB 23×/Bergen 57-96% 激活探针；14 源笔记入 catalyst-research
-- **22:30 AI×Neuro #56 裂脑人解释器 ✅**: doc KQ9Fd9BlionnVsxPOtlcWfwFnbd（59 blocks write+verify 一次过）+飞书投递 ✅——**防超时流程四招验证有效**（选题认领先行/搜索少而准/本地底稿先行/write+verify 一次过），未触 300s；遗留 #55 章鱼篇待补
-- **全天零 dev 增量**（kd/测试/文档 cron 已删）+ 罗嵩无直接对话——连续第 2 个「无人类交互日」
+## 近期活动 (09-30 全天——连续第 3 纯内容日，内容线 8/8 全执行)
+- **05:00 essay《相似≠相关》（1c88c6b）**: PageIndex 37.2k★ 深拆（vectorless reasoning 树检索；FinanceBench 98.7% vs 向量 RAG ~50%；amg 第二路树索引实验埋点——LongMemEval 时序倒置题对照误检率）；与 09-29 hindsight 篇成两条路对照
+- **06:00 dashboard 311c3e6**: 8 cron 6 ok/2 err——⚠️ 两个 error（creative consecErr=2 / ai-neuro 57 连）均为「完工后被 300s 截杀」口径伪影，内容实际落地，dashboard 结论须对照产物判读
+- **07:00/08:00 trending 双发**: daily 轻量 + deep 飞书 G3FydX9rlo01yIxpHmpcPhgQnKf
+- **19:00 creative（延续日）**: VoiceStudio 二连加速 46.2k→49.6k 逼近 50k；hindsight 日榜降温 -44% 周榜仍 17.4k；OpenShell 第 2 天稳 +990；block/buzz 落榜关闭
+- **20:00 deep-exploration《Agent 失眠症》（4854745）**: Sleep-time Compute（省 5×）/整理三操作零物理删除/AgentSleep 冗余-85%·recall+14.4pp/LSM compaction 类比；**amg next：nightly consolidation + AgentSleep 四指标 consolidation 前后 LongMemEval 对照**
+- **22:30 AI×Neuro #57 人类大脑细胞图谱 ✅（~5min 闭环）**: 112 blocks 写入验证+飞书投递+选题表 §23；HCA v1.0/PsychAD/scGPT+Geneformer；防超时流程四招连续第 2 晚生效（#56→#57 两连真实闭环）；#55 章鱼篇仍欠
+- **全天零 dev 增量**（计数持平）+ 罗嵩连续第 3 日无直接对话
 
 ## 本周关键路径
-1. ✅ 09-28+09-29 内容线连续两日 8/8 全绿（essay×2 / 深研×2 / trending×4 / creative×2 / AI×Neuro #56 ✅）
-2. ✅ AI×Neuro 超时问题以流程法解决（未动 timeoutSeconds；后续如再触发 300s 截杀才考虑加时）
+1. ✅ 09-28~09-30 内容线连续三日 8/8 全绿（essay×3 / 深研×3 / trending×6 / creative×3 / AI×Neuro #56 #57 ✅✅）
+2. ✅ AI×Neuro 防超时流程四招连续两晚生效（#56 #57 均 ~5min 真实闭环）；cron error 计数为伪影已入档，若再触发真超时才考虑加时
 3. ⬜ AI×Neuro #55 章鱼篇补做（空壳 doc W8JJdfbtxolwVTx7WricKF8qndh）
 4. ⬜ kd 链续跑与否=罗嵩决策（手动续跑：queue 见系统状态节；或重建 cron——prompt 在 09-27 会话 cron list 输出）
 5. ⬜ README(agent-memory-graph) → npm publish + amg PyPI 人工三步 + npm 命名决策 — **BLOCKED on human action**
 6. ⬜ 竞品对读（hindsight 优先；09-29 essay 已完成其机制层深拆，余 benchmark 对照）
-7. ⬜ Tavily 配额 10-01 重置后恢复默认搜索路由
+7. ✅ Tavily 配额 10-01 已重置，搜索路由恢复默认
+8. ⬜ amg next（09-30 深研产出）：nightly consolidation + AgentSleep 四指标评测（consolidation 前后 LongMemEval 对照）——待罗嵩排期或手动 kd 窗口
 
 ## 上次检查
+- **Knowledge org: 2026-10-01 02:00** — Integrated 09-30 全天（连续第 3 纯内容日内容线 8/8 全执行：essay 1c88c6b PageIndex《相似≠相关》+ 深研 4854745《Agent 失眠症》Sleep-time Compute/AgentSleep→amg nightly consolidation next + AI×Neuro #57 HCA ✅ ~5min 闭环两连真实成功——cron 57 连 error 计数系完工后截杀伪影入档；trending 双发+creative 延续日；零 dev 增量计数持平，零回滚 345；Tavily 10-01 重置）。MEMORY：CF 09-30 新节+09-27 归档 Part 3+AT 链 09-30 段；HEARTBEAT 全刷新
 - **Knowledge org: 2026-09-30 02:00** — Integrated 09-29 全天（连续第 2 纯内容日 8/8 全绿：essay 94f7b16 hindsight《RAG 记得住学不会》+ 深研 ebbd578 奖励作弊全景 + AI×Neuro #56 ✅ 防超时流程四招验证无超时闭环——#55 章鱼仍欠；零 dev 增量计数全面持平；Tavily 月配额耗尽全程 AnySearch 备援；git ls-files echo 陷阱入册）。MEMORY：CF 09-29 新节+修复重复头行+Active Theme 09-29 段+零回滚 344；HEARTBEAT 全刷新
 - **Knowledge org: 2026-09-29 02:00** — Integrated 09-28 全天（缩编后首个完整日：内容线 8/8 跑满、零 dev 增量计数不变；essay a5d3c98/深研 ec7902f OSWorld 两副面孔/trending OYAXdQNb/creative；⚠️ AI×Neuro #55 章鱼 300s 超时第 56 连 error——doc 空壳未写完+投递未达，选题表补行+topics 文件入库+修复方向入档）
 - **Knowledge org: 2026-09-28 02:00** — Integrated 09-27 全天（cron 缩编 15→8；外部五连 +51；write 覆盖事故新规；docs C606-C611 追平+edit 标点归一化第 2 例新规；AI×Neuro 投递修复；code-lab 四连）
