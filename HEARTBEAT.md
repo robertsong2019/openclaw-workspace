@@ -1,10 +1,10 @@
-# HEARTBEAT.md - October 11, 2026 (Sunday) 02:00 KO — 连续第 13 纯内容日·10-10 全绿整合 run
+# HEARTBEAT.md - October 12, 2026 (Monday) 02:00 KO — 连续第 14 纯内容日·10-11 全绿整合 run
 
 ## ⚠️ 执行环境（09-27 起；10-02 一项修复；gateway ~03:47 重启模式确认）
 **cron 现为 7 条（10-01 停用 ai-neuro 后）**: KO 02:00 / essay 05:00 / dashboard 06:00 / trending 07:00+08:00 / creative 19:00 / deep-exploration 20:00，全内容线。09-27 罗嵩手删 7 条开发线 cron（kd 链/开发/测试/文档），**开发节奏=罗嵩手动驱动**（kd prompt 全文在 09-27 会话可重建；amg kd 赛道 0.732/47 连不受影响，queue 手动续跑参考下方系统状态节）。
 **cron timeout 全表健康（10-03 验证闭环）**: creative 600 修复一次生效；KO/essay/daily/creative=600 / deep=900 / dashboard、deep-analysis=默认。
 **Tavily 新 dev key 全链路生效（10-02 首战 ✅，10-08 essay / 10-10 essay 素材再用 ✅）**: **永久教训：gateway=systemd user service，env 真源是 `gateway.systemd.env` 而非 `.env`，改 env 必须两处同步+重启**。AnySearch MCP 已从 mcporter 消失（仅剩 tencent-docs），备援链=web_fetch 直抓。
-**🔴 gateway ~03:47 重启模式确认（10-08 / 10-09 / 10-10 连续三天，最新 pid 1547246；10-06 04:18 为同族）**: 定时性极强（均 ~03:47），三次均未丢 cron 产物（KO 02:00 已完成）。**下一步行动（空闲 heartbeat 执行）**: `journalctl --user -u openclaw-gateway --since "03:30" --until "04:00"` 定位触发源（怀疑 systemd timer/logrotate/内存压力——主机可用内存 ~543MB -22% 警示维持）。若再现「KO err + 后续 cron 正常」模式，先查 journal 再判断真缺产物。
+**🔴 gateway ~03:47 重启模式确认（10-08 ~ 10-11 连续四天，pids 链 863071→1204836→1547246→1888785；10-06 04:18 为同族）**: 定时性极强（均 ~03:47），四次均未丢 cron 产物（KO 02:00 已完成；dashboard 27e89bf 已入档）。**下一步行动（空闲 heartbeat 执行）**: `journalctl --user -u openclaw-gateway --since "03:30" --until "04:00"` 定位触发源（怀疑 systemd timer/logrotate/内存压力——主机可用内存 563MB（10-11 dashboard）警示维持）。若再现「KO err + 后续 cron 正常」模式，先查 journal 再判断真缺产物。
 **已知 cosmetic warning**: cron list 带 `plugins.entries.memory-tencentdb: plugin not found`（stale config，待清理，不影响执行）。
 
 ## 待办任务
@@ -18,7 +18,8 @@
 
 ### 中优先级（本月）
 - [ ] **hindsight vs amg 对标实验（10-04 evening 头号线索，持续置顶）**: 论文 arXiv 2512.12818 + 公开 benchmark 站（hindsight 45.3k★）——半天可出 amg 外部坐标；判分口径须同源核对；**判卷人必须钉在 amg 环外（evaluator tampering 纪律，10-06 深研）**
-- [ ] **🔴 Agent-Reach 试装升级（⚠️ 安装行动连续第三天未执行 10-08/09/10——已飞书告知罗嵩待排期；素材三篇在手：10-05 能力层 + 10-08 外设市场 + 10-09 install.md 分发范式）**: 94k★ OpenClaw 官方兼容，可升级 tech-briefing/finance 信息源；能力层架构=TOOLS.md 搜索路由表代码化的现成范本；配合 openrig YAML 团队定义精读（10-08 creative 行动项）
+- [ ] **🔴 Agent-Reach 试装升级（⚠️ 安装行动连续第四天未执行 10-08/09/10/11——已飞书告知罗嵩待排期；素材三篇在手：10-05 能力层 + 10-08 外设市场 + 10-09 install.md 分发范式）**: 94k★ OpenClaw 官方兼容，可升级 tech-briefing/finance 信息源；能力层架构=TOOLS.md 搜索路由表代码化的现成范本；配合 openrig YAML 团队定义精读（10-08 creative 行动项）
+- [ ] **context-mode OpenClaw 原生插件试装（10-11 trending 行动项）**: 26.3k★，gateway >2026.1.29 本机满足；FTS5+BM25+RRF 知识库/渐进节流/2KB 优先级快照=amg/acs 压缩检索参照系
 - [ ] **dream loop 三连落地（10-07 深研行动项，与 #076+09-30 失眠症待办同源合并）**: ①agent-memory-service 最小 dream loop+20 题评测门 → ②amg 梦境产物过 LME-S 回归 cron → ③memory-service 紧凑索引层（claude-mem timeline 形状）
 - [ ] **amg 检索侧实验二连（10-09/10-10 飞书行动项）**: ①3-layer 渐进披露纳入 amg 检索实验（10-10 essay 落成文，L1/L2/L3 形状已梳理）②claude-mem OpenClaw 集成试点对比 amg 召回质量 ③EvidenceLedger 模式整理成通用工具函数（rea 45.4k★）
 - [ ] **paperclip budget 模型 → mission-control 治理化**（~97.3k★ 榜首；预算即权限与 treg 四级凭证阶梯同族）+ **caveman_retrieve / context-mode 沙箱 → acs 压缩策略候选**
@@ -40,21 +41,21 @@
 - **09-27 外部五连**: olb **320** / a2at **108** / sotk **619** / pw **229** / brc **401** / dg **78**
 - **tools/其他**: ctxpack 104 / ato 57 / afm 32 / project-dashboard 15 / skill-scaffolder 34 / session-archiver 90 / agent-memory-kit 33 / cqc 66 / act 51 / mcpt 41 / ai-dev-tools 93 / skill-doctor 81 / prompt-template-manager 34 / amg-mcp 128 / nano 1162 / mcx 65 / jp 59 / obs 268 / pocket-agent 80 / a2a_minimal 62 / cot 123 / wget-rust 25 / edge-agent-runtime 345 / agent-log 75 bats+32 / openclaw-mcp-server 29 / mission-control 45
 - **四项目总计**: **13943**（amg 11272 + sot 619 + atc 2052）
-- **全项目总计**: ~**24744** tests（09-29~10-11 连续纯内容日零增量维持）
-- **零回滚率**: amg **355天** 🏆（KO 链 08-22:299 → 10-07:352 → 10-08:353 → 10-09:354 → 10-10:355；C565-C611 47 连 keep）/ acs **209天**（口径=有产出天数）
+- **全项目总计**: ~**24744** tests（09-29~10-12 连续纯内容日零增量维持）
+- **零回滚率**: amg **356天** 🏆（KO 链 08-22:299 → 10-08:353 → 10-09:354 → 10-10:355 → 10-11:356；C565-C611 47 连 keep）/ acs **209天**（口径=有产出天数）
 - **工具链**: Tavily 新 dev key 全链路生效；AnySearch MCP 已从 mcporter 消失（仅剩 tencent-docs），备援=web_fetch 直抓；tencentdb stale plugin warning 待清理
-- **KO 日历**: 10-09 02:00 正常 ✅ → 10-10 02:00 正常 ✅ → 10-11 02:00 本 run 正常（MEMORY/HEARTBEAT 编辑沿用 Python 锚点脚本，TOOLS.md CJK 规则；本轮经历一次锚点 assert 中止+幂等重跑，零损坏）
+- **KO 日历**: 10-10 02:00 正常 ✅ → 10-11 02:00 正常 ✅ → 10-12 02:00 本 run 正常（MEMORY/HEARTBEAT 编辑沿用 Python 锚点脚本，TOOLS.md CJK 规则）
 
-## 近期活动 (10-09 ~ 10-10——连续第 12、13 纯内容日，产物线全绿)
-- **10-10 05:00 essay《别把数据库读进上下文》（6c04cb6+博客 1cb887f）**: 记忆检索经济学读侧首篇——三层漏斗 search→timeline→get（勘察/定位/细读=图书馆卡片目录）；工具描述即规矩（检索纪律写进工具契约）；博文 40 行 Vault 类 sandbox 端到端验证（runner 脚本模式）；O(库大小)→O(所需大小)；反模式五条；与 10-09 验证器篇交叉（同一句式：乘法因子+门口装闸）；post 200+staged 验尸首查即过
-- **10-10 06:00 dashboard 042c941 ✅ all 7 cron ok**: gateway 连续第三天 ~03:47 重启（pid 1547246 模式确认）；sessions 按 sessionId 去重 43 vs 50 raw；07:00 daily ✅（10-11 KO 补录）
-- **10-10 08:00 trending-deep 飞书 YIWLd69f ✅（213 blocks）**: rea 45.4k★ 日+14.9k（六边形 MCP 逆向 EvidenceLedger/无 fallback/有界进程）× alibaba/open-code-review（确定性管线+Agent 混合 1/9 token）；共同信号=确定性脚手架约束放大 Agent 能力非更长 prompt
-- **10-10 19:00 trending evening ✅**: lingbot-map 17.9k★（ECCV 2026 最佳论文候选 GCT 流式 3D 重建 20FPS）+ litellm Rust core 转向（60.9k★）；rea 4 天 5.3×（33.8k→59.5k）；claude-mem 99.1k+Agent-Reach 95.3k 双逼近 100k
-- **10-10 20:00 deep-exploration《Agent 崩溃在第 8 步，退款已经发出》（02e4440+博客 ff771d9）**: 持久执行首覆盖（17 源）——Resume Means Resume 五框架无两家 conformance 一致；LangGraph 第二个 resume 值从不读；k 进程 resume 触发 k 次；transcript≠journal（trace 解释发生了什么/journal 决定什么可重放）；幂等键=操作身份非时间戳；与 10-08（跑得快）+10-09（不作弊收据）交叉三连：推理层天马行空，执行边界有账有闸；post 200
-- **10-09 全天（第 12 纯内容日）**: essay 9808480《安装文档开始写给 Agent 读》（Agent-Reach install.md 分发第四次重写/文档即程序/攻击面 prompt injection 防四层）+ 深研 eca0348 验证器危机（Bergen 57-96% 作弊率/隐藏测试 76%→<1% 碾压监控/监控只旁路不进奖励）+ 飞书 Kn4vdSr0 claude-mem×rea + creative（star 虚高伪影声明/skills 明星化/控制面层=下一战场）+ dashboard 9eeadf8 all-green；详情已入 MEMORY 10-09 节
+## 近期活动 (10-10 ~ 10-11——连续第 13、14 纯内容日，产物线全绿)
+- **10-11 05:00 essay《一个人的 .agents 目录，28 万颗星》（41b87a8+博客 2f9561e）**: Skills 打包经济学首覆盖——三代打包=每 session 固定税下调；存量玩家主动降级（claude-mem v5.4 MCP→skill 2718→312 行省 2250/session，触发 67%→100%）；触发率是被低估的主菜（能力=装上×会用）；60 行路由器 sandbox 验证（路由层物理取不出正文；token 预算断言先实测校准）；动词归协议剧本归文件；与 10-09 验证器+10-10 检索漏斗成三道闸门三部曲
+- **10-11 06:00 dashboard 27e89bf ✅ all 7 cron ok**: gateway 第 4 次连续 ~03:47 重启（pid 1888785，pids 链固定模式）；主机可用内存 563MB；07:00 daily ✅（10-12 KO 补录）
+- **10-11 08:00 trending-deep 飞书 LGeZdsu4 ✅（157 blocks）**: rea 71.9k★ 单日 +25.8k × context-mode 26.3k★（OpenClaw 原生插件可装；RRF/渐进节流/2KB 分层快照=amg/acs 参照系；rea 字节级验证=验证器弧线素材）
+- **10-11 19:00 creative ✅（ec38dcc）**: openai/math 13.9k★/5 天（719 篇机器生成数学手稿 42% Lean 形式化——验证器弧线终极样本）；推荐罗嵩 TOP3：openai/math / tester-army e2e（amg 评测管线参考）/ iPhone-use（OpenClaw 设备控制参考）
+- **10-11 20:00 deep-exploration《八个 Agent 抢一个文件谁都没犯错》（笔记+博客 3e59c06）**: 多智能体单写者经济学首覆盖——90.2% 另一面 15× token（收益=上下文隔离经济学/子代理=带压缩函数的上下文工作台）；MAST 尸检 42% 规格全组织失能；无验证器的并行=更贵随机数发生器（接验证器危机）；三模式（生成-验证循环/trace 共享给写者隔离给验证者/smart friend）；MCP+A2A 都刻意不共享内存
+- **10-10 全天（第 13 纯内容日）**: essay 6c04cb6《别把数据库读进上下文》+ 深研 02e4440 持久执行（Resume Means Resume 五框架无两家一致）+ 飞书 YIWLd69f rea 45.4k★ + evening lingbot-map/litellm Rust core + dashboard 042c941 all 7 ok；详情已入 MEMORY 10-10 节
 
 ## 本周关键路径
-1. ✅ 09-28~10-10 内容线连续十三日运行（essay×13 / 深研×13 / dashboard×13 / creative×12 缺 10-02）；10-05/07/08/09/10 全绿 7/7；10-06 err 双 flag 已自愈+补账闭环
+1. ✅ 09-28~10-11 内容线连续十四日运行（essay×14 / 深研×14 / dashboard×14 / creative×13 缺 10-02）；10-05/07/08/09/10/11 全绿 7/7；10-06 err 双 flag 已自愈+补账闭环
 2. ✅ creative timeout 600 修复验证；✅ Tavily 工具链；✅ cron timeout 全表健康
 3. ⬜ **gateway ~03:47 重启源定位（journalctl，空闲 heartbeat 执行）**——连续三天模式确认，内存 543MB 警示维持
 4. ⬜ kd 链续跑与否=罗嵩决策（手动续跑 queue 见系统状态节；或重建 cron——prompt 在 09-27 会话）
@@ -64,6 +65,7 @@
 8. ⬜ 双 cron 线索落地：Agent-Reach 试装升级（已告知罗嵩待排期）/ AGENTS.md 双轴 review+对称沉淀 / paperclip budget→mission-control / claude-mem 集成试点+3-layer 渐进披露纳入 amg 检索+EvidenceLedger 工具化（10-09/10-10 飞书行动项）/ continual-learning→memory-manager
 
 ## 上次检查
+- **Knowledge org: 2026-10-12 02:00（本 run）** — Integrated 10-11 全天（连续第 14 纯内容日 7/7 全绿：essay 41b87a8 Skills 打包经济学（三代打包固定税/claude-mem 降级实证/触发率主菜/60 行路由器验证）/ dashboard 27e89bf all 7 ok（gateway 第 4 连 ~03:47 重启 pid 1888785，pids 链入档）/ 飞书 LGeZdsu4 rea 71.9k+context-mode 26.3k（OpenClaw 插件可装）/ creative openai/math 机器数学+TOP3 推荐（openai/math、tester-army e2e、iPhone-use）/ 深研 3e59c06 多智能体单写者经济学（15× token 另一面/MAST 组织失能/无验证器并行=贵随机数发生器/三模式））；零回滚 356。MEMORY：10-11 新节+**10-08 归档至 memory/archive-2026-10-08.md**+Active Theme 356+测试快照 10-12；HEARTBEAT 全刷新（gateway 四连 pid 链+Agent-Reach 四天未执行+context-mode 试装新入中优先级+内存 563MB）；daily 补录 06:00/07:00/20:00
 - **Knowledge org: 2026-10-11 02:00（本 run）** — Integrated 10-10 全天（连续第 13 纯内容日 7/7 全绿：essay 6c04cb6 记忆检索经济学读侧首篇（三层漏斗/工具描述即规矩/40 行 Vault sandbox 验证）/ dashboard 042c941 all 7 ok（gateway 连续第三天 ~03:47 重启模式确认）/ 飞书 YIWLd69f rea 45.4k★+open-code-review / evening lingbot-map ECCV+litellm Rust core / 深研 02e4440 持久执行 Resume Means Resume（五框架无两家一致/transcript≠journal/幂等键配方；与 10-08+10-09 交叉三连））；零回滚 355。MEMORY：10-10 新节+**10-07 归档至 memory/archive-2026-10-07.md**+Active Theme 355+测试快照 10-11；HEARTBEAT 全刷新（gateway 重启定位列入关键路径 #3+Agent-Reach 连续三天未执行标红+amg 检索侧实验二连新入中优先级）；daily 补录 06:00/07:00；本轮经历一次锚点 assert 中止+幂等重跑（零损坏，assert 纪律生效）
 - **Knowledge org: 2026-10-10 02:00** — Integrated 10-09 全天（连续第 12 纯内容日 7/7 全绿：essay 9808480 install.md 分发第四次重写 / dashboard 9eeadf8 all-green / 飞书 Kn4vdSr0 claude-mem×rea / creative star 伪影声明+控制面层=下一战场 / 深研 eca0348 验证器危机）；零回滚 354。MEMORY：10-09 新节+10-06 归档+Active Theme 354+测试快照 10-10；HEARTBEAT 全刷新；daily 补录 06:00/07:00
 - **Knowledge org: 2026-10-09 02:00** — Integrated 10-08 全天（连续第 11 纯内容日 7/7 全绿：essay f9564c5 OpenShell / 飞书 NaBGddfE / creative Agent 外设市场成型 / 深研 d3fb73b TomasuLLM 乱序推测执行）；零回滚 353。MEMORY：10-08 新节+10-05 归档；HEARTBEAT 全刷新；daily 补录
