@@ -13,19 +13,22 @@
 
 ---
 
-## Current Focus（截至 2026-10-17）
+## Current Focus（截至 2026-10-18）
 
 ### 运行体制（09-27 起）
 - **cron 7 条全内容线**：KO 02:00 / essay 05:00 / dashboard 06:00 / trending 07:00+08:00 / creative 19:00 / deep-exploration 20:00。开发线 cron 已删，**开发节奏=罗嵩手动驱动**
 - **AI×Neuro cron 已停用**（10-01 罗嵩指令）；trending-deep provider 瞬态已归档关闭
 
-### 10-15 ~ 10-16（连续第 18、19 纯内容日，全绿）
+### 10-15 ~ 10-17（连续第 18~20 纯内容日，全绿）
 - **10-15**: ①gateway 根因确诊=V8 堆耗尽 ABRT（journalctl 取证：Mark-Compact 965→983MB、270min=堆填充周期；10-13「漂移说」/10-14「exit 0 干净退出」均为采样伪影/误读——**读错字段比读错数据更隐蔽**）②trending 飞书 iFixAi（Agent 审计：SUT/Judge 分离+manifest seed）×VoiceStudio（本地 ElevenLabs 66.3k★）③creative token 经济学四连击（caveman 输出侏儒化/context-mode 索引式 compaction/billion-context/xerj gain 账本）④深研《Agent 的记性为什么需要图》720e15f（13 图记忆系统；Zep 在 LongMemEval +18.5% → amg 加 PPR 对照臂入待办）
 - **10-16**: ①essay《我的 Agent 宿主每 4.5 小时死一次，六天后我才发现》22d2294（OOM 取证叙事：13 次崩溃 10 间隔=270min±2s；夜间低负载泄漏近乎停滞佐证「周期是负载积分仪不是时钟」；代码块 sandbox 全真实输出）②trending 深析 rea 架构（provider 抽象/evidence-first 工具合同）+superpowers 299.9k★（15 skills=SDLC 状态机）③深研《Agentic Context Engineering》d6d6e66（ACE arXiv:2510.04618；**自己的 AGENTS.md/MEMORY.md 可按 bullet+计数器改造**）④dashboard c5230da；⚠️ KO 02:00 超时被杀（600s 触顶，MEMORY.md 未瘦身 24h +33%）→ **本 run 处理完毕**
-- 零回滚链 359（10-14 KO 口径）+10-15/16 纯内容日无回滚 → **实际连续 361 天零回滚** 🏆
+- **10-17**: ①KO 大瘦身 158k→8.7k（10-16 超时根因修复，全文归档）②essay《我的 Agent 记了 12 万字符的笔记，其中 83% 它自己再也读不到》aee7540（83.5% 死信区实证；预测「重启后警告消失」当日 05:38 兑现，见下）③trending 早间 context-mode 30.2k★+xerj 6.9k★ / 晚间 ai-memory（跨 harness 记忆总线，直击死信区问题）+orca+VoiceStudio ④深研 Computer-Use Agents（OSWorld 38→82% 平超人类；OSWorld-Human 全员负效用）笔记 ffce7e9+博文 5ad7d9a；catalyst-research 已成独立子仓
+- 零回滚链 359（10-14 KO 口径）+10-15/16/17 纯内容日无回滚 → **实际连续 362 天零回滚** 🏆
 
 ### Gateway OOM 追踪（持续项）
-- NRestarts 71（10-16 晨）→**76（10-17 02:00）**；10-16 崩溃 5 次（约 01:47/06:17/10:47/15:17/19:47，270min 节律），10-17 00:17 又一次；当前代 00:17 启动，RSS 792MB（peak 1.0G）
+- NRestarts 71（10-16 晨）→76（10-17 02:00）→**81（10-18 02:00，systemctl --user 口径）**；10-17 全天 10 代（00:18/01:48/05:38/06:18/09:48/10:48/14:18/15:18/18:48/23:18，270min 家族+成对短间隔结构）；当前代 10-17 23:17 起，RSS 958MB@2.7h
+- **✅ 博文预测兑现（10-18 取证）**：05:38 重启后「MEMORY.md is N chars」警告零复发（至 10-18 02:00，39 天 1,802 次警告后首次静默）——注入瘦身止损确认；但 OOM 未缓解（10-17 代数 10>10-16 的 6，根因 V8 堆维持原判）
+- **⚠️ 取证口径（10-18 实测）**：cron 沙箱 `journalctl -u openclaw-gateway` 返回空、系统级 systemctl 查同名 unit 得 NRestarts=0 是陷阱——**真源=`systemctl --user show openclaw-gateway` + `/tmp/openclaw/openclaw-YYYY-MM-DD.log` 文件日志**
 - **对策已定**：维持 systemd 自愈，勿加 max-old-space（2GB 主机 OS OOM 风险）；上游报告挂账（先搜 known issue）；危害=长会话上下文丢失非产物丢失
 - **上游报告待办置顶**（HEARTBEAT 同步）；根因=MEMORY.md 超限注入也是帮凶之一 → 本 run 瘦身即缓解
 
@@ -69,6 +72,8 @@
 - 身体路径（10-14）：接口特权随「人的身体」自动附赠；ACTOR_PROMPT 把物理写进动作协议
 - Sleep-time compute（10-07/10-14）：摊销省 5×；忘记是功能；时刻调度统一框架
 - ACE（10-16）：context=活账本非静态窗口；bullet+计数器>自由文本；MEMORY.md 超限正撞 context collapse 前兆
+- 记忆暗物质（10-17）：83.5% 记忆只写不读——注入层 20k 截断让 Key Insights 沦为死信区 39 天 1,802 次警告；write-time filtering 的终极论据
+- CUA 账单（10-17）：OSWorld 38.1→82% 平超人类，但 OSWorld-Human 全员 WES- 负——能力与效用背离在操作层再现
 
 ---
 
@@ -76,6 +81,7 @@
 
 | 日期 | 主题 | 核心 |
 |------|------|------|
+| 10-17 | Computer-Use Agents | OSWorld 38→82%；OSWorld-Human 负效用账单；IPI +32% 安全线 |
 | 10-16 | ACE Agentic Context Engineering | arXiv:2510.04618 ICLR 2026；账本式上下文；自家 AGENTS/MEMORY 改造蓝图 |
 | 10-15 | 图结构 Agent 记忆 | 13 系统（HippoRAG2/Zep/Mem0/A-MEM/MemOS…）；Zep LME +18.5%→amg PPR 对照臂 |
 | 10-14 | 闲置时间计算经济学 | 三部曲终章；sleep-time 摊销 5×；TTT 谱系；时刻调度 |
@@ -87,7 +93,7 @@
 | 08-14 | GraphRAG-Bench #064 | 参赛路径；差距清单 6 关 5；首跑就绪（阻塞=ollama 未装） |
 | 08-13 | GraphRAG 全景 #062 / OpenClaw 插件 #063 | 叙事差距非技术差距；三层漏斗 MCP→Skill→ClawHub |
 
-> 07-25~08-11 研究（#027-#061）及更早：见 memory/archive-2026-07-mid.md、archive-2026-07-early.md 及归档全文本
+> 07-25~08-11 研究（#027-#061）及更早：见 memory/archive-2026-07-mid.md、archive-2026-07-early.md 及归档全文本（catalyst-research 历史篇仍有 untracked 待批量 commit）
 
 ---
 
