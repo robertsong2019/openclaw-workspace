@@ -13,21 +13,22 @@
 
 ---
 
-## Current Focus（截至 2026-10-20）
+## Current Focus（截至 2026-10-21）
 
 ### 运行体制（09-27 起）
 - **cron 7 条全内容线**：KO 02:00 / essay 05:00 / dashboard 06:00 / trending 07:00+08:00 / creative 19:00 / deep-exploration 20:00。开发线 cron 已删，**开发节奏=罗嵩手动驱动**
 - **AI×Neuro cron 已停用**（10-01 罗嵩指令）；trending-deep provider 瞬态已归档关闭
 
-### 10-17 ~ 10-19（连续第 20~22 纯内容日）
-- **10-19**: ①essay《Google 官方给 Agent 写技能，只写 LLM 考砸的题》3cbb060（**eval-gap 判据**=Google 官方同款：只做评测显示 LLM 弱势的场景；49 技能自查三类划分，API 封装复读嫌疑 ~8 个；49 组对照实验排下周）②trending 飞书 TUW4d5aDwoMhmUxgystcargznkc：ai-memory 10.5k★（markdown-as-truth+SQLite 派生+零 LLM 老化）×orca 96.6k★（worktree fan-out+relay outbound-WS）③creative：rea 329,812★ 单周 +229k=总星 70% 判真实（agent 逆向工程集群，ghidra +7.6k/wk）；**headroom 75.9k★ 上下文压缩层，README 明列 `wrap openclaw` 支持**（OOM/token 双痛点对策候选）；CLI-Anything 54.9k★ 点名 OpenClaw ④深研 Self-Evolving Agents（DGM/AlphaEvolve/Gödel Agent 12+ 系统）博文 612affa；next=MEMORY/TOOLS 结构性编辑配前后探针（metaproductivity 台账）⑤dashboard 6/7：全绿 streak 终结 day 3（KO 标 error 230s 但实质完成，根因=mid-run edit oldText 失配）
-- **10-18**: essay《访问加权衰减两次翻车》a7a1f1d（**提及≠访问**；朴素子串代理 0% 压缩；20 题召回基线入待办）· trending 飞书 ai-memory×xerj MHpodEH10oHdtfxFfIacA3uDnCg · creative **android/skills +36→+381（Google 官方入场开放 skills 标准）** · 深研 Deep Research RL 06dd90e（BrowseComp 1.9%→51.5% 差距在训练；R1-Searcher++ 停搜 -30%；ZeroSearch 省 88%）· dashboard 7/7 day 2；坑：commit message 含 $ 被 shell 展开入 error-patterns
+### 10-17 ~ 10-20（连续第 20~23 纯内容日）
+- **10-20**: ①essay《省 40% 的 token 账单却 3.3 倍》20cc992（KV-cache 分叉点后缓存全作废；朴素截断三宗罪；**headroom 未装三理由=eval-gap 配对实验先行 / 2C2GB 装本地 HF 模型=汽油灭火 / 四纪律零依赖先落自己代码**）②trending 飞书 ZuHqd7rYgorMmDx6UDfcyuAhnDf：ai-memory×orca（与 10-19 选题重复，独立触发非双发）③creative：ponytail 168.6k★（行为 skill：-53% 代码+risky-logic 覆盖 98% vs 68%）/ cloudflare security-audit-skill 33k★（对抗式 verifier 证伪候选）/ graphify 129.5k★（无向量库知识图谱，EXTRACTED/INFERRED 诚实标签）；**OpenClaw 3 天内被 4 个高星项目显式支持** ④深研 MAST 多智能体失败分类学 40323e7（失败率 41-86.7%；规范缺陷独占 41.77%；概率链 95%^20≈36%；fan-out≤6 深度≤1；失败相关性 0.17-0.32 无银弹）⑤dashboard 7/7 全绿恢复
+- **10-19**: ①essay《Google 官方给 Agent 写技能》3cbb060（**eval-gap 判据**=只做评测显示 LLM 弱势的场景；49 技能自查，API 封装复读嫌疑 ~8 个；49 组对照实验排下周）②trending 飞书 TUW4d5aD：ai-memory 10.5k★×orca 96.6k★ ③creative：rea 329,812★ 单周 +229k=总星 70% 判真实；**headroom 75.9k★ 明列 `wrap openclaw`**（OOM/token 对策候选）；CLI-Anything 54.9k★ 点名 OpenClaw ④深研 Self-Evolving Agents 612affa；next=MEMORY/TOOLS 编辑配前后探针 ⑤dashboard 6/7（全绿 streak 终结 day 3，KO 标 error 但实质完成）
+- **10-18**: essay《访问加权衰减两次翻车》a7a1f1d（提及≠访问；20 题召回基线入待办）· trending 飞书 ai-memory×xerj · creative **android/skills +36→+381（Google 官方入场 skills 标准）** · 深研 Deep Research RL 06dd90e（BrowseComp 1.9%→51.5% 在训练；ZeroSearch 省 88%）· dashboard 7/7；坑：commit message 含 $ 被 shell 展开（error-patterns）
 - **10-17**: KO 大瘦身 158k→8.7k（10-16 超时根因修复）· essay《83% 读不到的笔记》aee7540（83.5% 死信区实证+警告消失预测当日兑现）· 深研 CUA（OSWorld 38→82% 平超人类；OSWorld-Human 全员负效用）5ad7d9a · catalyst-research 成独立子仓
 - （10-16 及更早逐日细节见归档 archive-2026-10-17-memory-slim-full.md + daily）
-- 零回滚 363（10-18 口径）+10-19 无回滚 → **连续 364 天零回滚** 🏆
+- 零回滚 363（10-18 口径）+10-19/10-20 无回滚 → **连续 365 天零回滚** 🏆
 
 ### Gateway OOM 追踪（持续项）
-- NRestarts 76（10-17）→86（10-19 02:00）→**92（10-20 02:00，systemctl --user 口径）**；10-19 全天 5 代（02:18/07:18/11:48/16:18/20:48，270min×4+一次 300min；10-19 02:18 崩溃与 KO 预测精确命中）；当前代 10-20 01:17 起，**下崩预计 10-20 ~05:48**
+- NRestarts 76（10-17）→92（10-20 02:00）→**97（10-21 02:00，systemctl --user 口径）**；10-20 全天 6 代 textbook（01:18/05:48/10:18/14:48/19:18/23:48，270min×5 精确无漂移；05:48 与 KO 预测、10:18 与 dashboard 预测双双命中，节拍器化已 3 日）；当前代 10-20 23:47 起，**下崩预计 10-21 ~04:18**
 - **✅ 注入层手术止损三日验证**：10-18/10-19 截断警告持续归零；OOM 独立继续（5 代/日，根因 V8 堆维持原判）
 - **⚠️ 取证口径（10-18 实测）**：cron 沙箱 `journalctl -u openclaw-gateway` 返回空、系统级 systemctl 同名 unit NRestarts=0 是陷阱——**真源=`systemctl --user show openclaw-gateway` + `/tmp/openclaw/openclaw-YYYY-MM-DD.log`**
 - **对策**：维持 systemd 自愈，勿加 max-old-space（2GB 主机 OS OOM 风险）；**新候选（10-19）**：headroom README 明列 `wrap openclaw`——先 doctor+savings 实测，按 eval-gap 判据验收；上游报告挂账置顶（HEARTBEAT 同步）；危害=长会话上下文丢失非产物丢失
@@ -40,7 +41,7 @@
 | agent-task-cli | **2052** | R82 ✅（Redis list 族上半场；余 8 法 R83 候选，手动驱动） |
 | structured-output-toolkit | **619** | npm ready |
 | context-forge | **1563** | |
-| 其他主力 | nano 1162 / obs 268 / bridge 320 / prompt-mgr 480 / amf 754 / olb 320 / a2at 108 / sotk 619 / pw 229 / brc 401 / dg 78 / mcx 65 / jp 59 / pocket-agent 80 / a2a_minimal 62 / mcpt 41 / amg-mcp 128 / amk 33 / cot 123 / ctxpack 104 / ato 57 / act 51 / cqc 66 / ai-dev 93 / skill-doctor 81 / scaffolder 34 / ptm 34 / wget-rust 25 / oms 29 / mission-control 45 / edge 345 / agent-log 75b+32 / skill-test 20 / project-dashboard 15 | 逐项目明细见归档 |
+| 其他主力 | nano 1162 / amf 754 / prompt-mgr 480 / brc 401 / edge 345 / bridge 320 / olb 320 / obs 268 / amg-mcp 128 / cot 123 / a2at 108 / ctxpack 104 / 其余 ~25 小项目合计 ~1.4k | 全量台账见归档 |
 | **四项目总计** | **13943** | amg+sot+atc（同口径） |
 | **全项目总计** | **~24744** | 09-29 起零增量维持 |
 
@@ -78,6 +79,7 @@
 - Deep Research RL（10-18）：BrowseComp 1.9%→51.5% 差距不在工具在训练；搜索是策略不是流程；下一基准轴=每次正确答案成本（停搜判据）
 - eval-gap 判据（10-19）：Google 官方同款——只做评测显示 LLM 弱势的场景，不做文档复读；API 封装型技能多数是复读嫌疑（49 技能自查）
 - rea 集群与上下文产品层（10-19）：单周 +229k=总星 70%，agent 逆向工程带动 ghidra +7.6k/wk；上下文工程成独立产品层（headroom/CLI-Anything 双双点名 OpenClaw 生态）
+- MAST 收敛判据（10-20）：读型 vs 写型任务（各自独立证据=杠杆，互为输入决策=单线程）；架构是任务形态的函数（可并行 +80.9% / 串行 -39~-70%）；无银弹（失败模式相关性 0.17-0.32）；每次正确答案 token 成本=下一基准轴
 
 ---
 
@@ -85,6 +87,7 @@
 
 | 日期 | 主题 | 核心 |
 |------|------|------|
+| 10-20 | MAST 多智能体失败分类学 | 失败率 41-86.7%；规范缺陷 41.77%；概率链 95%^20≈36%；读型/写型判据；fan-out≤6 深≤1；相关性 0.17-0.32 |
 | 10-19 | Self-Evolving Agents | DGM/AlphaEvolve/Gödel Agent/AgentEvolver；自改行为必须过 recall eval；metaproductivity 前后探针 |
 | 10-18 | Deep Research Agents × RL | RAG→RL 练进直觉；Kimi-Researcher 涌现；ZeroSearch 省 88%；停搜判据 |
 | 10-17 | Computer-Use Agents | OSWorld 38→82%；OSWorld-Human 负效用账单；IPI +32% 安全线 |
@@ -92,14 +95,8 @@
 | 10-15 | 图结构 Agent 记忆 | 13 系统（HippoRAG2/Zep/Mem0/A-MEM/MemOS…）；Zep LME +18.5%→amg PPR 对照臂 |
 | 10-14 | 闲置时间计算经济学 | 三部曲终章；sleep-time 摊销 5×；TTT 谱系；时刻调度 |
 | 10-13 | Agent 协议三十年 KQML→A2A | 协议=对端智能外骨骼；薄语义厚生态；npm 时刻 |
-| 10-12 | 压缩悖论 | E-mem F1 54.17；raw 恢复 -8.6pp；双口径评测 |
-| 10-11 | 单写者经济学 | 90.2% 质量损失换 15× token；三模式 |
-| 08-17 | LLM-as-Judge #069 | kupdate 0.0=协议病；双口径防归因通胀 |
-| 08-17 | OTel GenAI #070 | 17 operation.name 含 7 记忆动词；amg telemetry 同源漂移清单 |
-| 08-14 | GraphRAG-Bench #064 | 参赛路径；差距清单 6 关 5；首跑就绪（阻塞=ollama 未装） |
-| 08-13 | GraphRAG 全景 #062 / OpenClaw 插件 #063 | 叙事差距非技术差距；三层漏斗 MCP→Skill→ClawHub |
 
-> 07-25~08-11 研究（#027-#061）及更早：见 memory/archive-2026-07-mid.md、archive-2026-07-early.md 及归档全文本（catalyst-research 历史篇仍有 untracked 待批量 commit）
+> 10-10 及更早研究（#027-#064，含 LLM-as-Judge/OTel/GraphRAG 全景）：见归档索引（archive-2026-07-* 等）及 catalyst-research/（历史篇仍有 untracked 待批量 commit）
 
 ---
 
