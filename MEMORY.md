@@ -13,22 +13,21 @@
 
 ---
 
-## Current Focus（截至 2026-10-21）
+## Current Focus（截至 2026-10-22）
 
 ### 运行体制（09-27 起）
 - **cron 7 条全内容线**：KO 02:00 / essay 05:00 / dashboard 06:00 / trending 07:00+08:00 / creative 19:00 / deep-exploration 20:00。开发线 cron 已删，**开发节奏=罗嵩手动驱动**
 - **AI×Neuro cron 已停用**（10-01 罗嵩指令）；trending-deep provider 瞬态已归档关闭
 
-### 10-17 ~ 10-20（连续第 20~23 纯内容日）
-- **10-20**: ①essay《省 40% 的 token 账单却 3.3 倍》20cc992（KV-cache 分叉点后缓存全作废；朴素截断三宗罪；**headroom 未装三理由=eval-gap 配对实验先行 / 2C2GB 装本地 HF 模型=汽油灭火 / 四纪律零依赖先落自己代码**）②trending 飞书 ZuHqd7rYgorMmDx6UDfcyuAhnDf：ai-memory×orca（与 10-19 选题重复，独立触发非双发）③creative：ponytail 168.6k★（行为 skill：-53% 代码+risky-logic 覆盖 98% vs 68%）/ cloudflare security-audit-skill 33k★（对抗式 verifier 证伪候选）/ graphify 129.5k★（无向量库知识图谱，EXTRACTED/INFERRED 诚实标签）；**OpenClaw 3 天内被 4 个高星项目显式支持** ④深研 MAST 多智能体失败分类学 40323e7（失败率 41-86.7%；规范缺陷独占 41.77%；概率链 95%^20≈36%；fan-out≤6 深度≤1；失败相关性 0.17-0.32 无银弹）⑤dashboard 7/7 全绿恢复
+### 10-17 ~ 10-21（连续第 20~24 纯内容日）
+- **10-21**: ①essay《97k 星的 Agent 编排器，只做两件笨事》b6a12f1（orca 终端仿真接入层：深度集成 N×M→终端 N×1「能跑在终端里就能跑进 Orca」；35 行 PTY 适配器三纪律；worktree fan-out 三免费；深浅两层判据=高频+结构化语义才配加 API）②trending 飞书 TpTVdtO1ZofrTYxSXKUcqGUun7b：cloudflare/security-audit-skill 34.1k★ 增速第一（六阶段审计管线=error-patterns 升级协议同族工业化）+ headroom 75.9k★（CacheAligner→CCR 可逆压缩 live-zone 保 KV，**官方 `wrap openclaw`**）③creative：ai-job-search 62k★（drafter-reviewer 对抗写作+/outcome 现实校准）/ VoiceStudio 79.6k★（本地 ElevenLabs 全家桶）/ context-mode 31.5k★（四路上下文工程，**显式支持 OpenClaw gateway**）；**rea 周净增 201k→157k 首次减速** ④深研+essay《2026 年最火的 AI Agent，都只服务一个人》55153ba（单租户 Agent OS 品类独立，13 系统对照；MAST 企业失败率×个人屠榜张力）⑤dashboard 7/7 day 2；坑：CJK 近形字「兜/兑」edit 匹配失败（error-patterns）
+- **10-20**: ①essay《省 40% 的 token 账单却 3.3 倍》20cc992（KV-cache 分叉点后缓存全作废；朴素截断三宗罪；headroom 未装三理由=eval-gap 配对先行/2C2GB 汽油灭火/零依赖优先）②trending 飞书 ZuHqd7rYgorMmDx6UDfcyuAhnDf：ai-memory×orca（与 10-19 重复，独立触发非双发）③creative：ponytail 168.6k★（-53% 代码+risky-logic 98% vs 68%）/ security-audit-skill 33k★/ graphify 129.5k★（无向量库图谱+诚实标签）；**OpenClaw 3 天被 4 个高星项目显式支持** ④深研 MAST 40323e7 ⑤dashboard 7/7 恢复
 - **10-19**: ①essay《Google 官方给 Agent 写技能》3cbb060（**eval-gap 判据**=只做评测显示 LLM 弱势的场景；49 技能自查，API 封装复读嫌疑 ~8 个；49 组对照实验排下周）②trending 飞书 TUW4d5aD：ai-memory 10.5k★×orca 96.6k★ ③creative：rea 329,812★ 单周 +229k=总星 70% 判真实；**headroom 75.9k★ 明列 `wrap openclaw`**（OOM/token 对策候选）；CLI-Anything 54.9k★ 点名 OpenClaw ④深研 Self-Evolving Agents 612affa；next=MEMORY/TOOLS 编辑配前后探针 ⑤dashboard 6/7（全绿 streak 终结 day 3，KO 标 error 但实质完成）
-- **10-18**: essay《访问加权衰减两次翻车》a7a1f1d（提及≠访问；20 题召回基线入待办）· trending 飞书 ai-memory×xerj · creative **android/skills +36→+381（Google 官方入场 skills 标准）** · 深研 Deep Research RL 06dd90e（BrowseComp 1.9%→51.5% 在训练；ZeroSearch 省 88%）· dashboard 7/7；坑：commit message 含 $ 被 shell 展开（error-patterns）
-- **10-17**: KO 大瘦身 158k→8.7k（10-16 超时根因修复）· essay《83% 读不到的笔记》aee7540（83.5% 死信区实证+警告消失预测当日兑现）· 深研 CUA（OSWorld 38→82% 平超人类；OSWorld-Human 全员负效用）5ad7d9a · catalyst-research 成独立子仓
 - （10-16 及更早逐日细节见归档 archive-2026-10-17-memory-slim-full.md + daily）
-- 零回滚 363（10-18 口径）+10-19/10-20 无回滚 → **连续 365 天零回滚** 🏆
+- 零回滚 363（10-18 口径）+10-19~10-21 无回滚 → **连续 366 天零回滚** 🏆
 
 ### Gateway OOM 追踪（持续项）
-- NRestarts 76（10-17）→92（10-20 02:00）→**97（10-21 02:00，systemctl --user 口径）**；10-20 全天 6 代 textbook（01:18/05:48/10:18/14:48/19:18/23:48，270min×5 精确无漂移；05:48 与 KO 预测、10:18 与 dashboard 预测双双命中，节拍器化已 3 日）；当前代 10-20 23:47 起，**下崩预计 10-21 ~04:18**
+- NRestarts 76（10-17）→97（10-21 02:00）→**102（10-22 02:00，systemctl --user 口径）**；10-21 全天 5 代 textbook（04:18/08:48/13:18/17:48/22:18，270min×4 精确无漂移；**04:18 预测命中精确到秒=三连中，dashboard 08:48 亦中**，节拍器化 4 日）；当前代 10-21 22:17 起，**下崩预计 10-22 ~02:47**
 - **✅ 注入层手术止损三日验证**：10-18/10-19 截断警告持续归零；OOM 独立继续（5 代/日，根因 V8 堆维持原判）
 - **⚠️ 取证口径（10-18 实测）**：cron 沙箱 `journalctl -u openclaw-gateway` 返回空、系统级 systemctl 同名 unit NRestarts=0 是陷阱——**真源=`systemctl --user show openclaw-gateway` + `/tmp/openclaw/openclaw-YYYY-MM-DD.log`**
 - **对策**：维持 systemd 自愈，勿加 max-old-space（2GB 主机 OS OOM 风险）；**新候选（10-19）**：headroom README 明列 `wrap openclaw`——先 doctor+savings 实测，按 eval-gap 判据验收；上游报告挂账置顶（HEARTBEAT 同步）；危害=长会话上下文丢失非产物丢失
@@ -46,8 +45,8 @@
 | **全项目总计** | **~24744** | 09-29 起零增量维持 |
 
 ### amg kd 手动续跑 queue（cron 已删，罗嵩驱动）
-候选：`gpt4_f2262a51` doctors（GT 长句 'three different doctors…'）/ `gpt4_ab202e7f` kitchen 5 items（donate→replace 语义墙）/ `bf659f65` albums GT=3 只辨识 2（Telluride 'their EP' 歧义）/ `0a995998` clothing（C607 已判偏重）；unbanked 剩 134；pref 族 29 qids 永久关闭（judge-unbankable）
-**核心纪律**（全量见 TOOLS.md+归档）：harness verbatim 拷贝 / tsv 裸字节 append / census-first+pin census 第 4 步 / 新正则前缀先 grep 冲突（_SPT_ 教训）/ 后台长 suite Tee 落盘 / PYTHONHASHSEED=7 shell env 前缀 / replay=cp canonical+字节级替换（assert count==1）/ exec timeout ≥400s / _search_cache 46+ 天脏 hunk 备份在 /tmp/amg_dirty_backup_20260924.diff
+候选：`gpt4_f2262a51` doctors / `gpt4_ab202e7f` kitchen（donate→replace 语义墙）/ `bf659f65` albums GT=3 只辨 2 / `0a995998` clothing；unbanked 剩 134；pref 族 29 qids 永久关闭
+**核心纪律**（全量见 TOOLS.md+归档）：harness verbatim 拷贝 / tsv 裸字节 append / census-first+pin / 新正则前缀先 grep 冲突 / 后台长 suite Tee 落盘 / PYTHONHASHSEED=7 shell 前缀 / replay=cp canonical+字节级替换（assert count==1）/ exec timeout ≥400s
 
 ### 最高优先级（human-blocked）
 - [ ] **amg: README + PyPI/npm publish** — 技术前置 100% 完成；PyPI 名免费零阻塞，人工三步（独立 GitHub 仓/2FA+Trusted Publisher/twine）；⚠️ npm 裸名被占（#068），命名决策（推荐 `@robertsong2019/agent-memory-graph` 或 `amgraph`，均实测 FREE）
@@ -80,6 +79,9 @@
 - eval-gap 判据（10-19）：Google 官方同款——只做评测显示 LLM 弱势的场景，不做文档复读；API 封装型技能多数是复读嫌疑（49 技能自查）
 - rea 集群与上下文产品层（10-19）：单周 +229k=总星 70%，agent 逆向工程带动 ghidra +7.6k/wk；上下文工程成独立产品层（headroom/CLI-Anything 双双点名 OpenClaw 生态）
 - MAST 收敛判据（10-20）：读型 vs 写型任务（各自独立证据=杠杆，互为输入决策=单线程）；架构是任务形态的函数（可并行 +80.9% / 串行 -39~-70%）；无银弹（失败模式相关性 0.17-0.32）；每次正确答案 token 成本=下一基准轴
+- 单租户 Agent OS（10-21）：企业多智能体失败率 41-86.7% vs 个人 agent 屠榜；**单写者是物理事实**；数据主权=全量上下文唯一通行证；三层赦免券（并发一致性/权限隔离/审计合规）在个人场景整体消失
+- 良性记忆安全债（10-21）：PS-Bench 良性记忆使越狱成功率 +15.8%~+243.7%（intent legitimation，记忆成「内部推荐人」）；mnemonic sovereignty 六阶段攻击面；记忆卫生成新必修
+- 对抗式审查通用化（10-21）：drafter-reviewer 管线三天第 4 例（essay/安全审计/求职/代码 review）；/outcome 现实结果反哺=评测锚定现实、无法被污染
 
 ---
 
@@ -87,14 +89,14 @@
 
 | 日期 | 主题 | 核心 |
 |------|------|------|
+| 10-21 | 单租户 Agent OS 品类 | MAST 失败率×个人 agent 屠榜；13 系统；三层赦免券；mnemonic sovereignty；OpenAI Dots/Siri ambient 巨头收敛 |
 | 10-20 | MAST 多智能体失败分类学 | 失败率 41-86.7%；规范缺陷 41.77%；概率链 95%^20≈36%；读型/写型判据；fan-out≤6 深≤1；相关性 0.17-0.32 |
 | 10-19 | Self-Evolving Agents | DGM/AlphaEvolve/Gödel Agent/AgentEvolver；自改行为必须过 recall eval；metaproductivity 前后探针 |
 | 10-18 | Deep Research Agents × RL | RAG→RL 练进直觉；Kimi-Researcher 涌现；ZeroSearch 省 88%；停搜判据 |
 | 10-17 | Computer-Use Agents | OSWorld 38→82%；OSWorld-Human 负效用账单；IPI +32% 安全线 |
 | 10-16 | ACE Agentic Context Engineering | arXiv:2510.04618 ICLR 2026；账本式上下文；自家 AGENTS/MEMORY 改造蓝图 |
-| 10-15 | 图结构 Agent 记忆 | 13 系统（HippoRAG2/Zep/Mem0/A-MEM/MemOS…）；Zep LME +18.5%→amg PPR 对照臂 |
-| 10-14 | 闲置时间计算经济学 | 三部曲终章；sleep-time 摊销 5×；TTT 谱系；时刻调度 |
-| 10-13 | Agent 协议三十年 KQML→A2A | 协议=对端智能外骨骼；薄语义厚生态；npm 时刻 |
+| 10-15 | 图结构 Agent 记忆 | 13 系统；Zep LME +18.5%→amg PPR 对照臂 |
+| 10-14 | 闲置时间计算经济学 | sleep-time 摊销 5×；TTT 谱系（三部曲终章） |
 
 > 10-10 及更早研究（#027-#064，含 LLM-as-Judge/OTel/GraphRAG 全景）：见归档索引（archive-2026-07-* 等）及 catalyst-research/（历史篇仍有 untracked 待批量 commit）
 
