@@ -13,22 +13,22 @@
 
 ---
 
-## Current Focus（截至 2026-10-22）
+## Current Focus（截至 2026-10-23）
 
 ### 运行体制（09-27 起）
 - **cron 7 条全内容线**：KO 02:00 / essay 05:00 / dashboard 06:00 / trending 07:00+08:00 / creative 19:00 / deep-exploration 20:00。开发线 cron 已删，**开发节奏=罗嵩手动驱动**
 - **AI×Neuro cron 已停用**（10-01 罗嵩指令）；trending-deep provider 瞬态已归档关闭
 
-### 10-17 ~ 10-21（连续第 20~24 纯内容日）
-- **10-21**: ①essay《97k 星的 Agent 编排器，只做两件笨事》b6a12f1（orca 终端仿真接入层：深度集成 N×M→终端 N×1「能跑在终端里就能跑进 Orca」；35 行 PTY 适配器三纪律；worktree fan-out 三免费；深浅两层判据=高频+结构化语义才配加 API）②trending 飞书 TpTVdtO1ZofrTYxSXKUcqGUun7b：cloudflare/security-audit-skill 34.1k★ 增速第一（六阶段审计管线=error-patterns 升级协议同族工业化）+ headroom 75.9k★（CacheAligner→CCR 可逆压缩 live-zone 保 KV，**官方 `wrap openclaw`**）③creative：ai-job-search 62k★（drafter-reviewer 对抗写作+/outcome 现实校准）/ VoiceStudio 79.6k★（本地 ElevenLabs 全家桶）/ context-mode 31.5k★（四路上下文工程，**显式支持 OpenClaw gateway**）；**rea 周净增 201k→157k 首次减速** ④深研+essay《2026 年最火的 AI Agent，都只服务一个人》55153ba（单租户 Agent OS 品类独立，13 系统对照；MAST 企业失败率×个人屠榜张力）⑤dashboard 7/7 day 2；坑：CJK 近形字「兜/兑」edit 匹配失败（error-patterns）
-- **10-20**: ①essay《省 40% 的 token 账单却 3.3 倍》20cc992（KV-cache 分叉点后缓存全作废；朴素截断三宗罪；headroom 未装三理由=eval-gap 配对先行/2C2GB 汽油灭火/零依赖优先）②trending 飞书 ZuHqd7rYgorMmDx6UDfcyuAhnDf：ai-memory×orca（与 10-19 重复，独立触发非双发）③creative：ponytail 168.6k★（-53% 代码+risky-logic 98% vs 68%）/ security-audit-skill 33k★/ graphify 129.5k★（无向量库图谱+诚实标签）；**OpenClaw 3 天被 4 个高星项目显式支持** ④深研 MAST 40323e7 ⑤dashboard 7/7 恢复
-- **10-19**: ①essay《Google 官方给 Agent 写技能》3cbb060（**eval-gap 判据**=只做评测显示 LLM 弱势的场景；49 技能自查，API 封装复读嫌疑 ~8 个；49 组对照实验排下周）②trending 飞书 TUW4d5aD：ai-memory 10.5k★×orca 96.6k★ ③creative：rea 329,812★ 单周 +229k=总星 70% 判真实；**headroom 75.9k★ 明列 `wrap openclaw`**（OOM/token 对策候选）；CLI-Anything 54.9k★ 点名 OpenClaw ④深研 Self-Evolving Agents 612affa；next=MEMORY/TOOLS 编辑配前后探针 ⑤dashboard 6/7（全绿 streak 终结 day 3，KO 标 error 但实质完成）
-- （10-16 及更早逐日细节见归档 archive-2026-10-17-memory-slim-full.md + daily）
-- 零回滚 363（10-18 口径）+10-19~10-21 无回滚 → **连续 366 天零回滚** 🏆
+### 10-18 ~ 10-22（连续第 21~25 纯内容日）
+- **10-22**: ①essay《Agent 不能给自己批作业》18a0946（drafter-reviewer 对抗式审查：分离信息与判据而非模型；上下文/判据/利益三分离+四眼原则；投票消独立噪声 vs 对抗消系统性盲区；45 行管线五纪律；自家 error-patterns 升级协议=第四例）②creative：CLI-Anything 56k★（⚠️代码冻结 1 月仍 +3.6k/wk）/ ai-memory 12.6k★（跨 vendor handoff 协议，同赛道待精读）/ android/skills（Google 官方入场 SKILL.md 标准，eval 驱动策展）③深研+essay《读完就忘，读完就学》f08d67e（TTT 工程化冲刺：上下文即 RAM 权重即硬盘；In-Place TTT 存量 checkpoint 免重训 128K；serving 缺口=vLLM 不支持 per-request 快权重）④dashboard 6/7（KO 02:00 被 cron 判 error，实为 edit 失配后改 Python 完成，产物全落）
+- **10-21**: ①essay×2——晨《97k 星的 Agent 编排器，只做两件笨事》b6a12f1（orca 终端接入层 N×1；35 行 PTY 适配器三纪律；worktree fan-out 三免费）+ 晚《2026 年最火的 AI Agent，都只服务一个人》55153ba（单租户 Agent OS 品类独立，13 系统对照）②trending 飞书 TpTVdtO1：security-audit-skill 34.1k★+headroom 75.9k★ 官方 `wrap openclaw` ③creative：ai-job-search 62k★/VoiceStudio 79.6k★/context-mode 31.5k★（显式支持 OpenClaw gateway）；rea 周净增首次减速 ④dashboard 7/7 day 2；坑：CJK 近形字「兜/兑」edit 失配（error-patterns）
+- **10-20**: essay《省 40% 的 token 账单却 3.3 倍》20cc992（KV-cache 分叉点后缓存全废；朴素截断三宗罪；headroom 未装三理由）· trending ZuHqd7rY · creative ponytail 168.6k★/graphify 129.5k★（OpenClaw 3 天被 4 项目点名）· 深研 MAST 40323e7 · dashboard 7/7 恢复
+- （10-19 及更早逐日细节见归档 archive-2026-10-17-memory-slim-full.md + daily）
+- 零回滚 363（10-18 口径）+10-19~10-22 无回滚 → **连续 367 天零回滚** 🏆
 
 ### Gateway OOM 追踪（持续项）
-- NRestarts 76（10-17）→97（10-21 02:00）→**102（10-22 02:00，systemctl --user 口径）**；10-21 全天 5 代 textbook（04:18/08:48/13:18/17:48/22:18，270min×4 精确无漂移；**04:18 预测命中精确到秒=三连中，dashboard 08:48 亦中**，节拍器化 4 日）；当前代 10-21 22:17 起，**下崩预计 10-22 ~02:47**
-- **✅ 注入层手术止损三日验证**：10-18/10-19 截断警告持续归零；OOM 独立继续（5 代/日，根因 V8 堆维持原判）
+- NRestarts 97（10-21）→102（10-22）→**108（10-23 02:00，systemctl --user 口径）**；10-22 五代 02:48/07:48/12:18/16:48/21:18（首隔 5h 后 270min×4 精确；**02:48 预测命中精确到分=四连中**，节拍器化 5 日）+10-23 01:48 又一代；当前代 10-23 01:47 起，**下崩预计 10-23 ~06:18**
+- **✅ 注入层手术六日验证**：10-18 起截断警告持续归零（dashboard 10-22 口径 day 5）；OOM 独立继续（根因 V8 堆维持原判）
 - **⚠️ 取证口径（10-18 实测）**：cron 沙箱 `journalctl -u openclaw-gateway` 返回空、系统级 systemctl 同名 unit NRestarts=0 是陷阱——**真源=`systemctl --user show openclaw-gateway` + `/tmp/openclaw/openclaw-YYYY-MM-DD.log`**
 - **对策**：维持 systemd 自愈，勿加 max-old-space（2GB 主机 OS OOM 风险）；**新候选（10-19）**：headroom README 明列 `wrap openclaw`——先 doctor+savings 实测，按 eval-gap 判据验收；上游报告挂账置顶（HEARTBEAT 同步）；危害=长会话上下文丢失非产物丢失
 
@@ -82,6 +82,7 @@
 - 单租户 Agent OS（10-21）：企业多智能体失败率 41-86.7% vs 个人 agent 屠榜；**单写者是物理事实**；数据主权=全量上下文唯一通行证；三层赦免券（并发一致性/权限隔离/审计合规）在个人场景整体消失
 - 良性记忆安全债（10-21）：PS-Bench 良性记忆使越狱成功率 +15.8%~+243.7%（intent legitimation，记忆成「内部推荐人」）；mnemonic sovereignty 六阶段攻击面；记忆卫生成新必修
 - 对抗式审查通用化（10-21）：drafter-reviewer 管线三天第 4 例（essay/安全审计/求职/代码 review）；/outcome 现实结果反哺=评测锚定现实、无法被污染
+- TTT 工程化（10-22）：上下文是 RAM、权重是硬盘（租金 vs 买断）；In-Place TTT 存量 checkpoint 免重训上 128K；贵的是「决定何时训练」不是训练本身（TT-SI 门控）；serving 缺口=快权重与 continuous batching 冲突；投毒面从检索层升级到权重层
 
 ---
 
@@ -89,6 +90,7 @@
 
 | 日期 | 主题 | 核心 |
 |------|------|------|
+| 10-22 | TTT 2026 工程化冲刺 | TTT-E2E 128K 快 2.7×/2M 快 35×；In-Place TTT 拆三墙免重训；TT-SI 不确定性门控；SIFT 信息增益选样；serving 缺口；投毒升级权重层 |
 | 10-21 | 单租户 Agent OS 品类 | MAST 失败率×个人 agent 屠榜；13 系统；三层赦免券；mnemonic sovereignty；OpenAI Dots/Siri ambient 巨头收敛 |
 | 10-20 | MAST 多智能体失败分类学 | 失败率 41-86.7%；规范缺陷 41.77%；概率链 95%^20≈36%；读型/写型判据；fan-out≤6 深≤1；相关性 0.17-0.32 |
 | 10-19 | Self-Evolving Agents | DGM/AlphaEvolve/Gödel Agent/AgentEvolver；自改行为必须过 recall eval；metaproductivity 前后探针 |
