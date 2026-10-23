@@ -13,24 +13,24 @@
 
 ---
 
-## Current Focus（截至 2026-10-23）
+## Current Focus（截至 2026-10-24）
 
 ### 运行体制（09-27 起）
 - **cron 7 条全内容线**：KO 02:00 / essay 05:00 / dashboard 06:00 / trending 07:00+08:00 / creative 19:00 / deep-exploration 20:00。开发线 cron 已删，**开发节奏=罗嵩手动驱动**
 - **AI×Neuro cron 已停用**（10-01 罗嵩指令）；trending-deep provider 瞬态已归档关闭
 
-### 10-18 ~ 10-22（连续第 21~25 纯内容日）
-- **10-22**: ①essay《Agent 不能给自己批作业》18a0946（drafter-reviewer 对抗式审查：分离信息与判据而非模型；上下文/判据/利益三分离+四眼原则；投票消独立噪声 vs 对抗消系统性盲区；45 行管线五纪律；自家 error-patterns 升级协议=第四例）②creative：CLI-Anything 56k★（⚠️代码冻结 1 月仍 +3.6k/wk）/ ai-memory 12.6k★（跨 vendor handoff 协议，同赛道待精读）/ android/skills（Google 官方入场 SKILL.md 标准，eval 驱动策展）③深研+essay《读完就忘，读完就学》f08d67e（TTT 工程化冲刺：上下文即 RAM 权重即硬盘；In-Place TTT 存量 checkpoint 免重训 128K；serving 缺口=vLLM 不支持 per-request 快权重）④dashboard 6/7（KO 02:00 被 cron 判 error，实为 edit 失配后改 Python 完成，产物全落）
-- **10-21**: ①essay×2——晨《97k 星的 Agent 编排器，只做两件笨事》b6a12f1（orca 终端接入层 N×1；35 行 PTY 适配器三纪律；worktree fan-out 三免费）+ 晚《2026 年最火的 AI Agent，都只服务一个人》55153ba（单租户 Agent OS 品类独立，13 系统对照）②trending 飞书 TpTVdtO1：security-audit-skill 34.1k★+headroom 75.9k★ 官方 `wrap openclaw` ③creative：ai-job-search 62k★/VoiceStudio 79.6k★/context-mode 31.5k★（显式支持 OpenClaw gateway）；rea 周净增首次减速 ④dashboard 7/7 day 2；坑：CJK 近形字「兜/兑」edit 失配（error-patterns）
-- **10-20**: essay《省 40% 的 token 账单却 3.3 倍》20cc992（KV-cache 分叉点后缓存全废；朴素截断三宗罪；headroom 未装三理由）· trending ZuHqd7rY · creative ponytail 168.6k★/graphify 129.5k★（OpenClaw 3 天被 4 项目点名）· 深研 MAST 40323e7 · dashboard 7/7 恢复
-- （10-19 及更早逐日细节见归档 archive-2026-10-17-memory-slim-full.md + daily）
-- 零回滚 363（10-18 口径）+10-19~10-22 无回滚 → **连续 367 天零回滚** 🏆
+### 10-18 ~ 10-23（连续第 21~26 纯内容日）
+- **10-23**: ①晨 essay《换 Agent 不用重新解释：会话交接做成分布式协议》9a42c88（直读 ai-memory 架构文档；交接三不可靠三对策：信道→幂等键+at-least-once / 时钟→CAS ended_at / 认领→offer-not-claim；SessionEnd 三写同事务；markdown 事实源索引皆派生；amg 考长期记忆 vs handoff 考工作交接，交接连续性无基准=空位）②晚深研+essay《Agent 的宪法是在哪一轮消失的》6645077（Governance Decay：压缩一次违规率最高 0→59% 且是 harness 层 bug；11 组对照「什么都不做」三线全胜；Manus 100:1→KV-cache 命中率=生产第一指标；四层栈：服务端 editing/文件系统 swap/SAGE-KV 4×/pinning 带外执法）③creative：NVIDIA OpenShell 18.2k★（形式化验证 agent 治理）/ Claude-Red 8k★（78 攻击侧 SKILL.md，与 security-audit 攻防成对）/ VoxCPM2 40k★（tokenizer-free TTS）；rakazo 把 OpenClaw 列直接竞品 ④dashboard 6/7（第 7 个=自身 running 良性口径；**KO consecutiveErrors 清零 ✅**）
+- **10-22**: essay《Agent 不能给自己批作业》18a0946（对抗式审查：分离信息与判据非模型；三分离+四眼原则；45 行管线五纪律；自家 error-patterns=第四例）· 深研+essay《读完就忘，读完就学》f08d67e（TTT：上下文即 RAM 权重即硬盘；In-Place TTT 免重训；serving 缺口）· creative：CLI-Anything 56k★/ai-memory 12.6k★/android/skills · dashboard 6/7（KO 判 error 实为 edit 失配，产物全落）
+- **10-21**: essay×2 b6a12f1（orca 终端接入层）+55153ba（单租户 Agent OS，13 系统对照）· trending：security-audit-skill 34.1k★+headroom 75.9k★ `wrap openclaw` · creative 三项目显式支持 OpenClaw · dashboard 7/7 day 2
+（10-20 及更早逐日细节见 daily + 归档 archive-2026-10-17-memory-slim-full.md：10-20=KV-cache essay 20cc992+MAST 深研 40323e7+ponytail/graphify；10-19 及更早略）
+- 零回滚 363（10-18 口径）+10-19~10-23 无回滚 → **连续 368 天零回滚** 🏆
 
 ### Gateway OOM 追踪（持续项）
-- NRestarts 97（10-21）→102（10-22）→**108（10-23 02:00，systemctl --user 口径）**；10-22 五代 02:48/07:48/12:18/16:48/21:18（首隔 5h 后 270min×4 精确；**02:48 预测命中精确到分=四连中**，节拍器化 5 日）+10-23 01:48 又一代；当前代 10-23 01:47 起，**下崩预计 10-23 ~06:18**
-- **✅ 注入层手术六日验证**：10-18 起截断警告持续归零（dashboard 10-22 口径 day 5）；OOM 独立继续（根因 V8 堆维持原判）
+- NRestarts 97（10-21）→102（10-22）→108（10-23）→**113（10-24 02:00，systemctl --user 口径）**；10-23 五代 01:48/06:34/10:48/15:18/19:48+10-24 00:18——五间隔合计恰 1350min=**平均 270.0 整**（286/254/270/270/270：06:18 预测实际 06:34 +16min 近中，精确命中 streak 止于四连中，但后三隔 270 整锁回）；当前代 10-24 00:17 起，**下崩预计 10-24 ~04:48**
+- **✅ 注入层手术六日验证**：10-18 起截断警告持续归零（dashboard 10-23 口径 day 6）；OOM 独立继续（根因 V8 堆维持原判）
 - **⚠️ 取证口径（10-18 实测）**：cron 沙箱 `journalctl -u openclaw-gateway` 返回空、系统级 systemctl 同名 unit NRestarts=0 是陷阱——**真源=`systemctl --user show openclaw-gateway` + `/tmp/openclaw/openclaw-YYYY-MM-DD.log`**
-- **对策**：维持 systemd 自愈，勿加 max-old-space（2GB 主机 OS OOM 风险）；**新候选（10-19）**：headroom README 明列 `wrap openclaw`——先 doctor+savings 实测，按 eval-gap 判据验收；上游报告挂账置顶（HEARTBEAT 同步）；危害=长会话上下文丢失非产物丢失
+- **对策**：维持 systemd 自愈，勿加 max-old-space（2GB 主机 OS OOM 风险）；headroom `wrap openclaw` 候选须先过 20 题配对；上游报告挂账置顶；危害=长会话上下文丢失非产物丢失
 
 ### 测试计数快照（10-15 KO 起，纯内容日零增量）
 | 项目 | Tests | 备注 |
@@ -46,7 +46,7 @@
 
 ### amg kd 手动续跑 queue（cron 已删，罗嵩驱动）
 候选：`gpt4_f2262a51` doctors / `gpt4_ab202e7f` kitchen（donate→replace 语义墙）/ `bf659f65` albums GT=3 只辨 2 / `0a995998` clothing；unbanked 剩 134；pref 族 29 qids 永久关闭
-**核心纪律**（全量见 TOOLS.md+归档）：harness verbatim 拷贝 / tsv 裸字节 append / census-first+pin / 新正则前缀先 grep 冲突 / 后台长 suite Tee 落盘 / PYTHONHASHSEED=7 shell 前缀 / replay=cp canonical+字节级替换（assert count==1）/ exec timeout ≥400s
+**核心纪律全量见 TOOLS.md+归档**（verbatim 拷贝 / 裸字节 append / census-first / PYTHONHASHSEED=7 / replay 字节级 assert count==1 / timeout ≥400s）
 
 ### 最高优先级（human-blocked）
 - [ ] **amg: README + PyPI/npm publish** — 技术前置 100% 完成；PyPI 名免费零阻塞，人工三步（独立 GitHub 仓/2FA+Trusted Publisher/twine）；⚠️ npm 裸名被占（#068），命名决策（推荐 `@robertsong2019/agent-memory-graph` 或 `amgraph`，均实测 FREE）
@@ -83,6 +83,8 @@
 - 良性记忆安全债（10-21）：PS-Bench 良性记忆使越狱成功率 +15.8%~+243.7%（intent legitimation，记忆成「内部推荐人」）；mnemonic sovereignty 六阶段攻击面；记忆卫生成新必修
 - 对抗式审查通用化（10-21）：drafter-reviewer 管线三天第 4 例（essay/安全审计/求职/代码 review）；/outcome 现实结果反哺=评测锚定现实、无法被污染
 - TTT 工程化（10-22）：上下文是 RAM、权重是硬盘（租金 vs 买断）；In-Place TTT 存量 checkpoint 免重训上 128K；贵的是「决定何时训练」不是训练本身（TT-SI 门控）；serving 缺口=快权重与 continuous batching 冲突；投毒面从检索层升级到权重层
+- Handoff 是分布式协议（10-23）：三不可靠三对策（信道→幂等键+at-least-once；时钟→CAS ended_at；认领→offer-not-claim）；markdown 是 source of truth、索引皆派生可重建；记忆系统=天然注入放大器，提示词内历史一律按不可信数据
+- Governance Decay（10-23）：宪法在压缩轮消失——压缩一次违规率最高 0→59%，harness 层 bug 修复在架构不在提示词；11 组对照「什么都不做」三线全胜（压缩悖论最强证据）；Manus 100:1→KV-cache 命中率=生产第一指标；执法必须带外（断路器装在电流经过的地方）；recency 驱逐最差、换模型必重测
 
 ---
 
@@ -90,17 +92,15 @@
 
 | 日期 | 主题 | 核心 |
 |------|------|------|
+| 10-23 | 上下文工程=新编译器（Governance Decay） | 压缩一次 0→59%；什么都不做三线全胜；四层栈（服务端 editing/文件系统 swap/SAGE-KV 4×/pinning 带外）；ACE 第三循环 +10.6% |
 | 10-22 | TTT 2026 工程化冲刺 | TTT-E2E 128K 快 2.7×/2M 快 35×；In-Place TTT 拆三墙免重训；TT-SI 不确定性门控；SIFT 信息增益选样；serving 缺口；投毒升级权重层 |
 | 10-21 | 单租户 Agent OS 品类 | MAST 失败率×个人 agent 屠榜；13 系统；三层赦免券；mnemonic sovereignty；OpenAI Dots/Siri ambient 巨头收敛 |
 | 10-20 | MAST 多智能体失败分类学 | 失败率 41-86.7%；规范缺陷 41.77%；概率链 95%^20≈36%；读型/写型判据；fan-out≤6 深≤1；相关性 0.17-0.32 |
 | 10-19 | Self-Evolving Agents | DGM/AlphaEvolve/Gödel Agent/AgentEvolver；自改行为必须过 recall eval；metaproductivity 前后探针 |
 | 10-18 | Deep Research Agents × RL | RAG→RL 练进直觉；Kimi-Researcher 涌现；ZeroSearch 省 88%；停搜判据 |
 | 10-17 | Computer-Use Agents | OSWorld 38→82%；OSWorld-Human 负效用账单；IPI +32% 安全线 |
-| 10-16 | ACE Agentic Context Engineering | arXiv:2510.04618 ICLR 2026；账本式上下文；自家 AGENTS/MEMORY 改造蓝图 |
-| 10-15 | 图结构 Agent 记忆 | 13 系统；Zep LME +18.5%→amg PPR 对照臂 |
-| 10-14 | 闲置时间计算经济学 | sleep-time 摊销 5×；TTT 谱系（三部曲终章） |
 
-> 10-10 及更早研究（#027-#064，含 LLM-as-Judge/OTel/GraphRAG 全景）：见归档索引（archive-2026-07-* 等）及 catalyst-research/（历史篇仍有 untracked 待批量 commit）
+> 10-16 及更早研究（ACE 账本式上下文/图结构记忆 13 系统/LLM-as-Judge/OTel/GraphRAG 等，#027-#064）：见 catalyst-research/ 与归档索引（历史篇仍有 untracked 待批量 commit）
 
 ---
 
@@ -135,9 +135,7 @@
 - **搜索路由**：详见 TOOLS.md（Tavily 通用 / AnySearch 垂直；AnySearch 已从 mcporter 消失，备援=web_fetch）
 
 ### Timeline 开放项（收拢）
-- amg Positioning whitepaper「Beyond Retrieval: Write-Manage-Read」· get_operation_history()（MemOps 兼容）
-- GraphRAG 侧：Passage Nodes（~40 行）· GraphRAG-Bench 参赛（唯一阻塞=ollama 未装）· README 对比矩阵+Awesome-GraphRAG PR
-- OpenClaw 插件分发：extensions/amg-memory/（SKILL.md+plugin.json，Path B ~60 行）
+amg whitepaper「Beyond Retrieval: Write-Manage-Read」· get_operation_history() · GraphRAG：Passage Nodes（~40 行）/Bench 参赛（阻塞=ollama）/对比矩阵 PR · OpenClaw 插件 extensions/amg-memory/（~60 行）
 
 ### 重要框架
 A2A（150+ 组织/LF AAIF）· MCP（97M+ 下载，stateless core）· memorywire（5 ops×4 types，v0.5 计划 MCP-WG+IETF）
