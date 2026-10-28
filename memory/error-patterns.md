@@ -248,3 +248,10 @@
 - **根因：** commit message 用双引号包裹含 `$数字` 文本；文件内容本身无恙，纯 message 层
 - **修正：** commit message 含 `$` 一律单引号或 `\$` 转义
 - **出现次数：** 1
+
+### [2026-10-28] commit message 中 $ 被 shell 展开
+- **场景：** 晚间 essay push，commit -m 双引号内含 `$0.5`（监督定价）
+- **错误：** `$0.5` 展开为 `/usr/bin/bash.5`（$0=shell 路径）写进 commit message；HTML 正文无恙
+- **根因：** heredoc 外的双引号 commit -m，$ 未转义
+- **修正：** 已推送不改写历史；教训=含 $ 的 commit message 一律单引号或 heredoc 传 -F
+- **出现次数：** 1
