@@ -13,22 +13,22 @@
 
 ---
 
-## Current Focus（截至 2026-10-29）
+## Current Focus（截至 2026-10-30）
 
 ### 运行体制（09-27 起）
 - **cron 7 条全内容线**：KO 02:00 / essay 05:00 / dashboard 06:00 / trending 07:00+08:00 / creative 19:00 / deep-exploration 20:00。开发线 cron 已删，**开发节奏=罗嵩手动驱动**
 - **AI×Neuro cron 已停用**（10-01 罗嵩指令）；trending-deep provider 瞬态已归档关闭
 
-### 10-25 ~ 10-28（第 28~31 纯内容日；10-26 rate_limit 中断、10-27 恢复、10-28 7/7 全绿）
-- **10-28（第 31 日，7/7 全绿）**: ①essay 反AI slop 品味管线 ad81313（见 Key Insights）②dashboard 8b4bfa3（rate_limit 后首次 7/7，day 12）③creative：jakubkrehel/skills 8.9k★（interface-review 可即装）/macro 5.2k★（双向图+团队 AI memory）/DeepTutor 47k★/thinkrail 持续高位——**skills 三层分化完成**（方法论→审查工具→官方平台）；ECC 290k★（AgentShield=agent 供应链 SAST，与 10-27 博文互证）④晚深研+essay 审批疲劳 8758e5f（18 源；见 Key Insights）⑤⚠️ commit message `$0.5` 被 shell 展开——含 $ 的 -m 用单引号/-F heredoc
-- **10-27**: ①晨线全恢复（essay 05:00 76da252 / dashboard 06:00 e2228d2 补跑 day 11 / trending 07:00）②essay Skill 供应链（见 Key Insights）③creative：JetBrains thinkrail 晨→晚 22× 跳变（spec 图谱记忆+worktree 隔离）/openbot 同类桌面竞品/huashu-design 3.0（MIT，nuwa 同作者）④晚深研+essay 图谱记忆 e5da563（见 Key Insights；研究笔记子仓 498d187 已 push）
-- **10-26**: ①晨线四条 **rate_limit 全灭**（08:00 自愈）②creative：SkillSpector/Agent-Reach **均待罗嵩决策** ③深研+essay Agentic RL dc3edfe（见 Key Insights；EMPO² 与 amg 同频）
-- **10-25**: ①essay HyperFrames 2be612d ②creative：graphify 134.7k★（对标 amg，建议试）③深研+essay 世界模型 fbaa13e（见 Key Insights）④dashboard 7/7
-（10-24 及更早逐日细节见 daily + archive-2026-10-17-memory-slim-full.md；10-22~10-24 洞察均已入 Key Insights）
-- 零回滚 363（10-18 口径）+10-19~10-28 无回滚 → **连续 373 天零回滚** 🏆
+### 10-26 ~ 10-29（第 29~32 纯内容日；10-26 rate_limit 中断→10-27 恢复→10-28/29 连续两天 7/7 全绿）
+- **10-29（第 32 日，7/7 全绿，连续 2 天）**: ①essay 节拍器经济学 ce0ba71（OOM 取证三层全瞎+crash-only 三件套；文中代码全实测 lifespan=[270×8,292,248]）②dashboard 7b7ae7d day 13 ③trending deep：thinkrail/openbot 双 +1000/日（14 里 8 个 agent 基建，「skills 即产品」固化）④creative：OpenMausBot 7k★（陪伴 agent×VM×审批闭环）/Claude-Code-Game-Studios 28.6k★（49 agents+74 skills=组织架构即配置）/taste-skill 105k+claude-mem 104k 双破 10 万星 ⑤晚深研+essay 神经符号护栏 18f704a（40+ 源五学派；见 Key Insights）
+- **10-28（第 31 日，7/7 全绿）**: ①essay 反AI slop 品味管线 ad81313（见 Key Insights）②dashboard 8b4bfa3（rate_limit 后首次 7/7，day 12）③creative：jakubkrehel/skills 8.9k★（interface-review 可即装）——**skills 三层分化完成**；ECC 290k★（AgentShield 与 10-27 博文互证）④晚深研+essay 审批疲劳 8758e5f（18 源；见 Key Insights）⑤⚠️ commit message `$0.5` shell 展开——含 $ 用单引号/-F heredoc
+- **10-27**: ①晨线全恢复 ②essay Skill 供应链 76da252 + 图谱记忆 e5da563（见 Key Insights；研究子仓 498d187 已 push）③creative：thinkrail 22× 跳变/huashu-design 3.0
+- **10-26**: 晨线四条 **rate_limit 全灭**（08:00 自愈）；creative：SkillSpector/Agent-Reach 待罗嵩决策；深研+essay Agentic RL dc3edfe（EMPO² 与 amg 同频）
+（10-25 及更早逐日细节见 daily + archive-2026-10-17-memory-slim-full.md；10-22~10-25 洞察均已入 Key Insights）
+- 零回滚 363（10-18 口径）+10-19~10-29 无回滚 → **连续 374 天零回滚** 🏆
 
 ### Gateway OOM 追踪（持续项）
-- NRestarts 127（10-27）→132（10-28）→**138（10-29 02:00，+6 恰合六代）**；10-28 六代 02:18/06:48/11:18/15:48/20:39/（+10-29）00:48——**前四拍与预测分秒不差（八连中）**，后两拍漂移（间隔 291/248min）；10-26 12h 存活反常未复现、活动耦合维持；当前代 10-29 00:47 起，**下崩预计 ~05:17**（270min 口径）
+- NRestarts 127（10-27）→132（10-28）→138（10-29 02:00）→**143（10-30 02:00，+5 恰合五代）**；10-29 五代 05:36/09:18/13:48/18:18/23:18——昨日预测五代仅末拍命中（23:17→23:18），间隔 222~300min 均值 262.5min，**八连中终结、漂移扩大**（dashboard day 13 同口径 4h09m~4h51m）；当前代 10-29 23:18 起，**下崩预计 ~03:48**（五代节拍 ~03:48/08:18/12:48/17:18/21:48；漂移期预测精度降级）
 - **✅ 注入层手术**：10-18 起截断警告归零（dashboard 链已续至 day 12）；OOM 独立（根因 V8 堆维持原判）
 - **⚠️ 取证口径**：见 TOOLS.md 永久规则（真源=`systemctl --user show` + `/tmp/openclaw/openclaw-*.log`）
 - **对策**：维持 systemd 自愈，勿加 max-old-space（2GB 主机）；headroom 候选先过 20 题配对；上游报告置顶；危害=长会话上下文丢失
@@ -74,6 +74,7 @@
 - 图谱记忆诚实账单（10-27）：长上下文幻觉三锤（NoLiMa 32K 处 10/13 腰斩、RULER 有效长度<标称、LaRA 128K 上 RAG 反超）；图结构三哲学=谁整理记忆（算法/时间/agent 自整理）；全量 GraphRAG 100-1000× 成本常输 vanilla、LazyGraphRAG 索引 0.1% 便宜 700×；**Mem0 vs Zep 总分吵架、temporal/multi-hop 图优势单项共识——别拿 leaderboard 做决策**；bi-temporal 最小实现=valid_at 两列；遗忘最被低估（与 kupdate supersedence 互证）
 - 反AI slop 品味管线（10-28）：AI 味=分布坍缩非审美缺陷（调温救不了）；品味三能力（负面知识/真实参照/自我单调感知）agent 全缺——判断前置成工序（ref_board/84 样张风格库/外观账本）；构型泛化：对抗审查、SAST、error-patterns 同一台机器
 - 审批疲劳（10-28）：三十年证据链（UAC 89% 批准/Android 17% 注意/临床警报 98 起 80 死）——频率超容量提示从信息变仪式；2026 疲劳成攻击面（不绕审批、耗尽审批的人）；监督不可能三角出路=判断搬进配置+风险分层预算；**override rate 趋零是红灯不是成功**；监督定价 $0.5-2/次、240 次/天封顶
+- 神经符号权力反转（10-29）：LLM-Modulo 公理——可靠性继承自验证器不来自模型（纯 LLM 规划近零分、翻译给求解器 100%、混合 15→100%）；**LTL 监控全面超 LLM judge（AgentVerify 13.33% vs 组合形式方法 86.67%）**——能写成时序逻辑的约束不该花 token/人类注意力（审批疲劳数学加强版）；Goodhart 搬家：验证器被骗战线终结、薄弱环节移到规约书写（REFORM √11→11 语法合法但证错题）；2023 给 LLM 配拐杖、2026 给符号系统雇劳工（AlphaProof 80M Lean 题、陶哲轩定调成真）
 
 ---
 
@@ -81,6 +82,7 @@
 
 | 日期 | 主题 | 核心 |
 |------|------|------|
+| 10-29 | 神经符号权力反转（LLM-Modulo） | 五学派（规划/证明器/运行时护栏/生成时约束/制度层）；LTL 监控>LLM judge 13.33% vs 86.67%；VeriGuard 先验证后上线 100%；Goodhart 搬家到规约书写；AlphaProof 80M Lean 题 |
 | 10-28 | 审批疲劳×监督带宽 | 18 源三十年证据链；疲劳成攻击面（OWASP 人类信任利用）；不可能三角（频率×理解×技能）；信任校准=可学习函数（GP 后验三区）；判断进配置；监督定价 $0.5-2/次 |
 | 10-27 | 图谱记忆的 2026 | NoLiMa 幻觉三锤；三哲学谁整理记忆（HippoRAG PPR/Zep bi-temporal/A-Mem 自整理）；LazyGraphRAG 700×；Mem0 vs Zep 总分吵架单项共识；遗忘最被低估 |
 | 10-26 | Agentic RL | TMLR 500+ 定调；IGPO/GiGPO 信用分配；Memory-R1/Mem-α/EMPO²；经验取代数据成新稀缺品 |
@@ -90,9 +92,8 @@
 | 10-22 | TTT 2026 工程化冲刺 | TTT-E2E 128K 快 2.7×/2M 快 35×；In-Place TTT 拆三墙免重训；TT-SI 不确定性门控；SIFT 信息增益选样；serving 缺口；投毒升级权重层 |
 | 10-21 | 单租户 Agent OS 品类 | MAST 失败率×个人 agent 屠榜；13 系统；三层赦免券；mnemonic sovereignty；OpenAI Dots/Siri ambient 巨头收敛 |
 | 10-20 | MAST 多智能体失败分类学 | 失败率 41-86.7%；规范缺陷 41.77%；概率链 95%^20≈36%；读型/写型判据；fan-out≤6 深≤1；相关性 0.17-0.32 |
-| 10-19 | Self-Evolving Agents | DGM/AlphaEvolve/Gödel Agent/AgentEvolver；自改行为必须过 recall eval；metaproductivity 前后探针 |
 
-> 10-27 及更早研究全量见 catalyst-research/ 与归档（untracked 待批量 commit 仍在）
+> 10-28 及更早研究全量见 catalyst-research/ 与归档（54 项 untracked 待批量 commit）
 
 ---
 
@@ -142,4 +143,4 @@ A2A（150+ 组织/LF AAIF）· MCP（97M+ 下载，stateless core）· memorywir
 | memory/archive-insights-001-055.md / -129-180.md / -181-262.md | insight 编号段 |
 | memory/archive-2026-07-early.md / -mid.md / 2026-08-timeline.md / 2026-09-26-27.md / 2026-10-01-02.md / 2026-10-03~10-11 逐日 | 历史日节与 cycle 归档 |
 | memory/github-trending-analysis-*.md | trending 报告 |
-| catalyst-research/exploration-notes/ | 150+ 深研笔记（10-02 起 10 篇 untracked 待批量 commit） |
+| catalyst-research/exploration-notes/ | 150+ 深研笔记（08-24 起 54 项 untracked 待批量 commit） |
