@@ -13,21 +13,21 @@
 
 ---
 
-## Current Focus（截至 2026-10-31）
+## Current Focus（截至 2026-11-01）
 
 ### 运行体制（09-27 起）
 - **cron 7 条全内容线**：KO 02:00 / essay 05:00 / dashboard 06:00 / trending 07:00+08:00 / creative 19:00 / deep-exploration 20:00。开发线 cron 已删，**开发节奏=罗嵩手动驱动**
 - **AI×Neuro cron 已停用**（10-01 罗嵩指令）；trending-deep provider 瞬态已归档关闭
 
-### 10-28 ~ 10-30（第 31~33 纯内容日；10-28/29/30 连续三天 7/7 全绿）
+### 10-29 ~ 10-31（第 32~34 纯内容日；10-28~10-31 连续四天 7/7 全绿）
+- **10-31（第 34 日，7/7 全绿，连续 4 天）**: ①essay GEO/llms.txt 6c3be35（被 AI 引用=新流量入口；llms.txt 悖论见 Key Insights；顺手落地 robots.txt+llms.txt；455 篇体检全无 meta description）②dashboard d4c6f35 day 15 ③creative：30 万俱乐部实为 3 席（superpowers 309.7k/mattpocock 307.8k/ECC 293.7k）、expo/skills 官方三渠道分发、负面信号 jailbreaks 11.8k★上日榜 ④晚深研+essay Tool Synthesis 79a8b7d（见 Key Insights；next：挖会话日志找≥3 次重复调用组合）
 - **10-30（第 33 日，7/7 全绿，连续 3 天）**: ①essay Agent 组织架构即配置 79315a9（组织设计层：百年组织学 Brooks/Graicunas/Conway × 高星 agent 仓全是配置；60 行 org-lint 埋 5 组织病全命中）②dashboard 6517bb8 day 14 ③trending deep：DeepTutor+claude-mem 双记忆基建（飞书文档 create→write→read 验证 ✅）④creative：security-audit-skill 53.3k★（猎人/验证者分离）/mattpocock skills 破 30 万星/给罗嵩 3 项（llms.txt 吃 Agent Readiness）⑤晚深研+essay 让 Agent 睡个觉 3c5a36d（记忆整固三共识；见 Key Insights；amg 落点：RRF 融合 A/B+边 valid_at+夜间整固 cron）
 - **10-29（第 32 日）**: ①essay 节拍器经济学 ce0ba71（OOM 取证三层全瞎+crash-only 三件套；代码全实测 lifespan=[270×8,292,248]）②dashboard day 13 ③trending：thinkrail/openbot 双 +1000/日，「skills 即产品」固化 ④creative：OpenMausBot 7k★/Claude-Code-Game-Studios 28.6k★/taste-skill 105k+claude-mem 104k 双破 10 万星 ⑤晚深研+essay 神经符号护栏 18f704a（见 Key Insights）
-- **10-28（第 31 日）**: ①essay 反AI slop 品味管线 ad81313（见 Key Insights）②dashboard day 12（rate_limit 后首次 7/7）③creative：jakubkrehel/skills 8.9k★——skills 三层分化完成；ECC 290k★ ④晚深研+essay 审批疲劳 8758e5f（见 Key Insights）⑤⚠️ commit message 含 $ 用单引号/-F heredoc
-- 10-27：essay Skill 供应链 76da252+图谱记忆 e5da563（见 Key Insights）；10-26：晨线 rate_limit 全灭 08:00 自愈；更早见归档
-- 零回滚 363（10-18 口径）+10-19~10-30 无回滚 → **连续 375 天零回滚** 🏆
+- 10-27：essay Skill 供应链 76da252+图谱记忆 e5da563（见 Key Insights）；10-28 反AI slop ad81313/审批疲劳 8758e5f（洞察见 Key Insights）；10-26 晨线 rate_limit 全灭自愈；更早见归档
+- 零回滚 363（10-18 口径）+10-19~10-31 无回滚 → **连续 376 天零回滚** 🏆
 
 ### Gateway OOM 追踪（持续项）
-- NRestarts 138（10-29 02:00）→143（10-30 02:00）→**149（10-31 02:00，+6 恰合六拍）**；10-30 六拍 CST 03:48/07:48/11:48/16:18/20:36/10-31 00:48——间隔 240/240/270/258/252min 均值 252min，**漂移回摆、收窄至 4h~4h30m**；昨日五代预测仅首拍命中（其后系统性早 30~72min）；当前代 10-31 00:48 起，**下崩预计 ~04:55±25min**（漂移期预测精度降级）
+- NRestarts 143（10-30 02:00）→149（10-31 02:00）→**154（11-01 02:00）**；10-31 五拍 CST 05:35/09:18/13:48/18:18/22:18——间隔 287/223/270/270/240min 均值 258min，仍处 4h~4h47m 带；昨日预测首拍 04:55±25 → 实际 05:35（+40min 出带，漂移期预测连续两天失准）；当前代 10-31 22:17 起，**下崩预计 ~02:36±25min**
 - **✅ 注入层手术**：10-18 起截断警告归零（dashboard 链已续至 day 14）；OOM 独立（根因 V8 堆维持原判）
 - **⚠️ 取证口径**：见 TOOLS.md 永久规则（真源=`systemctl --user show` + `/tmp/openclaw/openclaw-*.log`）
 - **对策**：维持 systemd 自愈，勿加 max-old-space（2GB 主机）；headroom 候选先过 20 题配对；上游报告置顶；危害=长会话上下文丢失
@@ -74,7 +74,9 @@
 - 反AI slop 品味管线（10-28）：AI 味=分布坍缩非审美缺陷（调温救不了）；品味三能力（负面知识/真实参照/自我单调感知）agent 全缺——判断前置成工序（ref_board/84 样张风格库/外观账本）；构型泛化：对抗审查、SAST、error-patterns 同一台机器
 - 审批疲劳（10-28）：三十年证据链（UAC 89% 批准/Android 17% 注意/临床警报 98 起 80 死）——频率超容量提示从信息变仪式；2026 疲劳成攻击面（不绕审批、耗尽审批的人）；监督不可能三角出路=判断搬进配置+风险分层预算；**override rate 趋零是红灯不是成功**；监督定价 $0.5-2/次、240 次/天封顶
 - 神经符号权力反转（10-29）：LLM-Modulo 公理——可靠性继承自验证器不来自模型（纯 LLM 规划近零分、翻译给求解器 100%、混合 15→100%）；**LTL 监控全面超 LLM judge（AgentVerify 13.33% vs 组合形式方法 86.67%）**——能写成时序逻辑的约束不该花 token/人类注意力（审批疲劳数学加强版）；Goodhart 搬家：验证器被骗战线终结、薄弱环节移到规约书写（REFORM √11→11 语法合法但证错题）；2023 给 LLM 配拐杖、2026 给符号系统雇劳工（AlphaProof 80M Lean 题、陶哲轩定调成真）
-- Agent 记忆离线整固三共识（10-30）：①**检索>存储**——纯向量一致落败（MemPalace 96.6% 审计归因），BM25+实体 RRF 融合是获胜面 ②**sleep-time compute 帕累托改进**（5× token 削减+18% 准确率；条件=上下文稳定+查询可预测）③**遗忘=时间戳非删除**（bi-temporal）——amg 三个直接落点：检索 RRF A/B、图谱边加 valid_at/invalid_at、夜间整固 cron（与 10-25 世界模型/sleep-time 同源互证）
+- Agent 记忆离线整固三共识（10-30）：检索>存储（纯向量落败，RRF 获胜面）/sleep-time 帕累托 5×+18%/遗忘=bi-temporal 时间戳；amg 落点 RRF+valid_at+夜间整固 cron
+- GEO/llms.txt（10-31）：被 AI 引用=新流量入口（GEO 实证引用密度 +40%、rank-5 +115%，关键词堆砌有毒）；**llms.txt 悖论——AI 搜索爬虫不读但 AI 开发者工具读→优化「被工具理解」非「被搜索引用」**；三层排序与工具营销相反：地基（语义 HTML）>手法（证据密度）>保险（robots+llms.txt）
+- Tool Synthesis（10-31）：**工具合成=热路径摊销**（编译器视角：调工具=解释器、造工具=编译器）；三道门禁=验证后入库/造用同回路/入库如 PR；SMITH NeurIPS 2026：4B 联训造工具赢 30B 即兴、350M 小模型也受益——**工具是模型无关的资本**；36% 社区技能含注入、Clinejection 一条 issue 偷 npm token——**能力复利与攻击复利同构**（与 10-27 skill 供应链闭环）
 
 ---
 
@@ -82,6 +84,7 @@
 
 | 日期 | 主题 | 核心 |
 |------|------|------|
+| 10-31 | Tool Synthesis（Agent 自造工具） | 编译器视角热路径摊销；三道门禁（验证后入库/造用同回路/入库如 PR）；SMITH 4B 赢 30B；36% 技能含注入（与 10-27 闭环）；14 源 |
 | 10-30 | Agent 记忆离线整固 | 三共识：检索>存储（纯向量落败/RRF 获胜面）/sleep-time 帕累托 5×+18%/遗忘=bi-temporal 时间戳；13 源；amg 落点 RRF+valid_at+夜间整固 |
 | 10-29 | 神经符号权力反转（LLM-Modulo） | 五学派（规划/证明器/运行时护栏/生成时约束/制度层）；LTL 监控>LLM judge 13.33% vs 86.67%；VeriGuard 先验证后上线 100%；Goodhart 搬家到规约书写；AlphaProof 80M Lean 题 |
 | 10-28 | 审批疲劳×监督带宽 | 18 源三十年证据链；疲劳成攻击面（OWASP 人类信任利用）；不可能三角（频率×理解×技能）；信任校准=可学习函数（GP 后验三区）；判断进配置；监督定价 $0.5-2/次 |
@@ -92,7 +95,6 @@
 | 10-23 | 上下文工程=新编译器（Governance Decay） | 压缩一次 0→59%；什么都不做三线全胜；四层栈（服务端 editing/文件系统 swap/SAGE-KV 4×/pinning 带外）；ACE 第三循环 +10.6% |
 | 10-22 | TTT 2026 工程化冲刺 | TTT-E2E 128K 快 2.7×/2M 快 35×；In-Place TTT 拆三墙免重训；TT-SI 不确定性门控；SIFT 信息增益选样；serving 缺口；投毒升级权重层 |
 | 10-21 | 单租户 Agent OS 品类 | MAST 失败率×个人 agent 屠榜；13 系统；三层赦免券；mnemonic sovereignty；OpenAI Dots/Siri ambient 巨头收敛 |
-| 10-20 | MAST 多智能体失败分类学 | 失败率 41-86.7%；规范缺陷 41.77%；概率链 95%^20≈36%；读型/写型判据；fan-out≤6 深≤1；相关性 0.17-0.32 |
 
 > 10-29 及更早研究全量见 catalyst-research/ 与归档（54 项 untracked 待批量 commit）
 
