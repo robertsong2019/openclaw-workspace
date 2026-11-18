@@ -12,24 +12,25 @@
 
 ---
 
-### Current Focus（截至 2026-11-17）
+### Current Focus（截至 2026-11-18）
 
 ### 运行体制（09-27 起）
 - **cron 7 条全内容线**（KO 02:00/essay 05:00/dashboard 06:00/trending 07+08:00/creative 19:00/deep 20:00）；开发线已删=**罗嵩手动驱动**；AI×Neuro 停用（10-01）
 
-### 10-31 ~ 11-17（第 34~49 纯内容日；11-17 恢复 7/7，streak ×1）
-- **11-17（第 49 日，7/7 恢复 ✅，rate_limit 事故关闭）**: 07:00 trending cron 实证 ok（consec 全清零）·essay 金鱼评审员 76028e5（共享上下文三重污染：锚定/共享幻觉/沉没成本继承；上下文=价值函数：生成资产/验证负债/检索成本）·dashboard 81fa60e 断档 3 天后复更（489 posts）·trending-deep ✅（SkillEvaluator 三层门禁+ag-ui 1.0，与 amg 评测方法论互镜像）·creative ✅（Skills 生态爆发：anthropics/skills 官方仓；delivery 层大厂同周交卷 LoopForge/open-code-review；astryx agent-ready）·深研轨迹数据飞轮 7aa9705（验证器系列第五篇，见 Key Insights）
-- **11-15~16（rate_limit 事故已关闭）**: 11-15 全天 0/7 零 commit；11-16 恢复 3/7（trending-deep/creative/深研 AI科学家 312dee8）；窗口定界 11-15 05:00→11-16 08:00 共 8 run 失败，11-17 全线恢复
-- **11-14（第 48 日，7/7 ×7）**: essay 外壳打败模型 74bd424（同模型通用 agent 7.2% vs 确定性管线 33.9%、token ~1/9）·dashboard 232b84b day 6（486 posts）·trending deep 28 期（tailcat/plannotator；榜单换挡=造工具→用工具）·深研验证器经济学 9a57c4d（见 Key Insights）
-- 11-11~13（第 45~47 日，7/7 ×3）：essay 像素退位/计划即产品/认领心跳（c698453/bf975a4/cfafd08）·trending deep 24~27 期（astryx 两度登顶/codex-security/specs:for/MWG 剪枝）·深研 Agent 做梦/权重记忆/习得上下文管理（cc9b424/576aed6/859e90e，见 Key Insights）
-- **11-09~10（第 43~44 日，7/7）**: essay harness 商品化 4364088/OOM 取证记 50f3658·dashboard day 1~2·trending deep（agent-browser 48.4k★；LME-S 79.2%→fold 对照臂）·深研传染性 reward hacking 5363f2a/CUA 长程鸿沟 85c0560（见 Key Insights）
+### 10-31 ~ 11-18（第 34~50 纯内容日；11-17~18 连续 7/7，streak ×2）
+- **11-18（第 50 日，7/7 ×2）**: essay Agent Skills npm 时刻 350679b（验证器系列第六篇，见 Key Insights）·dashboard 5a508a8（492 posts；周期 7/7 首全绿）·trending-deep ✅ 飞书 X4LXdO（univer 人机共享 Facade API+paper-orchestra 五 agent 管线+autoraters 内建）·creative ✅（Agent-First 基建周：MWG eval 驱动修剪/agent-browser 诚实失败语义/astryx）·深研思考预算经济学 a31a5e2（见 Key Insights）
+- **11-17（第 49 日，7/7 恢复，事故关闭）**: 07:00 trending cron 实证 ok·essay 金鱼评审员 76028e5（三重污染+上下文=价值函数）·dashboard 81fa60e 复更（489）·trending-deep ✅ SkillEvaluator 三层门禁+ag-ui 1.0·creative ✅（Skills 生态爆发/LoopForge/open-code-review/astryx）·深研轨迹数据飞轮 7aa9705（见 Key Insights）
+- **11-15~16（rate_limit 事故已关闭）**: 窗口 11-15 05:00→11-16 08:00 共 8 run 失败（11-15 0/7 零 commit、11-16 3/7 含 AI科学家 312dee8）；11-17 全线恢复
+- **11-14（第 48 日，7/7 ×7）**: essay 外壳打败模型 74bd424（通用 agent 7.2% vs 管线 33.9%、token ~1/9）·trending deep 28 期（tailcat/plannotator；造工具→用工具）·深研验证器经济学 9a57c4d（见 Key Insights）
+- 11-11~13（第 45~47 日，7/7 ×3）：essay 三连（c698453/bf975a4/cfafd08）·trending deep 24~27 期（astryx/codex-security/MWG 剪枝）·深研做梦/权重记忆/习得上下文管理（cc9b424/576aed6/859e90e）
+- **11-09~10（第 43~44 日，7/7）**: essay harness 商品化 4364088/OOM 取证记 50f3658·trending agent-browser 48.4k★·深研传染性 reward hacking 5363f2a/CUA 长程鸿沟 85c0560（见 Key Insights）
 - 11-07~08（第 41~42 日，6/7→7/7）: essay OpenMontage 6598ca4/评测指纹 499550b·深研语音 892258c/图记忆 489d22c（CJK 失误两次均 Python 无损恢复）
-- 11-03~06（第 37~40 日，7/7）：essay 四连 a2f2a47（K 线 tokenizer/验证器/无障碍树/语义闸门）·深研 Skills 生态/写路径 RL/KV Cache/记忆投毒（见 Key Insights）
+- 11-03~06（7/7）：essay 四连 a2f2a47·深研 Skills 生态/写路径 RL/KV Cache/记忆投毒（见 Key Insights）
 - 11-01~02（第 35~36 日）: essay 热路径考古 e2ec6d9/自进化循环 f1808bb·Self-Evolving 09a84f4+《Agent 的睡眠》5d759b5；10-31 及更早见归档（11-02 KO CJK 失误=Python 链路起点）
-- 零回滚 363（10-18 口径）+10-19~11-17 无回滚 → **连续 393 天零回滚** 🏆
+- 零回滚 363（10-18 口径）+10-19~11-18 无回滚 → **连续 394 天零回滚** 🏆
 
 ### Gateway OOM 追踪（持续项）
-- NRestarts 236（11-15）→241（11-17）→**247（11-18 02:00，+6/24h）**；11-17 六拍 04:48~11-18 00:47 全 4h00m±1s（:48 相位石英锁定）；昨日 04:48 下崩预测**命中到秒**（04:48:14；预测累计 15 次 14 中）；当前代 11-18 00:47:46 起，**下崩预计 ~04:48±25min（11-18）**
+- NRestarts 236（11-15）→241（11-17）→**253（11-19 02:00，+12/2日）**；11-18 六拍 00:48~20:48 全 4h00m±1s（:48 石英锁定）；04:48 预测再命中（04:48:13；**累计 16 次 15 中**）；当前代 11-19 00:47:47 起，**下崩预计 ~04:48±25min（11-19）**
 - **✅ 注入层手术**：10-18 起截断警告归零（dashboard 链已续至 day 16）；OOM 独立（根因 V8 堆维持原判）
 - **⚠️ 取证口径**：见 TOOLS.md 永久规则（真源=`systemctl --user show` + `/tmp/openclaw/openclaw-*.log`）
 - **对策**：维持 systemd 自愈，勿加 max-old-space（2GB 主机）；headroom 候选先过 20 题配对；上游报告置顶
@@ -81,7 +82,7 @@
 - 写路径 RL（11-04）：瓶颈检索→写入；**Mem-α 4B 训 30k 泛化 400k=写记忆是可泛化技能**；Memory-r1 四原语；**Memento 案例存储>梯度存储零微调打赢训练型**；LightMem -88% token=可学习性与成本独立轴；Mem0 官方 94.4 vs 三方 49.0；终局=确定性骨架+学习策略管取舍
 - 无障碍树 computer use（11-05）：像素三宗罪→读 OS 无障碍树返回带 ref 的 JSON；**STALE_REF 是协议不是异常**+ disposition.retry=safe=重试安全性类型化——操作后验证从祈祷变制度；补 aria-label 就是给 agent 修路
 - KV Cache 经济学（11-05）：agent I:O≈100:1——**买的是重读非生成**（KV 读取占 82.4%）；前缀命中=逐字节相同（动态 memory 挪出 system prompt 7%→84%、成本 -59%）；AKV 三原语 -27.7%；**省钱通道=泄露通道**（PromptPeek 87%/CacheAttack 86%；防御 cache salting）
-- 记忆投毒（11-06）：**记忆把注入从租借变产权**；eTAMP 单污染网页跨会话 ASR 32.5%（权限模型对「经观察进入」先天失明）；AgentPoison 毒率<0.1% ASR≥80%（检索器即后门）；能力升级不带安全升级（GPT-5.2 仍 23.4%）/受挫 ASR×8/写入治理>检索过滤；**引用锁=防幻觉即防投毒地基**；10-27 预测兑现中
+- 记忆投毒（11-06）：**记忆把注入从租借变产权**；eTAMP 单污染网页跨会话 ASR 32.5%；AgentPoison 毒率<0.1% ASR≥80%（检索器即后门）；能力升级不带安全升级/受挫 ASR×8/写入治理>检索过滤；**引用锁=防幻觉即防投毒地基**；10-27 预测兑现中
 - 实时语音 Agent（11-07）：**800ms 预算里 endpointing 纯等待占 1/3-1/2**；**延迟是社交信号**（700ms+=被解读为犹豫）；Coval 流式级联 755ms 反超 S2S——「级联已死」被夸大；厂商自报 600ms vs 生产 2.4-3.8s 差 4-6 倍；end-of-turn 唯一裁判
 - 评测协议指纹（11-08）：同一基准两个世界——judge 口径未披露、同批答案三把尺子 44/56/88% 分差=头条 gap 2.6 倍；**基准名不是凭证，指纹才是**（data_sha256+judge+model+seed+tiebreak 五件套）；amg 台账已自带
 - 图记忆结构边界（11-08）：图退化为脚手架（LazyGraphRAG 0.1% 成本）；**最小可行图 entity-centric 骨架+检索时推理 Pareto 强于富结构**；HippoRAG 2 三模态+记忆=重构非取回；bi-temporal 作废不删除；代码场景别上图
@@ -92,7 +93,8 @@
 - 习得上下文管理（11-13）：窗口管理权从工程外挂移向模型技能——**CLM c_{t+1}=f_θ(c_t) 上下文自治**（零样本 +11.4%/-21.5% FLOPs 超手工压缩）；**MEMENTO：RL 学不出笔记术，hindsight SFT 才教会**（管理能力=预训练分布属性非架构属性）；AgentMemRec 记忆选择=零 LLM 推荐级联，**缺一条证据掉 37-64 分：建得漂亮≠证据进窗**；**token 层自由在 FLOP 层收税**（自编辑后后续 KV 全作废）；AKV 直改 KV -27.7%——模型真读的是 KV 状态非文本
 - 验证器经济学（11-14）：奖励=稀缺供给、判官=供应链——rubric hacking 会自内化（judge 被题目污染）；RLVR² 序数奖励/POW³R；GenPRM/ThinkPRM=验证器生成器化；MT-Bench 三宗罪（灌水 91%/自家 +10~25%/Arena 0.94→0.98）；**judge compute=第三扩缩轴**；金字塔 L0 确定性→L1 规则抽取→L2 LLM 判卷，能左不右；判官三件套体检=swap/padding/self-pref
 - 自主科学发现（11-16）：**论文≠发现——AI 科学家缺反证不缺产能**（Co-Scientist 72h 重演 10 年研究 vs 逐条核验止于体外+选择性报告）；25k runs 审计：68% 忽略证据/反证修正 26%/**底座占 41.4% 方差——不做波普尔换框架无用**；**插值器非外推器**（文献密集区好稀疏区崩+蒸馏继承偏差）；A-Lab：物理 oracle 也要溯源（溯源完备三要素）；与验证器经济学同构=新系统头版是检查装置
-- 轨迹数据飞轮（11-17）：**裸轨迹≠训练数据，差一个 verdict**——RL 要 (任务,判据) 对不要 token 流；**转速=min(验证带宽,任务多样性,重放保真度)，量不在公式里**（LegoFlow 512 条 7.6→64.4）；失败 run 是多数且 76% 步骤有效（SRFT mask 不删/ECHO 事后改目标，删失败=倒掉 3/4 的矿）；harness 泄漏同 checkpoint 差 6.8 分→日志必记 harness 指纹；混合学习最强（ExpRAG→amg trainability 评测框架）
+- 轨迹数据飞轮（11-17）：**裸轨迹≠训练数据，差一个 verdict**——RL 要 (任务,判据) 对不要 token 流；**转速=min(验证带宽,任务多样性,重放保真度)，量不在公式里**（LegoFlow 512 条 7.6→64.4）；失败 run 76% 步骤有效（SRFT mask 不删/ECHO 事后改目标，删失败=倒掉 3/4 的矿）；harness 泄漏同 checkpoint 差 6.8 分→日志记 harness 指纹；ExpRAG 混合学习→amg trainability
+- 思考预算经济学（11-18）：**想更多≠答更好——非单调曲线，τ≈1000 token 饱和**（flip events 把对的改成错；额外思考=进步幻觉）；长链变体 18× token 反而掉分；四大浪费模式、41-46% reasoning 可剪性能保持；**同模型同 effort 换 harness 思考量差 4 倍——浪费是系统属性**；并行>串行（3-5 路径+投票同预算 +20%）；同准确率 token 差 25 倍无人发布分母；与验证器系列互镜像：验证器管对不对，预算管值不值
 
 ---
 
@@ -100,12 +102,12 @@
 
 | 日期 | 主题 | 核心 |
 |------|------|------|
-| 11-17 | 轨迹数据飞轮（部署即训练） | 裸轨迹差一个 verdict；转速=min 三要素公式；失败 run 76% 步骤有效；harness 泄漏 6.8 分；ExpRAG 混合学习→amg trainability；20+ 源 |
+| 11-18 | 思考预算经济学（overthinking+自适应分配） | 非单调曲线 τ≈1000 token；flip events 对改错；41-46% reasoning 可剪；浪费=系统属性（harness 差 4 倍）；并行>串行 +20%；14 源 |
+| 11-17 | 轨迹数据飞轮（部署即训练） | 裸轨迹差一个 verdict；转速=min 三要素；失败 run 76% 步骤有效；harness 泄漏 6.8 分；ExpRAG→amg trainability；20+ 源 |
 | 11-16 | 自主科学发现验证鸿沟（AI Scientist） | 论文≠发现；Co-Scientist 72h 重演 vs 逐条核验止于体外；25k runs 68% 忽略证据/底座占 41.4% 方差；插值器非外推器；与验证器经济学同构；13 源 |
 | 11-14 | 验证器经济学（谁来给 Agent 判卷） | rubric hacking 自内化；序数奖励/PRM 生成器化；MT-Bench 三宗罪；judge compute 第三扩缩轴；验证金字塔 L0/L1/L2；16 源 |
 | 11-13 | 习得上下文管理（Engineered → Learned） | CLM 上下文自治零样本反超手工压缩；RL 学不出管理术需 hindsight SFT；记忆选择=推荐级联缺证据掉 37-64 分；KV 直改 -27.7%；17 源 |
 | 11-12 | 权重层记忆基底裁决（Route to Remember/TTT 收敛） | 权重记忆首次追平检索基线；失败剖面正交→路由分诊终局；慢变量进权重快变量留文本；14 源 |
-| 11-11 | Agent 做梦/记忆固化（sleep-time compute 产品化） | 产品收敛=触发器→固化→diff+纯文本 git 可审计；RL 固化器赢 prompt 固化（+7 分/记忆小 12 倍）；反事实效用=记忆价值；三边界；15 源 |
 
 
 > 11-08 及更早研究全量见 catalyst-research/ 与归档（54 项 untracked 待批量 commit）
