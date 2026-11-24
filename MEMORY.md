@@ -12,24 +12,24 @@
 
 ---
 
-### Current Focus（截至 2026-11-23）
+### Current Focus（截至 2026-11-24）
 
 ### 运行体制（09-27 起）
 - **cron 7 条全内容线**（KO 02:00/essay 05:00/dashboard 06:00/trending 07+08:00/creative 19:00/deep 20:00）；开发线已删=**罗嵩手动驱动**；AI×Neuro 停用（10-01）
 
-### 10-31 ~ 11-23（第 34~55 纯内容日；11-17~23 连续 7/7，streak ×7）
-- **11-23（第 55 日，7/7 ×7）**: essay HITL 收件箱化 69cdea3（见 Key Insights）·dashboard 73acd20 全绿第七天·trending-deep ✅ 飞书 DffGdyq（cursor/plugins 18.4k★ 官方插件规范+Claude-BugHunter 17.7k★ 83 skills 漏洞挖掘包）·creative ✅（alibaba/open-code-review AACR-Bench 回归+univer v1.6 两连版+plannotator README 确认 Inbox 支持 OpenClaw）·深研技能合成治理黑市 6759a2a（见 Key Insights）
-- **11-22（第 54 日，7/7 ×6）**: essay 披露时序 b9628cc（--help 不上税，见 Key Insights）·dashboard 61d54ba·trending-deep ✅ 飞书 F3aIdl（CLI-Anything HARNESS.md+minimind 64M MoE）·creative ✅（plannotator Inbox HITL 含 OpenClaw+astryx）·深研多智能体边界 5cd6804（见 Key Insights）
-- **11-21（第 53 日，7/7 ×5）**: essay MCP 常驻税 e04532a（58 工具 55K 常驻/defer_loading 削 85%）·dashboard d4bd2c0·trending-deep ✅ 飞书 DLSVdF（CLI-Anything+superpowers）·creative ✅（ffmpeg-skill SPEC 契约=常驻税第三方实证）·深研 CUA 长任务悬崖 214770e（见 Key Insights）
-- **11-19~20（第 51~52 日，7/7 ×3~4）**: essay 大纲即合同/环境即接口·trending-deep 飞书 GoZg/JLQ3dP·creative ✅·深研图推理 733b064+记忆做梦 d0868ee（见解在 Key Insights）
-- **11-18（第 50 日，7/7 ×2）**: essay npm 时刻 350679b·dashboard 5a508a8 首全绿·trending-deep ✅ 飞书 X4LXdO·深研思考预算 a31a5e2（见 Key Insights）
+### 10-31 ~ 11-24（第 34~56 纯内容日；11-17~24 连续 8 天 7/7，streak ×8）
+- **11-24（第 56 日，7/7 ×8）**: essay 自证三件套 108b3e2·dashboard e4d3155 全绿第八天·trending-deep ✅ 飞书 NSTwdXi（BugHunter 19.7k★+CLI-Anything 63.6k★）·creative ✅（AACR-Bench 24h 内三方复跑+16 候选 13 agent 饱和信号）·深研深度研究智能体 2848450（见 Key Insights）
+- **11-23（第 55 日，7/7 ×7）**: essay HITL 收件箱化 69cdea3·dashboard 73acd20 全绿第七天·trending-deep ✅ 飞书 DffGdyq（cursor/plugins+Claude-BugHunter 83 skills）·creative ✅（AACR-Bench 回归+plannotator Inbox 确认支持 OpenClaw）·深研技能合成治理黑市 6759a2a（见 Key Insights）
+- **11-22（第 54 日，7/7 ×6）**: essay 披露时序 b9628cc·dashboard 61d54ba·trending-deep ✅ 飞书 F3aIdl（CLI-Anything+minimind）·creative ✅（plannotator Inbox+astryx）·深研多智能体边界 5cd6804（见 Key Insights）
+- **11-21（第 53 日，7/7 ×5）**: essay MCP 常驻税 e04532a·dashboard d4bd2c0·trending-deep ✅ 飞书 DLSVdF（CLI-Anything+superpowers）·creative ✅（ffmpeg-skill SPEC 契约实证）·深研 CUA 长任务悬崖 214770e（见 Key Insights）
+- **11-18~20（第 50~52 日，7/7 ×2~4）**: essay npm 时刻/大纲即合同/环境即接口·trending-deep 飞书 X4LXdO/GoZg/JLQ3dP·creative ✅·深研思考预算+图推理+记忆做梦（见解在 Key Insights）
 - **11-17（第 49 日，7/7 恢复；11-15~16 rate_limit 8 run 失败已关闭）**: essay 金鱼评审员 76028e5·dashboard 81fa60e·trending-deep ✅ SkillEvaluator+ag-ui 1.0·深研轨迹飞轮 7aa9705
 - 11-09~14（第 43~48 日，7/7 ×5）：essay 六连（harness 商品化/OOM 取证记/金鱼三连/外壳打败模型 74bd424）·深研六篇（reward hacking/CUA 长程/做梦/权重记忆/CLM/验证器经济学，见解全在 Key Insights）
 - 11-01~08（第 35~42 日）：essay 七连·深研九篇（见解全在 Key Insights）；11-02 KO CJK 失误=Python 链路起点；10-31 及更早见归档
-- 零回滚 363（10-18 口径）+10-19~11-23 无回滚 → **连续 399 天零回滚** 🏆
+- 零回滚 363（10-18 口径）+10-19~11-24 无回滚 → **连续 400 天零回滚** 🏆
 
 ### Gateway OOM 追踪（持续项）
-- NRestarts 241（11-17）→**283（11-24 02:00，+6/24h 稳定）**；11-23 六拍 01:18/05:36/09:18/13:18/17:18/21:18+11-24 01:18，间隔 4h18m/3h41m/4h00m×4、相位 :18→:36 往返一跳后 :18 重锁；05:18±25 预测边缘命中（实际 05:36:44，+18.7min；**累计 21 次 20 中**）；当前代 11-24 01:17:47 起，**下崩预计 ~05:18±25min（11-24）**
+- NRestarts 241（11-17）→**289（11-25 02:00，+6/24h 稳定）**；11-24 六拍 05:36/08:48/12:48/17:18/21:18+11-25 01:18，间隔 3h12m/4h00m/4h30m/4h00m×2、相位 :36→:48×2→:18×3 三相振荡后 :18 重锁；05:18±25 预测再边缘命中（实际 05:35:55，+17.9min；**累计 22 次 21 中**）；当前代 11-25 01:17:46 起，**下崩预计 ~05:18±25min（11-25）**
 - **✅ 注入层手术**：10-18 起截断警告归零（dashboard 链已续至 day 16）；OOM 独立（根因 V8 堆维持原判）
 - **⚠️ 取证口径**：见 TOOLS.md 永久规则（真源=`systemctl --user show` + `/tmp/openclaw/openclaw-*.log`）
 - **对策**：维持 systemd 自愈，勿加 max-old-space（2GB 主机）；headroom 候选先过 20 题配对；上游报告置顶
@@ -101,6 +101,7 @@
 - HITL 收件箱化（11-23）：同步审批三死结=时间尺度失配/N 并行人串行瓶颈/语境过窗→异步消息重构（一问一条+语境内联+回复带引用）；**revision 漂移=最隐蔽死结**（审批带版本号，漂移带差异重入队）；四验收=非阻塞/路由回源/revision-checked/人端预消化
 - Agent 技能合成治理（11-23）：**会消费≠会编写，分歧在证据锚点**——静态轨迹总结≠技能，执行锚定+失败反馈+最优版保留闭环才是（SkillRevise 36→62）；**强→弱流动 +54.3%=不用训练的蒸馏**；技能收益=repairs−regressions 可 A/B 归因；≤3 模块聚焦胜大而全；黑市三重攻击面=scripts 全权限+NL 指令无签名+frontmatter 预授权（335 恶意/22-26% 漏洞/7.1% 泄密）
 - 多智能体真实边界（11-22）：**多智能体是上下文工程手段非智能放大器，唯一先验=子任务上下文耦合度**（读并行=红利/写并行=协调地狱）；MAST 44.2% 失败=系统设计、类间相关 0.17-0.32 无银弹；Self-MoA 质量打败多样性（+6.6%）；侵蚀效应：基线变强 MAS 收益蒸发、token 倍率 4-220×→脚手架非终点；动手三问：共享只读/上下文自足/固定判据合成
+- 深度研究智能体（11-24）：**搜索=可 RL 训练的行动空间，数据合成风洞（KG 随机游走+信息遮蔽）是开源追平闭源真护城河**；ReSum 式 evolving artifact=过程状态>过程日志；**检索器是被低估主变量（同 GPT-5 换检索器 55.9→70.1%）**；引用幻觉 14-95%=最短的腿
 
 ---
 
@@ -108,9 +109,9 @@
 
 | 日期 | 主题 | 核心 |
 |------|------|------|
-| 11-23 | Agent 技能合成治理黑市 | SkillsBench +16.6pp/自产≈0；SkillWeaver 练车闭环 +31.8%；SkillGen 对比归纳+干预模型；SkillRevise 36→62；ClawHavoc 黑市；progressive disclosure ~100 tokens；15+ 源 |
-| 11-22 | 多智能体真实边界 | +90%/−70% 同机制；耦合度唯一先验；MAST 44.2% 系统设计；Self-MoA 质量胜多样性；侵蚀效应 token 4-220×；12+ 源 |
-| 11-21 | CUA 长任务悬崖 | OSWorld 1.0/2.0 断崖 85%→20.6%；状态维持非 grounding；思考税 75-94%；每帧截图=攻击面；双轨终局；20 源 |
+| 11-24 | 深度研究智能体解剖 | 搜索=可 RL 训练行动空间；数据合成风洞=开源真护城河；检索器主变量 55.9→70.1；引用幻觉 14-95%；evolving artifact；16+ 源 |
+| 11-23 | Agent 技能合成治理黑市 | SkillsBench +16.6pp/自产≈0；SkillWeaver +31.8%；SkillRevise 36→62；ClawHavoc 黑市；15+ 源 |
+| 11-22 | 多智能体真实边界 | 耦合度唯一先验；MAST 44.2% 系统设计；Self-MoA 质量胜多样性；token 4-220×；12+ 源 |
 
 
 > 11-08 及更早研究全量见 catalyst-research/ 与归档（76 项 untracked 待批量 commit）
