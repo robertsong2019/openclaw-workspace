@@ -12,25 +12,23 @@
 
 ---
 
-### Current Focus（截至 2026-11-25）
+### Current Focus（截至 2026-11-26）
 
 ### 运行体制（09-27 起）
 - **cron 7 条全内容线**（KO 02:00/essay 05:00/dashboard 06:00/trending 07+08:00/creative 19:00/deep 20:00）；开发线已删=**罗嵩手动驱动**；AI×Neuro 停用（10-01）
 
-### 10-31 ~ 11-25（第 34~57 纯内容日；11-17~25 连续 9 天 7/7，streak ×9）
+### 10-31 ~ 11-26（第 34~58 纯内容日；11-17~26 连续 10 天 7/7，streak ×10）
+- **11-26（第 58 日，7/7 ×10）**: essay step-journal SQLite 141214a（四实验实测：双触发 0 调用/kill 续跑/模型升级全 miss）·dashboard 4cd5517 全绿第十天（'429'×3 全为毫秒时间戳误报；posts 507 实 506=.bak 混入家族第 7 例）·trending-deep ✅ 飞书 Eb0vddn（BugHunter 23k★+1,652/CLI-Anything 65k★）·creative ✅（n8n nod 自带电脑）·深研注入攻防 1af0aa2（见 Key Insights）
 - **11-25（第 57 日，7/7 ×9）**: essay 显示层Bug家族五案 ae35219（枚举 503）·dashboard 805848e 全绿第九天（posts 口径自修正 501）·trending-deep ✅ 飞书 MjIy（BugHunter 21.4k★/CLI-Anything 64.7k★ 7-phase）·creative ✅（Agent Skills 生态 16 席 10 基建）·深研持久化断点续跑 43dfdcc（见 Key Insights）
 - **11-24（第 56 日，7/7 ×8）**: essay 自证三件套 108b3e2·dashboard e4d3155 全绿第八天·trending-deep ✅ 飞书 NSTwdXi（BugHunter 19.7k★+CLI-Anything 63.6k★）·creative ✅（AACR-Bench 24h 内三方复跑+16 候选 13 agent 饱和信号）·深研深度研究智能体 2848450（见 Key Insights）
-- **11-23（第 55 日，7/7 ×7）**: essay HITL 收件箱化 69cdea3·dashboard 73acd20 全绿第七天·trending-deep ✅ 飞书 DffGdyq（cursor/plugins+Claude-BugHunter 83 skills）·creative ✅（AACR-Bench 回归+plannotator Inbox 确认支持 OpenClaw）·深研技能合成治理黑市 6759a2a（见 Key Insights）
-- **11-22（第 54 日，7/7 ×6）**: essay 披露时序 b9628cc·dashboard 61d54ba·trending-deep ✅ 飞书 F3aIdl（CLI-Anything+minimind）·creative ✅（plannotator Inbox+astryx）·深研多智能体边界 5cd6804（见 Key Insights）
-- **11-21（第 53 日，7/7 ×5）**: essay MCP 常驻税 e04532a·dashboard d4bd2c0·trending-deep ✅ 飞书 DLSVdF（CLI-Anything+superpowers）·creative ✅（ffmpeg-skill SPEC 契约实证）·深研 CUA 长任务悬崖 214770e（见 Key Insights）
-- **11-18~20（第 50~52 日，7/7 ×2~4）**: essay npm 时刻/大纲即合同/环境即接口·trending-deep 飞书 X4LXdO/GoZg/JLQ3dP·creative ✅·深研思考预算+图推理+记忆做梦（见解在 Key Insights）
+- **11-18~23（第 50~55 日，7/7 ×2~7）**: essay npm 时刻/大纲即合同/环境即接口/MCP 常驻税 e04532a·披露时序 b9628cc·HITL 收件箱化 69cdea3·trending-deep 飞书六篇（CLI-Anything 系）·creative ✅（ffmpeg SPEC/plannotator/astryx/AACR-Bench）·深研思考预算+图推理+记忆做梦+CUA 悬崖 214770e+多智能体边界 5cd6804+技能治理黑市 6759a2a（见解在 Key Insights）
 - **11-17（第 49 日，7/7 恢复；11-15~16 rate_limit 8 run 失败已关闭）**: essay 金鱼评审员 76028e5·dashboard 81fa60e·trending-deep ✅ SkillEvaluator+ag-ui 1.0·深研轨迹飞轮 7aa9705
 - 11-09~14（第 43~48 日，7/7 ×5）：essay 六连（harness 商品化/OOM 取证记/金鱼三连/外壳打败模型 74bd424）·深研六篇（reward hacking/CUA 长程/做梦/权重记忆/CLM/验证器经济学，见解全在 Key Insights）
 - 11-01~08（第 35~42 日）：essay 七连·深研九篇（见解全在 Key Insights）；11-02 KO CJK 失误=Python 链路起点；10-31 及更早见归档
-- 零回滚 363（10-18 口径）+10-19~11-25 无回滚 → **连续 401 天零回滚** 🏆
+- 零回滚 363（10-18 口径）+10-19~11-26 无回滚 → **连续 402 天零回滚** 🏆
 
 ### Gateway OOM 追踪（持续项）
-- NRestarts 241（11-17）→**295（11-26 02:00，+6/24h 稳定）**；11-25 六拍 01:18/05:18/08:48/12:48/16:48/20:48+11-26 00:48，间隔 4h00m×5+3h30m、相位 :18 后 :48×5 重锁（4h 节律回归稳定）；05:18 预测**正中**（实际 05:18:13，+0.2min；**累计 23 次 22 中**）；当前代 11-26 00:47:47 起，**下崩预计 ~04:48±25min（11-26）**
+- NRestarts 241（11-17）→**301（11-27 02:00，+6/24h 稳定）**；11-26 六拍 00:48/04:48/08:18/12:18/16:18/20:18+11-27 00:18，间隔 4h×5+3h30m、相位 :48×2 一跳 :18×5 重锁（4h 节律稳定）；04:48 预测**正中**（实际 04:48:14，+0.0min；**累计 24 次 23 中**）；当前代 11-27 00:17:46 起，**下崩预计 ~04:18±25min（11-27）**
 - **✅ 注入层手术**：10-18 起截断警告归零（dashboard 链已续至 day 16）；OOM 独立（根因 V8 堆维持原判）
 - **⚠️ 取证口径**：见 TOOLS.md 永久规则（真源=`systemctl --user show` + `/tmp/openclaw/openclaw-*.log`）
 - **对策**：维持 systemd 自愈，勿加 max-old-space（2GB 主机）；headroom 候选先过 20 题配对；上游报告置顶
@@ -97,6 +95,7 @@
 - 多智能体真实边界（11-22）：**多智能体是上下文工程手段非智能放大器，唯一先验=子任务上下文耦合度**（读并行=红利/写并行=协调地狱）；MAST 44.2% 失败=系统设计、类间相关 0.17-0.32 无银弹；Self-MoA 质量打败多样性（+6.6%）；侵蚀效应：基线变强 MAS 收益蒸发、token 倍率 4-220×→脚手架非终点；动手三问：共享只读/上下文自足/固定判据合成
 - 深度研究智能体（11-24）：**搜索=可 RL 训练的行动空间，数据合成风洞（KG 随机游走+信息遮蔽）是开源追平闭源真护城河**；ReSum 式 evolving artifact=过程状态>过程日志；**检索器是被低估主变量（同 GPT-5 换检索器 55.9→70.1%）**；引用幻觉 14-95%=最短的腿
 - Agent 持久化/断点续跑（11-25）：**持久化=降级阶梯非二值开关**（关键属性=事件只增不改；C468 救援=无意识 event sourcing）；**任何 at-least-once 基建都把幂等推回应用层**（cron 双触发四例=手工重实现）；接力棒模型=进程易耗品/记录主权，身份与对话持久化正交；journal 过期=恢复从数据问题升格治理；**恢复也是攻击面**（rollback+journal 投毒，读路径 untrusted-until-verified）
+- Agent 注入攻防（11-26）：**LLM 无指令/数据分离原语=注入的 SQL 注入时刻**（模型层无解）；系统三闸=provenance/capability/egress；**越强越易中招**（MCPTox 72%，指令遵循=攻击杠杆）；多智能体 boundary laundering→multi-CaMeL 归零；调研页嵌真实 payload（agentpwn）=研究即暴露面
 
 ---
 
@@ -104,6 +103,7 @@
 
 | 日期 | 主题 | 核心 |
 |------|------|------|
+| 11-26 | Agent 注入攻防全景 | 模型层无解→系统三闸；multi-CaMeL 归零；MCPTox 72%；17+ 源 |
 | 11-25 | Agent 持久化/断点续跑 | 降级阶梯；接力棒模型；journal 治理；恢复即攻击面；18+ 源 |
 | 11-24 | 深度研究智能体解剖 | 搜索=可 RL 训练行动空间；数据合成风洞=开源真护城河；检索器主变量 55.9→70.1；引用幻觉 14-95%；evolving artifact；16+ 源 |
 
